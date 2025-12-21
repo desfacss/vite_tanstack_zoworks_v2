@@ -9,7 +9,7 @@ import { camelCaseToTitleCase } from "@/core/components/common/utils/casing";
 
 const getAllValues = (obj: Record<string, any>): any[] => {
     let values: any[] = [];
-    for (let key in obj) {
+    for (const key in obj) {
         if (key.toLowerCase().includes("id")) {
             // Skip properties containing 'id'
             continue;

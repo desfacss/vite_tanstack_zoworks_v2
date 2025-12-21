@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Modal, notification, Spin, List, Card, Popconfirm } from 'antd';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
-import moment from 'moment';
+import dayjs from 'dayjs';
 // import DynamicForm from './DynamicForm'; // Assuming DynamicForm is in the same directory or accessible path
 // import { supabase } from '../../lib/supabase'; // Adjust path to your Supabase client
 // import { v4 as uuidv4 } from 'uuid'; // For generating UUIDs if needed, though Supabase handles it by default
@@ -227,8 +227,8 @@ const ActivitiesManager: React.FC<ActivitiesManagerProps> = ({ entity_name, enti
       status: formData.next_follow_up_at ? 'scheduled' : 'completed',
       is_completed: !formData.next_follow_up_at, // If no follow-up, assume completed
       completed_at: !formData.next_follow_up_at ? new Date().toISOString() : null,
-      scheduled_start_at: formData.next_follow_up_at ? moment(formData.next_follow_up_at).startOf('day').toISOString() : null,
-      scheduled_end_at: formData.next_follow_up_at ? moment(formData.next_follow_up_at).endOf('day').toISOString() : null,
+      scheduled_start_at: formData.next_follow_up_at ? dayjs(formData.next_follow_up_at).startOf('day').toISOString() : null,
+      scheduled_end_at: formData.next_follow_up_at ? dayjs(formData.next_follow_up_at).endOf('day').toISOString() : null,
       actual_start_at: !formData.next_follow_up_at ? new Date().toISOString() : null,
       actual_end_at: !formData.next_follow_up_at ? new Date().toISOString() : null,
       details: formData, // Store the entire form data in the JSONB details column
@@ -280,7 +280,7 @@ const ActivitiesManager: React.FC<ActivitiesManagerProps> = ({ entity_name, enti
 
   // Function to format date for display
   const formatDate = (dateString?: string) => {
-    return dateString ? moment(dateString).format('MMM D, YYYY') : 'N/A';
+    return dateString ? dayjs(dateString).format('MMM D, YYYY') : 'N/A';
   };
 
   return (

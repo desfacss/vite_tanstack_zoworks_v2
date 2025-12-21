@@ -354,8 +354,8 @@ console.log("gz",data);
       const userMap = new Map(userNamesData?.map(u => [u.id, u.name]));
 
       // 5. Split the lists based on membership to 'Technician' team
-      let techs: { id: string; name: string }[] = [];
-      let nonTechs: { id: string; name: string }[] = [];
+      const techs: { id: string; name: string }[] = [];
+      const nonTechs: { id: string; name: string }[] = [];
 
       orgUsersData.forEach(ou => {
         const userName = userMap.get(ou.user_id);

@@ -2,13 +2,12 @@
 import React, { useState, lazy, Suspense, useMemo } from 'react';
 import { Tabs, Spin } from 'antd';
 import { useTranslation } from 'react-i18next';
-import StatusTab from '@/modules/tickets/components/StatusTab';
 import NotesTab from './NotesTab';
 import DetailOverview from './DetailOverview';
 import EntityImages from './EntityImages';
 import ActivitiesManager from './ActivitiesManager';
-import Logs from '@/modules/tickets/components/Logs';
-// import { useNestedContext } from '../../lib/NestedContext';
+// NOTE: StatusTab and Logs are now registered via the tickets module registry
+// and loaded dynamically through registry.getTabsForEntity()
 import { registry } from '@/core/registry';
 
 const DynamicComponent = lazy(() => import('./DynamicTab'));
@@ -55,14 +54,14 @@ const DetailsView: React.FC<DetailsViewProps> = ({
     const generatedTabs: { key: string; label: string; children: React.ReactNode; order: number }[] = [];
     const safeEditItem = editItem || {};
 
-    // 1. Static Components Mapping (Core Only)
+    // 1. Static Components Mapping (Core Only - NO module imports!)
+    // StatusTab and Logs are now provided by the tickets module via registry
     const staticComponentMap: Record<string, { component: React.ComponentType<any>; props: any }> = {
       'Overview': { component: DetailOverview, props: { openMessageModal, data: editItem, viewConfig, config } },
-      'Status': { component: StatusTab, props: {} },
       'Notes': { component: NotesTab, props: {} },
       'Files': { component: EntityImages, props: { entity_type: entityType, entity_id: editItem?.id } },
       'Activities': { component: ActivitiesManager, props: { entity_name: entityType, entity_id: editItem?.id } },
-      'Logs': { component: Logs, props: { entity_type: entityType, entity_id: editItem?.id } },
+      // 'Status' and 'Logs' are now registered by tickets module and available via registry.getTabsForEntity()
     };
 
 

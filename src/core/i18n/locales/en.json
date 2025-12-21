@@ -90,7 +90,13 @@
       "expenses": "Expenses",
       "timesheets": "Timesheets",
       "ai": "Ai",
-      "nlp": "Nlp"
+      "nlp": "Nlp",
+      "welcome": "Welcome",
+      "organization": "Organization",
+      "location": "Location",
+      "menu": "Menu",
+      "search": "Search",
+      "select_organization": "Select Organization"
     }
   }
 }

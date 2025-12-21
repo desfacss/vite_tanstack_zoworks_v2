@@ -1,4 +1,4 @@
-import React, { useState, useRef, useMemo, useEffect } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import Papa from 'papaparse';
 import { message, Button, Typography, Space, Tooltip, Dropdown, MenuProps, Drawer, Modal, Form, Select, InputNumber } from 'antd';
 import { Upload as LucideUpload, MoreHorizontal, QrCode, Download, FileDown } from 'lucide-react';
@@ -6,7 +6,7 @@ import { useAuthStore } from '@/core/lib/store';
 import { useReactToPrint } from 'react-to-print';
 import QRCard from '@/core/components/details/QRCard';
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 // Define columns to exclude from export
 const EXCLUDED_EXPORT_COLUMNS = ['id', 'created_by', 'updated_by', 'created_at', 'updated_at', 'geofence', 'lat', 'lng', 'notes', 'is_active', 'x_client_type', 'parent_account_id'];
@@ -57,7 +57,7 @@ interface PrintSettings {
 
 const getNestedValue = (obj: any, path: string): string => {
     if (Object.prototype.hasOwnProperty.call(obj, path)) {
-        let value = obj[path];
+        const value = obj[path];
         return value === null || value === undefined ? '' : String(value);
     }
 
@@ -119,14 +119,14 @@ const ImportExportComponent: React.FC<ImportExportProps> = ({ entityType, viewCo
     const [importFile, setImportFile] = useState<File | null>(null);
     const [isImporting, setIsImporting] = useState(false);
     const [isExporting, setIsExporting] = useState(false);
-    const [isPrinting, setIsPrinting] = useState(false);
+    const [isPrinting] = useState(false);
     const [qrDrawerVisible, setQrDrawerVisible] = useState(false);
     const qrPrintRef = useRef<HTMLDivElement>(null);
 
     const [isPrintSettingsModalVisible, setIsPrintSettingsModalVisible] = useState(false);
     const [printSettingsForm] = Form.useForm<PrintSettings>();
 
-    const [currentQrPrintSettings, setCurrentQrPrintSettings] = useState<PrintSettings>({
+    const [currentQrPrintSettings] = useState<PrintSettings>({
         pageSize: 'A4',
         margin: 10,
         scale: 100,

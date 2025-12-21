@@ -230,13 +230,8 @@ const KanbanView: React.FC<KanbanViewProps> = ({
 
     setBoardData(newBoard);
   }, [data, viewConfig, groupByType, workflowDefinitions]);
-
-
-  // Validate viewConfig
-  if (!viewConfig?.kanbanview || (!viewConfig.kanbanview.types && workflowDefinitions.length === 0 && !groupByType)) {
-    message.error('Kanban View configuration is not fully defined or no workflows found.');
-    return <div>No Kanban view configuration found for {entityType} or no active workflows.</div>;
-  }
+  // Validate viewConfig - but note: we do the actual early return after all hooks
+  const hasValidConfig = viewConfig?.kanbanview && (viewConfig.kanbanview.types || workflowDefinitions.length > 0 || groupByType);
 
   // Handle drag-and-drop with Supabase RPC
   const onDragEnd = useCallback(
@@ -397,8 +392,14 @@ const KanbanView: React.FC<KanbanViewProps> = ({
     return selectedOption?.label || 'Select Group';
   }, [groupByType, groupByOptions]);
 
+  // Early return for loading state
   if (isLoading) {
     return <div>Loading...</div>;
+  }
+
+  // Early return for invalid config (after all hooks are called)
+  if (!hasValidConfig) {
+    return <div>No Kanban view configuration found for {entityType} or no active workflows.</div>;
   }
 
   return (

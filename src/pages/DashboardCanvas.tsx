@@ -1077,7 +1077,7 @@ const DashboardCanvas: React.FC<DashboardCanvasProps> = ({
     }
   }, [widgets, layouts]);
 
-  const handleLayoutChange = (currentLayout: any[], allLayouts: any) => {
+  const handleLayoutChange = (_currentLayout: any[], allLayouts: any) => {
     setLayouts(allLayouts);
     onLayoutChange(allLayouts);
   };

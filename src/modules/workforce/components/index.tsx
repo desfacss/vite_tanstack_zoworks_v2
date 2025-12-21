@@ -12,7 +12,7 @@ import env_def from "@/core/lib/env";
 
 export const getAllValues = (obj) => {
   let values = [];
-  for (let key in obj) {
+  for (const key in obj) {
     if (key.toLowerCase().includes("id")) {
       // Skip properties containing 'id'
       continue;

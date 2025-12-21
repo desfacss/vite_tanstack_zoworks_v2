@@ -29,7 +29,7 @@ const EventList: React.FC<EventListProps> = ({ events, showDate = false }) => {
                 {event.title}
               </Text>
               <Tag color={event.color} className="ml-2">
-                <ClockCircleOutlined className="mr-1" />
+                <Clock size={12} className="mr-1 inline" />
                 {event.startTime} - {event.endTime}
               </Tag>
             </div>

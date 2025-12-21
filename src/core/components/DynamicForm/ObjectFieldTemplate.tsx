@@ -5,11 +5,11 @@ import isString from 'lodash/isString';
 import {
     FormContextType, GenericObjectType, ObjectFieldTemplateProps, ObjectFieldTemplatePropertyType, RJSFSchema, StrictRJSFSchema, UiSchema, canExpand, descriptionId, getTemplate, getUiOptions, titleId,
 } from '@rjsf/utils';
-import Col from 'antd/lib/col';
-import Row from 'antd/lib/row';
-import { ConfigConsumer, ConfigConsumerProps } from 'antd/lib/config-provider/context';
+import { Col, Row, ConfigProvider, Grid } from 'antd';
 import Utils from './utils';
-import { Grid } from 'antd';
+
+const { ConfigContext: ConfigConsumer } = ConfigProvider;
+type ConfigConsumerProps = any; // ConfigConsumerProps is internal, using any for compatibility if not easily exported
 
 const DESCRIPTION_COL_STYLE = {
     paddingBottom: '8px',
@@ -148,7 +148,7 @@ export default function ObjectFieldTemplate<
                             {uiSchema?.['ui:grid'] && Array.isArray(uiSchema['ui:grid']) ?
                                 uiSchema['ui:grid'].map((ui_row) => {
                                     return Object.keys(ui_row).map((row_item) => {
-                                        let element = properties.find((p => p.name == row_item))
+                                        const element = properties.find((p => p.name == row_item))
                                         if (element) {
                                             return <Col key={element.name} span={ui_row[row_item] * spanMultiplier}>
                                                 {element.content}

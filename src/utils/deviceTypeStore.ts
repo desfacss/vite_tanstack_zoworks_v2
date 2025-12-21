@@ -5,7 +5,7 @@ export type OS = 'iOS' | 'Android' | 'Windows' | 'macOS' | 'Linux' | 'Other';
 
 const subscribers: ((deviceType: DeviceType) => void)[] = [];
 let currentDeviceType: DeviceType = detectDeviceType();
-let currentOS: OS = detectOS();
+const currentOS: OS = detectOS();
 
 function detectDeviceType(): DeviceType {
   const width = window.innerWidth;

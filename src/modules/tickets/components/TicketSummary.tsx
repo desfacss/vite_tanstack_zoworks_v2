@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Form, Input, Select, Button, Modal, message, Spin, Alert } from 'antd';
 import { supabase } from '@/lib/supabase';
-import moment from 'moment';
+import dayjs from 'dayjs';
 import { Plus } from 'lucide-react';
 import { useAuthStore } from '@/core/lib/store';
 
@@ -11,7 +11,8 @@ const { Option } = Select;
 
 interface DropdownOption {
   id: string;
-  name: string;
+  name?: string;
+  display_id?: string;
 }
 
 interface FormValues {
@@ -41,8 +42,8 @@ const SupportTicketForm: React.FC = () => {
   const [fieldTechnicians, setFieldTechnicians] = useState<DropdownOption[]>([]);
   const [isContactModalVisible, setIsContactModalVisible] = useState<boolean>(false);
   const [contactForm] = Form.useForm();
-  const qrInputRef = useRef<Input>(null);
-  const emailInputRef = useRef<Input>(null);
+  const qrInputRef = useRef<any>(null);
+  const emailInputRef = useRef<any>(null);
   const { organization } = useAuthStore();
   // Fetch dropdown options
   useEffect(() => {
@@ -221,7 +222,7 @@ const SupportTicketForm: React.FC = () => {
       const ticketData = {
         subject: values.subject,
         status: 'open',
-        reported_at: moment().toISOString(),
+        reported_at: dayjs().toISOString(),
         client_id: values.client_id,
         contact_id: values.contact_id,
         category_id: values.category_id,

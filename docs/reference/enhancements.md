@@ -16,4 +16,11 @@ This document tracks proposed enhancements for the application.
             *   Deep merge `session.location.app_settings` (Override) on top, if a location is active.
             *   Ensure proper handling of nested keys (e.g., `channels.email.defaults`).
         3.  **Refactor**: Replace all async calls to `idt_utils_get_merged_app_settings` with this synchronous helper function.
-    *   **Benefit**: Eliminates 1 RPC call per session load/refresh, resulting in faster UI rendering for settings-dependent components.
+
+## UI & Bundle Optimization
+
+- [x] **Moment.js Removal**: Successfully migrated all components to `dayjs` and removed `@ant-design/icons`. core bundle reduced by 55% (~190KB saved gzipped).
+- [ ] **Granular Lazy Loading for Heavy Widgets**:
+    *   **Plotly (4.8MB)**: Currently bundled in the main chunk via standard imports. Needs conversion to dynamic imports in `Dashboard.tsx` and `MetricChartWidget.tsx`.
+    *   **Leaflet**: Only needed for map views. Should be lazy-loaded in `MapViewComponent.tsx`.
+- [ ] **Static Asset Optimization**: Implement automatic WEBP conversion for entity images and optimize PWA icon sizes.

@@ -1,4 +1,4 @@
-export const serverErrorParsing = (errorMessage) => {
+export const serverErrorParsing = (errorMessage: string): string => {
     // Regex to match foreign key constraint errors
     const foreignKeyRegex = /update or delete on table "(.*?)" violates foreign key constraint ".*?" on table "(.*?)"/;
     const uuidRegex = /\b[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\b/;
@@ -6,7 +6,8 @@ export const serverErrorParsing = (errorMessage) => {
     // Check for foreign key constraint errors
     const match = errorMessage.match(foreignKeyRegex);
     if (match) {
-        let [_, parentTable, childTable] = match;
+        const [, parentTableRaw, childTable] = match;
+        let parentTable = parentTableRaw;
 
         // If parentTable ends with 's', remove the trailing 's'
         if (parentTable.endsWith('s')) {

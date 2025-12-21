@@ -11,7 +11,9 @@ type ViewType = 'today' | 'day' | 'week' | 'month';
 // Define config structure based on your dynamic setup
 interface CalendarViewConfig {
     fields?: { name?: string; start_date?: string; due_date?: string };
-    // ... other config fields you may need ...
+    calendarview?: {
+        fields?: { name?: string; start_date?: string; due_date?: string };
+    };
 }
 
 interface MobileCalendarViewProps {
@@ -26,7 +28,7 @@ const getNestedField = (obj: any, path: string) => {
 const MobileCalendarView: React.FC<MobileCalendarViewProps> = ({ data, viewConfig }) => {
     const [activeView, setActiveView] = useState<ViewType>('today');
     const [isMobile, setIsMobile] = useState<boolean>(false);
-    
+
     // --- Data Transformation (similar to your dynamic component) ---
     const events: Event[] = useMemo(() => {
         const fields = viewConfig?.calendarview?.fields || { name: 'name', start_date: 'event_start_at', due_date: 'event_end_at' };
@@ -38,7 +40,7 @@ const MobileCalendarView: React.FC<MobileCalendarViewProps> = ({ data, viewConfi
 
             let start: Date;
             let end: Date;
-            console.log("srrr",fields,startDateField,dueDateField);
+            console.log("srrr", fields, startDateField, dueDateField);
 
             if (startDateField && !dueDateField) {
                 const startDay = dayjs(startDateField);
@@ -60,7 +62,7 @@ const MobileCalendarView: React.FC<MobileCalendarViewProps> = ({ data, viewConfi
 
             return {
                 ...event, // Keep raw data
-                id: event.id, 
+                id: event.id,
                 title,
                 start,
                 end,
@@ -89,34 +91,34 @@ const MobileCalendarView: React.FC<MobileCalendarViewProps> = ({ data, viewConfi
         {
             key: 'today',
             label: 'Today',
-            icon: <ClockCircleOutlined />,
+            icon: <Clock size={16} />,
             children: <TodayView events={events} /> // Use transformed events
         },
         // ... (rest of the tabItems remain the same, passing 'events' to CalendarView)
         {
             key: 'day',
             label: 'Day',
-            icon: <EyeOutlined />,
+            icon: <Eye size={16} />,
             children: <CalendarView events={events} viewMode="day" isMobile={isMobile} />
         },
         {
-            key: 'week', 
+            key: 'week',
             label: isMobile ? '3 Days' : 'Week',
-            icon: <TableOutlined />,
+            icon: <Table size={16} />,
             children: <CalendarView events={events} viewMode="week" isMobile={isMobile} />
         },
         {
             key: 'month',
             label: 'Month',
-            icon: <CalendarOutlined />,
+            icon: <Calendar size={16} />,
             children: <CalendarView events={events} viewMode="month" isMobile={isMobile} />
         }
     ];
 
     return (
         <div className="h-screen bg-white">
-            <Card 
-                className="h-full !rounded-none border-0" 
+            <Card
+                className="h-full !rounded-none border-0"
                 bodyStyle={{ padding: 0, height: '100%' }}
             >
                 <Tabs
@@ -124,8 +126,8 @@ const MobileCalendarView: React.FC<MobileCalendarViewProps> = ({ data, viewConfi
                     onChange={(key) => setActiveView(key as ViewType)}
                     items={tabItems}
                     className="h-full"
-                    tabBarStyle={{ 
-                        margin: 0, 
+                    tabBarStyle={{
+                        margin: 0,
                         padding: '0 16px',
                         background: '#fafafa',
                         borderBottom: '1px solid #f0f0f0'

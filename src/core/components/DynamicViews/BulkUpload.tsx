@@ -18,7 +18,8 @@ import {
   Upload as UploadIcon,
   AlertTriangle,
 } from 'lucide-react';
-import { ColumnsType } from 'antd/lib/table';
+import type { TableProps } from 'antd';
+type ColumnsType<T> = TableProps<T>['columns'];
 import { SupabaseClient } from '@supabase/supabase-js';
 import Papa from 'papaparse';
 import dayjs from 'dayjs'; // 2. IMPORT dayjs
@@ -443,7 +444,7 @@ const BulkUpload: React.FC<BulkUploadProps> = ({ supabase }) => {
       (col) => col.is_displayable && col.is_template,
     );
 
-    const columns: ColumnsType<ParsedRow> = templateColumns.map((col) => {
+    const columns: any[] = templateColumns.map((col) => {
       return {
         title: (
           <Text style={{ color: col.is_mandatory ? 'red' : 'inherit' }}>
@@ -453,20 +454,20 @@ const BulkUpload: React.FC<BulkUploadProps> = ({ supabase }) => {
         ),
         dataIndex: col.key,
         key: col.key,
-        onCell: (record) => ({
+        onCell: (record: any) => ({
           record,
           dataIndex: col.key,
           metadata: col,
           foreignKeyOptions: foreignKeyOptions[col.key] || [],
           form: form, // Pass the form instance down
-        }),
+        } as any),
       };
     });
 
     columns.push({
       title: 'Errors',
       key: 'errors',
-      render: (_, record) => {
+      render: (_: any, record: ParsedRow) => {
         // Use form.getFieldValue to get the latest, potentially edited, values and errors
         const recordWithErrors = form.getFieldValue(record._key);
         if (recordWithErrors && recordWithErrors._errors?.length > 0) {

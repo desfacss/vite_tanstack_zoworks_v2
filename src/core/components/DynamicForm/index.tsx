@@ -103,7 +103,7 @@ const transformUiSchema = (uiSchema: any, dataSchemaProperties: string[]) => {
   const uiGrid = layout.flatMap((page: any[]) =>
     page.map((row: any) => {
       let fields: string[] = [];
-      let spans: { [key: string]: number } = {};
+      const spans: { [key: string]: number } = {};
 
       if (Array.isArray(row)) {
         fields = row;
@@ -255,7 +255,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ schemas, formData, updateId, 
           query = applyFilter(query, filter);
         });
 
-        let { data, error } = await query;
+        const { data, error } = await query;
 
         if (error) {
           console.error("Error fetching workflow stages from Supabase:", error);
@@ -342,7 +342,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ schemas, formData, updateId, 
           query = applyFilter(query, filter);
         });
 
-        let { data, error } = await query;
+        const { data, error } = await query;
 
         if (error) {
           console.error("Error fetching data from Supabase:", error);

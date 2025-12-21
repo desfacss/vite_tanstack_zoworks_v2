@@ -82,5 +82,24 @@ export async function register(
     component: () => import('./components/TicketEdit'),
   });
 
+  // 7. Register StatusTab for tickets (previously a static tab in DetailsView)
+  registry.registerTab({
+    id: 'status',
+    entityTypes: ['tickets'],
+    label: 'Status',
+    component: () => import('./components/StatusTab'),
+    order: 2,
+  });
+
+  // 8. Register Logs as a general static tab (replaces the static import in DetailsView)
+  // Note: This is a broader entity type list as Logs can apply to many entities
+  registry.registerTab({
+    id: 'logs-generic',
+    entityTypes: ['tickets', 'tasks', 'projects'],
+    label: 'Logs',
+    component: () => import('./components/Logs'),
+    order: 50,
+  });
+
   console.log('[Tickets] ✓ Module registered');
 }

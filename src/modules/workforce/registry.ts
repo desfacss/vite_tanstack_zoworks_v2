@@ -5,7 +5,7 @@
 
 import { registry } from '@/core/registry';
 import { registerModuleTranslations } from '@/core/i18n';
-import { WORKFORCE_MANIFEST } from './manifest';
+// WORKFORCE_MANIFEST is available for dependency checking if needed
 
 export interface WorkforceModuleConfig {
   sub_modules?: {
@@ -66,6 +66,18 @@ export async function register(
     label: 'workforce:tabs.activity',
     component: () => import('./components/AgentActivityReport'),
     order: 30,
+  });
+
+  // 6. Register Detail Components (for DetailOverview)
+  // These are used when viewConfig.details_overview.component matches the id
+  registry.registerDetailComponent({
+    id: 'expense_sheet',
+    component: () => import('./components/Expensesheet'),
+  });
+
+  registry.registerDetailComponent({
+    id: 'timesheet',
+    component: () => import('./components/Timesheet'),
   });
 
   console.log('[Workforce] ✓ Module registered');

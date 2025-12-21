@@ -1,14 +1,16 @@
 import React, { useState, useMemo } from 'react';
-import { Calendar, momentLocalizer, View, Views } from 'react-big-calendar';
-import moment from 'moment';
+import { Calendar, dayjsLocalizer, View, Views } from 'react-big-calendar';
+import dayjs from 'dayjs';
 import { Typography, Card, Button, Empty } from 'antd';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { Event } from '../types'; // Assuming this now holds the transformed event structure
+import { Event } from '../types';
+// Re-verifying types path in a moment if this fails 
+
 import EventList from './EventList';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 
 const { Title, Text } = Typography;
-const localizer = momentLocalizer(moment);
+const localizer = dayjsLocalizer(dayjs);
 
 interface CalendarViewProps {
   events: Event[];
@@ -37,7 +39,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, viewMode, isMobile 
   // Get events for selected date
   const selectedEvents = useMemo(() => {
     if (!selectedDate) return [];
-    const selectedDateStr = moment(selectedDate).format('YYYY-MM-DD');
+    const selectedDateStr = dayjs(selectedDate).format('YYYY-MM-DD');
     // Filter events based on the date field in the transformed Event object
     return events?.filter(event => event.date === selectedDateStr);
   }, [events, selectedDate]);
@@ -57,7 +59,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, viewMode, isMobile 
 
   const handleSelectEvent = ({ resource }: { resource: Event }) => {
     // The resource object here is the transformed Event, which has a 'date' string field
-    const eventDate = moment(resource.date).toDate();
+    const eventDate = dayjs(resource.date).toDate();
     setSelectedDate(eventDate);
     // Also update currentDate to navigate the calendar if needed (e.g., in month view)
     setCurrentDate(eventDate);
@@ -65,13 +67,13 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, viewMode, isMobile 
 
   // Helper function to check if a date has events
   const hasEventsOnDate = (date: Date) => {
-    const dateStr = moment(date).format('YYYY-MM-DD');
+    const dateStr = dayjs(date).format('YYYY-MM-DD');
     return events.some(event => event.date === dateStr);
   };
 
   // Get events count for a specific date
   const getEventsCountForDate = (date: Date) => {
-    const dateStr = moment(date).format('YYYY-MM-DD');
+    const dateStr = dayjs(date).format('YYYY-MM-DD');
     return events.filter(event => event.date === dateStr).length;
   };
 
@@ -87,13 +89,13 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, viewMode, isMobile 
     let startDay;
     if (viewMode === 'day') {
       // If in 'day' view, show the current date's week context
-      startDay = moment(currentDate).startOf('week');
+      startDay = dayjs(currentDate).startOf('week');
     } else if (isMobile && viewMode === 'week') {
       // In mobile '3-day' view, start from current date
-      return [currentDate, moment(currentDate).add(1, 'day').toDate(), moment(currentDate).add(2, 'day').toDate()];
+      return [currentDate, dayjs(currentDate).add(1, 'day').toDate(), dayjs(currentDate).add(2, 'day').toDate()];
     } else {
       // In full 'week' view, start of the week
-      startDay = moment(currentDate).startOf('week');
+      startDay = dayjs(currentDate).startOf('week');
     }
 
     const days = [];
@@ -101,7 +103,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, viewMode, isMobile 
     const numDaysToShow = (isMobile && viewMode === 'week') ? 3 : 7;
 
     for (let i = 0; i < numDaysToShow; i++) {
-      days.push(startDay.clone().add(i, 'day').toDate());
+      days.push(startDay.add(i, 'day').toDate());
     }
     return days;
   };
@@ -134,20 +136,20 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, viewMode, isMobile 
   const getViewTitle = () => {
     switch (viewMode) {
       case 'month':
-        return moment(currentDate).format('MMMM YYYY');
+        return dayjs(currentDate).format('MMMM YYYY');
       case 'week':
         if (isMobile) {
           // Show the 3-day range for mobile week view
           const days = getWeekDays();
           if (days.length === 3) {
-            return `${moment(days[0]).format('MMM D')} - ${moment(days[2]).format('MMM D, YYYY')}`;
+            return `${dayjs(days[0]).format('MMM D')} - ${dayjs(days[2]).format('MMM D, YYYY')}`;
           }
         }
-        const startOfWeek = moment(currentDate).startOf('week');
-        const endOfWeek = moment(currentDate).endOf('week');
+        const startOfWeek = dayjs(currentDate).startOf('week');
+        const endOfWeek = dayjs(currentDate).endOf('week');
         return `${startOfWeek.format('MMM D')} - ${endOfWeek.format('MMM D, YYYY')}`;
       case 'day':
-        return moment(currentDate).format('dddd, MMMM D, YYYY');
+        return dayjs(currentDate).format('dddd, MMMM D, YYYY');
       default:
         return '';
     }
@@ -155,22 +157,22 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, viewMode, isMobile 
 
   const navigateBack = () => {
     // Handle navigation based on the actual view in use
-    let unit: moment.unitOfTime.DurationConstructor;
+    let unit: dayjs.ManipulateType;
     if (viewMode === 'month') {
       unit = 'month';
     } else if (viewMode === 'week' && isMobile) {
       // Mobile week view navigates 3 days at a time
       unit = 'day';
-      const newDate = moment(currentDate).subtract(3, unit).toDate();
+      const newDate = dayjs(currentDate).subtract(3, unit).toDate();
       setCurrentDate(newDate);
       setSelectedDate(newDate);
       return;
     } else {
       // Desktop day/week views navigate one day/week at a time
-      unit = viewMode as moment.unitOfTime.DurationConstructor;
+      unit = viewMode as dayjs.ManipulateType;
     }
 
-    const newDate = moment(currentDate).subtract(1, unit).toDate();
+    const newDate = dayjs(currentDate).subtract(1, unit).toDate();
     setCurrentDate(newDate);
     // If not month view, update selectedDate to match the new start date
     if (viewMode !== 'month') {
@@ -180,22 +182,22 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, viewMode, isMobile 
 
   const navigateForward = () => {
     // Handle navigation based on the actual view in use
-    let unit: moment.unitOfTime.DurationConstructor;
+    let unit: dayjs.ManipulateType;
     if (viewMode === 'month') {
       unit = 'month';
     } else if (viewMode === 'week' && isMobile) {
       // Mobile week view navigates 3 days at a time
       unit = 'day';
-      const newDate = moment(currentDate).add(3, unit).toDate();
+      const newDate = dayjs(currentDate).add(3, unit).toDate();
       setCurrentDate(newDate);
       setSelectedDate(newDate);
       return;
     } else {
       // Desktop day/week views navigate one day/week at a time
-      unit = viewMode as moment.unitOfTime.DurationConstructor;
+      unit = viewMode as dayjs.ManipulateType;
     }
 
-    const newDate = moment(currentDate).add(1, unit).toDate();
+    const newDate = dayjs(currentDate).add(1, unit).toDate();
     setCurrentDate(newDate);
     // If not month view, update selectedDate to match the new start date
     if (viewMode !== 'month') {
@@ -254,8 +256,8 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, viewMode, isMobile 
         {showWeekHeader && (
           <div className="grid grid-cols-7 gap-1 mt-3">
             {getWeekDays().map((date, index) => {
-              const isSelected = selectedDate && moment(date).isSame(selectedDate, 'day');
-              const isToday = moment(date).isSame(moment(), 'day');
+              const isSelected = selectedDate && dayjs(date).isSame(selectedDate, 'day');
+              const isToday = dayjs(date).isSame(dayjs(), 'day');
               const hasEvents = hasEventsOnDate(date);
               const eventsCount = getEventsCountForDate(date);
 
@@ -280,13 +282,13 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, viewMode, isMobile 
                     className={`text-xs font-medium ${isSelected ? 'text-blue-600' : isToday ? 'text-blue-500' : 'text-gray-500'
                       }`}
                   >
-                    {moment(date).format('ddd')}
+                    {dayjs(date).format('ddd')}
                   </Text>
                   <Text
                     className={`text-lg font-semibold ${isSelected ? 'text-blue-600' : isToday ? 'text-blue-500' : 'text-gray-900'
                       }`}
                   >
-                    {moment(date).format('D')}
+                    {dayjs(date).format('D')}
                   </Text>
                   {/* Event indicator */}
                   <div className="flex items-center justify-center h-2 mt-1">
@@ -325,8 +327,8 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, viewMode, isMobile 
             <Calendar
               localizer={localizer}
               events={calendarEvents}
-              startAccessor="start"
-              endAccessor="end"
+              startAccessor={(e: any) => new Date(e.start)}
+              endAccessor={(e: any) => new Date(e.end)}
               style={{ height: 500 }}
               view={actualView as View}
               views={[Views.MONTH, Views.WEEK, Views.DAY]}
@@ -343,17 +345,17 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, viewMode, isMobile 
                 // ... (formats remain the same) ...
                 timeGutterFormat: 'HH:mm',
                 eventTimeRangeFormat: ({ start, end }) =>
-                  `${moment(start).format('HH:mm')} - ${moment(end).format('HH:mm')}`,
+                  `${dayjs(start).format('HH:mm')} - ${dayjs(end).format('HH:mm')}`,
                 dayFormat: 'ddd M/D',
                 dateFormat: 'D',
                 monthHeaderFormat: 'MMMM YYYY',
                 dayHeaderFormat: 'dddd, MMMM D',
                 dayRangeHeaderFormat: ({ start, end }) =>
-                  `${moment(start).format('MMM D')} - ${moment(end).format('MMM D, YYYY')}`,
+                  `${dayjs(start).format('MMM D')} - ${dayjs(end).format('MMM D, YYYY')}`,
                 agendaDateFormat: 'ddd MMM D',
                 agendaTimeFormat: 'HH:mm',
                 agendaTimeRangeFormat: ({ start, end }) =>
-                  `${moment(start).format('HH:mm')} - ${moment(end).format('HH:mm')}`,
+                  `${dayjs(start).format('HH:mm')} - ${dayjs(end).format('HH:mm')}`,
               }}
               step={30}
               timeslots={2}
@@ -370,7 +372,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, viewMode, isMobile 
         <div className="border-t bg-white">
           <div className="px-4 py-3 bg-gray-50">
             <Title level={5} className="!mb-0">
-              Events for {moment(currentDate).format('dddd, MMMM D, YYYY')}
+              Events for {dayjs(currentDate).format('dddd, MMMM D, YYYY')}
             </Title>
           </div>
           <div className="max-h-48 overflow-auto">
@@ -378,7 +380,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, viewMode, isMobile 
               <EventList events={selectedEvents} />
             ) : (
               <div className="px-4 py-8">
-                <Empty description="No events for this date" size="small" />
+                <Empty description="No events for this date" />
               </div>
             )}
           </div>

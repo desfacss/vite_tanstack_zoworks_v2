@@ -49,3 +49,14 @@ export interface ViewTypeDefinition {
     component: () => Promise<any>;
     requiredModules?: string[];    // e.g., gantt requires 'fsm' module
 }
+
+/**
+ * DetailComponentDefinition - For custom detail view components
+ * Used to render specialized views like Expensesheet, Timesheet, etc.
+ * Registered by modules and rendered by DetailOverview when viewConfig.details_overview.component matches
+ */
+export interface DetailComponentDefinition {
+    id: string;                    // e.g., 'expense_sheet', 'timesheet'
+    component: () => Promise<any>; // Dynamic import
+    props?: Record<string, any>;   // Default props
+}

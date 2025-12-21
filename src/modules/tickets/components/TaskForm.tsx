@@ -170,7 +170,7 @@ const TaskForm: React.FC<TaskFormProps> = ({ parentEditItem, entityType, editIte
   useEffect(() => {
     if (parentEditItem && entityType && !isEditMode) {
       let displayName = '';
-      let initialFields = {};
+      const initialFields = {};
       let inferredTaskType = null;
       let inferredTaskTypeId = null;
 

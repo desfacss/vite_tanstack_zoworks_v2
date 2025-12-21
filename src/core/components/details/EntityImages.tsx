@@ -3,7 +3,7 @@ import { message, Spin, Image, Tooltip, Button, Modal, Row, Col } from 'antd';
 import { File, Trash2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/core/lib/store';
-import moment from 'moment';
+import dayjs from 'dayjs';
 import ImageUploader from '@/core/components/shared/ImageUploader';
 
 interface FileObject {
@@ -264,7 +264,7 @@ const EntityImages: React.FC<EntityImagesProps> = ({ entity_type, entity_id }) =
                     </div>
                     <div>
                       <p>
-                        {!!fileSet?.created_by_name && <strong>{fileSet?.created_by_name}</strong>} ({moment(fileSet?.files[0]?.created_at).format('YYYY-MM-DD HH:mm:ss')})
+                        {!!fileSet?.created_by_name && <strong>{fileSet?.created_by_name}</strong>} ({dayjs(fileSet?.files[0]?.created_at).format('YYYY-MM-DD HH:mm:ss')})
                       </p>
                       {!!fileSet?.files[0]?.description && (
                         <p>

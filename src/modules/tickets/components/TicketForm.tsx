@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Form, Input, Select, Button, message, Spin, Modal, Space, DatePicker, Row, Col } from 'antd';
+import { Form, Input, Select, Button, message, Spin, Modal, DatePicker, Row, Col } from 'antd';
 import { useAuthStore } from '@/core/lib/store';
 import { supabase } from '@/lib/supabase';
 import ImageUploader from '@/core/components/shared/ImageUploader';
@@ -62,7 +62,7 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket_id, asset_id, onSuccess 
   const [clients, setClients] = useState<{ id: string; name: string }[]>([]);
   const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
   const [contracts, setContracts] = useState<{ id: string; display_id: string }[]>([]);
-  const [allUsers, setAllUsers] = useState<{ id: string; name: string }[]>([]);
+  const [, setAllUsers] = useState<{ id: string; name: string }[]>([]);
   const [technicianUsers, setTechnicianUsers] = useState<{ id: string; name: string }[]>([]);
   const [nonTechnicianUsers, setNonTechnicianUsers] = useState<{ id: string; name: string }[]>([]);
   const [assets, setAssets] = useState<{ id: string; display_id: string }[]>([]);
@@ -172,8 +172,8 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket_id, asset_id, onSuccess 
         if (userError) throw new Error(`Failed to fetch organization users: ${userError.message}`);
 
         // --- 3. Get all User Names in one efficient call ---
-        let technicianUsersList: { id: string; name: string }[] = [];
-        let nonTechnicianUsersList: { id: string; name: string }[] = [];
+        const technicianUsersList: { id: string; name: string }[] = [];
+        const nonTechnicianUsersList: { id: string; name: string }[] = [];
 
         if (orgUsersData) {
           const userIds = orgUsersData.map(ou => ou.user_id);
@@ -497,7 +497,7 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket_id, asset_id, onSuccess 
           phone: values.phone || null,
           account_id: clientId,
           organization_id: organization.id,
-          location_id: location.id,
+          location_id: location?.id ?? null,
           is_primary: false,
           details: {},
         })
@@ -627,11 +627,8 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket_id, asset_id, onSuccess 
     }
   };
 
-  // =================================================================================
-  // RENDER METHOD
-  // =================================================================================
-  const asset = assets?.find(e => e?.id === asset_id);
-  const title = `Create Ticket for ${asset?.display_id || asset?.id || 'Ticket'}`;
+  // RENDER METHOD\n  // =================================================================================\n  // Asset title could be used for display if needed:\n  // const asset = assets?.find(e => e?.id === asset_id);\n  // const title = `Create Ticket for ${asset?.display_id || asset?.id || 'Ticket'}`;
+
 
   return (
     <Spin spinning={loading}>
@@ -649,7 +646,7 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket_id, asset_id, onSuccess 
               showSearch
               onChange={handleClientChange}
               filterOption={(input, option) =>
-                option?.children?.toLowerCase().includes(input.toLowerCase())
+                String(option?.children ?? '').toLowerCase().includes(input.toLowerCase())
               }
             >
               {clients.map((client) => (
@@ -667,7 +664,7 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket_id, asset_id, onSuccess 
                 showSearch
                 onChange={handleAssetChange}
                 filterOption={(input, option) =>
-                  option?.children?.toLowerCase().includes(input.toLowerCase())
+                  String(option?.children ?? '').toLowerCase().includes(input.toLowerCase())
                 }
               >
                 {assets.map((asset) => (
@@ -701,7 +698,7 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket_id, asset_id, onSuccess 
                   showSearch
                   disabled={!form.getFieldValue('account_id')}
                   filterOption={(input, option) =>
-                    option?.children?.toLowerCase().includes(input.toLowerCase())
+                    String(option?.children ?? '').toLowerCase().includes(input.toLowerCase())
                   }
                 >
                   {contacts.map((contact) => (
@@ -740,7 +737,7 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket_id, asset_id, onSuccess 
                 placeholder="Select a location"
                 showSearch
                 filterOption={(input, option) =>
-                  option?.children?.toLowerCase().includes(input.toLowerCase())
+                  String(option?.children ?? '').toLowerCase().includes(input.toLowerCase())
                 }
               >
                 {locations.map((loc) => (
@@ -757,7 +754,7 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket_id, asset_id, onSuccess 
               disabled={(isAssetProvided || form.getFieldValue('asset_id')) && !isEditMode}
               showSearch
               filterOption={(input, option) =>
-                option?.children?.toLowerCase().includes(input.toLowerCase())
+                String(option?.children ?? '').toLowerCase().includes(input.toLowerCase())
               }
             >
               {categories.map((category) => (
@@ -774,7 +771,7 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket_id, asset_id, onSuccess 
               showSearch
               allowClear
               filterOption={(input, option) =>
-                option?.children?.toLowerCase().includes(input.toLowerCase())
+                String(option?.children ?? '').toLowerCase().includes(input.toLowerCase())
               }
             >
               {contracts.map((contract) => (
@@ -795,7 +792,7 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket_id, asset_id, onSuccess 
                       allowClear
                       showSearch
                       filterOption={(input, option) =>
-                        option?.children?.toLowerCase().includes(input.toLowerCase())
+                        String(option?.children ?? '').toLowerCase().includes(input.toLowerCase())
                       }
                     >
                       {nonTechnicianUsers?.map((user) => (
@@ -827,7 +824,7 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket_id, asset_id, onSuccess 
                   placeholder="Select priority"
                   showSearch
                   filterOption={(input, option) =>
-                    option?.children?.toLowerCase().includes(input.toLowerCase())
+                    String(option?.children ?? '').toLowerCase().includes(input.toLowerCase())
                   }
                 >
                   {priorities?.map((priority) => (
@@ -867,7 +864,7 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket_id, asset_id, onSuccess 
                       allowClear
                       showSearch
                       filterOption={(input, option) =>
-                        option?.children?.toLowerCase().includes(input.toLowerCase())
+                        String(option?.children ?? '').toLowerCase().includes(input.toLowerCase())
                       }
                     >
                       {technicianUsers?.map((user) => (

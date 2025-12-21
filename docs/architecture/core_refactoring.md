@@ -23,13 +23,41 @@ Build an **AI-native, hyper-configurable SaaS platform** that can instantiate an
 
 ### Design Principles
 
-| Principle | Description |
-|-----------|-------------|
-| **Zero Waste Loading** | Load only what the tenant needs - never ship unused code |
-| **Subdomain-Driven Configuration** | Subdomain determines tenant, modules, theme, language |
-| **Feature Composition** | Build any SOR from composable capability modules |
-| **AI-First Data Model** | Schema designed for AI agents to read, write, and reason |
-| **Progressive Enhancement** | Works with minimal config, enhances with more |
+| Principle | Description | Enforcement |
+|-----------|-------------|-------------|
+| **Zero Waste Loading** | Load only what the tenant needs - never ship unused code | Dynamic imports |
+| **Subdomain-Driven Configuration** | Subdomain determines tenant, modules, theme, language | `TenantResolver.ts` |
+| **Feature Composition** | Build any SOR from composable capability modules | Module manifests |
+| **AI-First Data Model** | Schema designed for AI agents to read, write, and reason | Supabase RLS |
+| **Progressive Enhancement** | Works with minimal config, enhances with more | Default fallbacks |
+| **Core Independence** | `src/core/` has ZERO imports from `src/modules/` | ESLint `no-restricted-imports` (ERROR) |
+| **Registry Pattern** | Modules register capabilities; core discovers at runtime | `src/core/registry/` |
+| **Hooks at Top** | All React hooks must be declared before any early returns | ESLint `rules-of-hooks` (WARN) |
+
+#### ESLint Protection (Added Dec 21, 2025)
+
+The architecture is **enforced by ESLint** to prevent regressions:
+
+```javascript
+// eslint.config.js - Core protection rule
+{
+  files: ['src/core/**/*.{ts,tsx}'],
+  rules: {
+    'no-restricted-imports': ['error', {
+      patterns: [{
+        group: ['@/modules/*', '**/modules/**'],
+        message: '🚫 ARCHITECTURE VIOLATION: Core must not import from modules.'
+      }]
+    }]
+  }
+}
+```
+
+If a developer tries to import from modules in core, ESLint will **fail the build** with:
+```
+🚫 ARCHITECTURE VIOLATION: Core must not import from modules. 
+Use the registry pattern instead.
+```
 
 ---
 

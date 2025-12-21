@@ -45,6 +45,7 @@ export const Settings: React.FC<SettingsProps> = ({ open, onClose }) => {
   const themeConfig = getTenantThemeConfig();
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState<string | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<{ light?: string; dark?: string }>({});
 
   const publitio = useMemo(() => new PublitioAPI('xr7tJHfDaqk5ov18TkJX', 'aApiZqz6Di1eacmemfof14xwN63lyJHG'), []);
 
@@ -244,6 +245,7 @@ export const Settings: React.FC<SettingsProps> = ({ open, onClose }) => {
 
   const handleLogoUpload = async (file: File, mode: 'light' | 'dark') => {
     setUploading(mode);
+    setSelectedFiles(prev => ({ ...prev, [mode]: file.name }));
     try {
       const result = await publitio.uploadFile(file, 'file', { title: `logo-${mode}-${organization?.id}` });
       if (result.success === false) throw new Error(result.error?.message || 'Upload failed');
@@ -254,9 +256,11 @@ export const Settings: React.FC<SettingsProps> = ({ open, onClose }) => {
       // Trigger theme update
       handleValuesChange(null, form.getFieldsValue());
       message.success(`${mode} logo uploaded successfully!`);
+      setSelectedFiles(prev => ({ ...prev, [mode]: undefined })); // Clear after success
     } catch (err: any) {
       console.error('Logo upload error:', err);
       message.error(`Failed to upload ${mode} logo: ${err.message}`);
+      setSelectedFiles(prev => ({ ...prev, [mode]: undefined })); // Clear on error
     } finally {
       setUploading(null);
     }
@@ -376,23 +380,30 @@ export const Settings: React.FC<SettingsProps> = ({ open, onClose }) => {
                           <ColorPicker showText className="w-full" />
                         </Form.Item>
                         <Form.Item name="light_logoUrl" label={t('settings.logo')}>
-                          <Space.Compact className="w-full">
-                            <Input placeholder="https://..." prefix={<ImageIcon size={14} />} />
-                            <input
-                              type="file"
-                              id="light-logo-upload"
-                              hidden
-                              accept="image/*"
-                              onChange={(e) => e.target.files?.[0] && handleLogoUpload(e.target.files[0], 'light')}
-                            />
-                            <Button
-                              icon={<UploadIcon size={14} />}
-                              loading={uploading === 'light'}
-                              onClick={() => document.getElementById('light-logo-upload')?.click()}
-                            >
-                              Upload
-                            </Button>
-                          </Space.Compact>
+                          <div className="space-y-2">
+                            <Space.Compact className="w-full">
+                              <Input placeholder="https://..." prefix={<ImageIcon size={14} />} className="flex-1" />
+                              <input
+                                type="file"
+                                id="light-logo-upload"
+                                hidden
+                                accept="image/*"
+                                onChange={(e) => e.target.files?.[0] && handleLogoUpload(e.target.files[0], 'light')}
+                              />
+                              <Button
+                                icon={<UploadIcon size={14} />}
+                                loading={uploading === 'light'}
+                                onClick={() => document.getElementById('light-logo-upload')?.click()}
+                              >
+                                Upload
+                              </Button>
+                            </Space.Compact>
+                            {selectedFiles.light && (
+                              <Text type="secondary" className="text-xs block">
+                                📎 Uploading: {selectedFiles.light}
+                              </Text>
+                            )}
+                          </div>
                         </Form.Item>
                       </div>
                     )
@@ -418,23 +429,30 @@ export const Settings: React.FC<SettingsProps> = ({ open, onClose }) => {
                           <ColorPicker showText className="w-full" />
                         </Form.Item>
                         <Form.Item name="dark_logoUrl" label={t('settings.logo')}>
-                          <Space.Compact className="w-full">
-                            <Input placeholder="https://..." prefix={<ImageIcon size={14} />} />
-                            <input
-                              type="file"
-                              id="dark-logo-upload"
-                              hidden
-                              accept="image/*"
-                              onChange={(e) => e.target.files?.[0] && handleLogoUpload(e.target.files[0], 'dark')}
-                            />
-                            <Button
-                              icon={<UploadIcon size={14} />}
-                              loading={uploading === 'dark'}
-                              onClick={() => document.getElementById('dark-logo-upload')?.click()}
-                            >
-                              Upload
-                            </Button>
-                          </Space.Compact>
+                          <div className="space-y-2">
+                            <Space.Compact className="w-full">
+                              <Input placeholder="https://..." prefix={<ImageIcon size={14} />} className="flex-1" />
+                              <input
+                                type="file"
+                                id="dark-logo-upload"
+                                hidden
+                                accept="image/*"
+                                onChange={(e) => e.target.files?.[0] && handleLogoUpload(e.target.files[0], 'dark')}
+                              />
+                              <Button
+                                icon={<UploadIcon size={14} />}
+                                loading={uploading === 'dark'}
+                                onClick={() => document.getElementById('dark-logo-upload')?.click()}
+                              >
+                                Upload
+                              </Button>
+                            </Space.Compact>
+                            {selectedFiles.dark && (
+                              <Text type="secondary" className="text-xs block">
+                                📎 Uploading: {selectedFiles.dark}
+                              </Text>
+                            )}
+                          </div>
                         </Form.Item>
                       </div>
                     )

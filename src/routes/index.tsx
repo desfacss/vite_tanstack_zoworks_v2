@@ -23,6 +23,7 @@ const WebRegister = lazy(() => import('../pages/auth/WebRegister'));
 
 // Protected pages
 const Dashboard = lazy(() => import('../pages/Dashboard'));
+const WelcomeHub = lazy(() => import('../core/components/Layout/WelcomeHub'));
 const SamplePage = lazy(() => import('../pages/SamplePage'));
 const Contacts = lazy(() => import('@/modules/crm/pages/Contacts'));
 const Profile = lazy(() => import('../pages/core/Profile'));
@@ -33,6 +34,11 @@ const generateNavItems = (t: (key: string) => string) => {
     // For mini-project, we return a static set of nav items
     // In the full app, this would be dynamically generated based on permissions
     const items = [
+        {
+            key: '/welcome',
+            label: 'Home',
+            path: '/welcome',
+        },
         {
             key: '/dashboard',
             label: t('nav.dashboard') || 'Dashboard',
@@ -94,7 +100,10 @@ export const AppRoutes: React.FC = () => {
 
                     {/* Protected pages with AuthedLayout */}
                     <Route element={<AuthedLayoutProvider><AuthedLayout /></AuthedLayoutProvider>}>
-                        <Route index element={<Navigate to="/dashboard" replace />} />
+                        <Route index element={<Navigate to="/welcome" replace />} />
+
+                        {/* Welcome Hub - Landing page */}
+                        <Route path="/welcome" element={<WelcomeHub />} />
 
                         {/* Dashboard */}
                         <Route path="/dashboard" element={<Dashboard />} />

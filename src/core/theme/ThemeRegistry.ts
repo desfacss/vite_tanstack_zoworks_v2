@@ -269,8 +269,22 @@ export function getTenantBrandName(): string {
 
 /**
  * Get tenant logo URL based on current mode
+ * Returns undefined for invalid URLs (e.g., c:\fakepath\)
  */
 export function getTenantLogoUrl(isDarkMode: boolean = false): string | undefined {
     const modeConfig = isDarkMode ? tenantConfig?.dark : tenantConfig?.light;
-    return modeConfig?.logoUrl || tenantConfig?.logoUrl;
+    const logoUrl = modeConfig?.logoUrl || tenantConfig?.logoUrl;
+
+    // Validate the URL - filter out invalid paths like "c:\fakepath\"
+    if (!logoUrl) return undefined;
+    if (logoUrl.toLowerCase().includes('fakepath')) {
+        console.warn('[Theme] Invalid logo URL detected (contains fakepath):', logoUrl);
+        return undefined;
+    }
+    if (!logoUrl.startsWith('http://') && !logoUrl.startsWith('https://') && !logoUrl.startsWith('/')) {
+        console.warn('[Theme] Invalid logo URL detected (not a valid URL):', logoUrl);
+        return undefined;
+    }
+
+    return logoUrl;
 }

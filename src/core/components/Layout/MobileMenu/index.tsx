@@ -1,8 +1,13 @@
 import React, { useState } from 'react';
-import { Drawer, Menu } from 'antd';
+import { Drawer, Menu, Typography } from 'antd';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import type { MenuProps } from 'antd';
+import type { ItemType } from 'antd/es/menu/interface';
+import { useAuthStore, useThemeStore } from '@/core/lib/store';
+import { getTenantLogoUrl, getTenantBrandName } from '@/core/theme/ThemeRegistry';
+
+const { Text } = Typography;
 
 interface MobileMenuProps {
   open: boolean;
@@ -18,49 +23,90 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
   const location = useLocation();
   const navigate = useNavigate();
   const { t } = useTranslation();
-  
+  const { user, organization } = useAuthStore();
+  const { isDarkMode } = useThemeStore();
+
+  // Get branding
+  const logoUrl = getTenantLogoUrl(isDarkMode);
+  const brandName = getTenantBrandName();
+
   // State to track the currently open submenu keys
   const [openKeys, setOpenKeys] = useState<string[]>([]);
 
   // Function to handle open/close of submenus
   const onOpenChange = (keys: string[]) => {
-    // Check if the new open key is a new submenu (not the one being closed)
     const latestOpenKey = keys.find(key => openKeys.indexOf(key) === -1);
-    
-    // If a new key is found and it corresponds to a root item, set it as the only open key
+
     if (latestOpenKey) {
       setOpenKeys([latestOpenKey]);
     } else {
-      // If a submenu is being closed, clear all open keys
       setOpenKeys([]);
     }
   };
 
   // Transform navigationItems to ensure proper rendering
-  const transformedItems = navigationItems?.map(item => {
+  const transformedItems: ItemType[] | undefined = navigationItems?.map((item: any) => {
     if (item?.children && item.children.length > 0) {
       return {
         ...item,
-        label: item.label, // Use label as the collapsible title
-        key: item.key, // Use the parent key for the collapsible section
-        children: item.children.map(child => ({
+        label: item.label,
+        key: item.key || '',
+        children: item.children.map((child: any) => ({
           ...child,
           label: child.label,
-          key: child.key,
+          key: child.key || '',
         })),
       };
     }
     return item;
-  });
+  }) as ItemType[];
+
+  // Get user's display name from store
+  const userName = user?.name || 'User';
 
   return (
     <Drawer
-      title={t('common.menu')}
       placement="left"
       onClose={onClose}
       open={open}
-      styles={{ body: { padding: 0, backgroundColor: '#fff' } }}
+      styles={{
+        body: { padding: 0, backgroundColor: 'var(--color-background)' },
+        header: { display: 'none' }
+      }}
     >
+      {/* Custom Header with Logo and Welcome Message */}
+      <div className="p-4 border-b border-[var(--color-border)]">
+        {/* Logo */}
+        <div className="flex items-center gap-3 mb-3">
+          {logoUrl ? (
+            <img
+              src={logoUrl}
+              alt={brandName}
+              className="h-8 w-auto max-w-full object-contain"
+            />
+          ) : (
+            <h1 className="text-xl font-bold text-[var(--color-primary)] m-0">
+              {brandName}
+            </h1>
+          )}
+        </div>
+
+        {/* Welcome Message */}
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-full bg-[var(--color-primary)] flex items-center justify-center text-white text-sm font-medium">
+            {userName.charAt(0).toUpperCase()}
+          </div>
+          <div>
+            <Text className="block text-xs text-gray-500">{t('common.welcome')}</Text>
+            <Text strong className="block text-sm">{userName}</Text>
+            {organization?.name && (
+              <Text className="block text-xs text-gray-400">{organization.name}</Text>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Navigation Menu */}
       <Menu
         mode="inline"
         selectedKeys={[location.pathname]}
@@ -69,9 +115,8 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
           navigate(key);
           onClose();
         }}
-        className="custom-mobile-menu"
-        style={{ backgroundColor: '#fff', color: '#000' }}
-        // Add openKeys and onOpenChange to control submenu expansion
+        className="custom-mobile-menu border-none"
+        style={{ backgroundColor: 'var(--color-background)' }}
         openKeys={openKeys}
         onOpenChange={onOpenChange}
       />

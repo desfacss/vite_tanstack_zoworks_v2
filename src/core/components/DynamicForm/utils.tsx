@@ -6,7 +6,7 @@ class Utils {
 	 * @return {String} 2 characters string
 	 */
 	static getNameInitial(name) {
-		let initials = name.match(/\b\w/g) || [];
+		const initials = name.match(/\b\w/g) || [];
 		return ((initials.shift() || '') + (initials.pop() || '')).toUpperCase();
 	}
 
@@ -21,7 +21,7 @@ class Utils {
 		  	return navTree;
 		}
 		let route; 
-		for (let p in navTree) {
+		for (const p in navTree) {
 			if( navTree.hasOwnProperty(p) && typeof navTree[p] === 'object' ) {
 				route = this.getRouteInfo(navTree[p], path);
 				if(route){
@@ -181,7 +181,7 @@ class Utils {
 	 */
 	static wildCardSearch(list, input) {
 		const searchText = (item) => {
-			for (let key in item) {
+			for (const key in item) {
 				if (item[key] == null) {
 					continue;
 				}
@@ -200,7 +200,7 @@ class Utils {
 	 * @return {Array} array of breakpoint size
 	 */
 	static getBreakPoint(screens) {
-		let breakpoints = []
+		const breakpoints = []
 		for (const key in screens) {
 			if (screens.hasOwnProperty(key)) {
 				const element = screens[key];

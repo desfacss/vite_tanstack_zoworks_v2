@@ -56,10 +56,15 @@ docs/
 - **Lazy-loaded modules** based on tenant configuration
 
 ### Core Design Principles
-1. **Core Must Be Self-Contained** - No imports from domain modules
-2. **Plugin Architecture** - Modules register via registries
-3. **Tenant-Aware Everything** - All data/config is tenant-scoped
-4. **Lazy Loading** - Only load what the tenant needs
+
+| Principle | Description | Enforcement |
+|-----------|-------------|-------------|
+| **Core Must Be Self-Contained** | No imports from domain modules allowed in `src/core/` | ESLint `no-restricted-imports` |
+| **Plugin Architecture** | Modules register via registries (actions, tabs, view types) | Registry pattern |
+| **Tenant-Aware Everything** | All data/config is tenant-scoped via subdomain | Tenant Resolver |
+| **Lazy Loading** | Only load what the tenant needs (modules, i18n) | Dynamic imports |
+| **Registry Pattern** | Components discover capabilities at runtime | Central registry |
+| **Hooks at Top** | All React hooks must be declared before any early returns | ESLint `rules-of-hooks` |
 
 ### Key Files to Know
 | File | Purpose |
@@ -99,17 +104,20 @@ docs/
 
 ## 📊 Current Status
 
-**Last Updated**: 2025-12-21
+**Last Updated**: 2025-12-21 (Evening)
 
 | Area | Status | Notes |
 |------|--------|-------|
-| Core Architecture | ✅ Complete | Modular registry-based design |
+| Core Architecture | ✅ Complete | Registry-based, zero module imports |
 | Multi-Tenant Auth | ✅ Complete | Subdomain-based routing |
-| Module System | ✅ Complete | 14 modules created |
-| Production Deploy | ⏳ Pending | Vercel configuration ready |
-| Legacy Cleanup | 🟡 Partial | Some files still in `src/components/` |
+| Module System | ✅ Complete | 14 modules with manifest/i18n/help |
+| Core Independence | ✅ Complete | DetailOverview, DetailsView decoupled |
+| Bundle Analysis | ✅ Complete | ~350KB gzipped (Balanced for stability) |
+| Production Deploy | ⏳ Pending | Vercel wildcard configuration |
+| Legacy Cleanup | ✅ Complete | getUserPermissions deprecated, v7→v8 done |
 
-**See**: [Progress Log](./logs/PROGRESS.md) for detailed status.
+**See**: [Architecture Status Report](./architecture_status_report_dec_2025.md) for details.
+**See**: [Verification Checklist](./architecture/verification-checklist.md) for module compliance.
 
 ---
 

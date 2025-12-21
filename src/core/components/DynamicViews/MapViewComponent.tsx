@@ -217,14 +217,8 @@ const MapViewComponent: React.FC<MapViewProps> = ({
   const [geofences, setGeofences] = useState<Record<string, LatLng[]>>({});
   const mapRef = useRef<L.Map | null>(null);
 
-  // Validate mapview configuration
-  if (
-    !viewConfig?.mapview ||
-    (typeof viewConfig.mapview === 'object' && Object.keys(viewConfig.mapview).length === 0)
-  ) {
-    message.error('Map View in y_view_config is not defined');
-    return <div>No map view configuration found for {entityType}</div>;
-  }
+  // NOTE: Validation moved to after all hooks to comply with rules-of-hooks
+  const hasValidMapConfig = viewConfig?.mapview && Object.keys(viewConfig.mapview).length > 0;
 
   const mapViewConfig = viewConfig?.mapview;
   const geofenceField = mapViewConfig?.locationFields?.geofence?.field || 'geofence';
@@ -255,11 +249,11 @@ const MapViewComponent: React.FC<MapViewProps> = ({
   // Custom marker icon
   const customIcon = markerIcon
     ? new L.Icon({
-        iconUrl: markerIcon,
-        iconSize: [25, 41],
-        iconAnchor: [12, 41],
-        popupAnchor: [1, -34],
-      })
+      iconUrl: markerIcon,
+      iconSize: [25, 41],
+      iconAnchor: [12, 41],
+      popupAnchor: [1, -34],
+    })
     : undefined;
 
   // All fields sorted by order
@@ -276,7 +270,7 @@ const MapViewComponent: React.FC<MapViewProps> = ({
 
   // Render field content
   const renderField = (record: any, fieldConfig: FieldConfig) => {
-    let value = fieldConfig.fieldPath
+    const value = fieldConfig.fieldPath
       .split('.')
       .reduce((obj, key) => obj?.[key], record);
     const { style = {}, webLink, mapSection } = fieldConfig;
@@ -445,7 +439,7 @@ const MapViewComponent: React.FC<MapViewProps> = ({
         label: action.name === 'add_' ? 'Add Item' : action.name,
         type: 'primary' as const,
         icon: undefined,
-        onClick: () => {},
+        onClick: () => { },
       })) || []
     );
   }, [mapViewConfig?.actions.bulk]);
@@ -454,12 +448,18 @@ const MapViewComponent: React.FC<MapViewProps> = ({
     setConfig((prev) => ({ ...prev, actionButtons }));
   }, [setConfig, actionButtons]);
 
+  // Early return for loading
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
         <Spin size="large" />
       </div>
     );
+  }
+
+  // Early return for invalid config (after all hooks)
+  if (!hasValidMapConfig) {
+    return <div>No map view configuration found for {entityType}</div>;
   }
 
   return (

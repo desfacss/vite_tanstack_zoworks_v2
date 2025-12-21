@@ -8,8 +8,9 @@ import RowActions from '../DynamicViews/RowActions';
 import TaskReportPage from '@/core/components/common/doc/ServiceReportDrawer';
 import DocView from './DocView';
 import ApprovalActionButtons from './ApprovalActionButtons';
-import Expensesheet from '@/modules/workforce/components/Expensesheet';
-import Timesheet from '@/modules/workforce/components/Timesheet';
+// NOTE: Expensesheet and Timesheet are now registered via workforce module registry
+// and loaded dynamically through registry.getDetailComponent()
+import { registry } from '@/core/registry';
 import { useAuthStore } from '@/core/lib/store';
 
 const { Text, Title } = Typography;
@@ -135,6 +136,36 @@ const getCardTitleText = (data: Record<string, any>): string => {
   }
 
   return ' - - ';
+};
+
+/**
+ * DetailComponentRenderer - Dynamically renders components registered in the registry
+ * Used for module-specific detail views like Expensesheet, Timesheet
+ */
+const DetailComponentRenderer: React.FC<{ componentId: string; data: Record<string, any> }> = ({ componentId, data }) => {
+  const [Component, setComponent] = useState<React.ComponentType<any> | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadComponent = async () => {
+      const componentDef = registry.getDetailComponent(componentId);
+      if (componentDef) {
+        try {
+          const module = await componentDef.component();
+          setComponent(() => module.default || module);
+        } catch (err) {
+          console.error(`Failed to load detail component: ${componentId}`, err);
+        }
+      }
+      setLoading(false);
+    };
+    loadComponent();
+  }, [componentId]);
+
+  if (loading) return <Spin size="small" />;
+  if (!Component) return null;
+
+  return <Component editItem={data} viewMode={true} onFinish={async () => { }} />;
 };
 
 
@@ -612,18 +643,10 @@ const DetailOverview: React.FC<DetailOverviewProps> = ({
         createdAt={currentData.created_at}
       />
       {viewConfig?.details_overview?.component === 'expense_sheet' && (
-        <Expensesheet
-          editItem={currentData}
-          viewMode={true}
-          onFinish={async () => { }}
-        />
+        <DetailComponentRenderer componentId="expense_sheet" data={currentData} />
       )}
       {viewConfig?.details_overview?.component === 'timesheet' && (
-        <Timesheet
-          editItem={currentData}
-          viewMode={true}
-          onFinish={async () => { }}
-        />
+        <DetailComponentRenderer componentId="timesheet" data={currentData} />
       )}
       {viewConfig?.general?.features?.qr_form && (
         <div className="pb-4">

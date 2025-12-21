@@ -6,6 +6,7 @@ export interface Location {
   organization_id: string;
   details: Record<string, any>;
   is_active: boolean;
+  is_default?: boolean;
   created_at: string;
   updated_at: string;
   created_by: string;

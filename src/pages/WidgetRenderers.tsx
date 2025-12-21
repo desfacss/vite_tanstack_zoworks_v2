@@ -2120,7 +2120,7 @@ export const BaseChart: React.FC<{
 
     // GLOBAL LAYOUT CONFIG
     // STRICT: automargin disabled to prevent loops
-    let layout: any = {
+    const layout: any = {
       autosize: true,
       margin: { l: 50, r: 20, t: 30, b: 50, pad: 4 },
       showlegend: true,
@@ -2287,7 +2287,7 @@ export const BaseChart: React.FC<{
       } else {
         traces = yAxes.map((yKey, i) => {
           let traceType = 'scatter';
-          let mode = 'lines+markers';
+          let mode: string | undefined = 'lines+markers';
           let fill = undefined;
 
           if (type === 'bar' || type === 'stacked_bar') {

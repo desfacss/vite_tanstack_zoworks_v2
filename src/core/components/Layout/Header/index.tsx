@@ -1396,10 +1396,10 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { ProfileMenu } from '../ProfileMenu';
 import { useAuthedLayoutConfig } from '../AuthedLayoutContext';
-import { useAuthStore, useThemeStore } from '@/core/lib/store';
+import { useAuthStore } from '@/core/lib/store';
 import { supabase } from '@/lib/supabase';
 import type { Organization, Location } from '@/lib/types';
-import { getTenantLogoUrl, getTenantBrandName } from '@/core/theme/ThemeRegistry';
+// Logo is now only displayed in Sider, not Header
 
 const { Header: AntHeader } = Layout;
 
@@ -1439,9 +1439,6 @@ export const Header: React.FC<HeaderProps> = ({
   const { config, setShowSettings: setGlobalShowSettings } = useAuthedLayoutConfig();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { isDarkMode } = useThemeStore();
-  const logoUrl = getTenantLogoUrl(isDarkMode);
-  const brandName = getTenantBrandName();
 
   const {
     user,
@@ -1588,20 +1585,10 @@ export const Header: React.FC<HeaderProps> = ({
         <div className="flex items-center gap-4 shrink-0 overflow-hidden">
           <Button type="text" icon={<Menu size={24} />} onClick={() => (isMobile ? setShowMobileMenu(true) : setCollapsed(!collapsed))} />
 
-          <div className="flex items-center gap-2 overflow-hidden">
-            {logoUrl ? (
-              <img src={logoUrl} alt={brandName} className="h-7 w-auto object-contain shrink-0" />
-            ) : (
-              <span className="text-lg font-bold text-[var(--color-primary)] shrink-0">{brandName}</span>
-            )}
-
-            {!isMobile && pageTitle && (
-              <>
-                <div className="w-1 h-1 rounded-full bg-gray-300 mx-1 shrink-0" />
-                <span className="text-lg font-semibold whitespace-nowrap truncate">{pageTitle}</span>
-              </>
-            )}
-          </div>
+          {/* Page Title Only - Logo is in Sider */}
+          {!isMobile && pageTitle && (
+            <span className="text-lg font-semibold whitespace-nowrap truncate">{pageTitle}</span>
+          )}
         </div>
 
         {/* Right Side Actions */}

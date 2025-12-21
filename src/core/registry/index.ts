@@ -3,7 +3,8 @@ import {
     ModuleDefinition,
     ActionDefinition,
     TabDefinition,
-    ViewTypeDefinition
+    ViewTypeDefinition,
+    DetailComponentDefinition
 } from './types';
 
 class AppRegistry {
@@ -11,6 +12,7 @@ class AppRegistry {
     private actions: Map<string, ActionDefinition[]> = new Map();
     private tabs: Map<string, TabDefinition[]> = new Map();
     private viewTypes: Map<string, ViewTypeDefinition> = new Map();
+    private detailComponents: Map<string, DetailComponentDefinition> = new Map();
 
     // Module registration
     registerModule(module: ModuleDefinition) {
@@ -50,6 +52,15 @@ class AppRegistry {
     // View Type registration
     registerViewType(viewType: ViewTypeDefinition) {
         this.viewTypes.set(viewType.id, viewType);
+    }
+
+    // Detail Component registration (for Expensesheet, Timesheet, etc.)
+    registerDetailComponent(component: DetailComponentDefinition) {
+        this.detailComponents.set(component.id, component);
+    }
+
+    getDetailComponent(id: string): DetailComponentDefinition | undefined {
+        return this.detailComponents.get(id);
     }
 
     // Get actions for an entity (called by DynamicViews)
