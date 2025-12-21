@@ -1,8 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '../../../lib/store';
-import viewConfigs from '../../../schemas/viewConfig';
-import entityConfigs from '../../../schemas/config';
+import viewConfigs from '@/schemas/viewConfig';
+import entityConfigs from '@/schemas/config';
 
 interface Config {
   available_views?: string[] | null;

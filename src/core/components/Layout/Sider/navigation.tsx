@@ -33,7 +33,7 @@ import {
 } from 'lucide-react';
 import type { MenuProps } from 'antd';
 import type { TFunction } from 'i18next';
-import menuConfig from '../../../config/menuConfig.json';
+import menuConfig from '@/config/menuConfig.json';
 
 // Icon mapping based on logical association
 const iconMap: Record<string, React.ReactNode> = {

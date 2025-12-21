@@ -4,7 +4,7 @@
 // import Plotly from 'plotly.js-dist-min';
 // import { supabase } from '@/lib/supabase';
 // import { useAuthStore } from '@/lib/store';
-// import { snakeToTitleCase } from '../common/utils/casing';
+// import { snakeToTitleCase } from '@/components/common/utils/casing';
 // import dayjs from 'dayjs';
 
 // // Define types for widget configuration
@@ -328,7 +328,7 @@ import { Card, Statistic, message, Spin, Typography, Select, Col } from 'antd';
 import Plotly from 'plotly.js-dist-min';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
-import { snakeToTitleCase } from '../common/utils/casing';
+import { snakeToTitleCase } from '@/components/common/utils/casing';
 import dayjs from 'dayjs';
 
 export interface MetricWidgetConfig {

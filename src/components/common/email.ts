@@ -1,1 +1,1 @@
-export { sendEmail } from '@/core/components/shared/email';
+export { sendEmail, generateEmailData } from '@/core/components/shared/email';

@@ -50,10 +50,10 @@
 // // // // //   const { user, organization, location, setOrganization, setLocation, viewPreferences, setViewPreferences, setIsSwitchingOrg } = useAuthStore();
 // // // // //   const queryClient = useQueryClient();
 // // // // //   const [showSearch, setShowSearch] = useState(false);
-  
+
 // // // // //   // New state to hold the RPC result
 // // // // //   const [userOrgLocations, setUserOrgLocations] = useState<UserOrgLocationData[]>([]);
-  
+
 // // // // //   const [loadingOrgLocs, setLoadingOrgLocs] = useState(false);
 
 // // // // //   /**
@@ -83,7 +83,7 @@
 // // // // //         if (orgLocs.length > 0) {
 // // // // //           // --- Set Initial Organization in Store ---
 // // // // //           let initialOrgData = orgLocs[0];
-          
+
 // // // // //           // Try to find the currently stored organization in the new list (for persistence)
 // // // // //           if (organization?.id) {
 // // // // //              const existingOrg = orgLocs.find(o => o.organization_id === organization.id);
@@ -91,7 +91,7 @@
 // // // // //                  initialOrgData = existingOrg;
 // // // // //              }
 // // // // //           }
-          
+
 // // // // //           // Set the organization in the Zustand store
 // // // // //           setOrganization({ id: initialOrgData.organization_id, name: initialOrgData.organization_name } as Organization);
 
@@ -179,7 +179,7 @@
 
 // // // // //     if (selectedOrgData && user?.id) {
 // // // // //       console.log(`>>> [Header] Switching to organization: ${selectedOrgData.organization_name} (${orgId})`);
-      
+
 // // // // //       setIsSwitchingOrg(true);
 // // // // //       message.loading({ content: `Switching to ${selectedOrgData.organization_name}...`, key: 'orgSwitch' });
 
@@ -289,7 +289,7 @@
 // // // // //               disabled={loadingOrgLocs || currentLocations.length === 0}
 // // // // //             />
 // // // // //           )}
-          
+
 // // // // //           {isMobile && config.searchFilters && (
 // // // // //             <Button
 // // // // //               type="text"
@@ -383,10 +383,10 @@
 // // // //   const { user, organization, location, setOrganization, setLocation, viewPreferences, setViewPreferences, setIsSwitchingOrg } = useAuthStore();
 // // // //   const queryClient = useQueryClient();
 // // // //   const [showSearch, setShowSearch] = useState(false);
-  
+
 // // // //   // New state to hold the RPC result
 // // // //   const [userOrgLocations, setUserOrgLocations] = useState<UserOrgLocationData[]>([]);
-  
+
 // // // //   const [loadingOrgLocs, setLoadingOrgLocs] = useState(false);
 
 // // // //   /**
@@ -405,7 +405,7 @@
 // // // //       try {
 // // // //         // Call the RPC. No arguments are needed as it uses auth.uid()
 // // // //         const { data, error } = await supabase.schema('identity').rpc('get_my_organizations_v2');
-        
+
 // // // //         if (error) {
 // // // //           console.error('[Header] Error calling get_my_organizations RPC:', error);
 // // // //           // Handle error (e.g., show a notification)
@@ -476,14 +476,14 @@
 
 // // // //     if (selectedOrgData && user?.id) {
 // // // //       console.log(`[Header] Switching to organization: ${selectedOrgData.organization_name} (${orgId})`);
-      
+
 // // // //       setIsSwitchingOrg(true);
 // // // //       message.loading({ content: `Switching to ${selectedOrgData.organization_name}...`, key: 'orgSwitch' });
 
 // // // //       // Immediately update the store for a responsive UI.
 // // // //       // CRITICAL: This updates the store's organization.id, which useUserSession will read during the next fetch.
 // // // //       setOrganization({ id: selectedOrgData.organization_id, name: selectedOrgData.organization_name } as Organization);
-      
+
 // // // //       const newLocations = selectedOrgData.locations;
 // // // //       if (newLocations.length > 0) {
 // // // //         const stickyLocationId = viewPreferences[user.id]?.lastLocationByOrg?.[orgId];
@@ -589,7 +589,7 @@
 // // // //               disabled={loadingOrgLocs || currentLocations.length === 0}
 // // // //             />
 // // // //           )}
-          
+
 // // // //           {isMobile && config.searchFilters && (
 // // // //             <Button
 // // // //               type="text"
@@ -676,7 +676,7 @@
 // // // }) => {
 // // //   const { t } = useTranslation();
 // // //   const { config } = useAuthedLayoutConfig();
-  
+
 // // //   // Store Access
 // // //   const { 
 // // //     user, 
@@ -691,7 +691,7 @@
 
 // // //   const queryClient = useQueryClient();
 // // //   const [showSearch, setShowSearch] = useState(false);
-  
+
 // // //   // Local state for the Dropdown Options only
 // // //   const [userOrgLocations, setUserOrgLocations] = useState<UserOrgLocationData[]>([]);
 // // //   const [loadingOrgLocs, setLoadingOrgLocs] = useState(false);
@@ -706,7 +706,7 @@
 // // //       setLoadingOrgLocs(true);
 // // //       try {
 // // //         const { data, error } = await supabase.schema('identity').rpc('get_my_organizations_v2');
-        
+
 // // //         if (error) {
 // // //           console.error('[Header] Error fetching org options:', error);
 // // //           return;
@@ -731,7 +731,7 @@
 // // //     if (selectedOrgData && user?.id) {
 // // //       console.group(`%c[Flow] Organization Switch Initiated`, 'color: #1890ff; font-weight: bold;');
 // // //       console.log(`[Flow] Step 1: User selected "${selectedOrgData.organization_name}" (${orgId})`);
-      
+
 // // //       setIsSwitchingOrg(true);
 // // //       message.loading({ content: `Switching to ${selectedOrgData.organization_name}...`, key: 'orgSwitch' });
 
@@ -750,11 +750,11 @@
 // // //       if (newLocations.length > 0) {
 // // //         const stickyLocationId = viewPreferences[user.id]?.lastLocationByOrg?.[orgId];
 // // //         const stickyLocation = newLocations.find(l => l.location_id === stickyLocationId);
-        
+
 // // //         const locData = stickyLocation || newLocations[0];
 // // //         targetLocation = { id: locData.location_id, name: locData.location_name } as Location;
 // // //       }
-      
+
 // // //       setLocation(targetLocation);
 // // //       console.log(`[Flow] Step 2b: Set Location to ${targetLocation?.name || 'None'}`);
 
@@ -772,7 +772,7 @@
 // // //         // This causes 'useUserSession' to run. It will see the new ID in the Store and fetch the correct permissions.
 // // //         console.log(`[Flow] Step 4: Invalidating 'user-session' query to trigger fetch...`);
 // // //         await queryClient.invalidateQueries({ queryKey: ['user-session'] });
-        
+
 // // //         message.success({ content: `Switched to ${selectedOrgData.organization_name}`, key: 'orgSwitch', duration: 2 });
 
 // // //       } catch (error) {
@@ -787,17 +787,17 @@
 
 // // //   const handleLocationChange = (locId: string) => {
 // // //     if (!organization?.id) return;
-    
+
 // // //     // Find the location name from our local list
 // // //     const currentOrgLocs = userOrgLocations.find(o => o.organization_id === organization.id)?.locations || [];
 // // //     const selectedLoc = currentOrgLocs.find(loc => loc.location_id === locId);
 
 // // //     if (selectedLoc && user) {
 // // //       console.log(`[Header] Switching location to: ${selectedLoc.location_name}`);
-      
+
 // // //       // 1. Update Store
 // // //       setLocation({ id: selectedLoc.location_id, name: selectedLoc.location_name } as Location);
-      
+
 // // //       // 2. Persist Preference (Local View Prefs)
 // // //       setViewPreferences(user.id, 'global', {
 // // //         lastLocationByOrg: {
@@ -856,7 +856,7 @@
 // // //           )}
 // // //         </div>
 // // //         <Space size={isMobile ? "small" : "middle"} className="flex items-center">
-          
+
 // // //           {/* Organization Select */}
 // // //           {!isMobile && organizationOptions.length > 1 && (
 // // //             <Select
@@ -882,7 +882,7 @@
 // // //               disabled={loadingOrgLocs || currentLocations.length === 0}
 // // //             />
 // // //           )}
-          
+
 // // //           {isMobile && config.searchFilters && (
 // // //             <Button
 // // //               type="text"
@@ -967,7 +967,7 @@
 // // }) => {
 // //   const { t } = useTranslation();
 // //   const { config } = useAuthedLayoutConfig();
-  
+
 // //   // Store Access
 // //   const { 
 // //     user, 
@@ -982,7 +982,7 @@
 
 // //   const queryClient = useQueryClient();
 // //   const [showSearch, setShowSearch] = useState(false);
-  
+
 // //   // Local state for the Dropdown Options only
 // //   const [userOrgLocations, setUserOrgLocations] = useState<UserOrgLocationData[]>([]);
 // //   const [loadingOrgLocs, setLoadingOrgLocs] = useState(false);
@@ -995,7 +995,7 @@
 // //       setLoadingOrgLocs(true);
 // //       try {
 // //         const { data, error } = await supabase.schema('identity').rpc('get_my_organizations_v2');
-        
+
 // //         if (error) {
 // //           console.error('[Header] Error fetching org options:', error);
 // //           return;
@@ -1019,7 +1019,7 @@
 
 // //     if (selectedOrgData && user?.id) {
 // //       console.group(`%c[Flow] Organization Switch Initiated`, 'color: #1890ff; font-weight: bold;');
-      
+
 // //       setIsSwitchingOrg(true);
 // //       message.loading({ content: `Switching to ${selectedOrgData.organization_name}...`, key: 'orgSwitch' });
 
@@ -1069,7 +1069,7 @@
 // //       try {
 // //         console.log(`[Flow] Step 3: Invalidating 'user-session' to trigger permission fetch...`);
 // //         await queryClient.invalidateQueries({ queryKey: ['user-session'] });
-        
+
 // //         message.success({ content: `Switched to ${selectedOrgData.organization_name}`, key: 'orgSwitch', duration: 2 });
 // //       } catch (error) {
 // //         console.error("[Flow] Critical Error: Failed to refresh session.", error);
@@ -1083,7 +1083,7 @@
 
 // //   const handleLocationChange = (locId: string) => {
 // //     if (!organization?.id) return;
-    
+
 // //     const currentOrgLocs = userOrgLocations.find(o => o.organization_id === organization.id)?.locations || [];
 // //     const selectedLoc = currentOrgLocs.find(loc => loc.location_id === locId);
 
@@ -1146,7 +1146,7 @@
 // //           )}
 // //         </div>
 // //         <Space size={isMobile ? "small" : "middle"} className="flex items-center">
-          
+
 // //           {!isMobile && organizationOptions.length > 1 && (
 // //             <Select
 // //               placeholder={t('common.select_organization')}
@@ -1170,7 +1170,7 @@
 // //               disabled={loadingOrgLocs || currentLocations.length === 0}
 // //             />
 // //           )}
-          
+
 // //           {isMobile && config.searchFilters && (
 // //             <Button
 // //               type="text"
@@ -1253,7 +1253,7 @@
 // }) => {
 //   const { t } = useTranslation();
 //   const { config } = useAuthedLayoutConfig();
-  
+
 //   const { 
 //     user, 
 //     organization, 
@@ -1292,7 +1292,7 @@
 
 //     if (selectedOrgData && user?.id) {
 //       console.group(`%c[Flow] Organization Switch Initiated`, 'color: #1890ff; font-weight: bold;');
-      
+
 //       setIsSwitchingOrg(true);
 //       message.loading({ content: `Switching to ${selectedOrgData.organization_name}...`, key: 'orgSwitch' });
 
@@ -1328,7 +1328,7 @@
 //         // USE RESET INSTEAD OF INVALIDATE
 //         // This clears the old "zoworks" cache so it doesn't flash back
 //         await queryClient.resetQueries({ queryKey: ['user-session'] });
-        
+
 //         message.success({ content: `Switched to ${selectedOrgData.organization_name}`, key: 'orgSwitch', duration: 2 });
 //       } catch (error) {
 //         console.error("[Flow] Critical Error:", error);
@@ -1444,16 +1444,16 @@ export const Header: React.FC<HeaderProps> = ({
   const { t } = useTranslation();
   const { config } = useAuthedLayoutConfig();
   const navigate = useNavigate();
-  
-  const { 
-    user, 
-    organization, 
-    location, 
-    setOrganization, 
-    setLocation, 
-    viewPreferences, 
-    setViewPreferences, 
-    setIsSwitchingOrg 
+
+  const {
+    user,
+    organization,
+    location,
+    setOrganization,
+    setLocation,
+    viewPreferences,
+    setViewPreferences,
+    setIsSwitchingOrg
   } = useAuthStore();
 
   const [showSearch, setShowSearch] = useState(false);
@@ -1484,9 +1484,9 @@ export const Header: React.FC<HeaderProps> = ({
       const currentOrgData = userOrgLocations.find(o => o.organization_id === organization.id);
       if (currentOrgData?.default_location_id) {
         console.log(`[Header] No location selected. Setting default location: ${currentOrgData.default_location_name} (${currentOrgData.default_location_id})`);
-        setLocation({ 
-          id: currentOrgData.default_location_id, 
-          name: currentOrgData.default_location_name || 'Default' 
+        setLocation({
+          id: currentOrgData.default_location_id,
+          name: currentOrgData.default_location_name || 'Default'
         } as Location);
       }
     }
@@ -1498,51 +1498,48 @@ export const Header: React.FC<HeaderProps> = ({
 
     if (selectedOrgData && user?.id) {
       console.group(`%c[Flow] Switch to ${selectedOrgData.organization_name}`, 'color: #1890ff');
-      
+
       setIsSwitchingOrg(true);
-      message.loading({ content: `Switching...`, key: 'orgSwitch' });
 
-      // STEP 1: UPDATE STORE
-      // Triggers SessionManager -> useUserSession(key=['user-session', newID])
-      setOrganization({ 
-        id: selectedOrgData.organization_id, 
-        name: selectedOrgData.organization_name 
-      } as Organization);
-
-      // STEP 2: RESET ROUTE
-      navigate('/dashboard');
-
-      // Handle Location
-      const newLocations = selectedOrgData.locations;
-      let targetLocation: Location | null = null;
-      if (newLocations.length > 0) {
-        const stickyId = viewPreferences[user.id]?.lastLocationByOrg?.[orgId];
-        const stickyLoc = newLocations.find(l => l.location_id === stickyId);
-        const locData = stickyLoc || newLocations[0];
-        targetLocation = { id: locData.location_id, name: locData.location_name } as Location;
-      }
-      setLocation(targetLocation);
-
-      // STEP 3: PERSISTENCE (Database + Auth Metadata)
       try {
-        // A. Update your custom database table (Identity Schema)
-        const { error: rpcError } = await supabase.schema('identity').rpc('set_preferred_organization', { new_org_id: orgId });
-        if (rpcError) throw rpcError;
+        // STEP 1: UPDATE STORE
+        // Triggers SessionManager -> useUserSession(key=['user-session', newID])
+        setOrganization({
+          id: selectedOrgData.organization_id,
+          name: selectedOrgData.organization_name
+        } as Organization);
 
-        // B. Update Supabase Auth Metadata (So the NEXT login JWT has the correct org_id)
-        // This fixes the logout/login issue.
-        const { error: authError } = await supabase.auth.updateUser({ 
-          data: { org_id: orgId } 
+        // STEP 2: RESET ROUTE
+        navigate('/dashboard');
+
+        // Handle Location
+        const newLocations = selectedOrgData.locations;
+        let targetLocation: Location | null = null;
+        if (newLocations.length > 0) {
+          const stickyId = viewPreferences[user.id]?.lastLocationByOrg?.[orgId];
+          const stickyLoc = newLocations.find(l => l.location_id === stickyId);
+          const locData = stickyLoc || newLocations[0];
+          targetLocation = { id: locData.location_id, name: locData.location_name } as Location;
+        }
+        setLocation(targetLocation);
+
+        // STEP 3: PERSISTENCE (Database + Auth Metadata)
+        const { error: rpcError } = await supabase.schema('identity').rpc('set_preferred_organization', { new_org_id: orgId });
+        if (rpcError) console.warn("[Flow] RPC warning:", rpcError);
+
+        const { error: authError } = await supabase.auth.updateUser({
+          data: { org_id: orgId }
         });
-        if (authError) throw authError;
+        if (authError) console.warn("[Flow] Auth update warning:", authError);
 
         console.log("[Flow] Preference synced to DB and Auth Metadata.");
       } catch (err) {
-        console.warn("[Flow] Persistence warning:", err);
+        console.error("[Flow] Organization switch error:", err);
+      } finally {
+        // ALWAYS clear the switching state
+        setIsSwitchingOrg(false);
+        console.groupEnd();
       }
-
-      message.success({ content: `Switched to ${selectedOrgData.organization_name}`, key: 'orgSwitch', duration: 2 });
-      console.groupEnd();
     }
   };
 
@@ -1561,8 +1558,8 @@ export const Header: React.FC<HeaderProps> = ({
 
   // Helpers
   const organizationOptions = useMemo(() => userOrgLocations.map(org => ({
-      value: org.organization_id,
-      label: (<div><span className='font-medium'>{org.organization_name}</span><br/><span className='text-xs text-gray-500'>{org.roles?.join(', ')}</span></div>)
+    value: org.organization_id,
+    label: (<div><span className='font-medium'>{org.organization_name}</span><br /><span className='text-xs text-gray-500'>{org.roles?.join(', ')}</span></div>)
   })), [userOrgLocations]);
 
   const currentLocations = useMemo(() => {
@@ -1585,39 +1582,39 @@ export const Header: React.FC<HeaderProps> = ({
           <Button type="text" icon={<MenuIcon size={24} />} onClick={() => (isMobile ? setShowMobileMenu(true) : setCollapsed(!collapsed))} />
           {pageTitle && <span className="text-lg font-semibold whitespace-nowrap">{pageTitle}</span>}
         </div>
-        
+
         {/* Right Side Actions */}
         <Space size={isMobile ? "small" : "middle"} className="ml-auto">
-          
+
           {/* Organization Select - VISIBLE ON MOBILE NOW */}
           {organizationOptions.length > 1 && (
-            <Select 
-              placeholder={t('common.select_organization')} 
-              value={organization?.id} 
-              onChange={handleOrganizationChange} 
-              loading={loadingOrgLocs} 
+            <Select
+              placeholder={t('common.select_organization')}
+              value={organization?.id}
+              onChange={handleOrganizationChange}
+              loading={loadingOrgLocs}
               style={{ width: isMobile ? 140 : 200 }} // Responsive Width
-              options={organizationOptions} 
-              disabled={loadingOrgLocs} 
+              options={organizationOptions}
+              disabled={loadingOrgLocs}
             />
           )}
 
           {/* Location Select - VISIBLE ON MOBILE NOW */}
           {currentLocations.length > 1 && (
-            <Select 
-              placeholder={t('common.select_location')} 
-              value={location?.id} 
-              onChange={handleLocationChange} 
-              loading={loadingOrgLocs} 
+            <Select
+              placeholder={t('common.select_location')}
+              value={location?.id}
+              onChange={handleLocationChange}
+              loading={loadingOrgLocs}
               style={{ width: isMobile ? 140 : 200 }} // Responsive Width
-              options={currentLocations} 
-              disabled={loadingOrgLocs} 
+              options={currentLocations}
+              disabled={loadingOrgLocs}
             />
           )}
-          
+
           {isMobile && config.searchFilters && <Button type="text" icon={<Search size={24} />} onClick={() => setShowSearch(true)} />}
           {!isMobile && <Button type="text" icon={<SettingsIcon size={24} />} onClick={() => setShowSettings(true)} />}
-          <ProfileMenu isMobile={isMobile}/>
+          <ProfileMenu isMobile={isMobile} />
         </Space>
       </div>
       {isMobile && <Drawer title={t('common.search')} onClose={() => setShowSearch(false)} open={showSearch} width={320}>{config.searchFilters}</Drawer>}

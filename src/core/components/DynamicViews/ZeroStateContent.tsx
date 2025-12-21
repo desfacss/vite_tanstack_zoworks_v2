@@ -1,7 +1,7 @@
 import { Empty, Button, Typography, Space, Card, Divider, Row, Col } from 'antd';
 import { FilterOutlined, FileTextOutlined } from '@ant-design/icons';
 import React, { useMemo, useEffect, useRef, useState } from 'react';
-import { snakeToTitleCase } from '../common/utils/casing';
+import { snakeToTitleCase } from '@/components/common/utils/casing';
 
 // --- External Libraries ---
 import ReactMarkdown from 'react-markdown';

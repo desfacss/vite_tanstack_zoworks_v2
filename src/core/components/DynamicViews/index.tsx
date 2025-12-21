@@ -22,13 +22,13 @@
 // import GlobalFilters from './GlobalFilters';
 // import { useViewConfigEnhanced } from './hooks/useEntityConfig';
 // import ImportExportComponent from './ImportExport';
-// import { snakeToTitleCase } from '../common/utils/casing';
+// import { snakeToTitleCase } from '@/components/common/utils/casing';
 // import MetricsView from './MetricsView';
-// import DetailOverview from '../common/details/DetailOverview';
+// import DetailOverview from '@/components/common/details/DetailOverview';
 // import { useLocation } from 'react-router-dom';
-// import { isLocationPartition } from '../common/utils/partitionPermissions';
+// import { isLocationPartition } from '@/components/common/utils/partitionPermissions';
 // import { useNestedContext } from '../../lib/NestedContext';
-// import { useDeviceType } from '../../utils/deviceTypeStore';
+// import { useDeviceType } from '@/utils/deviceTypeStore';
 // import { ZeroStateContent } from './ZeroStateContent';
 
 // /**
@@ -728,13 +728,13 @@ import GlobalActions from './GlobalActions';
 import GlobalFilters from './GlobalFilters';
 import { useViewConfigEnhanced } from './hooks/useEntityConfig';
 import ImportExportComponent from './ImportExport';
-import { snakeToTitleCase } from '../common/utils/casing';
+import { snakeToTitleCase } from '@/components/common/utils/casing';
 import MetricsView from './MetricsView';
-import DetailOverview from '../common/details/DetailOverview';
+import DetailOverview from '@/components/common/details/DetailOverview';
 import { useLocation } from 'react-router-dom';
-import { isLocationPartition } from '../common/utils/partitionPermissions';
+import { isLocationPartition } from '@/components/common/utils/partitionPermissions';
 import { useNestedContext } from '../../lib/NestedContext';
-import { useDeviceType } from '../../utils/deviceTypeStore';
+import { useDeviceType } from '@/utils/deviceTypeStore';
 import { ZeroStateContent } from './ZeroStateContent';
 
 /**

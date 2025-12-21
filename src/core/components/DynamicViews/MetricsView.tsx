@@ -4,7 +4,7 @@ import { Card, Row, Col, Select, Statistic, message, Drawer, Button, Typography,
 import { DashboardOutlined, ReloadOutlined } from '@ant-design/icons';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
-import { snakeToTitleCase } from '../common/utils/casing';
+import { snakeToTitleCase } from '@/components/common/utils/casing';
 import dayjs from 'dayjs';
 
 interface MetricsViewProps {

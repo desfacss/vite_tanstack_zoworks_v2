@@ -4,7 +4,7 @@ import { Card, Row, Col, Select, message, Button, Typography, Space, Spin, Modal
 import { ReloadOutlined, SaveOutlined } from '@ant-design/icons';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
-import { snakeToTitleCase } from '../common/utils/casing';
+import { snakeToTitleCase } from '@/components/common/utils/casing';
 import dayjs from 'dayjs';
 
 import MetricChartWidget, { MetricWidgetConfig } from './MetricChartWidget';

@@ -5,13 +5,13 @@ import { Edit2, Trash2, Eye, Copy, MoreHorizontal } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
-import DynamicForm from '../common/DynamicForm';
+import DynamicForm from '../DynamicForm';
 import DetailsView from '../details/DetailsView';
 import { useFormConfig } from '../DynamicViews/hooks/useFormConfig';
 import { useNestedContext } from '@/core/lib/NestedContext';
 import { ActionSheet } from 'antd-mobile';
 import { useLocation } from 'react-router-dom';
-import { isLocationPartition } from '../common/utils/partitionPermissions';
+import { isLocationPartition } from '@/components/common/utils/partitionPermissions';
 import { registry } from '@/core/registry';
 
 // Legacy Component Map for backward compatibility

@@ -5,7 +5,7 @@
 // import { UploadOutlined, ExportOutlined, FilePdfOutlined, EllipsisOutlined, QrcodeOutlined } from '@ant-design/icons';
 // import { useAuthStore } from '../../lib/store';
 // import { useReactToPrint } from 'react-to-print';
-// import QRCard from '../common/details/QRCard';
+// import QRCard from '@/components/common/details/QRCard';
 
 // // Define columns to exclude from export
 // const EXCLUDED_EXPORT_COLUMNS = ['id', 'created_by', 'updated_by'];
@@ -555,7 +555,7 @@ import { message, Button, Upload, Typography, Space, Tooltip, Dropdown, MenuProp
 import { UploadOutlined, ExportOutlined, FilePdfOutlined, EllipsisOutlined, QrcodeOutlined } from '@ant-design/icons';
 import { useAuthStore } from '../../lib/store';
 import { useReactToPrint } from 'react-to-print';
-import QRCard from '../common/details/QRCard';
+import QRCard from '@/components/common/details/QRCard';
 
 // Define columns to exclude from export
 const EXCLUDED_EXPORT_COLUMNS = ['id', 'created_by', 'updated_by', 'created_at', 'updated_at', 'geofence', 'lat', 'lng', 'notes', 'is_active', 'x_client_type', 'parent_account_id'];

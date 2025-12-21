@@ -7,12 +7,12 @@ import { supabase } from "@/core/lib/supabase";
 import { useAuthStore } from "@/core/lib/store";
 import { useViewConfigEnhanced } from "./hooks/useEntityConfig";
 import { useFormConfig } from "./hooks/useFormConfig";
-import DynamicForm from "../common/DynamicForm";
-import { isLocationPartition } from "../common/utils/partitionPermissions";
+import DynamicForm from "../DynamicForm";
+import { isLocationPartition } from "@/components/common/utils/partitionPermissions";
 import { useLocation } from "react-router-dom";
 import { useNestedContext } from "../../lib/NestedContext";
-import { useDeviceType } from "../../utils/deviceTypeStore";
-import { trackAndSaveLocation } from "../utils/locationTracker";
+import { useDeviceType } from "@/utils/deviceTypeStore";
+import { trackAndSaveLocation } from "@/components/utils/locationTracker";
 import { registry } from "@/core/registry";
 
 interface GlobalAction {

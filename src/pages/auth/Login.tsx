@@ -557,17 +557,23 @@ const Login = () => {
         console.log('>>> [LoginPage] Login API Success.');
         message.success('Login successful!');
 
-        // Fetch user's organizations to determine next step
-        const { data: sessionData, error: sessionError } = await supabase
+        // Step 1: Fetch user's organizations list (no org param required)
+        const { data: orgsData, error: orgsError } = await supabase
           .schema('identity')
-          .rpc('jwt_get_user_session');
+          .rpc('get_my_organizations');
 
-        if (sessionError) {
-          console.error('[Login] Failed to fetch session data:', sessionError);
-          throw sessionError;
+        if (orgsError) {
+          console.error('[Login] Failed to fetch organizations:', orgsError);
+          throw orgsError;
         }
 
-        const userOrgs: UserOrganization[] = sessionData?.organizations || [];
+        const userOrgs: UserOrganization[] = (orgsData || []).map((org: any) => ({
+          id: org.organization_id,
+          name: org.organization_name,
+          subdomain: org.subdomain || org.organization_name?.toLowerCase().replace(/\s+/g, '-'),
+          logo_url: org.logo_url,
+        }));
+
         console.log(`[Login] User has ${userOrgs.length} organizations`);
 
         if (userOrgs.length === 0) {

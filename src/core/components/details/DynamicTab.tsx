@@ -1,5 +1,5 @@
 // // import React from 'react';
-// // import DynamicViews from '../../DynamicViews';
+// // import DynamicViews from '../DynamicViews';
 // // // import DynamicViews from '../DynamicViews';
 
 // // interface DynamicTabProps {
@@ -45,7 +45,7 @@
 // // src/components/common/details/DynamicTab.tsx
 
 // import React from 'react';
-// import DynamicViews from '../../DynamicViews';
+// import DynamicViews from '../DynamicViews';
 
 // interface DynamicTabProps {
 //   entityType: string;
@@ -74,7 +74,7 @@
 // src/components/common/details/DynamicTab.tsx
 
 import React from 'react';
-import DynamicViews from '../../DynamicViews';
+import DynamicViews from '../DynamicViews';
 
 /**
  * @interface DynamicTabProps

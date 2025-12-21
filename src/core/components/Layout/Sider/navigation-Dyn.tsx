@@ -3,7 +3,7 @@ import React from 'react';
 import { Home, Users, Building2, CreditCard, FileText, Settings, Briefcase } from 'lucide-react';
 import type { MenuProps } from 'antd';
 import type { TFunction } from 'i18next';
-import menuConfig from '../../../config/menuConfig.json';
+import menuConfig from '@/config/menuConfig.json';
 
 // Icon mapping
 const iconMap: Record<string, React.ReactNode> = {
@@ -88,7 +88,7 @@ console.log("permissions - menuConfig",permissions,menuConfig);
 // import React from 'react';
 // import { FileText } from 'lucide-react';
 // import type { MenuProps } from 'antd';
-// import menuConfig from '../../../config/menuConfig.json';
+// import menuConfig from '@/config/menuConfig.json';
 
 // // Dynamically import pageMeta for each route
 // const loadPageMeta = (filePath: string) => {

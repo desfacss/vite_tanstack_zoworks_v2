@@ -4,8 +4,8 @@ import { Card, Divider, Tag, Button, Typography, Switch, message, Spin } from 'a
 import * as Icons from '@ant-design/icons';
 import { supabase } from '@/lib/supabase';
 import QRCard from './QRCard';
-import RowActions from '../../DynamicViews/RowActions';
-import TaskReportPage from '../doc/ServiceReportDrawer';
+import RowActions from '../DynamicViews/RowActions';
+import TaskReportPage from '@/components/common/doc/ServiceReportDrawer';
 import DocView from './DocView';
 import ApprovalActionButtons from './ApprovalActionButtons';
 import Expensesheet from './Expensesheet';

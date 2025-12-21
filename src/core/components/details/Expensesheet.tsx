@@ -4,7 +4,7 @@ import { Table, Input, Button, Typography, Select, message, Row, Col, InputNumbe
 import { supabase } from '@/lib/supabase'; // Updated path for supabase config
 import { useAuthStore } from '@/lib/store'; // Updated path to get session/user
 import dayjs from 'dayjs'
-import { generateEmailData, sendEmail } from '../email';
+import { generateEmailData, sendEmail } from '@/components/common/email';
 // NOTE: Assuming you will create/port these common utilities or replace them
 // import { generateEmailData, sendEmail } from 'components/common/SendEmail'; 
 // import { generateEmailData, sendEmail } from '@/utils/emailUtils'; // Placeholder for email utilities
