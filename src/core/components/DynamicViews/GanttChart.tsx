@@ -3,7 +3,7 @@ import { Gantt, ViewMode, Task } from 'gantt-task-react';
 import 'gantt-task-react/dist/index.css';
 import { Button, Dropdown, Menu, message, List } from 'antd';
 import { motion } from 'framer-motion';
-import { DownloadOutlined, UserOutlined } from '@ant-design/icons';
+import { Download, User } from 'lucide-react';
 import { useAuthedLayoutConfig } from '../Layout/AuthedLayoutContext';
 import RowActions from './RowActions';
 import { supabase } from '../../lib/supabase';
@@ -234,7 +234,7 @@ const GanttChart: React.FC<GanttViewProps> = ({
                     }}
                     trigger={['click']}
                   >
-                    <Button icon={<DownloadOutlined />} style={{ marginLeft: 8 }} />
+                    <Button icon={<Download size={16} />} style={{ marginLeft: 8 }} />
                   </Dropdown>
                 )}
               </div>
@@ -263,7 +263,7 @@ const GanttChart: React.FC<GanttViewProps> = ({
               {data.map((record) => (
                 <List.Item
                   key={record.id}
-                  prefix={<UserOutlined style={{ fontSize: 24 }} />}
+                  prefix={<User size={24} />}
                   description={getNestedField(record, 'details.email') || '-'}
                   arrow={false}
                   extra={

@@ -1,6 +1,6 @@
 import { Button, Card, notification, Table, Drawer, Modal, Form, Avatar, message, Spin, Tooltip, Menu, Dropdown, Col, Row, Input } from "antd";
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { PlusOutlined, EditFilled, DeleteOutlined, SendOutlined, UnorderedListOutlined, MoreOutlined, AppstoreOutlined, SearchOutlined, CopyFilled, ExclamationCircleFilled, EyeOutlined } from "@ant-design/icons";
+import { Plus, Pencil, Trash2, Send, List, MoreHorizontal, LayoutGrid, Search, Copy, AlertCircle, Eye } from "lucide-react";
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/core/lib/store';
 import './Services.css'; // Add a CSS file to style the cards grid
@@ -8,7 +8,7 @@ import { serverErrorParsing } from "@/core/components/common/utils/serverErrorPa
 import { camelCaseToTitleCase } from "@/core/components/common/utils/casing";
 import DynamicForm from "@/core/components/shared/DynamicForm";
 import AgentActivityReport from "./AgentActivityReport"; // Import the AgentActivityReport component
-import env_def from "@/utils/constants";
+import env_def from "@/core/lib/env";
 
 export const getAllValues = (obj) => {
   let values = [];
@@ -331,7 +331,7 @@ const TeamUsers: React.FC<TeamUsersProps> = ({ selectedTeamId }) => {
   const showDeleteConfirm = async (record: User) => {
     confirm({
       title: `Confirm deletion of ${record.name}?`,
-      icon: <ExclamationCircleFilled />,
+      icon: <AlertCircle size={16} />,
       okText: 'Yes',
       okType: 'danger',
       cancelText: 'No',
@@ -357,7 +357,7 @@ const TeamUsers: React.FC<TeamUsersProps> = ({ selectedTeamId }) => {
   const showResendLoginLinkConfirm = async (record: User) => {
     confirm({
       title: `Do you want to resend Login Link to ${record.name}?`,
-      icon: <ExclamationCircleFilled />,
+      icon: <AlertCircle size={16} />,
       okText: 'Yes',
       okType: 'danger',
       cancelText: 'No',
@@ -431,19 +431,19 @@ const TeamUsers: React.FC<TeamUsersProps> = ({ selectedTeamId }) => {
       render: (_: any, record: User) => (
         <div className="d-flex">
           <Tooltip title="Edit">
-            <Button type="primary" icon={<EditFilled />} size="small" className="mr-2" onClick={() => handleEdit(record)} />
+            <Button type="primary" icon={<Pencil size={14} />} size="small" className="mr-2" onClick={() => handleEdit(record)} />
           </Tooltip>
           <Tooltip title="Copy">
-            <Button type="primary" icon={<CopyFilled />} size="small" className="mr-2" onClick={() => handleEdit(record, true)} />
+            <Button type="primary" icon={<Copy size={14} />} size="small" className="mr-2" onClick={() => handleEdit(record, true)} />
           </Tooltip>
           <Tooltip title="Resend Login Link">
-            <Button type="primary" icon={<SendOutlined />} size="small" className="mr-2" onClick={() => showResendLoginLinkConfirm(record)} />
+            <Button type="primary" icon={<Send size={14} />} size="small" className="mr-2" onClick={() => showResendLoginLinkConfirm(record)} />
           </Tooltip>
           <Tooltip title="View Activity">
-            <Button type="primary" icon={<EyeOutlined />} size="small" className="mr-2" onClick={() => handleViewActivity(record.id)} />
+            <Button type="primary" icon={<Eye size={14} />} size="small" className="mr-2" onClick={() => handleViewActivity(record.id)} />
           </Tooltip>
           <Tooltip title="Delete">
-            <Button type="primary" ghost icon={<DeleteOutlined />} size="small" onClick={() => showDeleteConfirm(record)} />
+            <Button type="primary" ghost icon={<Trash2 size={14} />} size="small" onClick={() => showDeleteConfirm(record)} />
           </Tooltip>
         </div>
       ),
@@ -480,15 +480,15 @@ const TeamUsers: React.FC<TeamUsersProps> = ({ selectedTeamId }) => {
             placeholder="Search"
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
-            prefix={<SearchOutlined />}
+            prefix={<Search size={14} />}
             style={{ width: 200 }}
           />
           <Button
-            icon={viewMode === 'card' ? <UnorderedListOutlined /> : <AppstoreOutlined />}
+            icon={viewMode === 'card' ? <List size={16} /> : <LayoutGrid size={16} />}
             style={{ marginRight: '10px' }}
             onClick={() => setViewMode(viewMode === 'card' ? 'list' : 'card')}
           />
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => { setEditItem(null); setIsModalOpen(true); }}>
+          <Button type="primary" icon={<Plus size={16} />} onClick={() => { setEditItem(null); setIsModalOpen(true); }}>
             Invite User
           </Button>
         </div>
@@ -502,7 +502,7 @@ const TeamUsers: React.FC<TeamUsersProps> = ({ selectedTeamId }) => {
                   <Card
                     extra={
                       <Dropdown overlay={actionsMenu(user)} trigger={['click']}>
-                        <Button icon={<MoreOutlined />} shape="circle" />
+                        <Button icon={<MoreHorizontal size={16} />} shape="circle" />
                       </Dropdown>
                     }
                     title={

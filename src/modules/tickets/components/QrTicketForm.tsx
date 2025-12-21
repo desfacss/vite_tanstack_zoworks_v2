@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { Form, Input, Button, message, Spin, Select } from 'antd';
 import { supabase } from '@/lib/supabase';
-import FileUploader from '@/core/components/shared/ImageUploader';
+import ImageUploader from '@/core/components/shared/ImageUploader';
 
 // ===================================================================================
 // INTERFACES
@@ -41,9 +41,9 @@ const QrTicketForm: React.FC<QrTicketFormProps> = ({ asset_id, onSuccess }) => {
       const uploadedImages: ImageObject[] = imageUploaderRef.current
         ? await imageUploaderRef.current.triggerUpload()
         : [];
-console.log(uploadedImages, "uploadedImages");
+      console.log(uploadedImages, "uploadedImages");
       // Call the new RPC function for public ticket creation
-      const { data, error } = await supabase.rpc('tkt_wrapper_create_qr_ticket_v5', {
+      const { error } = await supabase.rpc('tkt_wrapper_create_qr_ticket_v5', {
         p_asset_id: asset_id,
         p_subject: values.subject,
         p_description: values.description || null,
@@ -96,7 +96,7 @@ console.log(uploadedImages, "uploadedImages");
               tokenSeparators={[',', ' ']}
             />
           </Form.Item>
-          <FileUploader ref={imageUploaderRef} autoUpload={true} onUploadComplete={() => {}} />
+          <ImageUploader ref={imageUploaderRef} autoUpload={true} onUploadComplete={() => { }} />
           <Form.Item>
             <Button className="mt-2" type="primary" htmlType="submit" loading={loading}>
               Submit Ticket

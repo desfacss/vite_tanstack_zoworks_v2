@@ -5,10 +5,12 @@ import type { Organization, User, Location } from './types';
 
 // --- TYPE DEFINITIONS ---
 
+/*
 interface Permission {
   module: string;
   actions: string[];
 }
+*/
 interface NavigationItem {
   key: string;
   label: string;
@@ -26,10 +28,10 @@ interface ViewPreferences {
       filters?: Record<string, any>;
       sortBy?: { field: string; direction: 'asc' | 'desc' };
       lastPath?: string;
-    } | { [organizationId: string]: string } | undefined;
-    lastLocationByOrg?: {
-      [organizationId: string]: string; // { org_id: location_id }
-    };
+      lastLocationByOrg?: {
+        [organizationId: string]: string; // { org_id: location_id }
+      };
+    } | undefined;
   };
 }
 interface ThemeState {
@@ -231,7 +233,7 @@ export const useAuthStore = create<AuthState>()(
         appSettings: state.appSettings,
       }),
       version: 1,
-      onRehydrateStorage: () => (state, error) => {
+      onRehydrateStorage: () => (_state, error) => {
         if (error) {
           console.error('❌ [STORE] Auth store rehydration error:', error);
         } else {

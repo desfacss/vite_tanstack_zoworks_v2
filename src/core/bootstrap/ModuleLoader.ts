@@ -1,13 +1,22 @@
-
-import { registry } from '@/core/registry';
+/**
+ * Module Loader - Lazy loads modules based on tenant configuration
+ * 
+ * Passes:
+ * - Module-specific config from org_module_configs.settings
+ * - Enabled languages from tenant config (for lazy i18n)
+ */
 
 export interface TenantConfig {
     enabled_modules: string[];
+    enabled_languages?: string[];
     module_config?: Record<string, any>;
 }
 
+// Module type - supports both sync and async register functions
+type ModuleRegisterFn = (config?: any, enabledLanguages?: string[]) => void | Promise<void>;
+
 // Module manifest - maps module IDs to lazy imports
-const MODULE_MANIFEST: Record<string, () => Promise<{ register: (config?: any) => void }>> = {
+const MODULE_MANIFEST: Record<string, () => Promise<{ register: ModuleRegisterFn }>> = {
     core: () => import('@/modules/core'),
     tickets: () => import('@/modules/tickets'),
     workforce: () => import('@/modules/workforce'),
@@ -26,6 +35,9 @@ const MODULE_MANIFEST: Record<string, () => Promise<{ register: (config?: any) =
 
 export async function loadModules(config: TenantConfig) {
     console.log('[ModuleLoader] Loading modules:', config.enabled_modules);
+    console.log('[ModuleLoader] Languages:', config.enabled_languages);
+
+    const enabledLanguages = config.enabled_languages || ['en'];
 
     const loadPromises = config.enabled_modules
         .filter(moduleId => MODULE_MANIFEST[moduleId])
@@ -34,9 +46,9 @@ export async function loadModules(config: TenantConfig) {
                 const startTime = performance.now();
                 const module = await MODULE_MANIFEST[moduleId]();
 
-                // Pass module-specific configuration if available
+                // Pass module-specific configuration AND enabled languages
                 const moduleSpecificConfig = config.module_config?.[moduleId] || {};
-                module.register(moduleSpecificConfig);
+                await module.register(moduleSpecificConfig, enabledLanguages);
 
                 const duration = Math.round(performance.now() - startTime);
                 console.log(`[ModuleLoader] ✓ ${moduleId} loaded in ${duration}ms`);

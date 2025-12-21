@@ -1,7 +1,7 @@
 // DocView.tsx
 import React, { useRef } from 'react';
 import { Typography, Divider, Row, Col, Button } from 'antd';
-import { PrinterOutlined } from '@ant-design/icons';
+import { Printer } from 'lucide-react';
 import { useReactToPrint } from 'react-to-print';
 
 const { Text, Title } = Typography;
@@ -55,14 +55,14 @@ interface DocTemplateSettings {
 
 interface DocViewProps {
   data: Record<string, any>;
-  viewConfig: {
+  _viewConfig: {
     details_overview: {
       groups: GroupConfig[];
     };
   };
   templateSettings: DocTemplateSettings;
   templateStyles: Record<string, React.CSSProperties>;
-  templateConfig: TemplateConfig; 
+  templateConfig: TemplateConfig;
 }
 
 interface LayoutFieldConfig {
@@ -84,7 +84,7 @@ interface SignatureConfig {
   signedByPath: string;
 }
 
-type LayoutBlock = 
+type LayoutBlock =
   | { type: 'two_column_info_box'; left: InfoBoxConfig; right: InfoBoxConfig }
   | { type: 'inline_fields'; fields: LayoutFieldConfig[]; columns?: number }
   | { type: 'description_section'; fields: LayoutFieldConfig[] }
@@ -97,26 +97,26 @@ interface TemplateConfig {
 // [getNestedValue remains the same]
 const getNestedValue = (obj: Record<string, any>, path: string): string => {
   if (!obj) return ' - - ';
-  
+
   if (obj.hasOwnProperty(path)) {
     const result = obj[path];
-    return result === undefined || result === null || result === '' ? ' - - ' : String(result);
+    return result === undefined || result === null || (typeof result === 'string' && result === '') ? ' - - ' : String(result);
   }
-  
+
   const result = path?.split('.')?.reduce((acc, part) => acc && acc[part], obj);
-  return result === undefined || result === null || result === '' ? ' - - ' : String(result);
+  return result === undefined || result === null || (typeof result === 'string' && result === '') ? ' - - ' : String(result);
 };
 
 // =========================================================================
 // UPDATED renderField to use flex/inline styles from templateStyles
 // =========================================================================
 const renderField = (
-  config: LayoutFieldConfig, 
-  data: Record<string, any>, 
+  config: LayoutFieldConfig,
+  data: Record<string, any>,
   styles: (className: string) => React.CSSProperties
 ) => {
   const value = getNestedValue(data, config.fieldPath);
-  
+
   if (config.isMapLink && value !== ' - - ' && config.latPath && config.lngPath) {
     const lat = getNestedValue(data, config.latPath);
     const lng = getNestedValue(data, config.lngPath);
@@ -141,8 +141,8 @@ const renderField = (
 // =========================================================================
 
 const renderDescriptionField = (
-  config: LayoutFieldConfig, 
-  data: Record<string, any>, 
+  config: LayoutFieldConfig,
+  data: Record<string, any>,
   accentColor?: string
 ) => {
   return (
@@ -158,8 +158,8 @@ const renderDescriptionField = (
 };
 
 const renderSignatureField = (
-  config: SignatureConfig, 
-  data: Record<string, any>, 
+  config: SignatureConfig,
+  data: Record<string, any>,
   accentColor?: string
 ) => (
   <Col span={12} key={config.imagePath} style={{ textAlign: 'center' }}>
@@ -177,10 +177,9 @@ const renderSignatureField = (
 
 const DocView: React.FC<DocViewProps> = ({
   data,
-  viewConfig,
   templateSettings,
   templateStyles,
-  templateConfig, 
+  templateConfig,
 }) => {
   const componentRef = useRef<HTMLDivElement>(null);
   const handlePrint = useReactToPrint({
@@ -196,7 +195,7 @@ const DocView: React.FC<DocViewProps> = ({
     padding: layout?.margins ? `${layout.margins.top}px ${layout.margins.right}px ${layout.margins.bottom}px ${layout.margins.left}px` : undefined,
     fontFamily: layout?.fontFamily,
     fontSize: layout?.fontSize ? `${layout.fontSize}px` : undefined,
-    backgroundColor: getStyle('.doc-view-container')?.background,
+    backgroundColor: getStyle('.doc-view-container')?.backgroundColor || getStyle('.doc-view-container')?.background as any,
   };
 
   const headerStyle = {
@@ -286,7 +285,7 @@ const DocView: React.FC<DocViewProps> = ({
             return null;
         }
       })();
-      
+
       return (
         <React.Fragment key={index}>
           {content}
@@ -343,9 +342,9 @@ const DocView: React.FC<DocViewProps> = ({
         </div>
       </div>
       <div style={{ padding: '12px 24px', textAlign: 'right' }}>
-        <Button 
-          type="primary" 
-          icon={<PrinterOutlined />} 
+        <Button
+          type="primary"
+          icon={<Printer size={16} />}
           onClick={handlePrint}
         >
           Print

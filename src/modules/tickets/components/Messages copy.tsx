@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase'; // Updated import path
 import { Collapse, Spin, Alert, Typography, Card } from 'antd';
-import { MailOutlined, ClockCircleOutlined } from '@ant-design/icons';
+import { Mail, Clock } from 'lucide-react';
 import dayjs from 'dayjs';
 
 const { Title, Text } = Typography;

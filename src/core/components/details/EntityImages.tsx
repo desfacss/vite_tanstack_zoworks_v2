@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { message, Spin, Image, Tooltip, Button, Modal, Row, Col } from 'antd';
-import { FileOutlined, DeleteOutlined } from '@ant-design/icons';
+import { File, Trash2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/core/lib/store';
 import moment from 'moment';
-import FileUploader from '@/core/components/shared/ImageUploader';
+import ImageUploader from '@/core/components/shared/ImageUploader';
 
 interface FileObject {
   url: string;
@@ -42,7 +42,7 @@ const EntityImages: React.FC<EntityImagesProps> = ({ entity_type, entity_id }) =
       const config = {
         entity_schema: 'public',
         entity_name: 'ent_attachments',
-        organization_id: user?.pref_organization_id,
+        organization_id: user?.organization_id,
         joins: [
           {
             schema: 'identity',
@@ -96,10 +96,10 @@ const EntityImages: React.FC<EntityImagesProps> = ({ entity_type, entity_id }) =
       }
     };
 
-    if (user?.pref_organization_id) {
+    if (user?.organization_id) {
       fetchFiles();
     }
-  }, [entity_type, entity_id, user?.pref_organization_id]);
+  }, [entity_type, entity_id, user?.organization_id]);
 
   // Handle new file uploads
   const handleFilesUploaded = async (files: FileObject[]) => {
@@ -186,7 +186,7 @@ const EntityImages: React.FC<EntityImagesProps> = ({ entity_type, entity_id }) =
   return (
     <div>
       <Spin spinning={loading}>
-        <FileUploader onUploadComplete={handleFilesUploaded} />
+        <ImageUploader onUploadComplete={handleFilesUploaded} />
 
         {/* Responsive File Gallery */}
         <div style={{ marginTop: 16 }}>
@@ -209,7 +209,7 @@ const EntityImages: React.FC<EntityImagesProps> = ({ entity_type, entity_id }) =
                     {/* Delete button positioned absolutely */}
                     <Button
                       type="text" // Changed to text type for a cleaner look without background
-                      icon={<DeleteOutlined />}
+                      icon={<Trash2 size={16} />}
                       onClick={() => handleRemoveFile(fileSet.id)}
                       style={{
                         position: 'absolute',
@@ -255,7 +255,7 @@ const EntityImages: React.FC<EntityImagesProps> = ({ entity_type, entity_id }) =
                                   paddingTop: 30,
                                 }}
                               >
-                                <FileOutlined style={{ fontSize: 40, color: '#1890ff' }} />
+                                <File size={40} className="text-blue-500" />
                               </a>
                             </Tooltip>
                           )}

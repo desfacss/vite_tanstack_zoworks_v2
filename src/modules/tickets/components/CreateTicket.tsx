@@ -1,7 +1,7 @@
 // src/components/CreateTicket.tsx
 import React, { useState } from 'react';
 import { Modal, Input, Button, notification } from 'antd';
-import env_def from '@/utils/constants';
+import env_def from '@/core/lib/env';
 
 const { TextArea } = Input;
 

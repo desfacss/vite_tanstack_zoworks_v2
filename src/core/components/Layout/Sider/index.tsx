@@ -1,20 +1,22 @@
 import React, { useState } from 'react';
 import { Layout, Menu } from 'antd';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
-import { useAuthStore } from '@/core/lib/store';
+import { useAuthStore, useThemeStore } from '@/core/lib/store';
+import { getTenantLogoUrl, getTenantBrandName } from '@/core/theme/ThemeRegistry';
 
 const { Sider: AntSider } = Layout;
 
 interface SiderProps {
   collapsed: boolean;
+  navigationItems?: any[];
 }
 
-export const Sider: React.FC<SiderProps> = ({ collapsed }) => {
+export const Sider: React.FC<SiderProps> = ({ collapsed, navigationItems: propNavigationItems }) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { t, i18n } = useTranslation();
-  const { organization, navigationItems } = useAuthStore();
+  const { navigationItems: storeNavigationItems } = useAuthStore();
+
+  const navigationItems = propNavigationItems || storeNavigationItems;
 
   const [openKeys, setOpenKeys] = useState<string[]>([]);
 
@@ -29,7 +31,7 @@ export const Sider: React.FC<SiderProps> = ({ collapsed }) => {
   };
 
   // --- NEW HANDLER FOR NAVIGATION ---
-  const handleMenuClick = ({ key, domEvent }: { key: string, domEvent: React.MouseEvent<HTMLElement> }) => {
+  const handleMenuClick = ({ key, domEvent }: any) => {
     // Check if the key starts with a forward slash (to distinguish routes from submenu keys like 'support')
     if (key.startsWith('/')) {
 
@@ -51,6 +53,10 @@ export const Sider: React.FC<SiderProps> = ({ collapsed }) => {
   //   if (!i18n.isInitialized || !navigationItems || navigationItems.length === 0) {
   //   return null; // or a loading skeleton
   // }
+  const { isDarkMode } = useThemeStore();
+  const logoUrl = getTenantLogoUrl(isDarkMode);
+  const brandName = getTenantBrandName();
+
   return (
     <AntSider
       trigger={null}
@@ -69,15 +75,31 @@ export const Sider: React.FC<SiderProps> = ({ collapsed }) => {
       className="border-r border-[var(--color-border)]"
       width={256}
     >
-      <div className="p-4 pl-7">
-        <h1 className="text-xl font-bold truncate text-white">
-          {organization?.name || 'Enterprise App'}
-        </h1>
+      <div className="p-4 flex items-center gap-3 overflow-hidden min-h-[64px]">
+        {logoUrl ? (
+          <img
+            src={logoUrl}
+            alt={brandName}
+            className={`h-8 w-auto max-w-full object-contain transition-all duration-300 ${collapsed ? 'mx-auto' : ''}`}
+          />
+        ) : (
+          <div className="flex items-center gap-2 overflow-hidden">
+            {!collapsed ? (
+              <h1 className="text-xl font-bold truncate text-[var(--color-primary)] m-0">
+                {brandName}
+              </h1>
+            ) : (
+              <div className="w-full text-center font-bold text-lg text-[var(--color-primary)]">
+                {brandName.substring(0, 2).toUpperCase()}
+              </div>
+            )}
+          </div>
+        )}
       </div>
       <Menu
         mode="inline"
         selectedKeys={[location.pathname]}
-        items={navigationItems}
+        items={navigationItems as any}
         // --- USE THE NEW HANDLER HERE ---
         onClick={handleMenuClick}
         // --------------------------------

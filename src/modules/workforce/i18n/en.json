@@ -1,0 +1,28 @@
+{
+  "nav": {
+    "title": "Workforce",
+    "leaves": "Leaves",
+    "expenses": "Expenses",
+    "timesheets": "Timesheets",
+    "teams": "Teams",
+    "teams-users": "Team Members"
+  },
+  "tabs": {
+    "timesheet": "Timesheet",
+    "members": "Members",
+    "activity": "Activity Report"
+  },
+  "forms": {
+    "leave": {
+      "type": "Leave Type",
+      "startDate": "Start Date",
+      "endDate": "End Date",
+      "reason": "Reason"
+    },
+    "expense": {
+      "category": "Category",
+      "amount": "Amount",
+      "receipt": "Receipt"
+    }
+  }
+}

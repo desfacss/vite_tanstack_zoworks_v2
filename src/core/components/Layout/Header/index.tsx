@@ -322,7 +322,7 @@
 // // // // import React, { useState, useEffect, useMemo } from 'react';
 // // // // import { Layout, Button, Space, Drawer, Select, message } from 'antd';
 // // // // // Active Component
-import { MenuOutlined, SearchOutlined, SettingOutlined } from '@ant-design/icons';
+// import { MenuOutlined, SearchOutlined, SettingOutlined } from '@ant-design/icons';
 // // // // import { useQueryClient, useIsFetching } from '@tanstack/react-query';
 // // // // import { useTranslation } from 'react-i18next';
 // // // // import { ProfileMenu } from '../ProfileMenu';
@@ -1388,16 +1388,18 @@ import { MenuOutlined, SearchOutlined, SettingOutlined } from '@ant-design/icons
 
 // THE REACTIVE LOGIC + reset supabase auth metadata for next ogin
 import React, { useState, useEffect, useMemo } from 'react';
-import { Layout, Button, Space, Drawer, Select, message } from 'antd';
-// import { Menu as MenuIcon, Search, Settings as SettingsIcon } from 'lucide-react-removed';
-import { useIsFetching } from '@tanstack/react-query';
+import { Layout, Button, Space, Drawer, Select, Badge, message } from 'antd';
+import { Menu, Search, Settings, Bell } from 'lucide-react';
+// import * as LucideIcons from 'lucide-react';
+import { useIsFetching, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { ProfileMenu } from '../ProfileMenu';
 import { useAuthedLayoutConfig } from '../AuthedLayoutContext';
-import { useAuthStore } from '@/core/lib/store';
+import { useAuthStore, useThemeStore } from '@/core/lib/store';
 import { supabase } from '@/lib/supabase';
 import type { Organization, Location } from '@/lib/types';
+import { getTenantLogoUrl, getTenantBrandName } from '@/core/theme/ThemeRegistry';
 
 const { Header: AntHeader } = Layout;
 
@@ -1417,7 +1419,8 @@ interface HeaderProps {
   unreadCount: number;
   setShowNotifications: (show: boolean) => void;
   setShowMobileMenu: (show: boolean) => void;
-  setShowSettings: (show: boolean) => void;
+  showSearch: boolean;
+  setShowSearch: (show: boolean) => void;
   pageTitle?: string;
 }
 
@@ -1425,13 +1428,20 @@ export const Header: React.FC<HeaderProps> = ({
   collapsed,
   setCollapsed,
   isMobile,
+  unreadCount,
+  setShowNotifications,
   setShowMobileMenu,
-  setShowSettings,
+  showSearch,
+  setShowSearch,
   pageTitle,
 }) => {
   const { t } = useTranslation();
-  const { config } = useAuthedLayoutConfig();
+  const { config, setShowSettings: setGlobalShowSettings } = useAuthedLayoutConfig();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { isDarkMode } = useThemeStore();
+  const logoUrl = getTenantLogoUrl(isDarkMode);
+  const brandName = getTenantBrandName();
 
   const {
     user,
@@ -1444,7 +1454,7 @@ export const Header: React.FC<HeaderProps> = ({
     setIsSwitchingOrg
   } = useAuthStore();
 
-  const [showSearch, setShowSearch] = useState(false);
+  // const [showSearch, setShowSearch] = useState(false);
   const [userOrgLocations, setUserOrgLocations] = useState<UserOrgLocationData[]>([]);
   const [loadingOrgLocs, setLoadingOrgLocs] = useState(false);
 
@@ -1488,9 +1498,10 @@ export const Header: React.FC<HeaderProps> = ({
       console.group(`%c[Flow] Switch to ${selectedOrgData.organization_name}`, 'color: #1890ff');
 
       setIsSwitchingOrg(true);
+      message.loading({ content: `Switching to ${selectedOrgData.organization_name}...`, key: 'orgSwitch' });
 
       try {
-        // STEP 1: UPDATE STORE
+        // STEP 1: UPDATE STORE (Optimistic)
         // Triggers SessionManager -> useUserSession(key=['user-session', newID])
         setOrganization({
           id: selectedOrgData.organization_id,
@@ -1500,11 +1511,11 @@ export const Header: React.FC<HeaderProps> = ({
         // STEP 2: RESET ROUTE
         navigate('/dashboard');
 
-        // Handle Location
+        // Handle Location (Sticky or Default)
         const newLocations = selectedOrgData.locations;
         let targetLocation: Location | null = null;
         if (newLocations.length > 0) {
-          const stickyId = viewPreferences[user.id]?.lastLocationByOrg?.[orgId];
+          const stickyId = viewPreferences[user.id]?.['global']?.lastLocationByOrg?.[orgId];
           const stickyLoc = newLocations.find(l => l.location_id === stickyId);
           const locData = stickyLoc || newLocations[0];
           targetLocation = { id: locData.location_id, name: locData.location_name } as Location;
@@ -1512,17 +1523,25 @@ export const Header: React.FC<HeaderProps> = ({
         setLocation(targetLocation);
 
         // STEP 3: PERSISTENCE (Database + Auth Metadata)
+        console.log("[Flow] Persisting preference to DB via set_preferred_organization...");
         const { error: rpcError } = await supabase.schema('identity').rpc('set_preferred_organization', { new_org_id: orgId });
         if (rpcError) console.warn("[Flow] RPC warning:", rpcError);
 
+        console.log("[Flow] Updating Supabase Auth Metadata...");
         const { error: authError } = await supabase.auth.updateUser({
           data: { org_id: orgId }
         });
         if (authError) console.warn("[Flow] Auth update warning:", authError);
 
-        console.log("[Flow] Preference synced to DB and Auth Metadata.");
+        // STEP 4: INVALIDATION (Critical for refetching updated session/permissions)
+        console.log("[Flow] Invalidating 'user-session' to trigger refetch...");
+        await queryClient.invalidateQueries({ queryKey: ['user-session'] });
+
+        message.success({ content: `Switched to ${selectedOrgData.organization_name}`, key: 'orgSwitch', duration: 2 });
+        console.log("[Flow] Switch complete.");
       } catch (err) {
         console.error("[Flow] Organization switch error:", err);
+        message.error({ content: 'Failed to switch organization.', key: 'orgSwitch', duration: 2 });
       } finally {
         // ALWAYS clear the switching state
         setIsSwitchingOrg(false);
@@ -1532,14 +1551,14 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   const handleLocationChange = (locId: string) => {
-    if (!organization?.id) return;
+    if (!organization?.id || !user?.id) return;
     const currentOrgLocs = userOrgLocations.find(o => o.organization_id === organization.id)?.locations || [];
     const selectedLoc = currentOrgLocs.find(loc => loc.location_id === locId);
 
-    if (selectedLoc && user) {
+    if (selectedLoc) {
       setLocation({ id: selectedLoc.location_id, name: selectedLoc.location_name } as Location);
       setViewPreferences(user.id, 'global', {
-        lastLocationByOrg: { ...(viewPreferences[user.id]?.lastLocationByOrg || {}), [organization.id]: locId },
+        lastLocationByOrg: { ...(viewPreferences[user.id]?.['global']?.lastLocationByOrg || {}), [organization.id]: locId },
       });
     }
   };
@@ -1566,42 +1585,67 @@ export const Header: React.FC<HeaderProps> = ({
   return (
     <AntHeader className="p-0 bg-[var(--color-background)] border-b border-[var(--color-border)]">
       <div className="flex justify-between items-center px-4 h-full overflow-x-auto">
-        <div className="flex items-center gap-2 shrink-0">
-          <Button type="text" icon={<MenuIcon size={24} />} onClick={() => (isMobile ? setShowMobileMenu(true) : setCollapsed(!collapsed))} />
-          {pageTitle && <span className="text-lg font-semibold whitespace-nowrap">{pageTitle}</span>}
+        <div className="flex items-center gap-4 shrink-0 overflow-hidden">
+          <Button type="text" icon={<Menu size={24} />} onClick={() => (isMobile ? setShowMobileMenu(true) : setCollapsed(!collapsed))} />
+
+          <div className="flex items-center gap-2 overflow-hidden">
+            {logoUrl ? (
+              <img src={logoUrl} alt={brandName} className="h-7 w-auto object-contain shrink-0" />
+            ) : (
+              <span className="text-lg font-bold text-[var(--color-primary)] shrink-0">{brandName}</span>
+            )}
+
+            {!isMobile && pageTitle && (
+              <>
+                <div className="w-1 h-1 rounded-full bg-gray-300 mx-1 shrink-0" />
+                <span className="text-lg font-semibold whitespace-nowrap truncate">{pageTitle}</span>
+              </>
+            )}
+          </div>
         </div>
 
         {/* Right Side Actions */}
         <Space size={isMobile ? "small" : "middle"} className="ml-auto">
 
-          {/* Organization Select - VISIBLE ON MOBILE NOW */}
-          {organizationOptions.length > 1 && (
+          {/* Organization Select - HIDDEN ON MOBILE AS PER USER REQUEST */}
+          {!isMobile && organizationOptions.length > 1 && (
             <Select
               placeholder={t('common.select_organization')}
               value={organization?.id}
               onChange={handleOrganizationChange}
               loading={loadingOrgLocs}
-              style={{ width: isMobile ? 140 : 200 }} // Responsive Width
+              style={{ width: 200 }}
               options={organizationOptions}
               disabled={loadingOrgLocs}
             />
           )}
 
-          {/* Location Select - VISIBLE ON MOBILE NOW */}
-          {currentLocations.length > 1 && (
+          {/* Location Select - HIDDEN ON MOBILE AS PER USER REQUEST */}
+          {!isMobile && currentLocations.length > 1 && (
             <Select
               placeholder={t('common.select_location')}
               value={location?.id}
               onChange={handleLocationChange}
               loading={loadingOrgLocs}
-              style={{ width: isMobile ? 140 : 200 }} // Responsive Width
+              style={{ width: 200 }}
               options={currentLocations}
               disabled={loadingOrgLocs}
             />
           )}
 
           {isMobile && config.searchFilters && <Button type="text" icon={<Search size={24} />} onClick={() => setShowSearch(true)} />}
-          {!isMobile && <Button type="text" icon={<SettingsIcon size={24} />} onClick={() => setShowSettings(true)} />}
+
+          <Button
+            type="text"
+            icon={
+              <Badge count={unreadCount} size="small" offset={[10, 0]}>
+                <Bell size={24} />
+              </Badge>
+            }
+            onClick={() => setShowNotifications(true)}
+          />
+
+          <Button type="text" icon={<Settings size={24} />} onClick={() => setGlobalShowSettings(true)} />
           <ProfileMenu isMobile={isMobile} />
         </Space>
       </div>

@@ -1,14 +1,10 @@
-
-import React, { useState, useMemo, Suspense, useEffect } from 'react';
-import { Layout, Drawer, FloatButton } from 'antd';
+import React, { useState, useMemo, Suspense } from 'react';
+import { Layout, Drawer } from 'antd';
 // import { TabBar } from 'antd-mobile';
-import { Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import {
-  MenuFoldOutlined,
-  MenuUnfoldOutlined
-} from '@ant-design/icons';
+// import { PanelLeft, Plus } from 'lucide-react';
 import { Header } from './Header';
 import { Sider } from './Sider';
 import { NotificationsDrawer } from './NotificationsDrawer';
@@ -22,7 +18,7 @@ import { useAuthedLayoutConfig } from './AuthedLayoutContext';
 import { LoadingFallback } from '../shared/LoadingFallback';
 import { useDeviceType } from '@/utils/deviceTypeStore';
 import { GlobalLoader } from '../shared/GlobalLoader';
-import ContextDebug from '../shared/ContextDebug';
+// import ContextDebug from '../shared/ContextDebug';
 
 const { Content } = Layout;
 
@@ -34,28 +30,28 @@ export const AuthedLayout: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
+  // const [showSettings, setShowSettings] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const location = useLocation();
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
   const { t } = useTranslation();
   const { organization, user, navigationItems } = useAuthStore();
-  const { config } = useAuthedLayoutConfig();
+  const { config, showSettings, setShowSettings } = useAuthedLayoutConfig();
 
   const deviceType = useDeviceType();
   const isMobile = deviceType === 'mobile';
 
   // Memoize bottomNavItems to prevent recalculation
-  const bottomNavItems = useMemo(() => {
-    return navigationItems
-      .reduce((acc: any[], item) => {
-        if (item.children) {
-          return [...acc, ...item.children];
-        }
-        return [...acc, item];
-      }, [])
-      .slice(0, 4);
-  }, [navigationItems]);
+  // const bottomNavItems = useMemo(() => {
+  //   return navigationItems
+  //     .reduce((acc: any[], item) => {
+  //       if (item.children) {
+  //         return [...acc, ...item.children];
+  //       }
+  //       return [...acc, item];
+  //     }, [])
+  //     .slice(0, 4);
+  // }, [navigationItems]);
 
   const { data: notifications = [] } = useQuery({
     queryKey: ['notifications', organization?.id],
@@ -142,7 +138,7 @@ export const AuthedLayout: React.FC = () => {
             unreadCount={unreadCount}
             setShowNotifications={setShowNotifications}
             setShowMobileMenu={setShowMobileMenu}
-            setShowSettings={setShowSettings}
+            showSearch={showSearch}
             setShowSearch={setShowSearch}
             pageTitle={getPageTitle()}
           />
@@ -187,7 +183,7 @@ export const AuthedLayout: React.FC = () => {
             <MobileMenu
               open={showMobileMenu}
               onClose={() => setShowMobileMenu(false)}
-              navigationItems={navigationItems}
+              navigationItems={navigationItems as any}
             />
 
             {config.searchFilters && (

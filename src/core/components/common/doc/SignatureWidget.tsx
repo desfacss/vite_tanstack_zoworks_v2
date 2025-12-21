@@ -1,12 +1,10 @@
 // src/components/forms/SignatureWidget.tsx
 
-import React, { useRef, useState, useCallback, useImperativeHandle, forwardRef } from 'react';
-import { Space, Typography, Spin, message, Button } from 'antd';
-import { ClearOutlined, CloseCircleOutlined } from '@ant-design/icons';
+import { useRef, useState, useCallback, useImperativeHandle, forwardRef } from 'react';
+import { Spin, message, Button } from 'antd';
+import { XCircle } from 'lucide-react';
 import SignatureCanvas from 'react-signature-canvas';
 import Publitio from 'publitio_js_sdk';
-
-const { Text } = Typography;
 
 // Publitio configuration
 const publitio = new Publitio(import.meta.env.VITE_PUBLITIO_API_KEY, import.meta.env.VITE_PUBLITIO_API_SECRET);
@@ -38,7 +36,7 @@ const SignatureWidget = forwardRef<SignatureWidgetRef, SignatureWidgetProps>(({ 
   const sigCanvasRef = useRef<SignatureCanvas>(null);
   const [isEmpty, setIsEmpty] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
-  const [hasDrawn, setHasDrawn] = useState(false);
+  const [_hasDrawn, setHasDrawn] = useState(false);
 
   // Expose upload function to the parent component via the ref
   useImperativeHandle(ref, () => ({
@@ -55,7 +53,7 @@ const SignatureWidget = forwardRef<SignatureWidgetRef, SignatureWidgetProps>(({ 
       try {
         const dataURL = sigCanvasRef.current.toDataURL();
         const signatureFile = dataURLtoFile(dataURL, `signature_${Date.now()}.png`);
-        const response = await publitio.uploadFile(signatureFile);
+        const response = await publitio.uploadFile(signatureFile, 'file');
 
         if (response && response.url_preview) {
           onChange?.(response.url_preview);
@@ -152,7 +150,7 @@ const SignatureWidget = forwardRef<SignatureWidgetRef, SignatureWidgetProps>(({ 
           {/* Moved the button inside the container with absolute positioning */}
           <Button
             type="text"
-            icon={<CloseCircleOutlined />}
+            icon={<XCircle size={20} />}
             size="large"
             onClick={handleClear}
             disabled={isEmpty || isLoading}

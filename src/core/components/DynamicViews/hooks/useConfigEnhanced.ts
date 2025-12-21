@@ -80,11 +80,11 @@
 //     },
 //     // Tanstack Config - KEEP THE COMMENTED _TO BE ENABLED FOR PRODUCTION SETTINGS 
 //     // staleTime: 24 * 60 * 60 * 1000, // Cache for 24 hours
-//     // cacheTime: 30 * 24 * 60 * 60 * 1000, // Keep in cache for 30 days
+//     // gcTime: 30 * 24 * 60 * 60 * 1000, // Keep in cache for 30 days
 
 //     // FOR DEVELOPMENT SETTINGS
 //     staleTime: 1000, // Cache for 24 hours
-//     cacheTime: 1000, // Keep in cache for 30 days
+//     gcTime: 1000, // Keep in cache for 30 days
 //   });
 // };
 
@@ -182,10 +182,10 @@ export const useConfigEnhanced = (entityType: string) => {
     },
     // Tanstack Config - KEEP THE COMMENTED _TO BE ENABLED FOR PRODUCTION SETTINGS
     // staleTime: 24 * 60 * 60 * 1000, // Cache for 24 hours
-    // cacheTime: 30 * 24 * 60 * 60 * 1000, // Keep in cache for 30 days
+    // gcTime: 30 * 24 * 60 * 60 * 1000, // Keep in cache for 30 days
 
     // FOR DEVELOPMENT SETTINGS
     staleTime: 1000, // Cache for 1 second
-    cacheTime: 1000, // Keep in cache for 1 second
+    gcTime: 1000, // Keep in cache for 1 second
   });
 };

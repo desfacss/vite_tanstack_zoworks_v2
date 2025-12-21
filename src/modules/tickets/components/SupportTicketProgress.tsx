@@ -1,7 +1,7 @@
 // components/SupportTicketProgress.tsx
 import React from 'react';
 import { Steps, Tooltip, Dropdown, Menu } from 'antd';
-import { CheckCircleOutlined, ClockCircleOutlined, MoreOutlined } from '@ant-design/icons';
+import { CheckCircle, Clock, MoreHorizontal } from 'lucide-react';
 // import './SupportTicketProgress.css';
 
 interface SupportTicketProgressProps {

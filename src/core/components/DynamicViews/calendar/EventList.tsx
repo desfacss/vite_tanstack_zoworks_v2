@@ -1,6 +1,6 @@
 import React from 'react';
 import { List, Tag, Typography } from 'antd';
-import { ClockCircleOutlined } from '@ant-design/icons';
+import { Clock } from 'lucide-react';
 import { Event } from '../types';
 
 const { Text } = Typography;

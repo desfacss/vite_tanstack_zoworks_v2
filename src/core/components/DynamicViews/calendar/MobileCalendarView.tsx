@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Tabs, Card } from 'antd';
-import { CalendarOutlined, ClockCircleOutlined, EyeOutlined, TableOutlined } from '@ant-design/icons';
+import { Calendar, Clock, Eye, Table } from 'lucide-react';
 import { Event } from '../types'; // This now refers to the transformed type
 import TodayView from './TodayView';
 import CalendarView from './CalendarView';

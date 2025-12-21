@@ -1,7 +1,23 @@
-import React from 'react';
+import { forwardRef, useImperativeHandle } from 'react';
 
-const FileUploader = () => {
+export interface ImageUploaderProps {
+    onUploadComplete?: (files: any[]) => void | Promise<void>;
+    autoUpload?: boolean;
+}
+
+const ImageUploader = forwardRef<any, ImageUploaderProps>((props, ref) => {
+    const { onUploadComplete: _onUploadComplete, autoUpload: _autoUpload } = props;
+
+    useImperativeHandle(ref, () => ({
+        triggerUpload: async () => {
+            console.log('Stub: triggering upload');
+            return [];
+        }
+    }));
+
     return <div>Image Uploader Stub</div>;
-};
+});
 
-export default FileUploader;
+ImageUploader.displayName = 'ImageUploader';
+
+export default ImageUploader;

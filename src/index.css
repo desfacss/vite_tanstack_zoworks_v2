@@ -2,77 +2,170 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ===== Tailwind Custom Utilities ===== */
-@layer components {
+/* ===== Core Layout & Utility Classes ===== */
 
-  /* Page Layouts */
+/* Page Layouts */
+.page-container {
+  padding: 1rem;
+  flex: 1 1 0%;
+  overflow: auto;
+}
+
+@media (min-width: 768px) {
   .page-container {
-    @apply p-4 md:p-6 flex-1 overflow-auto;
+    padding: 1.5rem;
   }
+}
 
+.page-header {
+  margin-bottom: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
   .page-header {
-    @apply mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 md:gap-0;
+    flex-direction: row;
+    align-items: center;
+    gap: 0;
   }
+}
 
+.page-title {
+  margin: 0;
+  font-size: 1.5rem;
+  line-height: 2rem;
+}
+
+@media (min-width: 768px) {
   .page-title {
-    @apply m-0 text-2xl md:text-3xl;
+    font-size: 1.875rem;
+    line-height: 2.25rem;
   }
+}
 
-  /* Card Grid Layouts */
+/* Card Grid Layouts */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
   .card-grid {
-    @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.5rem;
   }
+}
 
+@media (min-width: 1024px) {
+  .card-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.card-grid-wide {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
   .card-grid-wide {
-    @apply grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-6;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.5rem;
   }
+}
 
-  /* Content Sections */
+@media (min-width: 1280px) {
+  .card-grid-wide {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* Content Sections */
+.content-section {
+  background-color: var(--color-bg-primary);
+  padding: 1rem;
+  border-radius: 0.5rem;
+}
+
+@media (min-width: 768px) {
   .content-section {
-    @apply bg-bg-primary p-4 md:p-6 rounded-lg;
+    padding: 1.5rem;
   }
+}
 
-  .section-spacing {
-    @apply mb-6;
-  }
+.section-spacing {
+  margin-bottom: 1.5rem;
+}
 
-  /* Drawer Responsive */
+/* Drawer Responsive */
+.drawer-responsive {
+  width: 95%;
+}
+
+@media (min-width: 768px) {
   .drawer-responsive {
-    @apply w-[95%] md:w-96;
+    width: 24rem;
   }
+}
 
+.drawer-wide {
+  width: 95%;
+}
+
+@media (min-width: 768px) {
   .drawer-wide {
-    @apply w-[95%] md:w-[600px];
+    width: 600px;
   }
+}
 
-  /* Touch-friendly */
-  .btn-touch {
-    @apply min-h-[44px] min-w-[44px];
-  }
+/* Touch-friendly */
+.btn-touch {
+  min-height: 44px;
+  min-width: 44px;
+}
 
-  /* Common flex patterns */
-  .flex-between {
-    @apply flex justify-between items-center;
-  }
+/* Common flex patterns */
+.flex-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
 
-  .flex-center {
-    @apply flex justify-center items-center;
-  }
+.flex-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
 
-  .flex-start {
-    @apply flex justify-start items-center;
-  }
+.flex-start {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+}
 
-  /* Responsive text */
+/* Responsive text */
+.text-responsive {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+
+@media (min-width: 768px) {
   .text-responsive {
-    @apply text-sm md:text-base;
+    font-size: 1rem;
+    line-height: 1.5rem;
   }
+}
 
-  /* Form inputs - mobile-friendly */
-  .input-mobile {
-    @apply text-base;
-    /* 16px to prevent zoom on iOS */
-  }
+/* Form inputs - mobile-friendly */
+.input-mobile {
+  font-size: 1rem;
+  /* 16px to prevent zoom on iOS */
 }
 
 
@@ -80,6 +173,7 @@
 :root {
   --color-bg-primary: #ffffff;
   --color-bg-secondary: #f0f2f5;
+  --color-bg-secondary-rgb: 240, 242, 245;
   --color-bg-tertiary: #fafafa;
   --color-text-primary: #000000;
   --color-text-secondary: #8696a0;
@@ -93,6 +187,7 @@
 .dark {
   --color-bg-primary: #141414;
   --color-bg-secondary: #1f1f1f;
+  --color-bg-secondary-rgb: 31, 31, 31;
   --color-bg-tertiary: #2a2a2a;
   --color-text-primary: #e9edef;
   --color-text-secondary: #8696a0;

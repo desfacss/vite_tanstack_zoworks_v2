@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Modal, Form as AntDForm, Input, Select, DatePicker, notification, Spin, List, Card, Space, Popconfirm } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { Button, Modal, notification, Spin, List, Card, Popconfirm } from 'antd';
+import { Plus, Pencil, Trash2 } from 'lucide-react';
 import moment from 'moment';
 // import DynamicForm from './DynamicForm'; // Assuming DynamicForm is in the same directory or accessible path
 // import { supabase } from '../../lib/supabase'; // Adjust path to your Supabase client
@@ -168,7 +168,7 @@ const ActivitiesManager: React.FC<ActivitiesManagerProps> = ({ entity_name, enti
       .channel(`activities_for_${entity_name}_${entity_id}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'ent_activities', filter: `entity_name=eq.${entity_name}` }, payload => {
         // Only update if the change is relevant to the current entity_id
-        const changedActivity = payload.new || payload.old;
+        const changedActivity = (payload.new || payload.old) as any;
         if (changedActivity && changedActivity.entity_id === entity_id) {
           fetchActivities(); // Re-fetch to ensure data consistency
         }
@@ -212,11 +212,9 @@ const ActivitiesManager: React.FC<ActivitiesManagerProps> = ({ entity_name, enti
   // Handle form submission (add or update)
   const handleFormSubmit = async (formData: any) => {
     setSubmitting(true);
-    const userId = (await supabase.auth.getSession()).data.session?.user?.id;
-
     // Determine common fields from formData
     const commonFields = {
-      created_by:user?.id,
+      created_by: user?.id,
       activity_type: formData.activity_type,
       priority: formData.priority,
       subject: formData.subject,
@@ -289,7 +287,7 @@ const ActivitiesManager: React.FC<ActivitiesManagerProps> = ({ entity_name, enti
     <Card
       // title={`Activities for ${entity_name} (ID: ${entity_id})`}
       extra={
-        <Button type="primary" icon={<PlusOutlined />} onClick={handleAddActivity}>
+        <Button type="primary" icon={<Plus size={16} />} onClick={handleAddActivity}>
           Add Activity
         </Button>
       }
@@ -302,7 +300,7 @@ const ActivitiesManager: React.FC<ActivitiesManagerProps> = ({ entity_name, enti
           renderItem={activity => (
             <List.Item
               actions={[
-                <Button key="edit" type="link" icon={<EditOutlined />} onClick={() => handleEditActivity(activity)}>Edit</Button>,
+                <Button key="edit" type="link" icon={<Pencil size={14} />} onClick={() => handleEditActivity(activity)}>Edit</Button>,
                 <Popconfirm
                   key="delete"
                   title="Are you sure to delete this activity?"
@@ -310,7 +308,7 @@ const ActivitiesManager: React.FC<ActivitiesManagerProps> = ({ entity_name, enti
                   okText="Yes"
                   cancelText="No"
                 >
-                  <Button type="link" danger icon={<DeleteOutlined />}>Delete</Button>
+                  <Button type="link" danger icon={<Trash2 size={14} />}>Delete</Button>
                 </Popconfirm>,
               ]}
               className="px-4 py-3 border-b last:border-b-0"

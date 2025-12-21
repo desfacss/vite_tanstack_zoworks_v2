@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { 
-  Upload, 
+import {
+  Upload,
   Button,
   message,
   Select,
@@ -14,10 +14,10 @@ import { 
   DatePicker, // 1. IMPORT DatePicker
 } from 'antd';
 import {
-  DownloadOutlined,
-  UploadOutlined,
-  WarningOutlined,
-} from '@ant-design/icons';
+  Download,
+  Upload as UploadIcon,
+  AlertTriangle,
+} from 'lucide-react';
 import { ColumnsType } from 'antd/lib/table';
 import { SupabaseClient } from '@supabase/supabase-js';
 import Papa from 'papaparse';
@@ -57,12 +57,12 @@ interface BulkUploadProps {
 // --- Editable Cell Component (Defined outside for memoization) ---
 
 interface EditableCellProps extends React.HTMLAttributes<HTMLElement> {
-    record: ParsedRow;
-    dataIndex: string;
-    metadata: EntityMetadata;
-    foreignKeyOptions: Array<{ label: string; value: string }>;
-    children: React.ReactNode;
-    form: any; // Passed down from BulkUpload
+  record: ParsedRow;
+  dataIndex: string;
+  metadata: EntityMetadata;
+  foreignKeyOptions: Array<{ label: string; value: string }>;
+  children: React.ReactNode;
+  form: any; // Passed down from BulkUpload
 }
 
 const EditableCell: React.FC<EditableCellProps> = ({
@@ -80,41 +80,41 @@ const EditableCell: React.FC<EditableCellProps> = ({
   const handleChange = (value: any) => {
     // For DatePicker, value is a dayjs object, convert it to a string (ISO 8601 for Supabase)
     const normalizedValue = dayjs.isDayjs(value) ? value.format('YYYY-MM-DD') : value;
-    
+
     // Get the current row's data
     const currentRow = form.getFieldValue(record._key);
     let newErrors = currentRow._errors ? [...currentRow._errors] : [];
-    
+
     // Check if the mandatory field error exists and if the new value is valid
     if (metadata.is_mandatory) {
-        const errorText = `${metadata.display_name} is mandatory.`;
-        // Check if the normalized value is considered filled
-        const isNowFilled = normalizedValue !== null && normalizedValue !== undefined && String(normalizedValue).trim() !== '';
+      const errorText = `${metadata.display_name} is mandatory.`;
+      // Check if the normalized value is considered filled
+      const isNowFilled = normalizedValue !== null && normalizedValue !== undefined && String(normalizedValue).trim() !== '';
 
-        if (isNowFilled) {
-            // Remove the mandatory error if it was filled
-            newErrors = newErrors.filter(err => err !== errorText);
-        } else {
-             // Re-add the error if it's mandatory but still empty
-             if (!newErrors.includes(errorText)) {
-                 newErrors.push(errorText);
-             }
+      if (isNowFilled) {
+        // Remove the mandatory error if it was filled
+        newErrors = newErrors.filter(err => err !== errorText);
+      } else {
+        // Re-add the error if it's mandatory but still empty
+        if (!newErrors.includes(errorText)) {
+          newErrors.push(errorText);
         }
+      }
     }
-    
+
     // Update the form state for the whole row to reflect the new errors
     form.setFieldsValue({
-        [record._key]: {
-            ...currentRow,
-            [dataIndex]: normalizedValue, // Update the actual cell value
-            _errors: newErrors.length > 0 ? newErrors : undefined, // Update the errors array
-        }
+      [record._key]: {
+        ...currentRow,
+        [dataIndex]: normalizedValue, // Update the actual cell value
+        _errors: newErrors.length > 0 ? newErrors : undefined, // Update the errors array
+      }
     });
   };
-    
+
   const isForeignKey = !!metadata?.foreign_key;
   const isDateType = metadata?.type === 'date' || metadata?.type?.includes('timestamp');
-  
+
   let inputNode;
 
   if (isForeignKey) {
@@ -130,13 +130,13 @@ const EditableCell: React.FC<EditableCellProps> = ({
       />
     );
   } else if (isDateType) {
-      // 3. DatePicker for date fields
+    // 3. DatePicker for date fields
     inputNode = (
-        <DatePicker
-            onChange={handleChange}
-            style={{ width: '100%' }}
-            format="YYYY-MM-DD"
-        />
+      <DatePicker
+        onChange={handleChange}
+        style={{ width: '100%' }}
+        format="YYYY-MM-DD"
+      />
     );
   } else {
     // Default to Input for all other types (text, numeric, etc.)
@@ -152,10 +152,10 @@ const EditableCell: React.FC<EditableCellProps> = ({
   // Function to transform the form value for the component (dayjs object for DatePicker)
   const getValueProps = (value: any) => {
     if (isDateType && value) {
-        // Convert the string value back to a dayjs object for the DatePicker to display
-        // Handle cases where the value might be 'null' or empty string from parsing
-        const dateString = String(value).trim();
-        return { value: dateString ? dayjs(dateString) : null };
+      // Convert the string value back to a dayjs object for the DatePicker to display
+      // Handle cases where the value might be 'null' or empty string from parsing
+      const dateString = String(value).trim();
+      return { value: dateString ? dayjs(dateString) : null };
     }
     return { value };
   };
@@ -167,20 +167,20 @@ const EditableCell: React.FC<EditableCellProps> = ({
         name={[record?._key, dataIndex]}
         style={{ margin: 0 }}
         // Use the custom value transformer for DatePicker
-        getValueProps={getValueProps} 
+        getValueProps={getValueProps}
         // Antd validation rules for mandatory fields
         rules={[
           {
             required: metadata?.is_mandatory,
             message: `The ${metadata?.display_name} is required.`,
             validator: (_, value) => {
-                 // Check both the normalized string/uuid value AND the raw dayjs object for DatePicker
-                 const normalizedValue = dayjs.isDayjs(value) ? value.format('YYYY-MM-DD') : value;
+              // Check both the normalized string/uuid value AND the raw dayjs object for DatePicker
+              const normalizedValue = dayjs.isDayjs(value) ? value.format('YYYY-MM-DD') : value;
 
-                if (metadata?.is_mandatory && (!normalizedValue || String(normalizedValue).trim() === '' || normalizedValue === null)) {
-                    return Promise.reject(new Error(`The ${metadata?.display_name} is required.`));
-                }
-                return Promise.resolve();
+              if (metadata?.is_mandatory && (!normalizedValue || String(normalizedValue).trim() === '' || normalizedValue === null)) {
+                return Promise.reject(new Error(`The ${metadata?.display_name} is required.`));
+              }
+              return Promise.resolve();
             }
           }
         ]}
@@ -308,17 +308,17 @@ const BulkUpload: React.FC<BulkUploadProps> = ({ supabase }) => {
 
         // 4. Date normalization for initial parsing
         if (col.type === 'date' || col.type.includes('timestamp')) {
-            if (value && String(value).trim() !== '') {
-                // Try to parse the date from the CSV string, assuming various formats
-                const date = dayjs(value);
-                value = date.isValid() ? date.format('YYYY-MM-DD') : value; // Keep original if invalid
-                newRow[col.key] = value;
-            }
+          if (value && String(value).trim() !== '') {
+            // Try to parse the date from the CSV string, assuming various formats
+            const date = dayjs(value);
+            value = date.isValid() ? date.format('YYYY-MM-DD') : value; // Keep original if invalid
+            newRow[col.key] = value;
+          }
         }
-        
+
         // Mandatory check during file parsing
         if (col.is_mandatory && (!value || String(value).trim() === '')) {
-            newRow._errors!.push(`${col.display_name} is mandatory.`);
+          newRow._errors!.push(`${col.display_name} is mandatory.`);
         }
 
         if (String(value).trim() === "") {
@@ -332,7 +332,7 @@ const BulkUpload: React.FC<BulkUploadProps> = ({ supabase }) => {
           } else {
             // Only add error if it's not a mandatory error (to avoid double reporting)
             if (!newRow._errors!.some(err => err.includes(col.display_name) && err.includes('mandatory'))) {
-                newRow._errors!.push(`Invalid ${col.display_name}: '${value}' not found.`);
+              newRow._errors!.push(`Invalid ${col.display_name}: '${value}' not found.`);
             }
           }
         }
@@ -446,10 +446,10 @@ const BulkUpload: React.FC<BulkUploadProps> = ({ supabase }) => {
     const columns: ColumnsType<ParsedRow> = templateColumns.map((col) => {
       return {
         title: (
-            <Text style={{ color: col.is_mandatory ? 'red' : 'inherit' }}>
-                {col.display_name}
-                {col.is_mandatory && ' *'}
-            </Text>
+          <Text style={{ color: col.is_mandatory ? 'red' : 'inherit' }}>
+            {col.display_name}
+            {col.is_mandatory && ' *'}
+          </Text>
         ),
         dataIndex: col.key,
         key: col.key,
@@ -475,7 +475,7 @@ const BulkUpload: React.FC<BulkUploadProps> = ({ supabase }) => {
               title={recordWithErrors._errors.join('; ')}
               color="red"
             >
-              <WarningOutlined style={{ color: 'red' }} />
+              <AlertTriangle size={16} className="text-red-500" />
             </Tooltip>
           );
         }
@@ -496,26 +496,26 @@ const BulkUpload: React.FC<BulkUploadProps> = ({ supabase }) => {
   const handleBulkUpload = async () => {
     try {
       setUploading(true);
-      
+
       // 1. Trigger all Ant Design client-side validations
       await form.validateFields();
-      
+
       // 2. Get the final, valid values from the form
       const values = form.getFieldsValue(true);
-      
+
       // 3. Filter out rows with *any* remaining errors (from parsing or validation)
       const rowsToUpload = Object.values(values)
         .filter((row: any) => !row._errors || row._errors.length === 0)
         .filter((row: any) => {
-             // Filter out rows that are empty objects or contain only empty values
-             return row && Object.entries(row).some(([key, value]) => 
-                 key !== '_key' && key !== '_errors' && value !== null && value !== '' && value !== undefined
-             );
+          // Filter out rows that are empty objects or contain only empty values
+          return row && Object.entries(row).some(([key, value]) =>
+            key !== '_key' && key !== '_errors' && value !== null && value !== '' && value !== undefined
+          );
         })
         .map(
           ({ _key, _errors, ...rest }: any) => {
             // Unflatten and remove nulls for the database
-            const unflattened = unflattenObject({...rest});
+            const unflattened = unflattenObject({ ...rest });
             return removeNullValues(unflattened);
           },
         );
@@ -545,9 +545,9 @@ const BulkUpload: React.FC<BulkUploadProps> = ({ supabase }) => {
       // This block catches validation errors from form.validateFields()
       console.error(err);
       if (err.errorFields) {
-          message.error('Validation failed. Please correct all errors in the table.');
+        message.error('Validation failed. Please correct all errors in the table.');
       } else {
-          message.error('An unexpected error occurred during upload.');
+        message.error('An unexpected error occurred during upload.');
       }
       setUploading(false);
     }
@@ -577,7 +577,7 @@ const BulkUpload: React.FC<BulkUploadProps> = ({ supabase }) => {
           </Option>
         ))}
       </Select>
-      <Button icon={<DownloadOutlined />} disabled={!selectedEntity}>
+      <Button icon={<Download size={16} />} disabled={!selectedEntity}>
         Download Template
       </Button>
 
@@ -588,7 +588,7 @@ const BulkUpload: React.FC<BulkUploadProps> = ({ supabase }) => {
         disabled={!selectedEntity || uploading}
       >
         <Button
-          icon={<UploadOutlined />}
+          icon={<UploadIcon size={16} />}
           loading={uploading}
           disabled={!selectedEntity || uploading}
         >

@@ -13,20 +13,20 @@ import {
   Space,
 } from 'antd';
 import {
-  CheckCircleOutlined,
-  SyncOutlined,
-  CloseCircleOutlined,
-  WarningOutlined,
-  ClockCircleOutlined,
-  FlagOutlined,
-  RocketOutlined,
-  FileTextOutlined,
-  ApartmentOutlined,
-  SendOutlined,
-  BuildOutlined,
-  SolutionOutlined,
-  DollarCircleOutlined,
-} from '@ant-design/icons';
+  CheckCircle,
+  RefreshCw,
+  XCircle,
+  AlertTriangle,
+  Clock,
+  Flag,
+  Rocket,
+  FileText,
+  GitBranch,
+  Send,
+  Wrench,
+  ClipboardList,
+  DollarSign,
+} from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/core/lib/store';
 
@@ -144,17 +144,17 @@ interface TimelineItem {
  */
 function getIconForLog(item: TimelineItem): React.ReactNode {
   if (item.icon) return item.icon;
-  
-  if (item.data?.action_type === 'send_email') return <SendOutlined />;
+
+  if (item.data?.action_type === 'send_email') return <Send size={16} />;
   if (item.data?.action_type === 'create_entity') {
-    if (item.data?.context?.created_entity?.name?.includes('Task')) return <BuildOutlined />;
-    if (item.data?.context?.created_entity?.name?.includes('Service Report')) return <SolutionOutlined />;
-    if (item.data?.context?.created_entity?.name?.includes('Invoice')) return <DollarCircleOutlined />;
-    return <CheckCircleOutlined />;
+    if (item.data?.context?.created_entity?.name?.includes('Task')) return <Wrench size={16} />;
+    if (item.data?.context?.created_entity?.name?.includes('Service Report')) return <ClipboardList size={16} />;
+    if (item.data?.context?.created_entity?.name?.includes('Invoice')) return <DollarSign size={16} />;
+    return <CheckCircle size={16} />;
   }
-   if (item.data?.action_type === 'update_entity') return <SyncOutlined />;
-  
-  return <CheckCircleOutlined />;
+  if (item.data?.action_type === 'update_entity') return <RefreshCw size={16} />;
+
+  return <CheckCircle size={16} />;
 }
 
 /**
@@ -236,15 +236,15 @@ function processLogData(logData: AutomationLogResponse): TimelineItem[] {
     type: 'TICKET_CREATED',
     data: logData.ticket,
     color: 'green',
-    icon: <RocketOutlined />,
+    icon: <Rocket size={16} />,
   });
 
   logData.automation_trace.esm_logs.forEach((log) => {
-    let icon = <ApartmentOutlined />;
-    if (log.entity_type === 'tasks') icon = <BuildOutlined />;
-    if (log.entity_type === 'service_reports') icon = <SolutionOutlined />;
-    if (log.entity_type === 'invoices') icon = <DollarCircleOutlined />;
-    
+    let icon = <GitBranch size={16} />;
+    if (log.entity_type === 'tasks') icon = <Wrench size={16} />;
+    if (log.entity_type === 'service_reports') icon = <ClipboardList size={16} />;
+    if (log.entity_type === 'invoices') icon = <DollarSign size={16} />;
+
     items.push({
       id: log.id,
       timestamp: log.created_at,
@@ -261,30 +261,30 @@ function processLogData(logData: AutomationLogResponse): TimelineItem[] {
   ];
   allLogs.forEach((log) => {
     let color = 'green';
-    let icon: React.ReactNode = <CheckCircleOutlined />;
+    let icon: React.ReactNode = <CheckCircle size={16} />;
     let type: TimelineItemType = 'WORKFLOW_ACTION';
 
     if (log.status === 'failed') {
       color = 'red';
-      icon = <CloseCircleOutlined />;
+      icon = <XCircle size={16} />;
     } else if (log.status === 'skipped') {
       color = 'gold';
-      icon = <WarningOutlined />;
+      icon = <AlertTriangle size={16} />;
     }
 
     if (log.action_id) {
       type = 'WORKFLOW_ACTION';
       if (log.status === 'success') {
-         // Use context-specific icons for success
-         if(log.context?.action_type === 'send_email') icon = <SendOutlined />;
-         else if(log.context?.created_entity_id) icon = <CheckCircleOutlined/>;
-         else if(log.context?.updated_entity_id) icon = <SyncOutlined/>;
+        // Use context-specific icons for success
+        if (log.context?.action_type === 'send_email') icon = <Send size={16} />;
+        else if (log.context?.created_entity_id) icon = <CheckCircle size={16} />;
+        else if (log.context?.updated_entity_id) icon = <RefreshCw size={16} />;
       }
     } else {
       type = 'WORKFLOW_RULE';
-      icon = <FileTextOutlined />;
+      icon = <FileText size={16} />;
     }
-    
+
     items.push({
       id: log.id,
       timestamp: log.executed_at,
@@ -302,7 +302,7 @@ function processLogData(logData: AutomationLogResponse): TimelineItem[] {
       type: 'SLA_BREACH',
       data: breach,
       color: 'red',
-      icon: <FlagOutlined />,
+      icon: <Flag size={16} />,
     });
   });
 
@@ -313,7 +313,7 @@ function processLogData(logData: AutomationLogResponse): TimelineItem[] {
       type: 'EVENT_FIRED',
       data: event,
       color: 'gray',
-      icon: <ClockCircleOutlined />,
+      icon: <Clock size={16} />,
     });
     if (event.processed_at) {
       const isFailed = event.status === 'failed';
@@ -323,7 +323,7 @@ function processLogData(logData: AutomationLogResponse): TimelineItem[] {
         type: 'EVENT_PROCESSED',
         data: event,
         color: isFailed ? 'red' : 'green',
-        icon: isFailed ? <CloseCircleOutlined /> : <SyncOutlined />,
+        icon: isFailed ? <XCircle size={16} /> : <RefreshCw size={16} />,
       });
     }
   });
@@ -380,7 +380,7 @@ const AutomationLogViewer: React.FC<AutomationLogViewerProps> = ({ ticketId }) =
   }, [logData]);
 
   if (loading) {
-    return <Spin tip="Loading automation trace..." size="large"><div style={{height: 200}} /></Spin>;
+    return <Spin tip="Loading automation trace..." size="large"><div style={{ height: 200 }} /></Spin>;
   }
 
   if (error) {
@@ -404,7 +404,7 @@ const AutomationLogViewer: React.FC<AutomationLogViewerProps> = ({ ticketId }) =
         <Col xs={12} sm={8} md={6} lg={4}>
           <Statistic title="Escalation" value={ticket.escalation_level} />
         </Col>
-         <Col xs={12} sm={8} md={6} lg={4}>
+        <Col xs={12} sm={8} md={6} lg={4}>
           <Statistic title="SLA Breaches" value={summary.total_sla_breaches} />
         </Col>
         <Col xs={12} sm={8} md={6} lg={4}>
@@ -413,10 +413,10 @@ const AutomationLogViewer: React.FC<AutomationLogViewerProps> = ({ ticketId }) =
         <Col xs={12} sm={8} md={6} lg={4}>
           <Statistic title="Workflow Logs" value={summary.total_wf_logs} />
         </Col>
-         <Col xs={12} sm={8} md={6} lg={4}>
+        <Col xs={12} sm={8} md={6} lg={4}>
           <Statistic title="Related Tasks" value={summary.total_tasks} />
         </Col>
-         <Col xs={12} sm={8} md={6} lg={4}>
+        <Col xs={12} sm={8} md={6} lg={4}>
           <Statistic title="Service Reports" value={summary.total_service_reports} />
         </Col>
       </Row>
@@ -440,9 +440,9 @@ const AutomationLogViewer: React.FC<AutomationLogViewerProps> = ({ ticketId }) =
               </Col>
             </Row>
             <Collapse size="small" ghost style={{ padding: 0, margin: 0 }}>
-              <Panel 
-                header={<Text type="secondary" style={{fontSize: '12px'}}>Details</Text>} 
-                key={item.id} 
+              <Panel
+                header={<Text type="secondary" style={{ fontSize: '12px' }}>Details</Text>}
+                key={item.id}
                 style={{ padding: '0 0 0 8px' }}
               >
                 <pre style={{ background: '#f5f5f5', padding: 10, borderRadius: 4, maxHeight: 300, overflow: 'auto' }}>

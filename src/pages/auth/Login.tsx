@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowRightOutlined } from '@ant-design/icons';
+import { ArrowRight } from 'lucide-react';
 import { Button, Form, Input, Card, Space, App, Avatar, Spin } from 'antd';
 import { motion } from 'framer-motion';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -10,7 +10,7 @@ import {
   isDevelopment,
   getTenantUrl
 } from '@/core/bootstrap/TenantResolver';
-import env_def from '@/utils/constants';
+import env_def from '@/core/lib/env';
 
 interface UserOrganization {
   id: string;
@@ -250,7 +250,7 @@ const Login = () => {
                         </div>
                       </div>
                     </div>
-                    <ArrowRightOutlined />
+                    <ArrowRight size={16} />
                   </Button>
                 ))}
               </div>

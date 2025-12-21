@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { DatePicker, Input, Select, Tag, Tooltip, Typography } from "antd";
 import dayjs, { Dayjs } from "dayjs";
 import EditableTableWidget from "./TableWidget"; // Assuming this is typed elsewhere
-import { CheckOutlined, QuestionCircleOutlined } from "@ant-design/icons";
+import { Check, HelpCircle } from "lucide-react";
 import { WidgetProps } from "@rjsf/utils";
 
 const { RangePicker } = DatePicker;
@@ -247,11 +247,13 @@ const SelectableTags: React.FC<WidgetProps & { options: TagOptions }> = ({
               }}
               className={isSelected ? "selected-tag" : ""}
             >
-              <CheckOutlined
+              <Check
+                size={12}
                 style={{ marginRight: "2px", color: "green", visibility: "hidden" }}
               />
               {tag.label}
-              <CheckOutlined
+              <Check
+                size={12}
                 style={{
                   marginLeft: "2px",
                   color: "green",
@@ -309,17 +311,19 @@ const CustomDescriptionWidget = ({ options }) => {
   return (
     <div style={{ padding: "10px 0" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        {name ? <Typography.Title level={4} style={{ margin: 0 }}>{name}</Typography.Title>:<></>}
+        {name ? <Typography.Title level={4} style={{ margin: 0 }}>{name}</Typography.Title> : <></>}
         {helpText && name && (
           isMobile ? (
-            <QuestionCircleOutlined
+            <HelpCircle
               onClick={handleHelpClick}
-              style={{ color: "#1890ff", cursor: "pointer", fontSize: 18 }}
+              size={18}
+              style={{ color: "#1890ff", cursor: "pointer" }}
             />
           ) : (
             <Tooltip title={helpText} placement="right">
-              <QuestionCircleOutlined
-                style={{ color: "#1890ff", cursor: "pointer", fontSize: 18 }}
+              <HelpCircle
+                size={18}
+                style={{ color: "#1890ff", cursor: "pointer" }}
               />
             </Tooltip>
           )

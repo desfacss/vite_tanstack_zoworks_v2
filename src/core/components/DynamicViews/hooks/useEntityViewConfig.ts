@@ -45,7 +45,7 @@ export const useEntityViewConfig = (entityType: string) => {
     },
     enabled: !!entityType && !!organization?.id, // Only run if entityType and organization are available
     staleTime: 24 * 60 * 60 * 1000, // Cache for 24 hours
-    cacheTime: 30 * 24 * 60 * 60 * 1000, // Keep in cache for 30 days
+    gcTime: 30 * 24 * 60 * 60 * 1000, // Keep in cache for 30 days
     retry: 2, // Retry twice on failure
   });
 };

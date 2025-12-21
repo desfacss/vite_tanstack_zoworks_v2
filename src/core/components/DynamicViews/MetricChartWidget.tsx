@@ -84,7 +84,7 @@ const MetricChartWidget: React.FC<MetricChartWidgetProps> = ({ widgetConfig, vie
     },
     enabled: !!metricDefinition && !!organization?.id && !!entitySchema && !!entityType,
     staleTime: 5000,
-    cacheTime: 10 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 
   const lastUpdated = metricData?.[0]?.last_calculated_at

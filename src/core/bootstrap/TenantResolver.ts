@@ -1,6 +1,6 @@
 
 import { supabase } from '@/core/lib/supabase';
-import env_def from '@/utils/constants';
+import env_def from '@/core/lib/env';
 
 /**
  * Tenant configuration resolved from identity.v_organizations.
@@ -14,10 +14,31 @@ export interface TenantConfig {
     enabled_modules: string[];         // Merged list of active module keys
     module_config: Record<string, any>; // Inherited & specific module settings
     theme_config: {
-        mode: 'light' | 'dark';
+        mode?: 'light' | 'dark';
         primaryColor: string;
         brandName: string;
         logoUrl?: string;
+        borderRadius?: number;
+        light?: {
+            primaryColor: string;
+            logoUrl?: string;
+            cardBg?: string;
+            layoutBg?: string;
+            headerBg?: string;
+            siderBg?: string;
+            inputBg?: string;
+            textColor?: string;
+        };
+        dark?: {
+            primaryColor: string;
+            logoUrl?: string;
+            cardBg?: string;
+            layoutBg?: string;
+            headerBg?: string;
+            siderBg?: string;
+            inputBg?: string;
+            textColor?: string;
+        };
     };
     enabled_languages: string[];
     default_language: string;

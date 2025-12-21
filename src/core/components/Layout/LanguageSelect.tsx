@@ -1,15 +1,11 @@
 import { Select } from 'antd';
 import { useTranslation } from 'react-i18next';
-import env_def from '@/utils/constants';
-import { useAuthStore } from '@/core/lib/store';
-
 const { Option } = Select;
 
 export const LanguageSelect = () => {
   const { i18n } = useTranslation();
-  const { organization } = useAuthStore();
-  // if(env_def?.LANGUAGE!=="true") return null; // Return null if LANGUAGE is disabled
-  if (organization?.app_settings?.customization?.language !== "true") return null; // Return null if LANGUAGE is disabled
+  // Always allow language selection
+  // if (organization?.app_settings?.customization?.language !== "true") return null;
 
   return (
     <Select

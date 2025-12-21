@@ -14,16 +14,13 @@ import {
   Building2,
   CreditCard,
   Users2,
-  Plus
+  Plus,
+  PanelLeftClose,
+  PanelLeft,
+  Bell,
+  Settings,
+  User
 } from 'lucide-react';
-import {
-  MenuFoldOutlined,
-  MenuUnfoldOutlined,
-  BellOutlined,
-  SearchOutlined,
-  SettingOutlined,
-  UserOutlined
-} from '@ant-design/icons';
 import { useAuthStore } from '@/core/lib/store';
 import { supabase, getCurrentOrganization, getCurrentUser } from '../../lib/supabase';
 import { ThemeToggle } from './ThemeToggle';

@@ -1,7 +1,6 @@
 // // // // // // import React, { useState, useEffect } from 'react';
 // // // // // // import { Responsive, WidthProvider } from 'react-grid-layout';
 // // // // // // import { Card, Button, Dropdown, Menu, Popconfirm, Typography } from 'antd';
-// // // // // // import { DeleteOutlined, SettingOutlined } from '@ant-design/icons';
 // // // // // // import { WidgetWrapper, BaseChart, KPIWidget, TableWidget } from './WidgetRenderers';
 // // // // // // import _ from 'lodash';
 
@@ -52,7 +51,7 @@
 // // // // // //   const renderWidgetContent = (widget: any) => {
 // // // // // //     const def = widgetDefinitions[widget.definitionId];
 // // // // // //     const wData = widgetData[widget.id] || { loading: false, data: null, error: null };
-    
+
 // // // // // //     if (!def) return <div className="p-4 text-red-500">Definition Missing</div>;
 
 // // // // // //     // Merge widget instance config with template config
@@ -95,7 +94,7 @@
 // // // // // //             {/* Widget Header */}
 // // // // // //             <div className={`flex justify-between items-center px-4 py-2 border-b ${isEditMode ? 'cursor-move' : ''}`}>
 // // // // // //               <Text strong className="truncate select-none">{widget.title}</Text>
-              
+
 // // // // // //               {isEditMode && (
 // // // // // //                 <div className="flex gap-1" onMouseDown={e => e.stopPropagation()}>
 // // // // // //                    <Button 
@@ -110,7 +109,7 @@
 // // // // // //                 </div>
 // // // // // //               )}
 // // // // // //             </div>
-            
+
 // // // // // //             {/* Widget Body */}
 // // // // // //             <div className="flex-1 p-2 overflow-hidden relative">
 // // // // // //                {renderWidgetContent(widget)}
@@ -128,7 +127,6 @@
 // // // // // import React, { useMemo } from 'react';
 // // // // // import { Responsive, WidthProvider } from 'react-grid-layout';
 // // // // // import { Button, Popconfirm, Typography, Card } from 'antd';
-// // // // // import { DeleteOutlined, SettingOutlined, DragOutlined } from '@ant-design/icons';
 // // // // // import { WidgetWrapper, BaseChart, KPIWidget, TableWidget } from './WidgetRenderers';
 // // // // // import _ from 'lodash';
 
@@ -179,7 +177,7 @@
 // // // // //     // RGL sometimes fires with 0 width/height on mount. Ignore those.
 // // // // //     // Also ignore if the layout array is empty but we have widgets.
 // // // // //     if (currentLayout.length === 0 && widgets.length > 0) return;
-    
+
 // // // // //     // Pass the raw RGL layout up to the parent
 // // // // //     onLayoutChange(currentLayout);
 // // // // //   };
@@ -187,7 +185,7 @@
 // // // // //   const renderWidgetContent = (widget: any) => {
 // // // // //     const def = widgetDefinitions[widget.definitionId];
 // // // // //     const wData = widgetData[widget.id] || { loading: false, data: null, error: null };
-    
+
 // // // // //     if (!def) {
 // // // // //       return (
 // // // // //         <div className="h-full flex flex-col justify-center items-center bg-red-50 text-red-500 p-2 text-center">
@@ -219,15 +217,15 @@
 // // // // //         breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
 // // // // //         cols={{ lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 }}
 // // // // //         rowHeight={60}
-        
+
 // // // // //         // Edit Mode Controls
 // // // // //         isDraggable={isEditMode}
 // // // // //         isResizable={isEditMode}
 // // // // //         draggableHandle=".drag-handle" // Only drag from the header
-        
+
 // // // // //         // Critical: This callback updates the parent state
 // // // // //         onLayoutChange={handleRGLChange}
-        
+
 // // // // //         // Visuals
 // // // // //         margin={[16, 16]}
 // // // // //         containerPadding={[0, 0]}
@@ -241,7 +239,7 @@
 // // // // //                 {isEditMode && <DragOutlined className="text-gray-400" />}
 // // // // //                 <Text strong className="truncate select-none" style={{ fontSize: '14px' }}>{widget.title}</Text>
 // // // // //               </div>
-              
+
 // // // // //               {isEditMode && (
 // // // // //                 <div className="flex gap-1" onMouseDown={e => e.stopPropagation()}>
 // // // // //                    <Button 
@@ -261,7 +259,7 @@
 // // // // //                 </div>
 // // // // //               )}
 // // // // //             </div>
-            
+
 // // // // //             {/* Widget Body */}
 // // // // //             <div className="flex-1 p-2 overflow-hidden relative h-full">
 // // // // //                {renderWidgetContent(widget)}
@@ -279,7 +277,6 @@
 // // // // import React, { useMemo } from 'react';
 // // // // import { Responsive, WidthProvider } from 'react-grid-layout';
 // // // // import { Button, Popconfirm, Typography } from 'antd';
-// // // // import { DeleteOutlined, SettingOutlined, DragOutlined } from '@ant-design/icons';
 // // // // import { WidgetWrapper, BaseChart, KPIWidget, TableWidget } from './WidgetRenderers';
 // // // // import _ from 'lodash';
 
@@ -334,7 +331,7 @@
 // // // //   const renderWidgetContent = (widget: any) => {
 // // // //     const def = widgetDefinitions[widget.definitionId];
 // // // //     const wData = widgetData[widget.id] || { loading: false, data: null, error: null };
-    
+
 // // // //     if (!def) {
 // // // //       return (
 // // // //         <div className="h-full flex flex-col justify-center items-center bg-red-50 text-red-500 p-2 text-center border-red-100 border">
@@ -361,25 +358,25 @@
 // // // //       <ResponsiveGridLayout
 // // // //         className="layout"
 // // // //         layouts={{ lg: layout, md: layout, sm: layout }} // Force same layout logic across breakpoints to prevent scattering
-        
+
 // // // //         // Tablet/Mobile Breakpoints Tuning
 // // // //         breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
-        
+
 // // // //         // Columns: Keeping them divisible helps alignment. 
 // // // //         // iPad (md) usually fits 12 cols fine, but 10 is safer for smaller tablets.
 // // // //         cols={{ lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 }}
-        
+
 // // // //         // Height
 // // // //         rowHeight={60}
-        
+
 // // // //         // Interactions
 // // // //         isDraggable={isEditMode}
 // // // //         isResizable={isEditMode}
 // // // //         draggableHandle=".drag-handle"
-        
+
 // // // //         // Handlers
 // // // //         onLayoutChange={handleRGLChange}
-        
+
 // // // //         // Visuals
 // // // //         margin={[16, 16]}
 // // // //         containerPadding={[0, 0]}
@@ -393,7 +390,7 @@
 // // // //                 {isEditMode && <DragOutlined className="text-gray-400" />}
 // // // //                 <Text strong className="truncate select-none text-xs sm:text-sm">{widget.title}</Text>
 // // // //               </div>
-              
+
 // // // //               {isEditMode && (
 // // // //                 <div className="flex gap-1" onMouseDown={e => e.stopPropagation()}>
 // // // //                    <Button type="text" size="small" icon={<SettingOutlined />} onClick={() => onEditWidget(widget)}/>
@@ -403,7 +400,7 @@
 // // // //                 </div>
 // // // //               )}
 // // // //             </div>
-            
+
 // // // //             {/* Widget Body - Critical: flex-1 ensures it fills height */}
 // // // //             <div className="flex-1 p-2 overflow-hidden relative h-full w-full">
 // // // //                {renderWidgetContent(widget)}
@@ -420,7 +417,6 @@
 // // // import React, { useMemo, useState } from 'react';
 // // // import { Responsive, WidthProvider } from 'react-grid-layout';
 // // // import { Button, Popconfirm, Typography } from 'antd';
-// // // import { DeleteOutlined, SettingOutlined, DragOutlined } from '@ant-design/icons';
 // // // import { WidgetWrapper, BaseChart, KPIWidget, TableWidget } from './WidgetRenderers';
 // // // import _ from 'lodash';
 
@@ -482,7 +478,7 @@
 // // //   const renderWidgetContent = (widget: any) => {
 // // //     const def = widgetDefinitions[widget.definitionId];
 // // //     const wData = widgetData[widget.id] || { loading: false, data: null, error: null };
-    
+
 // // //     if (!def) {
 // // //       return (
 // // //         <div className="h-full flex flex-col justify-center items-center bg-red-50 text-red-500 p-2 text-center border-red-100 border">
@@ -508,32 +504,32 @@
 // // //     <div className="dashboard-canvas bg-gray-50 p-2 sm:p-4 rounded-lg min-h-[80vh]">
 // // //       <ResponsiveGridLayout
 // // //         className="layout"
-        
+
 // // //         // 3. SMART BREAKPOINTS & COLUMNS
 // // //         // md (iPad Landscape) is set to 12 cols to match Desktop. This fixes the "Scattering".
 // // //         // sm (iPad Portrait) is 6 cols.
 // // //         // xs (Mobile) is 1 col for a clean stack.
 // // //         breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
 // // //         cols={{ lg: 12, md: 12, sm: 6, xs: 1, xxs: 1 }}
-        
+
 // // //         // 4. SELECTIVE LAYOUT INJECTION
 // // //         // We ONLY pass the explicit layout for 'lg' and 'md'.
 // // //         // We deliberately OMIT 'sm', 'xs', 'xxs'. 
 // // //         // This forces the library to auto-generate a packed layout for mobile based on DOM order,
 // // //         // fixing the "Gaps" and "Half-displayed" issues.
 // // //         layouts={{ lg: masterLayout, md: masterLayout }}
-        
+
 // // //         rowHeight={60}
-        
+
 // // //         // Interactions
 // // //         isDraggable={isEditMode}
 // // //         isResizable={isEditMode}
 // // //         draggableHandle=".drag-handle"
-        
+
 // // //         // Handlers
 // // //         onLayoutChange={handleRGLChange}
 // // //         onBreakpointChange={(newBreakpoint) => setCurrentBreakpoint(newBreakpoint)}
-        
+
 // // //         // Visuals
 // // //         margin={[16, 16]}
 // // //         containerPadding={[0, 0]}
@@ -547,7 +543,7 @@
 // // //                 {isEditMode && <DragOutlined className="text-gray-400" />}
 // // //                 <Text strong className="truncate select-none text-xs sm:text-sm">{widget.title}</Text>
 // // //               </div>
-              
+
 // // //               {isEditMode && (
 // // //                 <div className="flex gap-1" onMouseDown={e => e.stopPropagation()}>
 // // //                    <Button type="text" size="small" icon={<SettingOutlined />} onClick={() => onEditWidget(widget)}/>
@@ -557,7 +553,7 @@
 // // //                 </div>
 // // //               )}
 // // //             </div>
-            
+
 // // //             {/* Widget Body */}
 // // //             <div className="flex-1 p-2 overflow-hidden relative h-full w-full">
 // // //                {renderWidgetContent(widget)}
@@ -574,7 +570,6 @@
 // // import React, { useMemo, useState } from 'react';
 // // import { Responsive, WidthProvider } from 'react-grid-layout';
 // // import { Button, Popconfirm, Typography } from 'antd';
-// // import { DeleteOutlined, SettingOutlined, DragOutlined } from '@ant-design/icons';
 // // import { WidgetWrapper, BaseChart, KPIWidget, TableWidget } from './WidgetRenderers';
 // // import _ from 'lodash';
 
@@ -668,7 +663,7 @@
 // //   const renderWidgetContent = (widget: any) => {
 // //     const def = widgetDefinitions[widget.definitionId];
 // //     const wData = widgetData[widget.id] || { loading: false, data: null, error: null };
-    
+
 // //     if (!def) {
 // //       return (
 // //         <div className="h-full flex flex-col justify-center items-center bg-red-50 text-red-500 p-2 text-center border-red-100 border">
@@ -694,29 +689,29 @@
 // //     <div className="dashboard-canvas bg-gray-50 p-2 sm:p-4 rounded-lg min-h-[80vh]">
 // //       <ResponsiveGridLayout
 // //         className="layout"
-        
+
 // //         // BREAKPOINTS
 // //         // lg: Desktop (1200px+)
 // //         // md: iPad Landscape / Small Laptop (996px+)
 // //         // sm: iPad Portrait (768px+)
 // //         breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
-        
+
 // //         // COLUMNS
 // //         // We keep 12 columns for lg and md to allow the 50% split logic (6/12) to work.
 // //         cols={{ lg: 12, md: 12, sm: 12, xs: 1, xxs: 1 }}
-        
+
 // //         // LAYOUTS injected from our Smart Generator
 // //         layouts={layouts}
-        
+
 // //         rowHeight={60}
-        
+
 // //         isDraggable={isEditMode}
 // //         isResizable={isEditMode}
 // //         draggableHandle=".drag-handle"
-        
+
 // //         onLayoutChange={handleRGLChange}
 // //         onBreakpointChange={(newBreakpoint) => setCurrentBreakpoint(newBreakpoint)}
-        
+
 // //         margin={[16, 16]}
 // //         containerPadding={[0, 0]}
 // //         useCSSTransforms={true}
@@ -728,7 +723,7 @@
 // //                 {isEditMode && <DragOutlined className="text-gray-400" />}
 // //                 <Text strong className="truncate select-none text-xs sm:text-sm">{widget.title}</Text>
 // //               </div>
-              
+
 // //               {isEditMode && (
 // //                 <div className="flex gap-1" onMouseDown={e => e.stopPropagation()}>
 // //                    <Button type="text" size="small" icon={<SettingOutlined />} onClick={() => onEditWidget(widget)}/>
@@ -755,7 +750,6 @@
 // import React, { useMemo, useState } from 'react';
 // import { Responsive, WidthProvider } from 'react-grid-layout';
 // import { Button, Popconfirm, Typography } from 'antd';
-// import { DeleteOutlined, SettingOutlined, DragOutlined } from '@ant-design/icons';
 // import { WidgetWrapper, BaseChart, KPIWidget, TableWidget } from './WidgetRenderers';
 // import _ from 'lodash';
 
@@ -813,14 +807,14 @@
 //     const generateSmartLayout = (baseWidgets: any[], expansionFactor: number) => {
 //       let currentRowY = 0;
 //       let currentX = 0;
-      
+
 //       return baseWidgets.map((w) => {
 //         const originalW = w.position?.w || 4;
-        
+
 //         // SMART WIDTH CALCULATION
 //         // Map desktop widths to tablet widths
 //         let newW = originalW;
-        
+
 //         if (originalW <= 2) newW = 3;       // 6 items/row -> 4 items/row
 //         else if (originalW === 3) newW = 4; // 4 items/row -> 3 items/row
 //         else if (originalW === 4) newW = 6; // 3 items/row -> 2 items/row
@@ -845,7 +839,7 @@
 
 //         // Advance X cursor
 //         currentX += newW;
-        
+
 //         return item;
 //       });
 //     };
@@ -896,7 +890,7 @@
 //   const renderWidgetContent = (widget: any) => {
 //     const def = widgetDefinitions[widget.definitionId];
 //     const wData = widgetData[widget.id] || { loading: false, data: null, error: null };
-    
+
 //     if (!def) {
 //       return (
 //         <div className="h-full flex flex-col justify-center items-center bg-red-50 text-red-500 p-2 text-center border-red-100 border">
@@ -922,27 +916,27 @@
 //     <div className="dashboard-canvas bg-gray-50 p-2 sm:p-4 rounded-lg min-h-[80vh]">
 //       <ResponsiveGridLayout
 //         className="layout"
-        
+
 //         // --- ADJUSTED BREAKPOINTS ---
 //         // lg: 1400+ (Desktop Monitors) -> USES DB LAYOUT
 //         // md: 900 - 1399 (Laptops, iPad Pro Landscape) -> USES SMART LAYOUT 1 (3 or 2 cols)
 //         // sm: 600 - 899 (Tablets Portrait) -> USES SMART LAYOUT 2 (2 cols strict)
 //         // xs: < 600 (Mobile) -> USES 1 COL STACK
 //         breakpoints={{ lg: 1400, md: 900, sm: 600, xs: 480, xxs: 0 }}
-        
+
 //         // All desktop/tablet views utilize 12 columns for granular spacing
 //         cols={{ lg: 12, md: 12, sm: 12, xs: 1, xxs: 1 }}
-        
+
 //         layouts={layouts}
 //         rowHeight={60}
-        
+
 //         isDraggable={isEditMode && currentBreakpoint === 'lg'} // Only allow drag on Master View
 //         isResizable={isEditMode && currentBreakpoint === 'lg'} // Only allow resize on Master View
 //         draggableHandle=".drag-handle"
-        
+
 //         onLayoutChange={handleRGLChange}
 //         onBreakpointChange={setCurrentBreakpoint}
-        
+
 //         margin={[16, 16]}
 //         containerPadding={[0, 0]}
 //         useCSSTransforms={true}
@@ -955,7 +949,7 @@
 //                 {isEditMode && currentBreakpoint === 'lg' && <DragOutlined className="text-gray-400" />}
 //                 <Text strong className="truncate select-none text-xs sm:text-sm">{widget.title}</Text>
 //               </div>
-              
+
 //               {isEditMode && currentBreakpoint === 'lg' && (
 //                 <div className="flex gap-1" onMouseDown={e => e.stopPropagation()}>
 //                    <Button type="text" size="small" icon={<SettingOutlined />} onClick={() => onEditWidget(widget)}/>
@@ -977,7 +971,7 @@
 import React, { useState, useEffect } from 'react';
 import { Responsive, WidthProvider } from 'react-grid-layout';
 import { Button, Popconfirm, Typography, Badge } from 'antd';
-import { DeleteOutlined, SettingOutlined, DragOutlined, TabletOutlined, DesktopOutlined, MobileOutlined } from '@ant-design/icons';
+import { Trash2, Settings, GripVertical, Tablet, Monitor, Smartphone } from 'lucide-react';
 import { WidgetWrapper, BaseChart, KPIWidget, TableWidget } from './WidgetRenderers';
 import _ from 'lodash';
 
@@ -1019,9 +1013,9 @@ const DashboardCanvas: React.FC<DashboardCanvasProps> = ({
       const xxs: any[] = []; // Tiny Phone (< 480px)
 
       const sortedWidgets = [...widgets].sort((a, b) => {
-         const yA = a.layouts?.lg?.y ?? a.position?.y ?? 0;
-         const yB = b.layouts?.lg?.y ?? b.position?.y ?? 0;
-         return yA - yB;
+        const yA = a.layouts?.lg?.y ?? a.position?.y ?? 0;
+        const yB = b.layouts?.lg?.y ?? b.position?.y ?? 0;
+        return yA - yB;
       });
 
       sortedWidgets.forEach((w, i) => {
@@ -1048,20 +1042,20 @@ const DashboardCanvas: React.FC<DashboardCanvasProps> = ({
 
         // -- TABLET PORTRAIT (sm) --
         if (w.layouts?.sm) {
-           sm.push({ i: id, ...w.layouts.sm, minW: 2, minH: 2 });
+          sm.push({ i: id, ...w.layouts.sm, minW: 2, minH: 2 });
         } else {
-           // Default to full width (12) or half (6) based on size
-           sm.push({ i: id, x: 0, y: i, w: 12, h: lgH, minW: 2, minH: 2 });
+          // Default to full width (12) or half (6) based on size
+          sm.push({ i: id, x: 0, y: i, w: 12, h: lgH, minW: 2, minH: 2 });
         }
 
         // -- LARGE PHONE / SMALL TABLET (xs) -- 
         // We use 6 columns here to allow resizing
         if (w.layouts?.xs) {
-           xs.push({ i: id, ...w.layouts.xs, minW: 2, minH: 2 });
+          xs.push({ i: id, ...w.layouts.xs, minW: 2, minH: 2 });
         } else {
-           // Default to full width (6 out of 6)
-           // But since cols=6, the user can resize this to width 3 (50%)
-           xs.push({ i: id, x: 0, y: i, w: 6, h: lgH, minW: 2, minH: 2 });
+          // Default to full width (6 out of 6)
+          // But since cols=6, the user can resize this to width 3 (50%)
+          xs.push({ i: id, x: 0, y: i, w: 6, h: lgH, minW: 2, minH: 2 });
         }
 
         // -- TINY PHONE (xxs) --
@@ -1089,26 +1083,26 @@ const DashboardCanvas: React.FC<DashboardCanvasProps> = ({
   };
 
   const getBreakpointIcon = () => {
-    switch(currentBreakpoint) {
-      case 'lg': return <DesktopOutlined />;
-      case 'md': return <TabletOutlined rotate={90} />;
-      case 'sm': return <TabletOutlined />;
-      case 'xs': return <MobileOutlined />; // 700px falls here
-      default: return <MobileOutlined style={{ opacity: 0.5 }} />;
+    switch (currentBreakpoint) {
+      case 'lg': return <Monitor size={16} />;
+      case 'md': return <Tablet size={16} style={{ transform: 'rotate(90deg)' }} />;
+      case 'sm': return <Tablet size={16} />;
+      case 'xs': return <Smartphone size={16} />; // 700px falls here
+      default: return <Smartphone size={16} style={{ opacity: 0.5 }} />;
     }
   };
 
   const renderWidgetContent = (widget: any) => {
     const def = widgetDefinitions[widget.definitionId];
     const wData = widgetData[widget.id] || { loading: false, data: null, error: null };
-    
+
     if (!def) return <div className="p-2 text-red-500 text-xs">Def Missing</div>;
     const config = { ...def.config_template, ...widget.config };
 
     return (
       <WidgetWrapper loading={wData.loading} error={wData.error} data={wData.data}>
         {def.widget_type === 'kpi' && <KPIWidget data={wData.data} config={config} />}
-        {def.widget_type === 'line_chart' && <BaseChart type="scatter" data={wData.data} config={config} />}
+        {def.widget_type === 'line_chart' && <BaseChart type="line" data={wData.data} config={config} />}
         {def.widget_type === 'bar_chart' && <BaseChart type="bar" data={wData.data} config={config} />}
         {def.widget_type === 'pie_chart' && <BaseChart type="pie" data={wData.data} config={config} />}
         {def.widget_type === 'table' && <TableWidget data={wData.data} config={config} />}
@@ -1121,12 +1115,12 @@ const DashboardCanvas: React.FC<DashboardCanvasProps> = ({
       {isEditMode && (
         <div className="absolute -top-10 right-0 z-10">
           <Badge count={currentBreakpoint.toUpperCase()} style={{ backgroundColor: '#52c41a' }}>
-             <Button shape="circle" icon={getBreakpointIcon()} />
+            <Button shape="circle" icon={getBreakpointIcon()} />
           </Badge>
         </div>
       )}
 
-      <div className="dashboard-canvas bg-gray-50 p-2 sm:p-4 rounded-lg min-h-[80vh]">
+      <div className="dashboard-canvas p-2 sm:p-4 rounded-lg min-h-[80vh] bg-[var(--color-bg-primary)]">
         <ResponsiveGridLayout
           className="layout"
           // BREAKPOINTS
@@ -1136,46 +1130,46 @@ const DashboardCanvas: React.FC<DashboardCanvasProps> = ({
           // xs: 480 - 768 (Large Phone / Small Tablet - This is your ~700px)
           // xxs: < 480 (Tiny Phone)
           breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
-          
+
           // COLUMNS - THE FIX
           // lg, md, sm: 12 cols (Standard)
           // xs: 6 cols (Allows 50% split or 100% width, enables resizing)
           // xxs: 1 col (Locked stack)
           cols={{ lg: 12, md: 12, sm: 12, xs: 6, xxs: 1 }}
-          
+
           layouts={layouts}
           rowHeight={60}
-          
+
           isDraggable={isEditMode}
           isResizable={isEditMode}
           draggableHandle=".drag-handle"
-          
+
           onLayoutChange={handleLayoutChange}
           onBreakpointChange={setCurrentBreakpoint}
-          
+
           margin={[10, 10]}
           containerPadding={[0, 0]}
           useCSSTransforms={true}
         >
           {widgets.map(widget => (
-            <div key={widget.id} className="bg-white shadow-sm rounded-lg border flex flex-col overflow-hidden hover:shadow-md transition-shadow">
-              <div className={`flex justify-between items-center px-3 border-b bg-white z-10 shrink-0 ${isEditMode ? 'cursor-move drag-handle bg-gray-50' : ''}`} style={{ height: '40px' }}>
+            <div key={widget.id} className="shadow-sm rounded-lg border flex flex-col overflow-hidden hover:shadow-md transition-shadow bg-[var(--color-bg-secondary)] border-[var(--color-border)]">
+              <div className={`flex justify-between items-center px-3 border-b z-10 shrink-0 bg-[var(--color-bg-secondary)] border-[var(--color-border)] ${isEditMode ? 'cursor-move drag-handle opacity-80' : ''}`} style={{ height: '40px' }}>
                 <div className="flex items-center gap-2 overflow-hidden">
-                  {isEditMode && <DragOutlined className="text-gray-400" />}
+                  {isEditMode && <GripVertical size={16} className="text-gray-400" />}
                   <Text strong className="truncate select-none text-xs sm:text-sm">{widget.title}</Text>
                 </div>
-                
+
                 {isEditMode && (
                   <div className="flex gap-1" onMouseDown={e => e.stopPropagation()}>
-                     <Button type="text" size="small" icon={<SettingOutlined />} onClick={() => onEditWidget(widget)}/>
-                     <Popconfirm title="Delete?" onConfirm={() => onRemoveWidget(widget.id)} okText="Yes" cancelText="No">
-                       <Button type="text" danger size="small" icon={<DeleteOutlined />} />
-                     </Popconfirm>
+                    <Button type="text" size="small" icon={<Settings size={14} />} onClick={() => onEditWidget(widget)} />
+                    <Popconfirm title="Delete?" onConfirm={() => onRemoveWidget(widget.id)} okText="Yes" cancelText="No">
+                      <Button type="text" danger size="small" icon={<Trash2 size={14} />} />
+                    </Popconfirm>
                   </div>
                 )}
               </div>
               <div className="flex-1 p-2 overflow-hidden relative h-full w-full">
-                 {renderWidgetContent(widget)}
+                {renderWidgetContent(widget)}
               </div>
             </div>
           ))}

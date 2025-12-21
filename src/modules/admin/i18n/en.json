@@ -1,0 +1,16 @@
+{
+  "nav": {
+    "title": "Admin",
+    "users": "Users",
+    "organizations": "Organizations",
+    "subscriptions": "Subscriptions",
+    "roles": "Roles",
+    "permissions": "Permissions",
+    "modules": "Modules"
+  },
+  "tabs": {
+    "details": "Details",
+    "members": "Members",
+    "config": "Configuration"
+  }
+}

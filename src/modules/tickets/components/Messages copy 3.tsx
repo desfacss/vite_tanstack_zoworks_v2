@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Collapse, Spin, Alert, Typography, Card, Input, Button, notification } from 'antd';
-import { MailOutlined, ClockCircleOutlined, SendOutlined } from '@ant-design/icons';
+import { Mail, Clock, Send } from 'lucide-react';
 import dayjs from 'dayjs';
 import { sendEmail } from '@/core/components/shared/email';
 // import { sendEmail } from './utils/email'; // Adjust path to where sendEmail is defined

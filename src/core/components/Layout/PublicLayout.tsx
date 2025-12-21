@@ -106,7 +106,7 @@ const PublicLayout = () => {
       <Header className="flex justify-between items-center px-4 bg-[var(--color-background)] border-b border-[var(--color-border)] sticky top-0 z-10 w-full"> {/* Added sticky header */}
         {/* Logo */}
         <div className="text-2xl font-bold text-[var(--color-text)]">
-          <Link to="/" className="hover:text-[var(--color-primary)]">VKBS</Link>
+          <Link to="/" className="hover:text-[var(--color-primary)]">zoworks.ai</Link>
         </div>
 
         {/* Right side of header: Navigation and controls */}
@@ -136,13 +136,13 @@ const PublicLayout = () => {
                 label: <Link to="/about">About</Link>,
               },
               // Add login/signup buttons for public layout if desired
-               {
-                 key: 'login',
-                 label: <Link to="/login">Login</Link>,
-               },
+              {
+                key: 'login',
+                label: <Link to="/login">Login</Link>,
+              },
             ]}
-            // Style overrides for menu items if needed (example)
-            // style={{ lineHeight: '64px' }} // Adjust based on header height
+          // Style overrides for menu items if needed (example)
+          // style={{ lineHeight: '64px' }} // Adjust based on header height
           />
 
           {/* Theme and Language Controls */}

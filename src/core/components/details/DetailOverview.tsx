@@ -1,15 +1,15 @@
 // DetailOverview.tsx
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card, Divider, Tag, Button, Typography, Switch, message, Spin } from 'antd';
-import * as Icons from '@ant-design/icons';
+import * as LucideIcons from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import QRCard from './QRCard';
 import RowActions from '../DynamicViews/RowActions';
 import TaskReportPage from '@/core/components/common/doc/ServiceReportDrawer';
 import DocView from './DocView';
 import ApprovalActionButtons from './ApprovalActionButtons';
-import Expensesheet from './Expensesheet';
-import Timesheet from './Timesheet';
+import Expensesheet from '@/modules/workforce/components/Expensesheet';
+import Timesheet from '@/modules/workforce/components/Timesheet';
 import { useAuthStore } from '@/core/lib/store';
 
 const { Text, Title } = Typography;
@@ -106,7 +106,7 @@ const getNestedValue = (obj: Record<string, any>, path: string): string | any[] 
   }, obj);
 
 
-  if (result === undefined || result === null || result === '') return ' - - ';
+  if (result === undefined || result === null || (typeof result === 'string' && result === '')) return ' - - ';
 
   // If the final result is a non-scalar object/array, return the object.
   if (typeof result === 'object' && result !== null && !Array.isArray(result)) {
@@ -150,12 +150,12 @@ const DetailOverview: React.FC<DetailOverviewProps> = ({
   const [fetchedData, setFetchedData] = useState<Record<string, any> | null>(null);
   const [loading, setLoading] = useState(true);
   const [toggledGroups, setToggledGroups] = useState<Set<string>>(new Set());
-  const { organization, user, permissions } = useAuthStore();
+  const { organization } = useAuthStore();
   const recordId = data?.id;
 
   const getIcon = (iconName?: string): React.ReactNode => {
-    return iconName && Icons[iconName as keyof typeof Icons]
-      ? React.createElement(Icons[iconName as keyof typeof Icons])
+    return iconName && (LucideIcons as any)[iconName]
+      ? React.createElement((LucideIcons as any)[iconName])
       : null;
   };
 
@@ -217,8 +217,8 @@ const DetailOverview: React.FC<DetailOverviewProps> = ({
 
       if (error) {
         console.error('Error fetching initial data from Supabase:', error);
-      } else if (result && result[column] && result[column].groups) {
-        setToggledGroups(new Set(result[column].groups as string[]));
+      } else if (result && (result as any)[column] && (result as any)[column].groups) {
+        setToggledGroups(new Set((result as any)[column].groups as string[]));
       }
     };
 
@@ -456,7 +456,7 @@ const DetailOverview: React.FC<DetailOverviewProps> = ({
     );
   };
 
-  const renderGroup = (group: GroupConfig, skipFirstField: boolean = false) => {
+  const renderGroup = (group: GroupConfig) => {
     const sortedFields = group?.fields
       ?.filter((field): field is FieldConfig => !!field && !!field.fieldPath)
       ?.sort((a, b) => (a.order || 0) - (b.order || 0));
@@ -485,8 +485,8 @@ const DetailOverview: React.FC<DetailOverviewProps> = ({
                   className="mr-2"
                   checked={toggledGroups.has(group.name)}
                   onChange={() => handleToggle(group.name)}
-                  checkedChildren={<Icons.EyeInvisibleOutlined />}
-                  unCheckedChildren={<Icons.EyeOutlined />}
+                  checkedChildren={<LucideIcons.EyeOff size={14} />}
+                  unCheckedChildren={<LucideIcons.Eye size={14} />}
                 />
                 {toggledGroups.has(group.name) ? 'Hidden' : 'Visible'}
               </div>
@@ -550,13 +550,13 @@ const DetailOverview: React.FC<DetailOverviewProps> = ({
   );
 
   // Find the field path that matched the card title for optional exclusion later
-  const titleFieldPath = TITLE_FIELD_PRIORITY.find(key => getNestedValue(currentData, key) === cardTitleText);
+  // const titleFieldPath = TITLE_FIELD_PRIORITY.find(key => getNestedValue(currentData, key) === cardTitleText);
 
   if (templateName && templateData) {
     return (
       <DocView
         data={currentData}
-        viewConfig={viewConfig}
+        _viewConfig={viewConfig}
         templateSettings={templateData.settings}
         templateStyles={templateData.styles}
         templateConfig={templateData.template_config}
@@ -579,7 +579,7 @@ const DetailOverview: React.FC<DetailOverviewProps> = ({
     return (
       <Card className="detail-overview-card" title="Error">
         <div style={{ padding: '20px', textAlign: 'center', color: 'red' }}>
-          <Icons.ExclamationCircleOutlined style={{ fontSize: 24, marginBottom: 10 }} />
+          <LucideIcons.AlertCircle style={{ fontSize: 24, marginBottom: 10 }} />
           <p>Failed to load the record details. Please try again.</p>
         </div>
       </Card>
@@ -615,12 +615,14 @@ const DetailOverview: React.FC<DetailOverviewProps> = ({
         <Expensesheet
           editItem={currentData}
           viewMode={true}
+          onFinish={async () => { }}
         />
       )}
       {viewConfig?.details_overview?.component === 'timesheet' && (
         <Timesheet
           editItem={currentData}
           viewMode={true}
+          onFinish={async () => { }}
         />
       )}
       {viewConfig?.general?.features?.qr_form && (
@@ -632,7 +634,7 @@ const DetailOverview: React.FC<DetailOverviewProps> = ({
           />
         </div>
       )}
-      {sortedGroups?.map((group, index) => (
+      {sortedGroups?.map((group: any, index: number) => (
         <React.Fragment key={group?.name}>
           {viewConfig?.details_overview?.dividers?.includes(group?.name) && index > 0 && (
             <Divider />
@@ -650,7 +652,7 @@ const DetailOverview: React.FC<DetailOverviewProps> = ({
           </>
         )}
       {viewConfig?.entity_type === 'organization.tasks' && (
-        <TaskReportPage editItem={currentData} />
+        <TaskReportPage editItem={currentData as { id: string }} />
       )}
     </Card>
   );

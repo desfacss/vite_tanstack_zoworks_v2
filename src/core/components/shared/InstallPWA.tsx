@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Modal, message } from 'antd';
 import { isIOS, isChrome, isAndroid } from 'react-device-detect';
-import { DownloadOutlined, ShareAltOutlined } from '@ant-design/icons';
+import { Download, Share2 } from 'lucide-react';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -118,7 +118,7 @@ export const InstallPWA: React.FC = () => {
   // Determine button text and icon based on platform
   const isDesktop = !isIOS && !isAndroid;
   const buttonText = isIOS ? 'Add to Home Screen' : isDesktop ? 'Install Desktop App' : 'Install App';
-  const buttonIcon = isIOS ? <ShareAltOutlined style={{ fontSize: 16 }} /> : <DownloadOutlined style={{ fontSize: 16 }} />;
+  const buttonIcon = isIOS ? <Share2 size={16} /> : <Download size={16} />;
 
   return (
     <>
@@ -140,7 +140,7 @@ export const InstallPWA: React.FC = () => {
         <div className="space-y-4">
           <p>To install this app on your iOS device:</p>
           <ol className="list-decimal list-inside space-y-2">
-            <li>Tap the <ShareAltOutlined className="inline-block mx-1" style={{ fontSize: 16 }} /> Share button in Safari</li>
+            <li>Tap the <Share2 size={16} className="inline-block mx-1" /> Share button in Safari</li>
             <li>Scroll down and tap "Add to Home Screen"</li>
             <li>Enter a name (optional) and tap "Add"</li>
           </ol>

@@ -1,7 +1,7 @@
 // import React, { useEffect, useState } from 'react';
 // import { supabase } from '@/lib/supabase';
 // import { Collapse, Spin, Alert, Typography, Card, Input, Button, notification } from 'antd';
-// import { MailOutlined, ClockCircleOutlined, SendOutlined } from '@ant-design/icons';
+// import { Mail, Clock, Send } from 'lucide-react';
 // import { v4 as uuidv4 } from 'uuid';
 // import dayjs from 'dayjs';
 // import { useAuthStore } from '@/core/lib/store';
@@ -457,7 +457,7 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Collapse, Spin, Alert, Typography, Card, Input, Button, App } from 'antd'; // Use App for context
-import { MailOutlined, ClockCircleOutlined, SendOutlined } from '@ant-design/icons';
+import { Mail, Clock, Send } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import dayjs from 'dayjs';
 import { useAuthStore } from '@/core/lib/store';

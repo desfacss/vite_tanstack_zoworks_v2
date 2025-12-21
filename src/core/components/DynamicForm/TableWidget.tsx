@@ -1,6 +1,6 @@
 import React from "react";
 import { Button, Table, Input, Select, Checkbox, DatePicker } from "antd";
-import { PlusOutlined, DeleteOutlined } from "@ant-design/icons";
+import { Plus, Trash2 } from "lucide-react";
 import dayjs, { Dayjs } from "dayjs";
 import { WidgetProps } from "@rjsf/utils";
 
@@ -159,7 +159,7 @@ const EditableTableWidget: React.FC<WidgetProps & { uiSchema: any; schema: Table
           removable ? (
             <Button
               type="link"
-              icon={<DeleteOutlined />}
+              icon={<Trash2 size={16} />}
               onClick={() => handleDeleteRow(index)}
             />
           ) : null,
@@ -184,7 +184,7 @@ const EditableTableWidget: React.FC<WidgetProps & { uiSchema: any; schema: Table
           type="dashed"
           onClick={handleAddRow}
           style={{ marginTop: "10px", width: "100%" }}
-          icon={<PlusOutlined />}
+          icon={<Plus size={16} />}
         >
           Add Row
         </Button>

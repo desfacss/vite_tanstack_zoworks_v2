@@ -6,7 +6,7 @@ import { Card, Typography, Button, Space, Divider } from 'antd';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@/core/lib/store';
-import { PlusOutlined, SettingOutlined } from '@ant-design/icons';
+import { Plus, Settings } from 'lucide-react';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -51,10 +51,10 @@ const SamplePage: React.FC = () => {
             {/* Action Buttons */}
             <Card className="mb-6" title="Quick Actions">
                 <Space wrap>
-                    <Button type="primary" icon={<PlusOutlined />}>
+                    <Button type="primary" icon={<Plus size={16} />}>
                         Create New Item
                     </Button>
-                    <Button icon={<SettingOutlined />}>
+                    <Button icon={<Settings size={16} />}>
                         Configure Module
                     </Button>
                 </Space>

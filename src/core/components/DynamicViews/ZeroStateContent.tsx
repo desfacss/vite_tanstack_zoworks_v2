@@ -1,5 +1,5 @@
 import { Empty, Button, Typography, Space, Card, Divider, Row, Col } from 'antd';
-import { FilterOutlined, FileTextOutlined } from '@ant-design/icons';
+import { Filter, FileText } from 'lucide-react';
 import React, { useMemo, useEffect, useRef, useState } from 'react';
 import { snakeToTitleCase } from '@/core/components/common/utils/casing';
 
@@ -227,7 +227,7 @@ export const ZeroStateContent: React.FC<ZeroStateContentProps> = ({
                 <Button
                     type="primary"
                     size="large"
-                    icon={<FilterOutlined />}
+                    icon={<Filter size={16} />}
                     onClick={clearFilters}
                     className="mt-4 shadow-md"
                 >
@@ -254,7 +254,7 @@ export const ZeroStateContent: React.FC<ZeroStateContentProps> = ({
             {/* 2. Main Content Card (The Rich Container) */}
             <Card bordered={false} className="shadow-2xl bg-[var(--color-component-background)] rounded-xl p-4">
                 <Empty
-                    image={hasActiveFilters ? Empty.PRESENTED_IMAGE_DEFAULT : <FileTextOutlined style={{ fontSize: 48, color: 'var(--color-primary)' }} />}
+                    image={hasActiveFilters ? Empty.PRESENTED_IMAGE_DEFAULT : <FileText size={48} className="text-primary" />}
                     description={
                         <div className="mt-4 max-w-6xl mx-auto">
                             {/* Main Page Title (Top-level container title) */}

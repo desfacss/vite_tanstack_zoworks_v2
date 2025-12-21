@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { Form, Input, Select, Button, message, Spin, Modal, Space, DatePicker, Row, Col } from 'antd';
 import { useAuthStore } from '@/core/lib/store';
 import { supabase } from '@/lib/supabase';
-import FileUploader from '@/core/components/shared/ImageUploader';
+import ImageUploader from '@/core/components/shared/ImageUploader';
 import dayjs from 'dayjs';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -121,7 +121,7 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket_id, asset_id, onSuccess 
         //     technicianUserIds = userTeamsData.map(item => item.organization_user_id);
         //   }
         // }
-        
+
         // const { data: allUsersData, error: userError } = await supabase
         //   .schema('identity')
         //   .from('users')
@@ -139,84 +139,84 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket_id, asset_id, onSuccess 
 
 
         // --- 1. Identify Technician Team Members (Organizational User IDs) ---
-        const { data: technicianTeamData } = await supabase
-          .schema('identity')
-          .from('teams')
-          .select('id')
-          .eq('name', 'Technician')
-          .eq('organization_id', organization?.id)
-          .single();
+        const { data: technicianTeamData } = await supabase
+          .schema('identity')
+          .from('teams')
+          .select('id')
+          .eq('name', 'Technician')
+          .eq('organization_id', organization?.id)
+          .single();
 
-        let technicianOrgUserIds: string[] = [];
-        
-        if (technicianTeamData) {
-          const { data: userTeamLinks } = await supabase
-            .schema('identity')
-            .from('user_teams')
-            .select('organization_user_id')
-            .eq('team_id', technicianTeamData.id);
-          
-          if (userTeamLinks) {
-            technicianOrgUserIds = userTeamLinks.map(item => item.organization_user_id);
-          }
-        }
-        
-        // --- 2. Fetch all active users in this organization (Organizational Users) ---
-        const { data: orgUsersData, error: userError } = await supabase
-          .schema('identity')
-          .from('organization_users')
-          .select('id, user_id, is_active')
-          .eq('organization_id', organization?.id)
-          .eq('is_active', true);
+        let technicianOrgUserIds: string[] = [];
 
-        if (userError) throw new Error(`Failed to fetch organization users: ${userError.message}`);
+        if (technicianTeamData) {
+          const { data: userTeamLinks } = await supabase
+            .schema('identity')
+            .from('user_teams')
+            .select('organization_user_id')
+            .eq('team_id', technicianTeamData.id);
 
-        // --- 3. Get all User Names in one efficient call ---
-        let technicianUsersList: { id: string; name: string }[] = [];
-        let nonTechnicianUsersList: { id: string; name: string }[] = [];
+          if (userTeamLinks) {
+            technicianOrgUserIds = userTeamLinks.map(item => item.organization_user_id);
+          }
+        }
 
-        if (orgUsersData) {
-          const userIds = orgUsersData.map(ou => ou.user_id);
-          const { data: userNamesData } = await supabase
-            .schema('identity')
-            .from('users')
-            .select('id, name')
-            .in('id', userIds);
-          
-          const userMap = new Map(userNamesData?.map(u => [u.id, u.name]));
+        // --- 2. Fetch all active users in this organization (Organizational Users) ---
+        const { data: orgUsersData, error: userError } = await supabase
+          .schema('identity')
+          .from('organization_users')
+          .select('id, user_id, is_active')
+          .eq('organization_id', organization?.id)
+          .eq('is_active', true);
 
-          // --- 4. Split the lists based on membership to 'Technician' team ---
-          orgUsersData.forEach(ou => {
-            const userName = userMap.get(ou.user_id);
-            if (userName) {
-              // Use the core user ID (ou.user_id) for the form value
-              const userEntry = { id: ou.user_id, name: userName };
-              
-              // Filter based on the organization_user_id (ou.id) being in the technician list
-              if (technicianOrgUserIds.includes(ou.id)) {
-                technicianUsersList.push(userEntry);
-              } else {
-                nonTechnicianUsersList.push(userEntry);
-              }
-            }
-          });
-        }
-        
-        setAllUsers(nonTechnicianUsersList.concat(technicianUsersList));
-        setNonTechnicianUsers(nonTechnicianUsersList);
-        setTechnicianUsers(technicianUsersList);
-// const { data: technicianMembers, error: teamMemberError } = await supabase
-//     .schema('identity')
-//     .from('v_team_users')
-//     .select('user_id, user_name')
-//     .eq('organization_id', organization?.id)
-//     .eq('team_name', 'Technician');
+        if (userError) throw new Error(`Failed to fetch organization users: ${userError.message}`);
 
-// if (teamMemberError) throw new Error(`Failed to fetch technicians: ${teamMemberError.message}`);
+        // --- 3. Get all User Names in one efficient call ---
+        let technicianUsersList: { id: string; name: string }[] = [];
+        let nonTechnicianUsersList: { id: string; name: string }[] = [];
 
-// // Map results directly to your state
-// const technicianUsersList = technicianMembers.map(m => ({ id: m.user_id, name: m.user_name }));
-// setTechnicianUsers(technicianUsersList);
+        if (orgUsersData) {
+          const userIds = orgUsersData.map(ou => ou.user_id);
+          const { data: userNamesData } = await supabase
+            .schema('identity')
+            .from('users')
+            .select('id, name')
+            .in('id', userIds);
+
+          const userMap = new Map(userNamesData?.map(u => [u.id, u.name]));
+
+          // --- 4. Split the lists based on membership to 'Technician' team ---
+          orgUsersData.forEach(ou => {
+            const userName = userMap.get(ou.user_id);
+            if (userName) {
+              // Use the core user ID (ou.user_id) for the form value
+              const userEntry = { id: ou.user_id, name: userName };
+
+              // Filter based on the organization_user_id (ou.id) being in the technician list
+              if (technicianOrgUserIds.includes(ou.id)) {
+                technicianUsersList.push(userEntry);
+              } else {
+                nonTechnicianUsersList.push(userEntry);
+              }
+            }
+          });
+        }
+
+        setAllUsers(nonTechnicianUsersList.concat(technicianUsersList));
+        setNonTechnicianUsers(nonTechnicianUsersList);
+        setTechnicianUsers(technicianUsersList);
+        // const { data: technicianMembers, error: teamMemberError } = await supabase
+        //     .schema('identity')
+        //     .from('v_team_users')
+        //     .select('user_id, user_name')
+        //     .eq('organization_id', organization?.id)
+        //     .eq('team_name', 'Technician');
+
+        // if (teamMemberError) throw new Error(`Failed to fetch technicians: ${teamMemberError.message}`);
+
+        // // Map results directly to your state
+        // const technicianUsersList = technicianMembers.map(m => ({ id: m.user_id, name: m.user_name }));
+        // setTechnicianUsers(technicianUsersList);
 
         // Fetch priorities (Assuming organization.enums is correct)
         const { data: priorityData, error: priorityError } = await supabase
@@ -230,49 +230,49 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket_id, asset_id, onSuccess 
         setPriorities(priorityData || []);
 
         // 1. Fetch the active ticket process blueprint
-        const { data: activeBlueprintData, error: blueprintError } = await supabase
-          .schema('automation')
-          .from('bp_process_blueprints')
-          .select('id')
-          .eq('entity_type', 'tickets')
-          .eq('is_active', true)
-          .single();
+        const { data: activeBlueprintData, error: blueprintError } = await supabase
+          .schema('automation')
+          .from('bp_process_blueprints')
+          .select('id')
+          .eq('entity_type', 'tickets')
+          .eq('is_active', true)
+          .single();
 
-        if (blueprintError) throw new Error(`Failed to fetch active ticket blueprint: ${blueprintError.message}`);
-        if (!activeBlueprintData) throw new Error('No active blueprint found for tickets.');
+        if (blueprintError) throw new Error(`Failed to fetch active ticket blueprint: ${blueprintError.message}`);
+        if (!activeBlueprintData) throw new Error('No active blueprint found for tickets.');
 
-        const activeBlueprintId = activeBlueprintData.id;
+        const activeBlueprintId = activeBlueprintData.id;
 
-        // 2. Fetch all ESM definitions linked to this blueprint, ordered by version descending
-        const { data: esmData, error: esmError } = await supabase
-          .schema('automation')
-          .from('esm_definitions')
-          .select('definitions, version')
-          .eq('blueprint_id', activeBlueprintId)
-          .order('version', { ascending: false });
+        // 2. Fetch all ESM definitions linked to this blueprint, ordered by version descending
+        const { data: esmData, error: esmError } = await supabase
+          .schema('automation')
+          .from('esm_definitions')
+          .select('definitions, version')
+          .eq('blueprint_id', activeBlueprintId)
+          .order('version', { ascending: false });
 
-        if (esmError) throw new Error(`Failed to fetch ESM definitions: ${esmError.message}`);
+        if (esmError) throw new Error(`Failed to fetch ESM definitions: ${esmError.message}`);
 
-        // 3. Get the latest version's definition (the first one after ordering)
-        if (esmData && esmData.length > 0) {
-          const latestEsm = esmData[0];
-          if (latestEsm.definitions?.stages) {
-            // Map to an object with both id and name for saving and display
-            const statusOptions = latestEsm.definitions.stages.map((stage: any) => ({
-              id: stage.id,
-              name: stage.name,
-            }));
-            setTicketStatus(statusOptions);
-            // *** IMPORTANT: Set default stage_id if not in edit mode ***
-            if (!isEditMode && statusOptions.length > 0) {
-              // Assuming the first stage is the desired default 'New'/'Open'
-              form.setFieldsValue({ stage_id: statusOptions[0].id });
-            }
-          }
-        } else {
-          console.warn('No active ESM definition found for the active ticket blueprint.');
-          setTicketStatus([]);
-        }
+        // 3. Get the latest version's definition (the first one after ordering)
+        if (esmData && esmData.length > 0) {
+          const latestEsm = esmData[0];
+          if (latestEsm.definitions?.stages) {
+            // Map to an object with both id and name for saving and display
+            const statusOptions = latestEsm.definitions.stages.map((stage: any) => ({
+              id: stage.id,
+              name: stage.name,
+            }));
+            setTicketStatus(statusOptions);
+            // *** IMPORTANT: Set default stage_id if not in edit mode ***
+            if (!isEditMode && statusOptions.length > 0) {
+              // Assuming the first stage is the desired default 'New'/'Open'
+              form.setFieldsValue({ stage_id: statusOptions[0].id });
+            }
+          }
+        } else {
+          console.warn('No active ESM definition found for the active ticket blueprint.');
+          setTicketStatus([]);
+        }
 
         // Fetch assets if showAssetDropdown is true (Assuming external.service_assets is correct)
         if (showAssetDropdown) {
@@ -569,12 +569,12 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket_id, asset_id, onSuccess 
           location_id: location?.is_default ? values.location_id : location?.id,
           organization_id: organization?.id,
           // **CHANGE**: Using toISOString() on a dayjs object which inherently handles TZ if constructed correctly
-          reported_at: new Date().toISOString(), 
+          reported_at: new Date().toISOString(),
           receivers: values.receiver_emails ? { emails: values.receiver_emails } : { emails: [] },
           details: {
             description: values.description || null,
             // **CHANGE**: Ensure schedule is ISO string for storage in JSONB
-            schedule: values.schedule ? values.schedule.toISOString() : null, 
+            schedule: values.schedule ? values.schedule.toISOString() : null,
             priority_id: values.priority_id || null,
           },
           asset_id: values.asset_id || asset_id || null,
@@ -605,7 +605,7 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket_id, asset_id, onSuccess 
       if (uploadedImages.length > 0 && newTicketId) {
         // Assuming ent_attachments is in the public schema or another known schema
         const { error: imageError } = await supabase
-          .from('ent_attachments') 
+          .from('ent_attachments')
           .insert({
             entity_type: 'tickets',
             entity_id: newTicketId,
@@ -809,7 +809,7 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket_id, asset_id, onSuccess 
                 <Col span={12}>
                   {fieldAgentId && (
                     <Form.Item name="schedule" label="Schedule (Date & Time)">
-                      <DatePicker format="YYYY-MM-DD HH:mm" style={{ width: '100%' }} needConfirm={false} showTime={{ minuteStep: 15 }}/>
+                      <DatePicker format="YYYY-MM-DD HH:mm" style={{ width: '100%' }} needConfirm={false} showTime={{ minuteStep: 15 }} />
                     </Form.Item>
                   )}
                 </Col>
@@ -880,13 +880,13 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket_id, asset_id, onSuccess 
                 </Col>
                 <Col span={12}>
                   <Form.Item name="schedule" label="Schedule Date/Time">
-                    <DatePicker 
-                        format="YYYY-MM-DD HH:mm" 
-                        style={{ width: '100%' }} 
-                        needConfirm={false} 
-                        showTime={{ minuteStep: 15 }}
-                        // **CHANGE**: Only show schedule if a Field Agent is selected or if editing an existing ticket that had one
-                        disabled={!fieldAgentId && !isEditMode} 
+                    <DatePicker
+                      format="YYYY-MM-DD HH:mm"
+                      style={{ width: '100%' }}
+                      needConfirm={false}
+                      showTime={{ minuteStep: 15 }}
+                      // **CHANGE**: Only show schedule if a Field Agent is selected or if editing an existing ticket that had one
+                      disabled={!fieldAgentId && !isEditMode}
                     />
                   </Form.Item>
                 </Col>
@@ -894,8 +894,8 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket_id, asset_id, onSuccess 
             </>
           )}
 
-          {isAssetProvided && !ticket_id && <FileUploader ref={imageUploaderRef} autoUpload={false} onUploadComplete={() => {}} />}
-          
+          {isAssetProvided && !ticket_id && <ImageUploader ref={imageUploaderRef} autoUpload={false} onUploadComplete={() => { }} />}
+
           <Form.Item>
             <Button className="mt-2" type="primary" htmlType="submit" loading={loading}>
               {isEditMode ? 'Update Ticket' : 'Submit Ticket'}

@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Card, Row, Col, Select, message, Button, Typography, Space, Spin, Modal, Input } from 'antd';
-import { ReloadOutlined, SaveOutlined } from '@ant-design/icons';
+import { RefreshCw, Save } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/core/lib/store';
 import { snakeToTitleCase } from '@/core/components/common/utils/casing';

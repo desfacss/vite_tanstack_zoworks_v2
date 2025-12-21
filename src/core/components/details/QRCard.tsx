@@ -17,8 +17,8 @@ const QRCard: React.FC<QRCardProps> = ({ f, i, display_id }) => {
   const baseUrl = `${window.location.protocol}//${window.location.host}`;
   const qrUrl = `${baseUrl}/submit?f=${encodeURIComponent(f)}&i=${encodeURIComponent(i)}`;
 
-  const companyLink = organization?.app_settings?.custom_domain
-    ? `https://${organization.app_settings.custom_domain}`
+  const companyLink = (organization?.app_settings as any)?.custom_domain
+    ? `https://${(organization?.app_settings as any)?.custom_domain}`
     : 'https://www.vkbs.in';
 
   return (

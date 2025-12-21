@@ -89,7 +89,7 @@ export const useViewConfigEnhanced = (entityType: string, entitySchema: string, 
     },
     enabled: !!entityType && !!organization?.id && !!entitySchema,
     staleTime: 24 * (testing ? 1 : (60 * 60 * 1000)),
-    cacheTime: 30 * 24 * (testing ? 1 : (60 * 60 * 1000)),
+    gcTime: 30 * 24 * (testing ? 1 : (60 * 60 * 1000)),
     retry: 2,
   });
 };

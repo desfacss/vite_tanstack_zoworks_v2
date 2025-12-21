@@ -32,7 +32,7 @@
 // // // // //          Plotly.Plots.resize(chartRef.current);
 // // // // //        }
 // // // // //     });
-    
+
 // // // // //     resizeObserver.current.observe(chartRef.current);
 
 // // // // //     // Cleanup on Unmount
@@ -72,7 +72,7 @@
 // // // // //         marker: { colors: ['#1890ff', '#13c2c2', '#52c41a', '#faad14', '#f5222d', '#722ed1'] }
 // // // // //       }];
 // // // // //     } 
-    
+
 // // // // //     // B. GAUGE (Single Value Indicator)
 // // // // //     else if (type === 'gauge') {
 // // // // //       const val = data[0]?.[yAxis] || 0;
@@ -105,7 +105,7 @@
 // // // // //     // D. CARTESIAN (Line, Area, Bar, Combo)
 // // // // //     else {
 // // // // //       const yAxes = Array.isArray(yAxis) ? yAxis : [yAxis];
-      
+
 // // // // //       traces = yAxes.map(yKey => {
 // // // // //         // Determine specific trace type
 // // // // //         let traceType = 'scatter'; // Default line
@@ -157,7 +157,7 @@
 // // // // // export const KPIWidget: React.FC<{ data: any[]; config: any }> = ({ data, config }) => {
 // // // // //   const metricKey = config.metricKey || Object.keys(data[0] || {}).find(k => typeof data[0][k] === 'number');
 // // // // //   const value = data[0]?.[metricKey!] || 0;
-  
+
 // // // // //   return (
 // // // // //     <div className="h-full flex items-center justify-center">
 // // // // //       <Statistic 
@@ -216,7 +216,7 @@
 
 // // // // import React, { useEffect, useRef } from 'react';
 // // // // import { Statistic, Table, Alert, Spin, Tag } from 'antd';
-// // // // import { ArrowUpOutlined, ArrowDownOutlined } from '@ant-design/icons';
+// // // // import { ArrowUp, ArrowDown } from 'lucide-react';
 // // // // import Plotly from 'plotly.js-dist-min';
 // // // // import _ from 'lodash';
 
@@ -242,20 +242,20 @@
 // // // //       <Spin tip="Loading Data..." />
 // // // //     </div>
 // // // //   );
-  
+
 // // // //   if (error) return (
 // // // //     <div className="h-full w-full p-4">
 // // // //       <Alert message="Data Error" description={error} type="error" showIcon />
 // // // //     </div>
 // // // //   );
-  
+
 // // // //   if (!data || (Array.isArray(data) && data.length === 0)) return (
 // // // //     <div className="h-full w-full flex flex-col items-center justify-center text-gray-400">
 // // // //       <div className="text-2xl mb-2">∅</div>
 // // // //       <div>No Data Available</div>
 // // // //     </div>
 // // // //   );
-  
+
 // // // //   return <div className="h-full w-full overflow-hidden relative">{children}</div>;
 // // // // };
 
@@ -283,7 +283,7 @@
 // // // //          Plotly.Plots.resize(chartRef.current);
 // // // //        }
 // // // //     });
-    
+
 // // // //     resizeObserver.current.observe(chartRef.current);
 
 // // // //     // Cleanup on Unmount
@@ -304,7 +304,7 @@
 // // // //     const groupBy = config.groupBy; // For stacked/grouped charts
 
 // // // //     let traces: any[] = [];
-    
+
 // // // //     // Default Layout
 // // // //     let layout: any = {
 // // // //       margin: { l: 40, r: 20, t: 30, b: 40 },
@@ -332,13 +332,13 @@
 // // // //         marker: { colors: config.colors || ['#1890ff', '#13c2c2', '#52c41a', '#faad14', '#f5222d', '#722ed1'] }
 // // // //       }];
 // // // //     } 
-    
+
 // // // //     // STRATEGY B: GAUGE (Single Value KPI)
 // // // //     else if (type === 'gauge') {
 // // // //       const val = data[0]?.[yAxis] || 0;
 // // // //       const min = config.min || 0;
 // // // //       const max = config.max || 100;
-      
+
 // // // //       traces = [{
 // // // //         type: "indicator",
 // // // //         mode: "gauge+number+delta",
@@ -373,7 +373,7 @@
 // // // //         fillcolor: 'rgba(24, 144, 255, 0.2)',
 // // // //         line: { color: '#1890ff' }
 // // // //       }];
-      
+
 // // // //       layout.polar = {
 // // // //         radialaxis: { visible: true, showline: true }, 
 // // // //         angularaxis: { direction: 'clockwise' }
@@ -426,12 +426,12 @@
 // // // //     else {
 // // // //       // Handle multiple series (e.g. ["sales", "profit"])
 // // // //       const yAxes = Array.isArray(yAxis) ? yAxis : [yAxis];
-      
+
 // // // //       // If grouping is enabled (e.g., Stacked Bars by 'Category')
 // // // //       if (groupBy) {
 // // // //         // Group data by the grouping column
 // // // //         const groupedData = _.groupBy(data, groupBy);
-        
+
 // // // //         traces = Object.keys(groupedData).map(groupName => {
 // // // //            const groupRows = groupedData[groupName];
 // // // //            return {
@@ -527,7 +527,7 @@
 // // // //   // Auto-detect metric key if not provided
 // // // //   const metricKey = config.metricKey || Object.keys(data[0] || {}).find(k => typeof data[0][k] === 'number');
 // // // //   const value = data[0]?.[metricKey!] || 0;
-  
+
 // // // //   // Handle trend indicators if present in data
 // // // //   // Expects data to have 'trend' or 'change_pct' columns, or config to define them
 // // // //   const trend = data[0]?.['trend'] || data[0]?.['change_pct'];
@@ -547,7 +547,7 @@
 // // // //             color: config.color || '#1f1f1f' 
 // // // //         }}
 // // // //       />
-      
+
 // // // //       {/* Trend Indicator */}
 // // // //       {trend !== undefined && (
 // // // //           <div className={`mt-2 text-sm ${isPositive ? 'text-green-500' : 'text-red-500'}`}>
@@ -574,7 +574,7 @@
 // // // //     render: (val: any) => {
 // // // //         // Smart Rendering logic
 // // // //         if (val === null || val === undefined) return <span className="text-gray-300">-</span>;
-        
+
 // // // //         // Currency check (simple heuristic)
 // // // //         if (typeof val === 'number') {
 // // // //             if (col.toLowerCase().includes('price') || col.toLowerCase().includes('cost') || col.toLowerCase().includes('revenue')) {
@@ -633,7 +633,7 @@
 
 // // // import React, { useEffect, useRef } from 'react';
 // // // import { Statistic, Table, Alert, Spin, Tag } from 'antd';
-// // // import { ArrowUpOutlined, ArrowDownOutlined } from '@ant-design/icons';
+// // // import { ArrowUp, ArrowDown } from 'lucide-react';
 // // // import Plotly from 'plotly.js-dist-min';
 // // // import _ from 'lodash';
 
@@ -659,20 +659,20 @@
 // // //       <Spin tip="Loading Data..." />
 // // //     </div>
 // // //   );
-  
+
 // // //   if (error) return (
 // // //     <div className="h-full w-full p-4">
 // // //       <Alert message="Data Error" description={error} type="error" showIcon />
 // // //     </div>
 // // //   );
-  
+
 // // //   if (!data || (Array.isArray(data) && data.length === 0)) return (
 // // //     <div className="h-full w-full flex flex-col items-center justify-center text-gray-400">
 // // //       <div className="text-2xl mb-2">∅</div>
 // // //       <div>No Data Available</div>
 // // //     </div>
 // // //   );
-  
+
 // // //   return <div className="h-full w-full overflow-hidden relative">{children}</div>;
 // // // };
 
@@ -700,7 +700,7 @@
 // // //          Plotly.Plots.resize(chartRef.current);
 // // //        }
 // // //     });
-    
+
 // // //     resizeObserver.current.observe(chartRef.current);
 
 // // //     // Cleanup on Unmount
@@ -724,7 +724,7 @@
 // // //     if (config.sort) {
 // // //        // Determine which key to sort by (sortBy > first yAxis > value)
 // // //        const sortKey = config.sortBy || (Array.isArray(config.yAxis) ? config.yAxis[0] : config.yAxis) || 'value';
-       
+
 // // //        chartData.sort((a, b) => {
 // // //            const valA = a[sortKey] || 0;
 // // //            const valB = b[sortKey] || 0;
@@ -742,13 +742,13 @@
 // // //     // ---------------------------------------------------------
 // // //     // PHASE 2: CONFIGURATION & LAYOUT
 // // //     // ---------------------------------------------------------
-    
+
 // // //     const xAxis = config.xAxis || config.labels || config.group_by || 'name';
 // // //     const yAxis = config.yAxis || config.values || 'value';
 // // //     const groupBy = config.groupBy; // For stacked/grouped charts
 
 // // //     let traces: any[] = [];
-    
+
 // // //     let layout: any = {
 // // //       margin: { l: 40, r: 20, t: 30, b: 40 },
 // // //       showlegend: true,
@@ -777,13 +777,13 @@
 // // //         marker: { colors: config.colors || ['#1890ff', '#13c2c2', '#52c41a', '#faad14', '#f5222d', '#722ed1'] }
 // // //       }];
 // // //     } 
-    
+
 // // //     // STRATEGY: GAUGE (Single Value KPI)
 // // //     else if (type === 'gauge') {
 // // //       const val = chartData[0]?.[yAxis] || 0;
 // // //       const min = config.min || 0;
 // // //       const max = config.max || 100;
-      
+
 // // //       traces = [{
 // // //         type: "indicator",
 // // //         mode: "gauge+number+delta",
@@ -817,7 +817,7 @@
 // // //         fillcolor: 'rgba(24, 144, 255, 0.2)',
 // // //         line: { color: '#1890ff' }
 // // //       }];
-      
+
 // // //       layout.polar = {
 // // //         radialaxis: { visible: true, showline: true }, 
 // // //         angularaxis: { direction: 'clockwise' }
@@ -868,11 +868,11 @@
 // // //     // STRATEGY: CARTESIAN (Line, Bar, Area, Combo)
 // // //     else {
 // // //       const yAxes = Array.isArray(yAxis) ? yAxis : [yAxis];
-      
+
 // // //       // Grouping Logic (Stacked/Grouped Bars)
 // // //       if (groupBy) {
 // // //         const groupedData = _.groupBy(chartData, groupBy);
-        
+
 // // //         traces = Object.keys(groupedData).map(groupName => {
 // // //            const groupRows = groupedData[groupName];
 // // //            return {
@@ -969,7 +969,7 @@
 // // // export const KPIWidget: React.FC<{ data: any[]; config: any }> = ({ data, config }) => {
 // // //   const metricKey = config.metricKey || Object.keys(data[0] || {}).find(k => typeof data[0][k] === 'number');
 // // //   const value = data[0]?.[metricKey!] || 0;
-  
+
 // // //   const trend = data[0]?.['trend'] || data[0]?.['change_pct'];
 // // //   const isPositive = trend > 0;
 
@@ -987,7 +987,7 @@
 // // //             color: config.color || '#1f1f1f' 
 // // //         }}
 // // //       />
-      
+
 // // //       {trend !== undefined && (
 // // //           <div className={`mt-2 text-sm ${isPositive ? 'text-green-500' : 'text-red-500'}`}>
 // // //               {isPositive ? <ArrowUpOutlined /> : <ArrowDownOutlined />}
@@ -1006,7 +1006,7 @@
 // // //   // 1. Pre-process data for Sort/Limit if defined in config
 // // //   // This mirrors the logic in BaseChart for consistency
 // // //   let processedData = [...data];
-  
+
 // // //   // Sort
 // // //   if (config.sort && config.sortBy) {
 // // //      processedData.sort((a, b) => {
@@ -1015,7 +1015,7 @@
 // // //        return config.sort === 'asc' ? valA - valB : valB - valA;
 // // //      });
 // // //   }
-  
+
 // // //   // Limit (Top N)
 // // //   if (config.limit && typeof config.limit === 'number') {
 // // //      processedData = processedData.slice(0, config.limit);
@@ -1030,7 +1030,7 @@
 // // //     sorter: (a: any, b: any) => (a[col] > b[col] ? 1 : -1),
 // // //     render: (val: any) => {
 // // //         if (val === null || val === undefined) return <span className="text-gray-300">-</span>;
-        
+
 // // //         // Number Formatting
 // // //         if (typeof val === 'number') {
 // // //             if (col.toLowerCase().includes('price') || col.toLowerCase().includes('cost') || col.toLowerCase().includes('revenue')) {
@@ -1086,7 +1086,7 @@
 
 // // import React, { useEffect, useRef } from 'react';
 // // import { Statistic, Table, Alert, Spin, Tag } from 'antd';
-// // import { ArrowUpOutlined, ArrowDownOutlined } from '@ant-design/icons';
+// // import { ArrowUp, ArrowDown } from 'lucide-react';
 // // import Plotly from 'plotly.js-dist-min';
 // // import _ from 'lodash';
 
@@ -1104,20 +1104,20 @@
 // //       <Spin tip="Loading Data..." />
 // //     </div>
 // //   );
-  
+
 // //   if (error) return (
 // //     <div className="h-full w-full p-4">
 // //       <Alert message="Data Error" description={error} type="error" showIcon />
 // //     </div>
 // //   );
-  
+
 // //   if (!data || (Array.isArray(data) && data.length === 0)) return (
 // //     <div className="h-full w-full flex flex-col items-center justify-center text-gray-400">
 // //       <div className="text-2xl mb-2">∅</div>
 // //       <div>No Data Available</div>
 // //     </div>
 // //   );
-  
+
 // //   return <div className="h-full w-full overflow-hidden relative">{children}</div>;
 // // };
 
@@ -1148,7 +1148,7 @@
 // //            }
 // //         });
 // //     });
-    
+
 // //     resizeObserver.current.observe(chartRef.current);
 
 // //     // Cleanup on Unmount
@@ -1185,7 +1185,7 @@
 // //     // ---------------------------------------------------------
 // //     // PHASE 2: CONFIGURATION & LAYOUT
 // //     // ---------------------------------------------------------
-    
+
 // //     const xAxis = config.xAxis || config.labels || config.group_by || 'name';
 // //     const yAxis = config.yAxis || config.values || 'value';
 // //     const groupBy = config.groupBy; 
@@ -1194,7 +1194,7 @@
 
 // //     // FIX: Get Explicit Dimensions to prevent "Auto-margin redraw" loop
 // //     const { clientWidth, clientHeight } = chartRef.current;
-    
+
 // //     let layout: any = {
 // //       width: clientWidth,   // <--- EXPLICIT WIDTH
 // //       height: clientHeight, // <--- EXPLICIT HEIGHT
@@ -1225,13 +1225,13 @@
 // //         marker: { colors: config.colors || ['#1890ff', '#13c2c2', '#52c41a', '#faad14', '#f5222d', '#722ed1'] }
 // //       }];
 // //     } 
-    
+
 // //     // STRATEGY: GAUGE (Single Value KPI)
 // //     else if (type === 'gauge') {
 // //       const val = chartData[0]?.[yAxis] || 0;
 // //       const min = config.min || 0;
 // //       const max = config.max || 100;
-      
+
 // //       traces = [{
 // //         type: "indicator",
 // //         mode: "gauge+number+delta",
@@ -1265,7 +1265,7 @@
 // //         fillcolor: 'rgba(24, 144, 255, 0.2)',
 // //         line: { color: '#1890ff' }
 // //       }];
-      
+
 // //       layout.polar = {
 // //         radialaxis: { visible: true, showline: true }, 
 // //         angularaxis: { direction: 'clockwise' }
@@ -1316,11 +1316,11 @@
 // //     // STRATEGY: CARTESIAN (Line, Bar, Area, Combo)
 // //     else {
 // //       const yAxes = Array.isArray(yAxis) ? yAxis : [yAxis];
-      
+
 // //       // Grouping Logic (Stacked/Grouped Bars)
 // //       if (groupBy) {
 // //         const groupedData = _.groupBy(chartData, groupBy);
-        
+
 // //         traces = Object.keys(groupedData).map(groupName => {
 // //            const groupRows = groupedData[groupName];
 // //            return {
@@ -1415,7 +1415,7 @@
 // // export const KPIWidget: React.FC<{ data: any[]; config: any }> = ({ data, config }) => {
 // //   const metricKey = config.metricKey || Object.keys(data[0] || {}).find(k => typeof data[0][k] === 'number');
 // //   const value = data[0]?.[metricKey!] || 0;
-  
+
 // //   const trend = data[0]?.['trend'] || data[0]?.['change_pct'];
 // //   const isPositive = trend > 0;
 
@@ -1433,7 +1433,7 @@
 // //             color: config.color || '#1f1f1f' 
 // //         }}
 // //       />
-      
+
 // //       {trend !== undefined && (
 // //           <div className={`mt-2 text-sm ${isPositive ? 'text-green-500' : 'text-red-500'}`}>
 // //               {isPositive ? <ArrowUpOutlined /> : <ArrowDownOutlined />}
@@ -1451,7 +1451,7 @@
 // // export const TableWidget: React.FC<{ data: any[]; config: any }> = ({ data, config }) => {
 // //   // 1. Pre-process data for Sort/Limit
 // //   let processedData = [...data];
-  
+
 // //   if (config.sort && config.sortBy) {
 // //      processedData.sort((a, b) => {
 // //        const valA = a[config.sortBy] || 0;
@@ -1459,7 +1459,7 @@
 // //        return config.sort === 'asc' ? valA - valB : valB - valA;
 // //      });
 // //   }
-  
+
 // //   if (config.limit && typeof config.limit === 'number') {
 // //      processedData = processedData.slice(0, config.limit);
 // //   }
@@ -1473,7 +1473,7 @@
 // //     sorter: (a: any, b: any) => (a[col] > b[col] ? 1 : -1),
 // //     render: (val: any) => {
 // //         if (val === null || val === undefined) return <span className="text-gray-300">-</span>;
-        
+
 // //         if (typeof val === 'number') {
 // //             if (col.toLowerCase().includes('price') || col.toLowerCase().includes('cost') || col.toLowerCase().includes('revenue')) {
 // //                  return val.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
@@ -1530,7 +1530,7 @@
 
 // import React, { useEffect, useRef } from 'react';
 // import { Statistic, Table, Alert, Spin, Tag } from 'antd';
-// import { ArrowUpOutlined, ArrowDownOutlined } from '@ant-design/icons';
+// import { ArrowUp, ArrowDown } from 'lucide-react';
 // import Plotly from 'plotly.js-dist-min';
 // import _ from 'lodash';
 
@@ -1549,20 +1549,20 @@
 //       <Spin size="large" tip="Loading Data..." />
 //     </div>
 //   );
-  
+
 //   if (error) return (
 //     <div className="h-full w-full p-4 flex items-center">
 //       <Alert message="Error loading widget" description={error} type="error" showIcon className="w-full" />
 //     </div>
 //   );
-  
+
 //   if (!data || (Array.isArray(data) && data.length === 0)) return (
 //     <div className="h-full w-full flex flex-col items-center justify-center text-gray-400 bg-gray-50 rounded-lg">
 //       <div className="text-3xl mb-2">∅</div>
 //       <div className="font-medium">No Data Available</div>
 //     </div>
 //   );
-  
+
 //   // Ensure the container is rigid so Plotly doesn't overflow
 //   return <div className="h-full w-full overflow-hidden relative">{children}</div>;
 // };
@@ -1594,7 +1594,7 @@
 //            }
 //         });
 //     });
-    
+
 //     resizeObserver.current.observe(chartRef.current);
 
 //     // Cleanup on Unmount
@@ -1630,7 +1630,7 @@
 //     // ---------------------------------------------------------
 //     // PHASE 2: CONFIGURATION & LAYOUT
 //     // ---------------------------------------------------------
-    
+
 //     const xAxis = config.xAxis || config.labels || config.group_by || 'name';
 //     const yAxis = config.yAxis || config.values || 'value';
 //     const groupBy = config.groupBy; 
@@ -1683,12 +1683,12 @@
 //       delete layout.xaxis;
 //       delete layout.yaxis;
 //     } 
-    
+
 //     else if (type === 'gauge') {
 //       const val = chartData[0]?.[yAxis] || 0;
 //       const min = config.min || 0;
 //       const max = config.max || 100;
-      
+
 //       traces = [{
 //         type: "indicator",
 //         mode: "gauge+number+delta",
@@ -1723,7 +1723,7 @@
 //         fillcolor: 'rgba(24, 144, 255, 0.2)',
 //         line: { color: '#1890ff' }
 //       }];
-      
+
 //       layout.polar = {
 //         radialaxis: { visible: true, showline: true }, 
 //         angularaxis: { direction: 'clockwise' }
@@ -1781,7 +1781,7 @@
 //     // CARTESIAN (Line, Bar, Area, Combo)
 //     else {
 //       const yAxes = Array.isArray(yAxis) ? yAxis : [yAxis];
-      
+
 //       if (groupBy) {
 //         const groupedData = _.groupBy(chartData, groupBy);
 //         traces = Object.keys(groupedData).map(groupName => {
@@ -1791,7 +1791,7 @@
 //              y: groupRows.map(d => d[yAxes[0]]), 
 //              type: type === 'stacked_bar' ? 'bar' : (type === 'area' ? 'scatter' : 'bar'),
 //              name: groupName,
-//              stackgroup: type === 'area' ? 'one' : undefined,
+//              stackgroup: type === 'area' ? 'one' : undefined as any,
 //              marker: { color: config.colors?.[groupName] }
 //            };
 //         });
@@ -1883,7 +1883,7 @@
 // export const KPIWidget: React.FC<{ data: any[]; config: any }> = ({ data, config }) => {
 //   const metricKey = config.metricKey || Object.keys(data[0] || {}).find(k => typeof data[0][k] === 'number');
 //   const value = data[0]?.[metricKey!] || 0;
-  
+
 //   const trend = data[0]?.['trend'] || data[0]?.['change_pct'];
 //   const isPositive = trend > 0;
 
@@ -1902,7 +1902,7 @@
 //             lineHeight: 1.2
 //         }}
 //       />
-      
+
 //       {trend !== undefined && trend !== null && (
 //           <div className={`mt-3 text-sm font-medium flex items-center px-2 py-1 rounded-full ${isPositive ? 'text-green-700 bg-green-50' : 'text-red-700 bg-red-50'}`}>
 //               {isPositive ? <ArrowUpOutlined className="mr-1"/> : <ArrowDownOutlined className="mr-1"/>}
@@ -1920,7 +1920,7 @@
 // export const TableWidget: React.FC<{ data: any[]; config: any }> = ({ data, config }) => {
 //   // 1. Pre-process data for Sort/Limit
 //   let processedData = [...data];
-  
+
 //   if (config.sort && config.sortBy) {
 //      processedData.sort((a, b) => {
 //        const valA = a[config.sortBy] || 0;
@@ -1928,7 +1928,7 @@
 //        return config.sort === 'asc' ? valA - valB : valB - valA;
 //      });
 //   }
-  
+
 //   if (config.limit && typeof config.limit === 'number') {
 //      processedData = processedData.slice(0, config.limit);
 //   }
@@ -1947,7 +1947,7 @@
 //     },
 //     render: (val: any) => {
 //         if (val === null || val === undefined) return <span className="text-gray-300">-</span>;
-        
+
 //         if (typeof val === 'number') {
 //             if (col.toLowerCase().includes('price') || col.toLowerCase().includes('cost') || col.toLowerCase().includes('revenue')) {
 //                  return val.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
@@ -2005,38 +2005,39 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { Statistic, Table, Alert, Spin, Tag } from 'antd';
-import { ArrowUpOutlined, ArrowDownOutlined } from '@ant-design/icons';
+import { ArrowUp, ArrowDown } from 'lucide-react';
 import Plotly from 'plotly.js-dist-min';
 import _ from 'lodash';
+import { useThemeStore } from '@/core/lib/store';
 
 // --- Types ---
-export type ChartType = 
+export type ChartType =
   | 'line' | 'area' | 'bar' | 'stacked_bar' | 'combo'
-  | 'pie' | 'donut' 
-  | 'funnel' | 'gauge' 
+  | 'pie' | 'donut'
+  | 'funnel' | 'gauge'
   | 'radar' | 'treemap' | 'sunburst';
 
 // --- Generic Wrapper for Loading/Error States ---
 export const WidgetWrapper: React.FC<any> = ({ data, loading, error, children }) => {
   if (loading) return (
-    <div className="h-full w-full flex items-center justify-center bg-white/50 z-10">
+    <div className="h-full w-full flex items-center justify-center z-10" style={{ backgroundColor: 'rgba(var(--color-bg-secondary-rgb), 0.5)' }}>
       <Spin size="large" tip="Loading Data..." />
     </div>
   );
-  
+
   if (error) return (
     <div className="h-full w-full p-4 flex items-center">
       <Alert message="Error loading widget" description={error} type="error" showIcon className="w-full" />
     </div>
   );
-  
+
   if (!data || (Array.isArray(data) && data.length === 0)) return (
-    <div className="h-full w-full flex flex-col items-center justify-center text-gray-400 bg-gray-50 rounded-lg">
+    <div className="h-full w-full flex flex-col items-center justify-center text-gray-400 rounded-lg" style={{ backgroundColor: 'var(--color-bg-secondary)' }}>
       <div className="text-3xl mb-2">∅</div>
       <div className="font-medium">No Data Available</div>
     </div>
   );
-  
+
   // CSS ISOLATION: relative container allows children to be absolute
   return <div className="h-full w-full relative overflow-hidden">{children}</div>;
 };
@@ -2051,6 +2052,7 @@ export const BaseChart: React.FC<{
   config: any;
   layoutOverride?: any;
 }> = ({ type, data, config, layoutOverride }) => {
+  const { isDarkMode } = useThemeStore();
   const chartRef = useRef<HTMLDivElement>(null);
   const plotlyInstance = useRef<any>(null);
   const [isMounted, setIsMounted] = useState(false);
@@ -2058,21 +2060,21 @@ export const BaseChart: React.FC<{
   // 1. LIFECYCLE: Initialize & Observer
   useEffect(() => {
     setIsMounted(true);
-    
+
     if (!chartRef.current) return;
 
     // Use a debounced resize observer to prevent rapid firing
     const resizeObserver = new ResizeObserver((entries) => {
-       if (!Array.isArray(entries) || !entries.length) return;
-       
-       window.requestAnimationFrame(() => {
-          // Check if element is still in DOM and has dimensions
-          if (chartRef.current && chartRef.current.clientWidth > 0 && chartRef.current.clientHeight > 0) {
-             Plotly.Plots.resize(chartRef.current);
-          }
-       });
+      if (!Array.isArray(entries) || !entries.length) return;
+
+      window.requestAnimationFrame(() => {
+        // Check if element is still in DOM and has dimensions
+        if (chartRef.current && chartRef.current.clientWidth > 0 && chartRef.current.clientHeight > 0) {
+          Plotly.Plots.resize(chartRef.current);
+        }
+      });
     });
-    
+
     resizeObserver.observe(chartRef.current);
 
     return () => {
@@ -2085,7 +2087,7 @@ export const BaseChart: React.FC<{
   useEffect(() => {
     // Safety check: Ensure ref exists, data exists, and container has size (prevents 0-height crashes)
     if (!chartRef.current || !data.length) return;
-    
+
     // Wait for mount to ensure DOM layout is settled
     if (!isMounted) return;
 
@@ -2095,16 +2097,16 @@ export const BaseChart: React.FC<{
     let chartData = [...data];
 
     if (config.sort) {
-       const sortKey = config.sortBy || (Array.isArray(config.yAxis) ? config.yAxis[0] : config.yAxis) || 'value';
-       chartData.sort((a, b) => {
-           const valA = a[sortKey] || 0;
-           const valB = b[sortKey] || 0;
-           return config.sort === 'asc' ? valA - valB : valB - valA;
-       });
+      const sortKey = config.sortBy || (Array.isArray(config.yAxis) ? config.yAxis[0] : config.yAxis) || 'value';
+      chartData.sort((a, b) => {
+        const valA = a[sortKey] || 0;
+        const valB = b[sortKey] || 0;
+        return config.sort === 'asc' ? valA - valB : valB - valA;
+      });
     }
 
     if (config.limit && typeof config.limit === 'number') {
-        chartData = chartData.slice(0, config.limit);
+      chartData = chartData.slice(0, config.limit);
     }
 
     // ---------------------------------------------------------
@@ -2112,27 +2114,41 @@ export const BaseChart: React.FC<{
     // ---------------------------------------------------------
     const xAxis = config.xAxis || config.labels || config.group_by || 'name';
     const yAxis = config.yAxis || config.values || 'value';
-    const groupBy = config.groupBy; 
+    const groupBy = config.groupBy;
 
     let traces: any[] = [];
 
     // GLOBAL LAYOUT CONFIG
     // STRICT: automargin disabled to prevent loops
     let layout: any = {
-      autosize: true, 
-      margin: { l: 50, r: 20, t: 30, b: 50, pad: 4 }, 
+      autosize: true,
+      margin: { l: 50, r: 20, t: 30, b: 50, pad: 4 },
       showlegend: true,
-      legend: { orientation: 'h', y: -0.2 }, 
-      xaxis: { 
-          tickangle: -45, 
-          automargin: false, // STRICT DISABLE
-          fixedrange: true 
+      legend: {
+        orientation: 'h',
+        y: -0.2,
+        font: { color: isDarkMode ? '#e5e7eb' : '#374151' }
       },
-      yaxis: { 
-          automargin: false, // STRICT DISABLE
-          fixedrange: true 
+      xaxis: {
+        tickangle: -45,
+        automargin: false, // STRICT DISABLE
+        fixedrange: true,
+        gridcolor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+        zerolinecolor: isDarkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)',
+        tickfont: { color: isDarkMode ? '#e5e7eb' : '#374151' }
       },
-      font: { family: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial", size: 11 },
+      yaxis: {
+        automargin: false, // STRICT DISABLE
+        fixedrange: true,
+        gridcolor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+        zerolinecolor: isDarkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)',
+        tickfont: { color: isDarkMode ? '#e5e7eb' : '#374151' }
+      },
+      font: {
+        family: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial",
+        size: 11,
+        color: isDarkMode ? '#e5e7eb' : '#374151'
+      },
       paper_bgcolor: 'transparent',
       plot_bgcolor: 'transparent',
       ...layoutOverride
@@ -2151,19 +2167,19 @@ export const BaseChart: React.FC<{
         textinfo: 'label+percent',
         textposition: 'outside',
         // Pie charts usually handle automargin safely, but we can be explicit
-        automargin: true, 
+        automargin: true,
         marker: { colors: config.colors || ['#1890ff', '#13c2c2', '#52c41a', '#faad14', '#f5222d', '#722ed1'] }
       }];
       layout.margin = { l: 40, r: 40, t: 40, b: 40 }; // Even margins for circle
       delete layout.xaxis;
       delete layout.yaxis;
-    } 
-    
+    }
+
     else if (type === 'gauge') {
       const val = chartData[0]?.[yAxis] || 0;
       const min = config.min || 0;
       const max = config.max || 100;
-      
+
       traces = [{
         type: "indicator",
         mode: "gauge+number+delta",
@@ -2189,7 +2205,7 @@ export const BaseChart: React.FC<{
     }
 
     else if (type === 'radar') {
-       traces = [{
+      traces = [{
         type: 'scatterpolar',
         r: chartData.map(d => d[yAxis]),
         theta: chartData.map(d => d[xAxis]),
@@ -2199,7 +2215,7 @@ export const BaseChart: React.FC<{
         line: { color: '#1890ff' }
       }];
       layout.polar = {
-        radialaxis: { visible: true, showline: true }, 
+        radialaxis: { visible: true, showline: true },
         angularaxis: { direction: 'clockwise' }
       };
       delete layout.xaxis;
@@ -2210,7 +2226,7 @@ export const BaseChart: React.FC<{
       traces = [{
         type: 'treemap',
         labels: chartData.map(d => d[config.labels || xAxis]),
-        parents: chartData.map(d => d[config.parents || 'parent_id'] || ''), 
+        parents: chartData.map(d => d[config.parents || 'parent_id'] || ''),
         values: chartData.map(d => d[config.values || yAxis]),
         textinfo: "label+value+percent parent",
         branchvalues: "total",
@@ -2238,51 +2254,51 @@ export const BaseChart: React.FC<{
     }
 
     else if (type === 'funnel') {
-        traces = [{
-            type: 'funnel',
-            y: chartData.map(d => d[xAxis]), 
-            x: chartData.map(d => d[yAxis]), 
-            textinfo: "value+percent initial",
-            hoverinfo: "x+percent previous+percent initial",
-            marker: { color: ["#1890ff", "#40a9ff", "#69c0ff", "#91d5ff", "#bae7ff"] }
-        }];
-        layout.margin = { l: 100 }; 
-        delete layout.xaxis;
-        delete layout.yaxis;
+      traces = [{
+        type: 'funnel',
+        y: chartData.map(d => d[xAxis]),
+        x: chartData.map(d => d[yAxis]),
+        textinfo: "value+percent initial",
+        hoverinfo: "x+percent previous+percent initial",
+        marker: { color: ["#1890ff", "#40a9ff", "#69c0ff", "#91d5ff", "#bae7ff"] }
+      }];
+      layout.margin = { l: 100 };
+      delete layout.xaxis;
+      delete layout.yaxis;
     }
 
     else {
       // CARTESIAN (Line, Bar, Area, Combo)
       const yAxes = Array.isArray(yAxis) ? yAxis : [yAxis];
-      
+
       if (groupBy) {
         const groupedData = _.groupBy(chartData, groupBy);
         traces = Object.keys(groupedData).map(groupName => {
-           const groupRows = groupedData[groupName];
-           return {
-             x: groupRows.map(d => d[xAxis]),
-             y: groupRows.map(d => d[yAxes[0]]), 
-             type: type === 'stacked_bar' ? 'bar' : (type === 'area' ? 'scatter' : 'bar'),
-             name: groupName,
-             stackgroup: type === 'area' ? 'one' : undefined,
-             marker: { color: config.colors?.[groupName] }
-           };
+          const groupRows = groupedData[groupName];
+          return {
+            x: groupRows.map(d => d[xAxis]),
+            y: groupRows.map(d => d[yAxes[0]]),
+            type: type === 'stacked_bar' ? 'bar' : (type === 'area' ? 'scatter' : 'bar'),
+            name: groupName,
+            stackgroup: type === 'area' ? 'one' : undefined as any,
+            marker: { color: config.colors?.[groupName] }
+          };
         });
       } else {
         traces = yAxes.map((yKey, i) => {
-          let traceType = 'scatter'; 
+          let traceType = 'scatter';
           let mode = 'lines+markers';
           let fill = undefined;
 
           if (type === 'bar' || type === 'stacked_bar') {
-               traceType = 'bar';
-               mode = undefined;
+            traceType = 'bar';
+            mode = undefined;
           } else if (type === 'area') {
-               fill = 'tozeroy';
+            fill = 'tozeroy';
           } else if (type === 'combo') {
-              const specificType = config.seriesTypes?.[yKey] || (i === 0 ? 'bar' : 'scatter'); 
-              traceType = specificType === 'line' ? 'scatter' : specificType;
-              if (traceType === 'bar') mode = undefined;
+            const specificType = config.seriesTypes?.[yKey] || (i === 0 ? 'bar' : 'scatter');
+            traceType = specificType === 'line' ? 'scatter' : specificType;
+            if (traceType === 'bar') mode = undefined;
           }
 
           return {
@@ -2292,14 +2308,14 @@ export const BaseChart: React.FC<{
             mode: mode,
             fill: fill,
             name: yKey.replace(/_/g, ' ').toUpperCase(),
-            marker: { color: config.colors?.[yKey] },
+            marker: { color: config.colors?.[yKey] || undefined },
             line: traceType === 'scatter' ? { shape: 'spline' } : undefined
           };
         });
       }
 
       if (type === 'stacked_bar') {
-          layout.barmode = 'stack';
+        layout.barmode = 'stack';
       }
     }
 
@@ -2311,7 +2327,7 @@ export const BaseChart: React.FC<{
       layout.shapes = layout.shapes || [];
       layout.shapes.push({
         type: 'line',
-        xref: 'paper', x0: 0, x1: 1, 
+        xref: 'paper', x0: 0, x1: 1,
         y0: baseline.value,
         y1: baseline.value,
         line: { color: baseline.color || '#ff4d4f', width: 2, dash: 'dash' },
@@ -2334,17 +2350,17 @@ export const BaseChart: React.FC<{
     // PHASE 5: RENDER
     // ---------------------------------------------------------
     // Double check ref before calling React
-    if(chartRef.current) {
-        Plotly.react(chartRef.current, traces, layout, { 
-            displayModeBar: false, 
-            responsive: true,
-            displaylogo: false,
-            scrollZoom: false
-        }).then((instance) => {
-            plotlyInstance.current = instance;
-        }).catch(err => {
-            console.warn("Plotly Render Warning:", err);
-        });
+    if (chartRef.current) {
+      Plotly.react(chartRef.current, traces, layout, {
+        displayModeBar: false,
+        responsive: true,
+        displaylogo: false,
+        scrollZoom: false
+      }).then((instance: any) => {
+        plotlyInstance.current = instance;
+      }).catch((err: any) => {
+        console.warn("Plotly Render Warning:", err);
+      });
     }
 
   }, [data, config, type, isMounted]);
@@ -2352,11 +2368,11 @@ export const BaseChart: React.FC<{
   // --- CSS ISOLATION ---
   // Absolute positioning ensures this div takes up space but doesn't push parent
   return (
-    <div 
-        ref={chartRef} 
-        className="absolute inset-0 w-full h-full" 
-        // Inline style fallback for safety
-        style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }} 
+    <div
+      ref={chartRef}
+      className="absolute inset-0 w-full h-full"
+      // Inline style fallback for safety
+      style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
     />
   );
 };
@@ -2366,33 +2382,40 @@ export const BaseChart: React.FC<{
 // ============================================================================
 
 export const KPIWidget: React.FC<{ data: any[]; config: any }> = ({ data, config }) => {
+  const { isDarkMode } = useThemeStore();
   const metricKey = config.metricKey || Object.keys(data[0] || {}).find(k => typeof data[0][k] === 'number');
   const value = data[0]?.[metricKey!] || 0;
-  
+
   const trend = data[0]?.['trend'] || data[0]?.['change_pct'];
   const isPositive = trend > 0;
 
   return (
     <div className="h-full flex flex-col items-center justify-center p-4 relative">
-      <Statistic 
-        title={<span className="text-gray-500 text-sm uppercase tracking-wide">{config.subtitle || config.title || ''}</span>}
-        value={value} 
+      <Statistic
+        title={<span className="text-gray-400 text-xs uppercase tracking-wider">{config.subtitle || config.title || ''}</span>}
+        value={value}
         precision={config.precision !== undefined ? config.precision : (Number.isInteger(value) ? 0 : 2)}
         prefix={config.prefix}
         suffix={config.format === 'percent' ? '%' : config.suffix}
-        valueStyle={{ 
-            fontSize: config.fontSize || '2.5rem', 
-            fontWeight: 700, 
-            color: config.color || '#1f1f1f',
-            lineHeight: 1.2
+        valueStyle={{
+          fontSize: config.fontSize || '2.2rem',
+          fontWeight: 700,
+          color: config.color || (isDarkMode ? '#e9edef' : '#1f1f1f'),
+          lineHeight: 1.2
         }}
       />
-      
+
       {trend !== undefined && trend !== null && (
-          <div className={`mt-3 text-sm font-medium flex items-center px-2 py-1 rounded-full ${isPositive ? 'text-green-700 bg-green-50' : 'text-red-700 bg-red-50'}`}>
-              {isPositive ? <ArrowUpOutlined className="mr-1"/> : <ArrowDownOutlined className="mr-1"/>}
-              <span>{Math.abs(trend)}% {config.trendLabel || 'vs last period'}</span>
-          </div>
+        <div
+          className="mt-3 text-xs font-bold flex items-center px-2 py-1 rounded-full"
+          style={{
+            color: isPositive ? '#22c55e' : '#ef4444',
+            backgroundColor: isPositive ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)'
+          }}
+        >
+          {isPositive ? <ArrowUp size={14} className="mr-1" /> : <ArrowDown size={14} className="mr-1" />}
+          <span>{Math.abs(trend)}% {config.trendLabel || 'vs last period'}</span>
+        </div>
       )}
     </div>
   );
@@ -2404,17 +2427,17 @@ export const KPIWidget: React.FC<{ data: any[]; config: any }> = ({ data, config
 
 export const TableWidget: React.FC<{ data: any[]; config: any }> = ({ data, config }) => {
   let processedData = [...data];
-  
+
   if (config.sort && config.sortBy) {
-     processedData.sort((a, b) => {
-       const valA = a[config.sortBy] || 0;
-       const valB = b[config.sortBy] || 0;
-       return config.sort === 'asc' ? valA - valB : valB - valA;
-     });
+    processedData.sort((a, b) => {
+      const valA = a[config.sortBy] || 0;
+      const valB = b[config.sortBy] || 0;
+      return config.sort === 'asc' ? valA - valB : valB - valA;
+    });
   }
-  
+
   if (config.limit && typeof config.limit === 'number') {
-     processedData = processedData.slice(0, config.limit);
+    processedData = processedData.slice(0, config.limit);
   }
 
   const columns = (config.columns || Object.keys(data[0] || {})).map((col: string) => ({
@@ -2423,48 +2446,48 @@ export const TableWidget: React.FC<{ data: any[]; config: any }> = ({ data, conf
     key: col,
     ellipsis: true,
     sorter: (a: any, b: any) => {
-        const valA = a[col] || 0;
-        const valB = b[col] || 0;
-        if(typeof valA === 'string') return valA.localeCompare(valB);
-        return valA - valB;
+      const valA = a[col] || 0;
+      const valB = b[col] || 0;
+      if (typeof valA === 'string') return valA.localeCompare(valB);
+      return valA - valB;
     },
     render: (val: any) => {
-        if (val === null || val === undefined) return <span className="text-gray-300">-</span>;
-        
-        if (typeof val === 'number') {
-            if (col.toLowerCase().includes('price') || col.toLowerCase().includes('cost') || col.toLowerCase().includes('revenue')) {
-                 return val.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
-            }
-            if (col.toLowerCase().includes('percent') || col.toLowerCase().includes('rate')) {
-                const isRatio = val <= 1 && val > -1 && val !== 0; 
-                return isRatio ? `${(val * 100).toFixed(1)}%` : `${val.toFixed(1)}%`;
-            }
-            if (Number.isInteger(val)) return val.toLocaleString();
-            return val.toFixed(2);
-        }
+      if (val === null || val === undefined) return <span className="text-gray-300">-</span>;
 
-        if (typeof val === 'string' && ['status', 'priority', 'state'].some(k => col.toLowerCase().includes(k))) {
-            let color = 'default';
-            const lowerVal = val.toLowerCase();
-            if (['high', 'critical', 'error', 'failed', 'rejected'].includes(lowerVal)) color = 'red';
-            else if (['medium', 'warning', 'pending', 'in progress'].includes(lowerVal)) color = 'orange';
-            else if (['low', 'success', 'completed', 'active', 'approved'].includes(lowerVal)) color = 'green';
-            else if (['open', 'new'].includes(lowerVal)) color = 'blue';
-            return <Tag color={color}>{val.toUpperCase()}</Tag>;
+      if (typeof val === 'number') {
+        if (col.toLowerCase().includes('price') || col.toLowerCase().includes('cost') || col.toLowerCase().includes('revenue')) {
+          return val.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
         }
+        if (col.toLowerCase().includes('percent') || col.toLowerCase().includes('rate')) {
+          const isRatio = val <= 1 && val > -1 && val !== 0;
+          return isRatio ? `${(val * 100).toFixed(1)}%` : `${val.toFixed(1)}%`;
+        }
+        if (Number.isInteger(val)) return val.toLocaleString();
+        return val.toFixed(2);
+      }
 
-        return val;
+      if (typeof val === 'string' && ['status', 'priority', 'state'].some(k => col.toLowerCase().includes(k))) {
+        let color = 'default';
+        const lowerVal = val.toLowerCase();
+        if (['high', 'critical', 'error', 'failed', 'rejected'].includes(lowerVal)) color = 'red';
+        else if (['medium', 'warning', 'pending', 'in progress'].includes(lowerVal)) color = 'orange';
+        else if (['low', 'success', 'completed', 'active', 'approved'].includes(lowerVal)) color = 'green';
+        else if (['open', 'new'].includes(lowerVal)) color = 'blue';
+        return <Tag color={color}>{val.toUpperCase()}</Tag>;
+      }
+
+      return val;
     }
   }));
 
   return (
-    <div className="h-full w-full overflow-hidden rounded-lg bg-white">
+    <div className="h-full w-full overflow-hidden rounded-lg bg-[var(--color-bg-secondary)]">
       <Table
         dataSource={processedData}
         columns={columns}
         pagination={config.pagination === false ? false : { pageSize: config.pageSize || 5, size: 'small', hideOnSinglePage: true }}
         size="middle"
-        rowKey={(r) => r.id || JSON.stringify(r)} 
+        rowKey={(r) => r.id || JSON.stringify(r)}
         scroll={{ x: 'max-content', y: config.height || 300 }}
         className="h-full"
       />

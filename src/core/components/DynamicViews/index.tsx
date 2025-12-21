@@ -10,7 +10,6 @@
 //   EnvironmentOutlined,
 //   DashboardOutlined,
 //   MenuOutlined, // Add MenuOutlined for the mobile view button
-// } from '@ant-design/icons';
 // import { useQuery } from '@tanstack/react-query';
 // import { supabase } from '../../lib/supabase';
 // import { useAuthStore } from '@/core/lib/store';
@@ -374,7 +373,7 @@
 //     enabled: !!organization?.id && !!viewConfig && !!config && (!detailView || (detailView && !!parentEditItem)),
 //     keepPreviousData: true,
 //     staleTime: 0,//1000 * 60,
-//     cacheTime: 0//1000 * 60 * 5,
+//     gcTime: 0//1000 * 60 * 5,
 //   });
 
 //   useEffect(() => {
@@ -707,16 +706,16 @@
 import React, { useState, useEffect, Suspense, useRef, useMemo } from 'react';
 import { Space, Radio, Card, message, Tooltip, Typography, Dropdown, Button, Pagination } from 'antd';
 import {
-  TableOutlined,
-  AppstoreOutlined,
-  InsertRowAboveOutlined,
-  CalendarOutlined,
-  ProjectOutlined,
-  InfoCircleOutlined,
-  EnvironmentOutlined,
-  DashboardOutlined,
-  MenuOutlined,
-} from '@ant-design/icons';
+  Table,
+  LayoutGrid,
+  Columns,
+  Calendar,
+  FolderKanban,
+  Info,
+  MapPin,
+  LayoutDashboard,
+  Menu,
+} from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '@/core/lib/store';
@@ -735,6 +734,7 @@ import { isLocationPartition } from '@/core/components/common/utils/partitionPer
 import { useNestedContext } from '../../lib/NestedContext';
 import { useDeviceType } from '@/utils/deviceTypeStore';
 import { ZeroStateContent } from './ZeroStateContent';
+import { useLocation } from 'react-router-dom';
 
 /**
  * @interface DynamicViewsProps
@@ -808,13 +808,13 @@ const DynamicViews: React.FC<DynamicViewsProps> = ({
   const isDesktop = deviceType === 'desktop';
 
   const viewOptions = [
-    { value: 'tableview', label: 'Table', icon: <TableOutlined /> },
-    { value: 'gridview', label: 'Grid', icon: <AppstoreOutlined /> },
-    { value: 'kanbanview', label: 'Kanban', icon: <InsertRowAboveOutlined /> },
-    { value: 'calendarview', label: 'Calendar', icon: <CalendarOutlined /> },
-    { value: 'ganttview', label: 'Gantt', icon: <ProjectOutlined /> },
-    { value: 'mapview', label: 'Map', icon: <EnvironmentOutlined /> },
-    { value: 'dashboardview', label: 'Dashboard', icon: <DashboardOutlined /> },
+    { value: 'tableview', label: 'Table', icon: <Table size={16} /> },
+    { value: 'gridview', label: 'Grid', icon: <LayoutGrid size={16} /> },
+    { value: 'kanbanview', label: 'Kanban', icon: <Columns size={16} /> },
+    { value: 'calendarview', label: 'Calendar', icon: <Calendar size={16} /> },
+    { value: 'ganttview', label: 'Gantt', icon: <FolderKanban size={16} /> },
+    { value: 'mapview', label: 'Map', icon: <MapPin size={16} /> },
+    { value: 'dashboardview', label: 'Dashboard', icon: <LayoutDashboard size={16} /> },
   ];
 
   const printRef = useRef<HTMLDivElement>(null);
@@ -925,7 +925,7 @@ const DynamicViews: React.FC<DynamicViewsProps> = ({
     if (isTopLevel) {
       return availableViews;
     }
-    return availableViews.filter((view) => !restrictedViews.includes(view));
+    return availableViews.filter((view: string) => !restrictedViews.includes(view));
   }, [availableViews, isTopLevel]);
 
   const { viewType = defaultView, setViewType } = useViewState(entityType, defaultView as ViewType, filteredAvailableViews as ViewType[], viewContextKey);
@@ -940,7 +940,7 @@ const DynamicViews: React.FC<DynamicViewsProps> = ({
   // --- Column Visibility ---
   const initialVisibleColumns = useMemo(() => {
     if (viewConfig?.tableview?.fields) {
-      return viewConfig.tableview.fields.map(field => field.fieldPath);
+      return viewConfig.tableview.fields.map((field: any) => field.fieldPath);
     }
     return [];
   }, [viewConfig]);
@@ -954,8 +954,8 @@ const DynamicViews: React.FC<DynamicViewsProps> = ({
   const allDisplayableColumns = useMemo(() => {
     if (!viewConfig?.metadata) return [];
     return viewConfig.metadata
-      .filter(field => field.is_displayable)
-      .map(field => {
+      .filter((field: any) => field.is_displayable)
+      .map((field: any) => {
         const fieldPath = field.foreign_key ? `${field.key}_${field.foreign_key.display_column}` : field.key;
         return {
           fieldName: field.display_name,
@@ -1096,9 +1096,8 @@ const DynamicViews: React.FC<DynamicViewsProps> = ({
       };
     },
     enabled: !!organization?.id && !!viewConfig && !!config && (!detailView || (detailView && !!parentEditItem)),
-    keepPreviousData: true,
-    staleTime: 0, // 1000 * 60,
-    cacheTime: 0 // 1000 * 60 * 5,
+    staleTime: 0,
+    gcTime: 0,
   });
 
   // --- Update Pagination State from Data ---
@@ -1168,7 +1167,7 @@ const DynamicViews: React.FC<DynamicViewsProps> = ({
 
   // --- Handlers ---
 
-  const handleTableChange = (newPagination, filters, sorter) => {
+  const handleTableChange = (_newPagination: any, _filters: any, sorter: any) => {
     if (sorter.field && sorter.field.endsWith('_id_name')) {
       console.log("Ignoring sort for display field:", sorter.field);
       return;
@@ -1273,7 +1272,7 @@ const DynamicViews: React.FC<DynamicViewsProps> = ({
           {config?.details?.name}
           {config?.details?.description && (
             <Tooltip title={config?.details?.description}>
-              <InfoCircleOutlined className="ml-2" />
+              <Info size={14} className="ml-2" />
             </Tooltip>
           )}
         </Typography.Title>
@@ -1290,7 +1289,7 @@ const DynamicViews: React.FC<DynamicViewsProps> = ({
       return (
         <Dropdown menu={{ items: menuItems }} trigger={['click']}>
           <Button>
-            {tabOptions.find(tab => tab.key === currentTab)?.label} <MenuOutlined />
+            {tabOptions.find(tab => tab.key === currentTab)?.label} <Menu size={14} />
           </Button>
         </Dropdown>
       );
@@ -1321,7 +1320,7 @@ const DynamicViews: React.FC<DynamicViewsProps> = ({
         return (
           <Button
             onClick={handleViewCycle}
-            icon={currentView?.icon || <TableOutlined />}
+            icon={currentView?.icon || <Table size={16} />}
           />
         );
       }

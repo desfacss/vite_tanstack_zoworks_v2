@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Modal, Badge, List } from 'antd';
-import { BellOutlined } from '@ant-design/icons';
+import { Bell } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/core/lib/store';
 import { Database } from '@/types/database.types';
@@ -34,8 +34,8 @@ const NotificationIcon: React.FC = () => {
       .select('*')
       .or(
         `type.eq.public,` +
-          `locations.cs.{${currentLocation.id}},` +
-          `users.cs.{${currentUser.user_id}}`,
+        `locations.cs.{${currentLocation.id}},` +
+        `users.cs.{${currentUser.user_id}}`,
       )
       .gte('expiry', new Date().toISOString())
       .lte('start', new Date().toISOString())
@@ -62,7 +62,7 @@ const NotificationIcon: React.FC = () => {
     if (!user || !location) {
       return;
     }
-    
+
     // Set up real-time listener for notifications
     const subscription = supabase
       .channel('notifications_channel')
@@ -86,7 +86,7 @@ const NotificationIcon: React.FC = () => {
   return (
     <>
       <Badge count={notifications.length}>
-        <BellOutlined style={{ fontSize: '24px' }} onClick={openModal} />
+        <Bell size={24} onClick={openModal} className="cursor-pointer" />
       </Badge>
       <Modal
         title="Notifications"

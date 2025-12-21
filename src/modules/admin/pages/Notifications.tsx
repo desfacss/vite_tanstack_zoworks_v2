@@ -1,15 +1,14 @@
 import { Button, Card, notification, Table, Drawer, Form, Input, Select, DatePicker, Modal, Tooltip, Typography } from "antd";
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Edit2, Trash2, Plus, Search } from "lucide-react";
+import { Edit2, Trash2, Plus, Search, AlertCircle } from "lucide-react";
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from "@/core/lib/store";
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import { camelCaseToTitleCase } from "@/core/components/common/utils/casing";
-// import { EditOutlined, DeleteOutlined } from "@ant-design/icons"; // Merged above
 
-const getAllValues = (obj) => {
-    let values = [];
+const getAllValues = (obj: Record<string, any>): any[] => {
+    let values: any[] = [];
     for (let key in obj) {
         if (key.toLowerCase().includes("id")) {
             // Skip properties containing 'id'
@@ -77,7 +76,7 @@ const Notifications: React.FC = () => {
     const [roles, setRoles] = useState<Role[]>([]);
     const [searchText, setSearchText] = useState('');
 
-    const dateFormat = 'YYYY/MM/DD';
+
 
     const { organization } = useAuthStore();
     const organizationId = organization?.id;
@@ -85,7 +84,7 @@ const Notifications: React.FC = () => {
     const filteredNotifications = useMemo(() => {
         if (!searchText) return notifications;
         return notifications?.filter((item) => {
-            return getAllValues(item).some((value) =>
+            return getAllValues(item).some((value: any) =>
                 String(value).toLowerCase().includes(searchText?.toLowerCase())
             );
         });
@@ -181,7 +180,7 @@ const Notifications: React.FC = () => {
     const showDeleteConfirm = (record: Notification) => {
         confirm({
             title: `Confirm deletion of Notification - ${record?.title} ?`,
-            icon: <ExclamationCircleFilled />,
+            icon: <AlertCircle size={16} />,
             okText: 'Yes',
             okType: 'danger',
             cancelText: 'No',
@@ -240,15 +239,15 @@ const Notifications: React.FC = () => {
             <div className="d-flex justify-content-between align-items-center flex justify-between items-center" style={{ marginBottom: "10px" }}>
                 <Typography.Title level={4} className="m-0">Notifications</Typography.Title>
                 <div>
-                    <Input className="mr-2" placeholder="Search" value={searchText} onChange={(e) => setSearchText(e.target.value)} prefix={<SearchOutlined />} style={{ width: 200 }} />
-                    <Button type="primary" icon={<PlusOutlined />} onClick={() => { setIsDrawerOpen(true); form.resetFields(); setEditItem(null); setType(null); }} >
+                    <Input className="mr-2" placeholder="Search" value={searchText} onChange={(e) => setSearchText(e.target.value)} prefix={<Search size={14} />} style={{ width: 200 }} />
+                    <Button type="primary" icon={<Plus size={16} />} onClick={() => { setIsDrawerOpen(true); form.resetFields(); setEditItem(null); setType(null); }} >
                         Add Notification
                     </Button>
                 </div>
             </div>
             <div className="table-responsive" ref={componentRef}>
                 <Table<Notification> columns={columns} dataSource={filteredNotifications}
-                    rowKey={(record) => record.id} loading={!filteredNotifications} pagination={true} />
+                    rowKey={(record) => record.id} loading={!filteredNotifications} pagination={{ pageSize: 10 }} />
             </div>
             <Drawer footer={null} width={500} title={editItem ? "Edit Notification" : "Add Notification"}
                 open={isDrawerOpen} maskClosable={false}
@@ -272,7 +271,7 @@ const Notifications: React.FC = () => {
                     <Form.Item name="start" label="Start" rules={[{ required: true, message: 'Please select the Start date' }]}>
                         <DatePicker size={'small'} style={{ width: '100%' }} />
                     </Form.Item>
-                    <Form.Item name="expiry" label="Expiry" format={dateFormat} rules={[{ required: true, message: 'Please select the Expiry date' }]}>
+                    <Form.Item name="expiry" label="Expiry" rules={[{ required: true, message: 'Please select the Expiry date' }]}>
                         <DatePicker size={'small'} style={{ width: '100%' }} />
                     </Form.Item>
 

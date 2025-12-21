@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Calendar, momentLocalizer, View, Views } from 'react-big-calendar';
 import moment from 'moment';
 import { Typography, Card, Button, Empty } from 'antd';
-import { LeftOutlined, RightOutlined } from '@ant-design/icons';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Event } from '../types'; // Assuming this now holds the transformed event structure
 import EventList from './EventList';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
@@ -86,14 +86,14 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, viewMode, isMobile 
     // Determine the start day based on viewMode
     let startDay;
     if (viewMode === 'day') {
-        // If in 'day' view, show the current date's week context
-        startDay = moment(currentDate).startOf('week');
+      // If in 'day' view, show the current date's week context
+      startDay = moment(currentDate).startOf('week');
     } else if (isMobile && viewMode === 'week') {
-        // In mobile '3-day' view, start from current date
-        return [currentDate, moment(currentDate).add(1, 'day').toDate(), moment(currentDate).add(2, 'day').toDate()];
+      // In mobile '3-day' view, start from current date
+      return [currentDate, moment(currentDate).add(1, 'day').toDate(), moment(currentDate).add(2, 'day').toDate()];
     } else {
-        // In full 'week' view, start of the week
-        startDay = moment(currentDate).startOf('week');
+      // In full 'week' view, start of the week
+      startDay = moment(currentDate).startOf('week');
     }
 
     const days = [];
@@ -101,7 +101,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, viewMode, isMobile 
     const numDaysToShow = (isMobile && viewMode === 'week') ? 3 : 7;
 
     for (let i = 0; i < numDaysToShow; i++) {
-        days.push(startDay.clone().add(i, 'day').toDate());
+      days.push(startDay.clone().add(i, 'day').toDate());
     }
     return days;
   };
@@ -109,7 +109,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, viewMode, isMobile 
   const eventStyleGetter = (event: any) => {
     const eventData = event.resource as Event;
     const baseColor = eventData.color;
-    
+
     // ... (color mapping logic remains the same) ...
     let backgroundColor = baseColor;
     if (baseColor && !baseColor.startsWith('#')) {
@@ -120,7 +120,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, viewMode, isMobile 
       };
       backgroundColor = colorMap[baseColor] || baseColor;
     }
-    
+
     return {
       style: {
         backgroundColor: backgroundColor,
@@ -137,11 +137,11 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, viewMode, isMobile 
         return moment(currentDate).format('MMMM YYYY');
       case 'week':
         if (isMobile) {
-            // Show the 3-day range for mobile week view
-            const days = getWeekDays();
-            if (days.length === 3) {
-                return `${moment(days[0]).format('MMM D')} - ${moment(days[2]).format('MMM D, YYYY')}`;
-            }
+          // Show the 3-day range for mobile week view
+          const days = getWeekDays();
+          if (days.length === 3) {
+            return `${moment(days[0]).format('MMM D')} - ${moment(days[2]).format('MMM D, YYYY')}`;
+          }
         }
         const startOfWeek = moment(currentDate).startOf('week');
         const endOfWeek = moment(currentDate).endOf('week');
@@ -157,24 +157,24 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, viewMode, isMobile 
     // Handle navigation based on the actual view in use
     let unit: moment.unitOfTime.DurationConstructor;
     if (viewMode === 'month') {
-        unit = 'month';
+      unit = 'month';
     } else if (viewMode === 'week' && isMobile) {
-        // Mobile week view navigates 3 days at a time
-        unit = 'day';
-        const newDate = moment(currentDate).subtract(3, unit).toDate();
-        setCurrentDate(newDate);
-        setSelectedDate(newDate);
-        return;
+      // Mobile week view navigates 3 days at a time
+      unit = 'day';
+      const newDate = moment(currentDate).subtract(3, unit).toDate();
+      setCurrentDate(newDate);
+      setSelectedDate(newDate);
+      return;
     } else {
-        // Desktop day/week views navigate one day/week at a time
-        unit = viewMode as moment.unitOfTime.DurationConstructor;
+      // Desktop day/week views navigate one day/week at a time
+      unit = viewMode as moment.unitOfTime.DurationConstructor;
     }
-    
+
     const newDate = moment(currentDate).subtract(1, unit).toDate();
     setCurrentDate(newDate);
     // If not month view, update selectedDate to match the new start date
     if (viewMode !== 'month') {
-        setSelectedDate(newDate);
+      setSelectedDate(newDate);
     }
   };
 
@@ -182,24 +182,24 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, viewMode, isMobile 
     // Handle navigation based on the actual view in use
     let unit: moment.unitOfTime.DurationConstructor;
     if (viewMode === 'month') {
-        unit = 'month';
+      unit = 'month';
     } else if (viewMode === 'week' && isMobile) {
-        // Mobile week view navigates 3 days at a time
-        unit = 'day';
-        const newDate = moment(currentDate).add(3, unit).toDate();
-        setCurrentDate(newDate);
-        setSelectedDate(newDate);
-        return;
+      // Mobile week view navigates 3 days at a time
+      unit = 'day';
+      const newDate = moment(currentDate).add(3, unit).toDate();
+      setCurrentDate(newDate);
+      setSelectedDate(newDate);
+      return;
     } else {
-        // Desktop day/week views navigate one day/week at a time
-        unit = viewMode as moment.unitOfTime.DurationConstructor;
+      // Desktop day/week views navigate one day/week at a time
+      unit = viewMode as moment.unitOfTime.DurationConstructor;
     }
-    
+
     const newDate = moment(currentDate).add(1, unit).toDate();
     setCurrentDate(newDate);
     // If not month view, update selectedDate to match the new start date
     if (viewMode !== 'month') {
-        setSelectedDate(newDate);
+      setSelectedDate(newDate);
     }
   };
 
@@ -208,9 +208,9 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, viewMode, isMobile 
     setCurrentDate(today);
     // If not month view, select today's date
     if (viewMode !== 'month') {
-        setSelectedDate(today);
+      setSelectedDate(today);
     } else {
-        setSelectedDate(null);
+      setSelectedDate(null);
     }
   };
 
@@ -228,28 +228,28 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, viewMode, isMobile 
             {getViewTitle()}
           </Title>
           <div className="flex gap-2">
-            <Button 
-              type="text" 
-              icon={<LeftOutlined />} 
+            <Button
+              type="text"
+              icon={<ChevronLeft size={16} />}
               onClick={navigateBack}
               size="small"
             />
-            <Button 
-              type="primary" 
+            <Button
+              type="primary"
               onClick={goToToday}
               size="small"
             >
               Today
             </Button>
-            <Button 
-              type="text" 
-              icon={<RightOutlined />} 
+            <Button
+              type="text"
+              icon={<ChevronRight size={16} />}
               onClick={navigateForward}
               size="small"
             />
           </div>
         </div>
-        
+
         {/* Week/Day Header with date selection */}
         {showWeekHeader && (
           <div className="grid grid-cols-7 gap-1 mt-3">
@@ -258,7 +258,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, viewMode, isMobile 
               const isToday = moment(date).isSame(moment(), 'day');
               const hasEvents = hasEventsOnDate(date);
               const eventsCount = getEventsCountForDate(date);
-              
+
               // Conditional styling based on mobile '3-day' view
               const colSpan = (isMobile && viewMode === 'week') ? 'col-span-2' : 'col-span-1';
 
@@ -267,26 +267,24 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, viewMode, isMobile 
                   key={index}
                   className={`
                     flex flex-col items-center p-2 rounded-lg cursor-pointer transition-all duration-200 ${colSpan}
-                    ${isSelected 
-                      ? 'bg-blue-100 border-2 border-blue-500' 
-                      : isToday 
-                        ? 'bg-blue-50 border border-blue-200' 
+                    ${isSelected
+                      ? 'bg-blue-100 border-2 border-blue-500'
+                      : isToday
+                        ? 'bg-blue-50 border border-blue-200'
                         : 'hover:bg-gray-100 border border-transparent'
                     }
                   `}
                   onClick={() => handleWeekDaySelect(date)}
                 >
-                  <Text 
-                    className={`text-xs font-medium ${
-                      isSelected ? 'text-blue-600' : isToday ? 'text-blue-500' : 'text-gray-500'
-                    }`}
+                  <Text
+                    className={`text-xs font-medium ${isSelected ? 'text-blue-600' : isToday ? 'text-blue-500' : 'text-gray-500'
+                      }`}
                   >
                     {moment(date).format('ddd')}
                   </Text>
-                  <Text 
-                    className={`text-lg font-semibold ${
-                      isSelected ? 'text-blue-600' : isToday ? 'text-blue-500' : 'text-gray-900'
-                    }`}
+                  <Text
+                    className={`text-lg font-semibold ${isSelected ? 'text-blue-600' : isToday ? 'text-blue-500' : 'text-gray-900'
+                      }`}
                   >
                     {moment(date).format('D')}
                   </Text>
@@ -299,17 +297,15 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, viewMode, isMobile 
                           Array.from({ length: Math.min(eventsCount, 3) }).map((_, i) => (
                             <div
                               key={i}
-                              className={`w-1.5 h-1.5 rounded-full ${
-                                isSelected ? 'bg-blue-600' : 'bg-blue-400'
-                              }`}
+                              className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-blue-600' : 'bg-blue-400'
+                                }`}
                             />
                           ))
                         ) : (
                           // Show a single larger dot for 4+ events
                           <div
-                            className={`w-2 h-2 rounded-full ${
-                              isSelected ? 'bg-blue-600' : 'bg-blue-400'
-                            }`}
+                            className={`w-2 h-2 rounded-full ${isSelected ? 'bg-blue-600' : 'bg-blue-400'
+                              }`}
                           />
                         )}
                       </div>
@@ -321,7 +317,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, viewMode, isMobile 
           </div>
         )}
       </div>
-      
+
       {/* Calendar */}
       <div className="flex-1 overflow-hidden">
         <div className="h-full p-4">
@@ -346,7 +342,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, viewMode, isMobile 
               formats={{
                 // ... (formats remain the same) ...
                 timeGutterFormat: 'HH:mm',
-                eventTimeRangeFormat: ({ start, end }) => 
+                eventTimeRangeFormat: ({ start, end }) =>
                   `${moment(start).format('HH:mm')} - ${moment(end).format('HH:mm')}`,
                 dayFormat: 'ddd M/D',
                 dateFormat: 'D',
@@ -368,7 +364,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, viewMode, isMobile 
           </Card>
         </div>
       </div>
-      
+
       {/* Selected Date Events */}
       {selectedDate && (
         <div className="border-t bg-white">

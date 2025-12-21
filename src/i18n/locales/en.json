@@ -90,7 +90,25 @@
       "expenses": "Expenses",
       "timesheets": "Timesheets",
       "ai": "Ai",
-      "nlp": "Nlp"
+      "nlp": "Nlp",
+      "select_organization": "Select Organization",
+      "branding_saved": "Theme settings saved successfully"
+    },
+    "settings": {
+      "context": "Organization Context",
+      "appearance": "Appearance",
+      "theme_mode": "Theme Mode",
+      "language": "Default Language",
+      "accessibility": "Accessibility",
+      "fontSize": "Font Size",
+      "zoom": "UI Zoom",
+      "theme_editing": "Theme Customization",
+      "brand_name": "Brand Name",
+      "save_branding": "Save Changes",
+      "primary_color": "Primary Color",
+      "card_bg": "Card Background",
+      "layout_bg": "Layout Background",
+      "logo": "Brand Logo"
     }
   }
 }

@@ -5,7 +5,7 @@ import { format, parse, startOfWeek, getDay } from 'date-fns';
 import enUS from 'date-fns/locale/en-US';
 import { Button, Dropdown, Menu, List } from 'antd';
 import { motion } from 'framer-motion';
-import { DownloadOutlined, UserOutlined } from '@ant-design/icons';
+import { Download, User } from 'lucide-react';
 import { useAuthedLayoutConfig } from '../Layout/AuthedLayoutContext';
 import RowActions from './RowActions';
 import dayjs from 'dayjs';

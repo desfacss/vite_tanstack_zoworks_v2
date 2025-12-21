@@ -9,7 +9,7 @@ const { Title } = Typography;
 interface ServiceReportDrawerProps {
   editItem?: { id: string };
   // We'll pass the title from the parent
-  title: string; 
+  title?: string;
 }
 
 const ServiceReportDrawer: React.FC<ServiceReportDrawerProps> = ({ editItem }) => {

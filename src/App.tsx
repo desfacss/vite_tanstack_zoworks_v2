@@ -18,7 +18,7 @@
 // // //   defaultOptions: {
 // // //     queries: {
 // // //       staleTime: isDev ? 10 : 1000 * 60 * 5, // Data remains fresh for 5 minutes
-// // //       cacheTime: isDev ? 10 : 1000 * 60 * 30, // Cache persists for 30 minutes
+// // //       gcTime: isDev ? 10 : 1000 * 60 * 30, // Cache persists for 30 minutes
 // // //       retry: 1, // Retry failed requests 3 times
 // // //       retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
 // // //       refetchOnWindowFocus: true, // Refresh data when window regains focus
@@ -200,7 +200,7 @@
 // //   defaultOptions: {
 // //     queries: {
 // //       staleTime: isDev ? 10 : 1000 * 60 * 5,
-// //       cacheTime: isDev ? 10 : 1000 * 60 * 30,
+// //       gcTime: isDev ? 10 : 1000 * 60 * 30,
 // //       retry: 1,
 // //       retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
 // //       refetchOnWindowFocus: true,
@@ -311,7 +311,7 @@
 // import './i18n';
 //     queries: {
 //       staleTime: isDev ? 10 : 1000 * 60 * 5,
-//       cacheTime: isDev ? 10 : 1000 * 60 * 30,
+//       gcTime: isDev ? 10 : 1000 * 60 * 30,
 //       retry: 1,
 //       retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
 //       refetchOnWindowFocus: true,
@@ -410,7 +410,7 @@
 // //   defaultOptions: {
 // //     queries: {
 // //       staleTime: isDev ? 10 : 1000 * 60 * 5, // Data remains fresh for 5 minutes
-// //       cacheTime: isDev ? 10 : 1000 * 60 * 30, // Cache persists for 30 minutes
+// //       gcTime: isDev ? 10 : 1000 * 60 * 30, // Cache persists for 30 minutes
 // //       retry: 1, // Retry failed requests 3 times
 // //       retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
 // //       refetchOnWindowFocus: true, // Refresh data when window regains focus
@@ -592,7 +592,7 @@
 //   defaultOptions: {
 //     queries: {
 //       staleTime: isDev ? 10 : 1000 * 60 * 5,
-//       cacheTime: isDev ? 10 : 1000 * 60 * 30,
+//       gcTime: isDev ? 10 : 1000 * 60 * 30,
 //       retry: 1,
 //       retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
 //       refetchOnWindowFocus: true,
@@ -694,12 +694,11 @@
 
 // src/App.tsx
 
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter } from 'react-router-dom';
 import { App as AntApp } from 'antd';
 import AppRoutes from './routes';
-import { ThemeProvider } from './core/components/shared/ThemeProvider';
 import './i18n';
 import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persister';
 import { persistQueryClient } from '@tanstack/react-query-persist-client';
@@ -715,7 +714,7 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: isDev ? 10 : 1000 * 60 * 5,
-      cacheTime: isDev ? 10 : 1000 * 60 * 30,
+      gcTime: isDev ? 10 : 1000 * 60 * 30,
       retry: 1,
       retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
       refetchOnWindowFocus: true,

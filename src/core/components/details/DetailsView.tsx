@@ -1,13 +1,14 @@
 
 import React, { useState, lazy, Suspense, useMemo } from 'react';
 import { Tabs, Spin } from 'antd';
-import StatusTab from './StatusTab';
+import { useTranslation } from 'react-i18next';
+import StatusTab from '@/modules/tickets/components/StatusTab';
 import NotesTab from './NotesTab';
 import DetailOverview from './DetailOverview';
 import EntityImages from './EntityImages';
 import ActivitiesManager from './ActivitiesManager';
-import Logs from './Logs';
-import { useNestedContext } from '../../lib/NestedContext';
+import Logs from '@/modules/tickets/components/Logs';
+// import { useNestedContext } from '../../lib/NestedContext';
 import { registry } from '@/core/registry';
 
 const DynamicComponent = lazy(() => import('./DynamicTab'));
@@ -29,7 +30,8 @@ const DetailsView: React.FC<DetailsViewProps> = ({
   rawData,
   openMessageModal,
 }) => {
-  const { contextStack, closeContext } = useNestedContext();
+  // const { contextStack, closeContext } = useNestedContext();
+  const { t } = useTranslation();
 
   const getDefaultTabKey = () => {
     const allTabs = [
@@ -110,9 +112,9 @@ const DetailsView: React.FC<DetailsViewProps> = ({
               tabOptions={tabProps.tabs || []}
               detailView={tabConfig.detailView || false}
               parentRecord={editItem}
-              activeTabKey={activeKey}
-              config={config}
-              rawData={rawData}
+            // activeTabKey={activeKey} // Removed as it does not exist on DynamicTabProps
+            // config={config} // Removed as it does not exist on DynamicTabProps
+            // rawData={rawData} // Removed as it does not exist on DynamicTabProps
             />
           </Suspense>
         ),
@@ -124,7 +126,7 @@ const DetailsView: React.FC<DetailsViewProps> = ({
       const TabComponent = lazy(tabDef.component);
       return {
         key: tabDef.id,
-        label: typeof tabDef.label === 'function' ? tabDef.label((s) => s) : tabDef.label,
+        label: typeof tabDef.label === 'function' ? tabDef.label(t) : tabDef.label as string,
         order: tabDef.order || 100,
         children: (
           <Suspense fallback={<Spin />}>
@@ -145,7 +147,7 @@ const DetailsView: React.FC<DetailsViewProps> = ({
   }, [editItem, entityType, rawData, openMessageModal, viewConfig, config, activeKey]);
 
   if (!tabs || tabs.length === 0) {
-    return <DetailOverview data={editItem} viewConfig={viewConfig} config={config} />;
+    return <DetailOverview data={editItem || {}} viewConfig={viewConfig} config={config} />;
   }
 
   if (tabs.length === 1) {

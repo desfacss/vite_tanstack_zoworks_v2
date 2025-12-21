@@ -2,9 +2,9 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Collapse, Spin, Alert, Typography, Card, Input, Button, notification } from 'antd';
-import { MailOutlined, ClockCircleOutlined, SendOutlined } from '@ant-design/icons';
+import { Mail, Clock, Send } from 'lucide-react';
 import dayjs from 'dayjs';
-import env_def from '@/utils/constants';
+import env_def from '@/core/lib/env';
 
 const { Title, Text } = Typography;
 const { Panel } = Collapse;

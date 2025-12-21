@@ -13,12 +13,14 @@ import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@/core/lib/store';
 import { supabase } from '../../../lib/supabase';
+import { useAuthedLayoutConfig } from '../AuthedLayoutContext';
 
 export const ProfileMenu: React.FC<{ isMobile?: boolean }> = ({ isMobile }) => {
   const navigate = useNavigate();
   // Get setIsLoggingOut from store
   const { user, clearUserSession, setIsLoggingOut } = useAuthStore();
   const queryClient = useQueryClient();
+  const { setShowSettings } = useAuthedLayoutConfig();
 
   const handleLogout = async () => {
     // 1. Set Guard: Prevents SessionManager from accepting new data
@@ -45,12 +47,12 @@ export const ProfileMenu: React.FC<{ isMobile?: boolean }> = ({ isMobile }) => {
 
   const menuItems = {
     items: [
-      { key: 'profile', label: 'My Profile', icon: <User size={16} />, onClick: () => navigate('/profile') }, // Navigate to profile
-      { key: 'settings', label: 'Settings', icon: <Settings size={16} />, onClick: () => navigate('/settings') },
+      { key: 'profile', label: 'My Profile', icon: <User size={16} />, onClick: () => navigate('/profile') },
+      { key: 'settings', label: 'Settings', icon: <Settings size={16} />, onClick: () => setShowSettings(true) },
       { key: 'billing', label: 'Billing & Plans', icon: <CreditCard size={16} />, onClick: () => navigate('/billing') },
       { type: 'divider' },
-      { key: 'organization', label: 'Organization Settings', icon: <Building size={16} />, onClick: () => navigate('/settings/organization') },
-      { key: 'team', label: 'Team Management', icon: <User size={16} />, onClick: () => navigate('/settings/team') },
+      { key: 'organization', label: 'Organization Settings', icon: <Building size={16} />, onClick: () => navigate('/settings?tab=organization') },
+      { key: 'team', label: 'Team Management', icon: <User size={16} />, onClick: () => navigate('/settings?tab=team') },
       { type: 'divider' },
       { key: 'help', label: 'Help & Support', icon: <HelpCircle size={16} />, onClick: () => window.open('https://help.zoworks.com', '_blank') },
       { key: 'docs', label: 'Documentation', icon: <FileText size={16} />, onClick: () => window.open('https://docs.zoworks.com', '_blank') },

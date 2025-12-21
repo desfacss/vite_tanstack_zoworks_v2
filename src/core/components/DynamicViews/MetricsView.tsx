@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Card, Row, Col, Select, Statistic, message, Drawer, Button, Typography, Space } from 'antd';
-import { DashboardOutlined, ReloadOutlined } from '@ant-design/icons';
+import { LayoutDashboard, RefreshCw } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/core/lib/store';
 import { snakeToTitleCase } from '@/core/components/common/utils/casing';
@@ -110,7 +110,7 @@ const MetricsView: React.FC<MetricsViewProps> = ({ entitySchema, entityType, vie
     },
     enabled: !!selectedMetric && !!metricsViewConfig?.measures?.length && !!entitySchema && !!entityType && (!!location?.id || !!organization?.id),
     staleTime: 5000,
-    cacheTime: 10 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 
   const lastUpdated = metricData?.[0]?.last_calculated_at

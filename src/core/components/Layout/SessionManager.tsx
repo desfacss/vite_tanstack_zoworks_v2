@@ -706,7 +706,7 @@
 // // // //  * - **`queryKey`**: `['user-session']` is the unique key for this query in the cache.
 // // // //  * - **`enabled`**: The query is deferred until `enabled` is `true`, which is controlled by the `SessionManager`.
 // // // //  * - **`staleTime`**: Data is considered fresh for 15 minutes.
-// // // //  * - **`cacheTime`**: Inactive data is kept in the cache for 1 hour.
+// // // //  * - **`gcTime`**: Inactive data is kept in the cache for 1 hour.
 // // // //  */
 // // // // export const useUserSession = (enabled: boolean) => {
 // // // //   return useQuery<UserSessionData, Error>({
@@ -714,7 +714,7 @@
 // // // //     queryFn: fetchUserSessionData,
 // // // //     enabled,
 // // // //     staleTime: 1000 * 60 * 15,
-// // // //     cacheTime: 1000 * 60 * 60,
+// // // //     gcTime: 1000 * 60 * 60,
 // // // //     retry: 1,
 // // // //     refetchOnWindowFocus: true,
 // // // //   });
@@ -1601,7 +1601,7 @@
 // // // //  * - **`queryKey`**: `['user-session']` is the unique key for this query in the cache.
 // // // //  * - **`enabled`**: The query is deferred until `enabled` is `true`, which is controlled by the `SessionManager`.
 // // // //  * - **`staleTime`**: Data is considered fresh for 15 minutes.
-// // // //  * - **`cacheTime`**: Inactive data is kept in the cache for 1 hour.
+// // // //  * - **`gcTime`**: Inactive data is kept in the cache for 1 hour.
 // // // //  */
 // // // // export const useUserSession = (enabled: boolean) => {
 // // // //   return useQuery<UserSessionData, Error>({
@@ -1609,7 +1609,7 @@
 // // // //     queryFn: fetchUserSessionData,
 // // // //     enabled,
 // // // //     staleTime: 1000 * 60 * 15,
-// // // //     cacheTime: 1000 * 60 * 60,
+// // // //     gcTime: 1000 * 60 * 60,
 // // // //     retry: 1,
 // // // //     refetchOnWindowFocus: true,
 // // // //   });
@@ -1872,6 +1872,7 @@ import { useEffect, useState } from 'react';
 import { useAuthStore } from '@/core/lib/store';
 import { useUserSession } from '@/core/hooks/useUserSession';
 import { supabase } from '@/lib/supabase';
+import { loadTenantTheme } from '@/core/theme/ThemeRegistry';
 
 export const SessionManager = () => {
   const [enabled, setEnabled] = useState(false);
@@ -1883,7 +1884,7 @@ export const SessionManager = () => {
     setAuthError,
     organization,
     isLoggingOut,
-    setIsLoggingOut // <--- 1. IMPORT THE SETTER
+    setIsLoggingOut
   } = useAuthStore(state => ({
     setSession: state.setSession,
     clearUserSession: state.clearUserSession,
@@ -1894,25 +1895,17 @@ export const SessionManager = () => {
     setIsLoggingOut: state.setIsLoggingOut
   }));
 
-  // CRITICAL: Disable the hook immediately if we are logging out.
-  // This prevents the hook from firing simply because 'organization' became null (which triggers fallback logic).
   const { data, isSuccess, isError, error, isStale } = useUserSession(enabled && !isLoggingOut, organization?.id);
 
   // --- Effect 1: Manage Auth Lifecycle ---
   useEffect(() => {
-    // Initial Session Check
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) setEnabled(true);
       else setInitialized(true);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      console.log(`>>> [SessionManager] Auth Event: ${event}`);
-
       if (event === 'SIGNED_IN') {
-        // 2. BREAK THE DEADLOCK
-        // We must explicitly tell the store "We are done logging out, this is a new login".
-        // This re-enables the useUserSession hook below.
         setIsLoggingOut(false);
         setEnabled(true);
       }
@@ -1927,31 +1920,26 @@ export const SessionManager = () => {
 
   // --- Effect 2: Sync Data to Store ---
   useEffect(() => {
-    // 0. Safety Guard: If logging out, STOP EVERYTHING.
-    if (isLoggingOut) {
-      // Note: This log might appear once during the transition, which is expected.
-      return;
-    }
+    if (isLoggingOut) return;
 
     if (isSuccess && data) {
-      const status = isStale ? '(STALE)' : '(FRESH)';
-
-      // Extra Check for Org Switch consistency:
       if (organization?.id && data.organization.id !== organization.id) {
         return;
       }
-
-      console.log(`[SessionManager] Syncing ${status}: ${data.organization.name}`);
       setSession(data);
     }
 
-    if (isError) {
-      console.error('[SessionManager] Error:', error);
+    if (isError && error) {
       setAuthError(error.message);
-      clearUserSession();
     }
-  }, [isSuccess, isStale, isError, data, error, setSession, clearUserSession, setAuthError, organization?.id, isLoggingOut]);
+  }, [isSuccess, isError, data, setSession, clearUserSession, error, organization?.id, isLoggingOut, setAuthError, isStale]);
+
+  // --- Effect 3: Watch and Apply Theme Configuration ---
+  useEffect(() => {
+    if (data?.organization?.theme_config) {
+      loadTenantTheme(data.organization.theme_config as any);
+    }
+  }, [data?.organization?.theme_config]);
 
   return null;
 };
-export default SessionManager;

@@ -1,78 +1,78 @@
 import React from 'react';
 import {
-  HomeOutlined,
-  TeamOutlined,
-  BankOutlined,
-  CreditCardOutlined,
-  FileTextOutlined,
-  SettingOutlined,
-  BriefcaseOutlined,
-  AppstoreOutlined,
-  BarChartOutlined,
-  UnorderedListOutlined,
-  CarOutlined,
-  BuildOutlined,
-  SolutionOutlined,
-  CalendarOutlined,
-  ClockCircleOutlined,
-  UsergroupAddOutlined,
-  FolderOpenOutlined,
-  AuditOutlined,
-  CodeOutlined,
-  EnvironmentOutlined,
-  NodeIndexOutlined,
-  ContainerOutlined,
-  CustomerServiceOutlined,
-  SafetyCertificateOutlined,
-  BellOutlined,
-  ReadOutlined,
-  ShopOutlined,
-  FileDoneOutlined,
-  SafetyOutlined
-} from '@ant-design/icons';
+  Home,
+  Users,
+  Building2,
+  CreditCard,
+  FileText,
+  Settings,
+  Briefcase,
+  LayoutGrid,
+  BarChart3,
+  List,
+  Car,
+  Building,
+  Headphones,
+  Calendar,
+  Clock,
+  UserPlus,
+  FolderOpen,
+  FileCheck,
+  Code,
+  MapPin,
+  GitBranch,
+  Package,
+  HeadphonesIcon,
+  ShieldCheck,
+  Bell,
+  BookOpen,
+  Store,
+  FileBadge,
+  Shield
+} from 'lucide-react';
 import type { MenuProps } from 'antd';
 import type { TFunction } from 'i18next';
 import menuConfig from '@/config/menuConfig.json';
 
-// Icon mapping based on logical association using Ant Design Icons
+// Icon mapping based on logical association using Lucide Icons
 const iconMap: Record<string, React.ReactNode> = {
-  dashboard: <HomeOutlined />,
-  users: <TeamOutlined />,
-  organizations: <BankOutlined />,
-  subscriptions: <CreditCardOutlined />,
-  businesses: <BriefcaseOutlined />,
-  settings: <SettingOutlined />,
-  support: <SolutionOutlined />, // Support tickets
-  fsm: <CarOutlined />, // Field service management (Truck -> Car/Vehicle)
-  contracts: <AuditOutlined />, // Contracts
-  workforce: <UsergroupAddOutlined />, // Workforce
-  tickets: <UnorderedListOutlined />, // Tickets
-  'service-reports': <FileTextOutlined />, // Service reports
-  projects: <FolderOpenOutlined />, // Projects
-  process: <NodeIndexOutlined />, // Processes (Workflow)
-  analytics: <BarChartOutlined />, // Analytics/reports
-  tracking: <EnvironmentOutlined />, // GPS/Location tracking
-  'my-tickets': <UnorderedListOutlined />, // My tickets
-  'service-types': <AppstoreOutlined />,
-  'service-offerings': <ContainerOutlined />, // Service offerings (Package)
-  'service-contracts': <AuditOutlined />, // Service contracts
-  'service-categories': <AppstoreOutlined />, // Service categories
-  'service-assets': <FileTextOutlined />, // Service assets
-  clients: <BuildOutlined />, // Clients
-  'client-contacts': <TeamOutlined />, // Client contacts
-  teams: <TeamOutlined />, // Teams
-  leaves: <CalendarOutlined />, // Leaves/time-off
-  workflow: <NodeIndexOutlined />, // Workflow
-  config: <CodeOutlined />, // Configuration
-  'user-settings': <SettingOutlined />,
-  'support-service': <CustomerServiceOutlined />,
-  admin: <SafetyCertificateOutlined />,
-  notifications: <BellOutlined />,
-  catalog: <ReadOutlined />,
-  shopping: <ShopOutlined />,
-  reports: <FileDoneOutlined />,
-  invoices: <FileTextOutlined />,
-  default: <FileTextOutlined />, // Default fallback icon
+  dashboard: <Home size={18} />,
+  users: <Users size={18} />,
+  organizations: <Building2 size={18} />,
+  subscriptions: <CreditCard size={18} />,
+  businesses: <Briefcase size={18} />,
+  settings: <Settings size={18} />,
+  support: <Headphones size={18} />,
+  fsm: <Car size={18} />,
+  contracts: <FileCheck size={18} />,
+  workforce: <UserPlus size={18} />,
+  tickets: <List size={18} />,
+  'service-reports': <FileText size={18} />,
+  projects: <FolderOpen size={18} />,
+  process: <GitBranch size={18} />,
+  analytics: <BarChart3 size={18} />,
+  tracking: <MapPin size={18} />,
+  'my-tickets': <List size={18} />,
+  'service-types': <LayoutGrid size={18} />,
+  'service-offerings': <Package size={18} />,
+  'service-contracts': <FileCheck size={18} />,
+  'service-categories': <LayoutGrid size={18} />,
+  'service-assets': <FileText size={18} />,
+  clients: <Building size={18} />,
+  'client-contacts': <Users size={18} />,
+  teams: <Users size={18} />,
+  leaves: <Calendar size={18} />,
+  workflow: <GitBranch size={18} />,
+  config: <Code size={18} />,
+  'user-settings': <Settings size={18} />,
+  'support-service': <HeadphonesIcon size={18} />,
+  admin: <ShieldCheck size={18} />,
+  notifications: <Bell size={18} />,
+  catalog: <BookOpen size={18} />,
+  shopping: <Store size={18} />,
+  reports: <FileBadge size={18} />,
+  invoices: <FileText size={18} />,
+  default: <FileText size={18} />,
 };
 
 // export const getNavigationItems = (

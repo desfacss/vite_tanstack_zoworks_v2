@@ -1,7 +1,7 @@
 // src/routes/index.tsx
 // Mini-project routes: auth + dashboard + contacts (dynamic views) + profile + settings
 
-import React, { Suspense, lazy, useEffect, useMemo } from 'react';
+import React, { Suspense, lazy, useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from '@/core/lib/store';
 import { useTranslation } from 'react-i18next';
@@ -23,14 +23,13 @@ const WebRegister = lazy(() => import('../pages/auth/WebRegister'));
 
 // Protected pages
 const Dashboard = lazy(() => import('../pages/Dashboard'));
-const UserSettings = lazy(() => import('../pages/settings/_UserSettings'));
 const SamplePage = lazy(() => import('../pages/SamplePage'));
 const Contacts = lazy(() => import('@/modules/crm/pages/Contacts'));
 const Profile = lazy(() => import('../pages/core/Profile'));
 const Settings = lazy(() => import('../pages/core/UserSetting'));
 
 // Navigation items generator for mini project
-const generateNavItems = (t: (key: string) => string, permissions: any, user: any) => {
+const generateNavItems = (t: (key: string) => string) => {
     // For mini-project, we return a static set of nav items
     // In the full app, this would be dynamically generated based on permissions
     const items = [
@@ -53,7 +52,7 @@ const generateNavItems = (t: (key: string) => string, permissions: any, user: an
     return items;
 };
 
-const AppRoutes = React.memo(() => {
+export const AppRoutes: React.FC = () => {
     const { user, permissions, setNavigationItems } = useAuthStore(state => ({
         user: state.user,
         permissions: state.permissions,
@@ -67,7 +66,7 @@ const AppRoutes = React.memo(() => {
     useEffect(() => {
         if (permissions && user) {
             console.log('>>> [AppRoutes] Permissions and User exist. Setting Nav Items.');
-            const navItems = generateNavItems(t, permissions, user);
+            const navItems = generateNavItems(t);
             setNavigationItems(navItems);
         } else {
             console.log('>>> [AppRoutes] Permissions or User missing. Clearing nav items.');
@@ -105,7 +104,7 @@ const AppRoutes = React.memo(() => {
 
                         {/* Profile & Settings */}
                         <Route path="/profile" element={<Profile />} />
-                        <Route path="/user-settings" element={<Settings />} />
+                        <Route path="/settings" element={<Settings />} />
 
                         {/* Sample page for new module development */}
                         <Route path="/sample" element={<SamplePage />} />
@@ -120,6 +119,6 @@ const AppRoutes = React.memo(() => {
             </Routes>
         </Suspense>
     );
-});
+};
 
 export default AppRoutes;

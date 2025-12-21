@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Form, Input, Select, Button, Modal, message, Spin, Alert } from 'antd';
 import { supabase } from '@/lib/supabase';
 import moment from 'moment';
-import { PlusOutlined } from '@ant-design/icons';
+import { Plus } from 'lucide-react';
 import { useAuthStore } from '@/core/lib/store';
 
 const { TextArea } = Input;
@@ -264,7 +264,7 @@ const SupportTicketForm: React.FC = () => {
         },
         body: JSON.stringify(emailPayload),
       });
-      console.log("gde",response);
+      console.log("gde", response);
 
       if (!response.ok) {
         throw new Error(`Failed to send support email: ${await response.text()}`);
@@ -352,7 +352,7 @@ const SupportTicketForm: React.FC = () => {
                 </Option>
               ))}
             </Select>
-            <Button icon={<PlusOutlined />} onClick={() => setIsContactModalVisible(true)}>
+            <Button icon={<Plus size={16} />} onClick={() => setIsContactModalVisible(true)}>
               Add New Contact
             </Button>
           </div>

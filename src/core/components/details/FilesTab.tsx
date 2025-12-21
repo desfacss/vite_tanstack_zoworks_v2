@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Upload, Button, Modal, Input, List, Space, message, Image } from 'antd';
-import { PlusOutlined, DownloadOutlined } from '@ant-design/icons';
+import { Plus, Download } from 'lucide-react';
 import PublitioAPI from 'publitio_js_sdk';
 // import { supabase } from 'configs/SupabaseConfig';
 import { supabase } from '@/lib/supabase';
 
 interface FilesTabProps {
-  editItem?: { id: string; [key: string]: any };
+  editItem?: { id: string;[key: string]: any };
   rawData?: any[];
 }
 
@@ -49,7 +49,7 @@ const FilesTab: React.FC<FilesTabProps> = ({ editItem, rawData }) => {
   };
 
   const handleFileUpload = async (info: any, folder: string) => {
-    const { file, fileList } = info;
+    const { file } = info;
     if (file.status === 'done') {
       const newFile = {
         ...file.response,
@@ -87,7 +87,7 @@ const FilesTab: React.FC<FilesTabProps> = ({ editItem, rawData }) => {
 
   return (
     <div>
-      <Button onClick={() => setVisibleCreateFolder(true)} icon={<PlusOutlined />}>
+      <Button onClick={() => setVisibleCreateFolder(true)} icon={<Plus size={16} />}>
         Create Folder
       </Button>
       <Modal
@@ -124,7 +124,7 @@ const FilesTab: React.FC<FilesTabProps> = ({ editItem, rawData }) => {
                 onChange={(info) => handleFileUpload(info, folder)}
                 multiple
               >
-                <Button icon={<PlusOutlined />}>Upload File</Button>
+                <Button icon={<Plus size={16} />}>Upload File</Button>
               </Upload>
               {files[folder]?.map((file) => (
                 <div key={file.id} style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
@@ -135,7 +135,7 @@ const FilesTab: React.FC<FilesTabProps> = ({ editItem, rawData }) => {
                   )}
                   <Space>
                     <a href={file.url_download} download target="_blank" rel="noopener noreferrer">
-                      <Button icon={<DownloadOutlined />} size="small">
+                      <Button icon={<Download size={16} />} size="small">
                         Download
                       </Button>
                     </a>

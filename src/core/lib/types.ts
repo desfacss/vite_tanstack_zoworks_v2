@@ -1,4 +1,4 @@
-import { User as SupabaseUser } from '@supabase/supabase-js';
+
 
 export interface Location {
   id: string;
@@ -15,12 +15,20 @@ export interface Location {
 export interface Organization {
   id: string;
   name: string;
+  brand_name: string | null;
+  logo_url: string | null;
+  primary_color: string | null;
+  theme_config: Record<string, any> | null;
   subdomain: string | null;
   module_features: string[];
   details: Record<string, any>;
   app_settings: {
     name: string;
     workspace: string;
+    customization?: {
+      theme?: "true" | "false";
+      language?: "true" | "false";
+    };
   };
   user_profile_settings: Record<string, any>;
   created_by: string;

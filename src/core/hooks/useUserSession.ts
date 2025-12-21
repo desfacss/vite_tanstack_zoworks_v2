@@ -24,7 +24,7 @@
 
 // // // //   if (rpcError) throw new Error(`RPC Error: ${rpcError.message}`);
 // // // //   if (!rpcData) throw new Error('No data returned from RPC.');
-  
+
 // // // //   // Handle RPCs that might return an array
 // // // //   const partialSession = (Array.isArray(rpcData) ? rpcData[0] : rpcData) as RpcSessionData;
 // // // //   console.log('>>> [useUserSession] fetchUserSessionData: 2. RPC Success.', { userId: partialSession.user_id, orgId: partialSession.org_id });
@@ -56,7 +56,7 @@
 // // // //   if (!userResponse.data) throw new Error(`User not found for ID: ${partialSession.user_id}`);
 // // // //   if (orgResponse.error) throw new Error(`Organization Fetch Error: ${orgResponse.error.message}`);
 // // // //   if (!orgResponse.data) throw new Error(`Organization not found for ID: ${partialSession.org_id}`);
-  
+
 // // // //   const userData = userResponse.data as User;
 // // // //   const orgData = orgResponse.data as Organization;
 // // // //   console.log('>>> [useUserSession] fetchUserSessionData: 4. User/Org fetch SUCCESS.');
@@ -72,7 +72,7 @@
 // // // //       .select('*')
 // // // //       .eq('id', locationId)
 // // // //       .single();
-    
+
 // // // //     if (error) console.warn(`Location fetch warning: ${error.message}`); // Warn but don't fail the entire session fetch
 // // // //     else locationData = data as Location;
 // // // //   }
@@ -100,7 +100,7 @@
 // // // //     queryFn: fetchUserSessionData,
 // // // //     enabled, // The query will only run when this is true
 // // // //     staleTime: 1000 * 60 * 15, // 15 minutes
-// // // //     cacheTime: 1000 * 60 * 60, // 1 hour
+// // // //     gcTime: 1000 * 60 * 60, // 1 hour
 // // // //     retry: 1, // Retry once on failure
 // // // //     refetchOnWindowFocus: true, // Refetch on window focus for data consistency
 // // // //   });
@@ -145,7 +145,7 @@
 
 // // //   if (rpcError) throw new Error(`RPC Error: ${rpcError.message}`);
 // // //   if (!rpcData) throw new Error('No data returned from RPC.');
-  
+
 // // //   const partialSession = (Array.isArray(rpcData) ? rpcData[0] : rpcData) as RpcSessionData;
 // // //   console.log('>>> [useUserSession] fetchUserSessionData: 2. RPC Success.', { userId: partialSession.user_id, orgId: partialSession.org_id });
 
@@ -166,7 +166,7 @@
 // // //   if (!userResponse.data) throw new Error(`User not found for ID: ${partialSession.user_id}`);
 // // //   if (orgResponse.error) throw new Error(`Organization Fetch Error: ${orgResponse.error.message}`);
 // // //   if (!orgResponse.data) throw new Error(`Organization not found for ID: ${partialSession.org_id}`);
-  
+
 // // //   const userData = userResponse.data as User;
 // // //   const orgData = orgResponse.data as Organization;
 // // //   console.log('>>> [useUserSession] fetchUserSessionData: 4. User/Org fetch SUCCESS.');
@@ -177,7 +177,7 @@
 // // //   if (locationId) {
 // // //     console.log(`>>> [useUserSession] fetchUserSessionData: 5. Fetching Location ${locationId}...`);
 // // //     const { data, error } = await supabase.schema('identity').from('locations').select('*').eq('id', locationId).maybeSingle();
-    
+
 // // //     if (error) console.warn(`Location fetch warning: ${error.message}`); // Warn but don't fail.
 // // //     else locationData = data as Location;
 // // //   }
@@ -207,7 +207,7 @@
 // // //  * - **`queryKey`**: `['user-session']` is the unique key for this query in the cache.
 // // //  * - **`enabled`**: The query is deferred until `enabled` is `true`, which is controlled by the `SessionManager`.
 // // //  * - **`staleTime`**: Data is considered fresh for 15 minutes.
-// // //  * - **`cacheTime`**: Inactive data is kept in the cache for 1 hour.
+// // //  * - **`gcTime`**: Inactive data is kept in the cache for 1 hour.
 // // //  */
 // // // export const useUserSession = (enabled: boolean) => {
 // // //   return useQuery<UserSessionData, Error>({
@@ -215,7 +215,7 @@
 // // //     queryFn: fetchUserSessionData,
 // // //     enabled,
 // // //     staleTime: 1000 * 60 * 15,
-// // //     cacheTime: 1000 * 60 * 60,
+// // //     gcTime: 1000 * 60 * 60,
 // // //     retry: 1,
 // // //     refetchOnWindowFocus: true,
 // // //   });
@@ -247,7 +247,7 @@
 
 // // //   if (rpcError) throw new Error(`RPC Error: ${rpcError.message}`);
 // // //   if (!rpcData) throw new Error('No data returned from RPC.');
-  
+
 // // //   // Handle RPCs that might return an array
 // // //   const partialSession = (Array.isArray(rpcData) ? rpcData[0] : rpcData) as RpcSessionData;
 // // //   console.log('>>> [useUserSession] fetchUserSessionData: 2. RPC Success.', { userId: partialSession.user_id, orgId: partialSession.org_id });
@@ -279,7 +279,7 @@
 // // //   if (!userResponse.data) throw new Error(`User not found for ID: ${partialSession.user_id}`);
 // // //   if (orgResponse.error) throw new Error(`Organization Fetch Error: ${orgResponse.error.message}`);
 // // //   if (!orgResponse.data) throw new Error(`Organization not found for ID: ${partialSession.org_id}`);
-  
+
 // // //   const userData = userResponse.data as User;
 // // //   const orgData = orgResponse.data as Organization;
 // // //   console.log('>>> [useUserSession] fetchUserSessionData: 4. User/Org fetch SUCCESS.');
@@ -295,7 +295,7 @@
 // // //       .select('*')
 // // //       .eq('id', locationId)
 // // //       .single();
-    
+
 // // //     if (error) console.warn(`Location fetch warning: ${error.message}`); // Warn but don't fail the entire session fetch
 // // //     else locationData = data as Location;
 // // //   }
@@ -323,7 +323,7 @@
 // // //     queryFn: fetchUserSessionData,
 // // //     enabled, // The query will only run when this is true
 // // //     staleTime: 1000 * 60 * 15, // 15 minutes
-// // //     cacheTime: 1000 * 60 * 60, // 1 hour
+// // //     gcTime: 1000 * 60 * 60, // 1 hour
 // // //     retry: 1, // Retry once on failure
 // // //     refetchOnWindowFocus: true, // Refetch on window focus for data consistency
 // // //   });
@@ -368,14 +368,14 @@
 // //   const orgIdToUse = currentOrgId || session?.user?.user_metadata?.org_id;
 
 // //   console.log(`>>> [useUserSession] fetchUserSessionData: 2. Calling RPC for OrgID: ${orgIdToUse} (Source: ${currentOrgId ? 'Store' : 'JWT Metadata'})`);
-  
+
 // //   const { data: rpcData, error: rpcError } = await supabase
 // //     .schema('identity')
 // //     .rpc('jwt_get_user_session', { p_organization_id: orgIdToUse });
 
 // //   if (rpcError) throw new Error(`RPC Error: ${rpcError.message}`);
 // //   if (!rpcData) throw new Error('No data returned from RPC.');
-  
+
 // //   const partialSession = (Array.isArray(rpcData) ? rpcData[0] : rpcData) as RpcSessionData;
 // //   console.log('>>> [useUserSession] fetchUserSessionData: 2. RPC Success.', { userId: partialSession.user_id, orgId: partialSession.org_id });
 
@@ -396,7 +396,7 @@
 // //   if (!userResponse.data) throw new Error(`User not found for ID: ${partialSession.user_id}`);
 // //   if (orgResponse.error) throw new Error(`Organization Fetch Error: ${orgResponse.error.message}`);
 // //   if (!orgResponse.data) throw new Error(`Organization not found for ID: ${partialSession.org_id}`);
-  
+
 // //   const userData = userResponse.data as User;
 // //   const orgData = orgResponse.data as Organization;
 // //   console.log('>>> [useUserSession] fetchUserSessionData: 4. User/Org fetch SUCCESS.');
@@ -407,7 +407,7 @@
 // //   if (locationId) {
 // //     console.log(`>>> [useUserSession] fetchUserSessionData: 5. Fetching Location ${locationId}...`);
 // //     const { data, error } = await supabase.schema('identity').from('locations').select('*').eq('id', locationId).maybeSingle();
-    
+
 // //     if (error) console.warn(`Location fetch warning: ${error.message}`); // Warn but don't fail.
 // //     else locationData = data as Location;
 // //   }
@@ -437,7 +437,7 @@
 // //  * - **`queryKey`**: `['user-session']` is the unique key for this query in the cache.
 // //  * - **`enabled`**: The query is deferred until `enabled` is `true`, which is controlled by the `SessionManager`.
 // //  * - **`staleTime`**: Data is considered fresh for 15 minutes.
-// //  * - **`cacheTime`**: Inactive data is kept in the cache for 1 hour.
+// //  * - **`gcTime`**: Inactive data is kept in the cache for 1 hour.
 // //  */
 // // export const useUserSession = (enabled: boolean) => {
 // //   return useQuery<UserSessionData, Error>({
@@ -445,7 +445,7 @@
 // //     queryFn: fetchUserSessionData,
 // //     enabled,
 // //     staleTime: 1000 * 60 * 15,
-// //     cacheTime: 1000 * 60 * 60,
+// //     gcTime: 1000 * 60 * 60,
 // //     retry: 1,
 // //     refetchOnWindowFocus: true,
 // //   });
@@ -461,7 +461,7 @@
 
 // const fetchUserSessionData = async (): Promise<UserSessionData> => {
 //   const start = performance.now();
-  
+
 //   // 1. Check basic Auth Session
 //   const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 //   if (sessionError || !session) throw new Error('No active Supabase session');
@@ -469,7 +469,7 @@
 //   // 2. DECISION MATRIX: Store (Recent Switch) vs JWT (Initial Load)
 //   const storeOrgId = useAuthStore.getState().organization?.id;
 //   const jwtOrgId = session.user.user_metadata.org_id;
-  
+
 //   // The Logic: If the store has an ID, the user just switched. Trust the store.
 //   const targetOrgId = storeOrgId || jwtOrgId;
 
@@ -478,14 +478,14 @@
 //     `\n   Target Org ID: ${targetOrgId}`,
 //     `\n   Source: ${storeOrgId ? '📍 ACTIVE STORE (User just switched)' : '💾 JWT METADATA (Page refresh/Login)'}`
 //   );
-  
+
 //   // 3. RPC Call
 //   const { data: rpcData, error: rpcError } = await supabase
 //     .schema('identity')
 //     .rpc('jwt_get_user_session', { p_organization_id: targetOrgId });
 
 //   if (rpcError || !rpcData) throw new Error(rpcError?.message || 'RPC No Data');
-  
+
 //   const partialSession = (Array.isArray(rpcData) ? rpcData[0] : rpcData) as RpcSessionData;
 
 //   // 4. Parallel Fetch of Full Records
@@ -527,7 +527,7 @@
 
 
 // THE REACTIVE LOGIC
-import { useQuery, QueryFunctionContext } from '@tanstack/react-query';
+import { useQuery, QueryFunctionContext, keepPreviousData } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import type { UserSessionData, RpcSessionData } from '@/core/lib/store';
 import type { User, Organization, Location } from '@/lib/types';
@@ -537,7 +537,7 @@ type UserSessionQueryKey = ['user-session', string | null];
 
 const fetchUserSessionData = async ({ queryKey }: QueryFunctionContext<UserSessionQueryKey>): Promise<UserSessionData> => {
   const start = performance.now();
-  
+
   // Extract the ID specifically requested by the Query Key
   const [_, requestedOrgId] = queryKey;
 
@@ -555,14 +555,14 @@ const fetchUserSessionData = async ({ queryKey }: QueryFunctionContext<UserSessi
     `\n   Target ID: ${targetOrgId}`,
     `\n   Strategy: ${requestedOrgId ? '🎯 REACTIVE (Store ID passed in Key)' : '💾 FALLBACK (JWT Metadata)'}`
   );
-  
+
   // 3. RPC Call
   const { data: rpcData, error: rpcError } = await supabase
     .schema('identity')
     .rpc('jwt_get_user_session', { p_organization_id: targetOrgId });
 
   if (rpcError || !rpcData) throw new Error(rpcError?.message || 'RPC No Data');
-  
+
   const partialSession = (Array.isArray(rpcData) ? rpcData[0] : rpcData) as RpcSessionData;
 
   // 4. Parallel Fetch of Full Records
@@ -575,12 +575,12 @@ const fetchUserSessionData = async ({ queryKey }: QueryFunctionContext<UserSessi
   let locationData: Location | null = null;
   const locId = partialSession.location_id || userResponse.data?.location_id;
   if (locId) {
-     const { data } = await supabase.schema('identity').from('locations').select('*').eq('id', locId).maybeSingle();
-     locationData = data as Location;
+    const { data } = await supabase.schema('identity').from('locations').select('*').eq('id', locId).maybeSingle();
+    locationData = data as Location;
   }
 
-  console.log(`%c[Flow] Session Ready (${Math.round(performance.now() - start)}ms)`, 'color: green', 
-    `\n   Org: ${orgResponse.data?.name}`, 
+  console.log(`%c[Flow] Session Ready (${Math.round(performance.now() - start)}ms)`, 'color: green',
+    `\n   Org: ${orgResponse.data?.name}`,
     `\n   Loc: ${locationData?.name || 'None'}`
   );
 
@@ -600,8 +600,8 @@ export const useUserSession = (enabled: boolean, currentOrgId?: string | null) =
     queryKey: ['user-session', currentOrgId || null],
     queryFn: fetchUserSessionData,
     enabled,
-    staleTime: 1000 * 60 * 15, 
+    staleTime: 1000 * 60 * 15,
     refetchOnWindowFocus: false,
-    keepPreviousData: true, // Prevents UI flickering while switching
+    placeholderData: keepPreviousData, // Prevents UI flickering while switching
   });
 };

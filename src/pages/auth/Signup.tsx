@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Form, Input, Button, Divider, message, Space, Card, Avatar } from 'antd';
-import { GoogleOutlined } from '@ant-design/icons';
+import { Chrome } from 'lucide-react'; // Using Chrome as Google icon placeholder
 import { Mail, Lock, User, Loader2, UserPlus } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
@@ -151,7 +151,7 @@ const Signup = () => {
                 block
                 size="large"
                 onClick={handleGoogleSignup}
-                icon={<GoogleOutlined />}
+                icon={<Chrome size={20} />}
                 className="max-w-[300px] mx-auto mb-4"
               >
                 Continue with Google

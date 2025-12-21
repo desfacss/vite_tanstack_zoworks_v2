@@ -1,0 +1,17 @@
+{
+  "nav": {
+    "title": "Field Service",
+    "assets": "Assets",
+    "contracts": "Contracts",
+    "offerings": "Service Offerings",
+    "reports": "Service Reports",
+    "types": "Service Types",
+    "categories": "Service Categories",
+    "invoices": "Service Invoices"
+  },
+  "tabs": {
+    "serviceHistory": "Service History",
+    "maintenance": "Maintenance",
+    "parts": "Parts"
+  }
+}

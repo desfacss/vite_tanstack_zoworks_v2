@@ -4,7 +4,6 @@
 // // // // // // //   BarChartOutlined, CheckCircleOutlined, ClockCircleOutlined, TeamOutlined, FileDoneOutlined,
 // // // // // // //   ExclamationCircleOutlined, HourglassOutlined, CalendarOutlined, BuildOutlined,
 // // // // // // //   FolderOpenOutlined, LineChartOutlined, PieChartOutlined, UsergroupAddOutlined, SyncOutlined
-// // // // // // // } from '@ant-design/icons';
 // // // // // // // import Plotly from 'plotly.js-dist-min';
 // // // // // // // import { useAuthStore } from '@/core/lib/store';
 // // // // // // // import { supabase } from '../lib/supabase';
@@ -100,7 +99,7 @@
 // // // // // // //             setState({ data: null, loading: false, error: err.message });
 // // // // // // //         }
 // // // // // // //     };
-    
+
 // // // // // // //     // All standard widgets are fetched in parallel for performance.
 // // // // // // //     await Promise.all([
 // // // // // // //         fetchDataForWidget('kpi_overall_performance', setOverallKpis),
@@ -121,7 +120,7 @@
 // // // // // // //   }, [organization, location]); // This function is stable and only changes when org/location changes.
 
 // // // // // // //   // --- EFFECT TRIGGERS ---
-  
+
 // // // // // // //   // This effect handles the initial data load and re-fetches when the org/location changes.
 // // // // // // //   useEffect(() => {
 // // // // // // //     fetchAllData();
@@ -131,9 +130,9 @@
 // // // // // // //   const handleRefresh = () => {
 // // // // // // //     fetchAllData(true);
 // // // // // // //   };
-  
+
 // // // // // // //   // --- PLOTLY CHART RENDERING (All hooks implemented) ---
-  
+
 // // // // // // //   // Renders the "Top 5 Accounts by Work Hours" chart.
 // // // // // // //   useEffect(() => {
 // // // // // // //     if (accountSummary.data && accountsChartRef.current) {
@@ -155,7 +154,7 @@
 // // // // // // //         asset_category_name: category,
 // // // // // // //         number_of_tickets: sumBy(assets, 'total_tickets'),
 // // // // // // //       })).sort((a, b) => b.number_of_tickets - a.number_of_tickets);
-      
+
 // // // // // // //       Plotly.newPlot(assetTicketsChartRef.current, [{
 // // // // // // //           labels: aggregatedData.map(d => d.asset_category_name).slice(0, 5),
 // // // // // // //           values: aggregatedData.map(d => d.number_of_tickets).slice(0, 5),
@@ -163,7 +162,7 @@
 // // // // // // //       }], { height: 300, showlegend: false, margin: { l: 10, r: 10, t: 10, b: 10 } }, { displayModeBar: false, responsive: true });
 // // // // // // //     }
 // // // // // // //   }, [assetSummaryData.data]);
-  
+
 // // // // // // //   // Renders the "Top Process Bottlenecks" chart.
 // // // // // // //    useEffect(() => {
 // // // // // // //     if (processBottlenecks.data && bottlenecksChartRef.current) {
@@ -176,7 +175,7 @@
 // // // // // // //       }], { height: 300, margin: { l: 150, r: 20, t: 20, b: 40 }, xaxis: { title: 'Avg. Hours in Stage' }, yaxis: { automargin: true, autorange: 'reversed' } }, { displayModeBar: false, responsive: true });
 // // // // // // //     }
 // // // // // // //   }, [processBottlenecks.data]);
-  
+
 // // // // // // //   // Renders the "Weekly Performance Trends" chart.
 // // // // // // //   useEffect(() => {
 // // // // // // //     if (weeklyPerformance.data && weeklyTrendChartRef.current) {
@@ -184,7 +183,7 @@
 // // // // // // //       Plotly.newPlot(weeklyTrendChartRef.current, [{ x: sortedData.map(d => d.week_start_date), y: sortedData.map(d => d.completed_tickets), type: 'scatter', mode: 'lines+markers', name: 'Tickets Resolved' }, { x: sortedData.map(d => d.week_start_date), y: sortedData.map(d => d.total_tickets), type: 'bar', name: 'Total Tickets Created' }], { height: 300, margin: { l: 50, r: 20, t: 30, b: 50 }, legend: { x: 0, y: 1.2, orientation: 'h' } }, { displayModeBar: false, responsive: true });
 // // // // // // //     }
 // // // // // // //   }, [weeklyPerformance.data]);
-  
+
 // // // // // // //   // Renders the "Asset Distribution" chart based on the dropdown selection.
 // // // // // // //   useEffect(() => {
 // // // // // // //     if (assetSummaryData.data && assetGroupChartRef.current) {
@@ -200,7 +199,7 @@
 
 // // // // // // //   // --- RENDER METHOD ---
 // // // // // // //   if (!organization?.id) { return <Alert message="No Organization Selected" type="warning" showIcon />; }
-  
+
 // // // // // // //   const WidgetWrapper: React.FC<{ title: string; icon?: React.ReactNode; loading: boolean; error: string | null; children: React.ReactNode; extra?: React.ReactNode; }> = ({ title, icon, loading, error, children, extra }) => (
 // // // // // // //     <Card title={<><span style={{ marginRight: 8 }}>{icon}</span>{title}</>} extra={extra} style={{ height: '100%' }}>
 // // // // // // //       {loading ? <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '300px' }}><Spin /></div>
@@ -219,7 +218,7 @@
 // // // // // // //           <Button icon={<SyncOutlined spin={isRefreshing} />} onClick={handleRefresh} disabled={isRefreshing}>Refresh Data</Button>
 // // // // // // //         </div>
 // // // // // // //       </div>
-      
+
 // // // // // // //       {/* ROW 1: KPIs */}
 // // // // // // //       <Row gutter={[16, 16]}>
 // // // // // // //         <Col xs={12} sm={8} md={4}><WidgetWrapper title="Total Tickets" loading={overallKpis.loading} error={overallKpis.error}><Statistic value={overallKpis.data?.total_tickets ?? 0} prefix={<FileDoneOutlined />} /></WidgetWrapper></Col>
@@ -278,7 +277,7 @@
 // // // // // // //             />
 // // // // // // //           </WidgetWrapper></Col>
 // // // // // // //       </Row>
-      
+
 // // // // // // //       {/* ROW 5: More Tables */}
 // // // // // // //       <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
 // // // // // // //         <Col span={24}><WidgetWrapper title="Recent Agent Activity" icon={<CalendarOutlined />} loading={dailyAgentActivity.loading} error={dailyAgentActivity.error}>
@@ -307,7 +306,6 @@
 // // // // // //   BarChartOutlined, CheckCircleOutlined, ClockCircleOutlined, TeamOutlined, FileDoneOutlined,
 // // // // // //   ExclamationCircleOutlined, HourglassOutlined, CalendarOutlined, BuildOutlined,
 // // // // // //   FolderOpenOutlined, LineChartOutlined, PieChartOutlined, UsergroupAddOutlined, SyncOutlined
-// // // // // // } from '@ant-design/icons';
 // // // // // // import Plotly from 'plotly.js-dist-min';
 // // // // // // import { useAuthStore } from '@/core/lib/store';
 // // // // // // import { supabase } from '../lib/supabase';
@@ -337,12 +335,12 @@
 // // // // // //       p_force_refresh: params.forceRefresh || false
 // // // // // //     });
 // // // // // //     if (error) { throw new Error(error.message); }
-    
+
 // // // // // //     // The RPC now returns { data, lastCalculatedAt }
 // // // // // //     const { data: resultData, lastCalculatedAt } = data;
-    
+
 // // // // // //     console.log(`%c[API Response] <- view: ${params.viewName}, calculated at: ${lastCalculatedAt}`, 'color: green;', data);
-    
+
 // // // // // //     // Return an object containing both the data and the timestamp
 // // // // // //     return { data: resultData || [], lastCalculatedAt };
 // // // // // //   } catch (err: any) {
@@ -429,7 +427,7 @@
 // // // // // //     // Update the status after the attempt
 // // // // // //     setNotificationStatus(Notification.permission);
 // // // // // //   };
-  
+
 // // // // // //   // A2HS prompt listener (Unchanged, but now we only set the event)
 // // // // // //   useEffect(() => {
 // // // // // //     const handler = (e: any) => {
@@ -438,10 +436,10 @@
 // // // // // //       console.log('beforeinstallprompt event captured');
 // // // // // //     };
 // // // // // //     window.addEventListener('beforeinstallprompt', handler);
-    
+
 // // // // // //     return () => window.removeEventListener('beforeinstallprompt', handler);
 // // // // // //   }, []);
-  
+
 // // // // // //   const handleInstallClick = () => {
 // // // // // //     if (installPromptEvent) {
 // // // // // //       // Use the stored event to show the prompt
@@ -484,7 +482,7 @@
 // // // // // //     { view: 'av_weekly_performance', widget: 'weeklyPerformance' },
 // // // // // //     { view: 'av_assets_summary', widget: 'assetSummaryData' },
 // // // // // //   ];
-    
+
 // // // // // //     // Create a variable to hold the latest timestamp from the results
 // // // // // //     let latestTimestamp: Date | null = null; 
 
@@ -522,7 +520,7 @@
 // // // // // //         });
 
 // // // // // //         setIsRefreshing(false);
-        
+
 // // // // // //         // Update the lastRefresh state with the latest timestamp from the backend
 // // // // // //         if (latestTimestamp) {
 // // // // // //             setLastRefresh(latestTimestamp);
@@ -542,7 +540,7 @@
 // // // // // //       fetchAllData(true);
 // // // // // //     }
 // // // // // //   };
-  
+
 // // // // // //   // --- PLOTLY CHART RENDERING (Fully Implemented) ---
 // // // // // //   useEffect(() => {
 // // // // // //     if (state.accountSummary.data && accountsChartRef.current) {
@@ -562,7 +560,7 @@
 // // // // // //       Plotly.newPlot(assetTicketsChartRef.current, [{ labels: aggregatedData.map(d => d.asset_category_name).slice(0, 5), values: aggregatedData.map(d => d.number_of_tickets).slice(0, 5), type: 'pie', hole: 0.4, textinfo: 'label+percent', automargin: true }], { height: 300, showlegend: false, margin: { l: 10, r: 10, t: 10, b: 10 } }, { displayModeBar: false, responsive: true });
 // // // // // //     }
 // // // // // //   }, [state.assetSummaryData.data]);
-  
+
 // // // // // //   useEffect(() => {
 // // // // // //     if (state.processBottlenecks.data && bottlenecksChartRef.current) {
 // // // // // //       const validData = state.processBottlenecks.data.filter((d: IStageSummary) => d.average_duration_hours != null);
@@ -570,14 +568,14 @@
 // // // // // //       Plotly.newPlot(bottlenecksChartRef.current, [{ y: sortedData.map(d => d.stage_name).slice(0, 5), x: sortedData.map(d => d.average_duration_hours).slice(0, 5), type: 'bar', orientation: 'h', marker: { color: '#faad14' }, }], { height: 300, margin: { l: 150, r: 20, t: 20, b: 40 }, xaxis: { title: 'Avg. Hours in Stage' }, yaxis: { automargin: true, autorange: 'reversed' } }, { displayModeBar: false, responsive: true });
 // // // // // //     }
 // // // // // //   }, [state.processBottlenecks.data]);
-  
+
 // // // // // //   useEffect(() => {
 // // // // // //     if (state.weeklyPerformance.data && weeklyTrendChartRef.current) {
 // // // // // //       const sortedData = [...state.weeklyPerformance.data].sort((a: IWeeklyTrend, b: IWeeklyTrend) => new Date(a.week_start_date).getTime() - new Date(b.week_start_date).getTime());
 // // // // // //       Plotly.newPlot(weeklyTrendChartRef.current, [{ x: sortedData.map(d => d.week_start_date), y: sortedData.map(d => d.completed_tickets), type: 'scatter', mode: 'lines+markers', name: 'Tickets Resolved' }, { x: sortedData.map(d => d.week_start_date), y: sortedData.map(d => d.total_tickets), type: 'bar', name: 'Total Tickets Created' }], { height: 300, margin: { l: 50, r: 20, t: 30, b: 50 }, legend: { x: 0, y: 1.2, orientation: 'h' } }, { displayModeBar: false, responsive: true });
 // // // // // //     }
 // // // // // //   }, [state.weeklyPerformance.data]);
-  
+
 // // // // // //   useEffect(() => {
 // // // // // //     if (state.assetSummaryData.data && assetGroupChartRef.current) {
 // // // // // //       const groupedData = groupBy(state.assetSummaryData.data, assetGroup);
@@ -591,7 +589,7 @@
 
 // // // // // //   // --- RENDER METHOD ---
 // // // // // //   if (!organization?.id) { return <Alert message="No Organization Selected" type="warning" showIcon />; }
-  
+
 // // // // // //   const WidgetWrapper: React.FC<{ title: string; icon?: React.ReactNode; loading: boolean; error: string | null; children: React.ReactNode; extra?: React.ReactNode; }> = ({ title, icon, loading, error, children, extra }) => (
 // // // // // //     <Card title={<><span style={{ marginRight: 8 }}>{icon}</span>{title}</>} extra={extra} style={{ height: '100%' }}>
 // // // // // //       {loading ? <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '300px' }}><Spin /></div>
@@ -619,7 +617,7 @@
 // // // // // //           style={{ marginBottom: 16 }}
 // // // // // //         />
 // // // // // //       )} */}
-      
+
 // // // // // //       {/* Conditionally render the notification button */}
 // // // // // //       {/* {notificationStatus === 'default' && (
 // // // // // //         <Alert
@@ -643,7 +641,7 @@
 // // // // // //           <Button icon={<SyncOutlined spin={isRefreshing} />} onClick={handleRefresh} disabled={isRefreshing}>Refresh Data</Button>
 // // // // // //         </div>
 // // // // // //       </div>
-      
+
 // // // // // //       {/* ROW 1: KPIs */}
 // // // // // //       <Row gutter={[16, 16]}>
 // // // // // //         <Col xs={12} sm={8} md={4}><WidgetWrapper title="Total Tickets" loading={state.overallKpis.loading} error={state.overallKpis.error}><Statistic value={state.overallKpis.data?.total_tickets ?? 0} prefix={<FileDoneOutlined />} /></WidgetWrapper></Col>
@@ -702,7 +700,7 @@
 // // // // // //             />
 // // // // // //           </WidgetWrapper></Col>
 // // // // // //       </Row>
-      
+
 // // // // // //       {/* ROW 5: More Tables */}
 // // // // // //       <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
 // // // // // //         <Col span={24}><WidgetWrapper title="Recent Agent Activity" icon={<CalendarOutlined />} loading={state.dailyAgentActivity.loading} error={state.dailyAgentActivity.error}>
@@ -731,7 +729,6 @@
 
 // // // // // import React, { useState, useEffect, useRef, useCallback } from 'react';
 // // // // // import { Card, Row, Col, Table, Tag, Statistic, Spin, Typography, Alert, Button } from 'antd';
-// // // // // import { SyncOutlined } from '@ant-design/icons';
 // // // // // import Plotly from 'plotly.js-dist-min';
 // // // // // import { useAuthStore } from '@/core/lib/store';
 // // // // // import { supabase } from '../lib/supabase';
@@ -783,7 +780,7 @@
 // // // // //     if (data && chartRef.current) {
 // // // // //       const xAxis = definition.config_template?.xAxis;
 // // // // //       const yAxis = definition.config_template?.yAxis;
-      
+
 // // // // //       if (Array.isArray(yAxis)) {
 // // // // //         // Multiple series
 // // // // //         const traces = yAxis.map((yKey, index) => ({
@@ -793,7 +790,7 @@
 // // // // //           mode: 'lines+markers',
 // // // // //           name: yKey
 // // // // //         }));
-        
+
 // // // // //         Plotly.newPlot(chartRef.current, traces, {
 // // // // //           height: 300,
 // // // // //           margin: { l: 50, r: 20, t: 30, b: 50 }
@@ -829,7 +826,7 @@
 // // // // //       // Implement bar chart rendering logic
 // // // // //       const xAxis = definition.config_template?.xAxis;
 // // // // //       const yAxis = definition.config_template?.yAxis;
-      
+
 // // // // //       if (Array.isArray(yAxis)) {
 // // // // //         const traces = yAxis.map((yKey, index) => ({
 // // // // //           x: data.map((d: any) => d[xAxis]),
@@ -837,7 +834,7 @@
 // // // // //           type: 'bar',
 // // // // //           name: yKey
 // // // // //         }));
-        
+
 // // // // //         Plotly.newPlot(chartRef.current, traces, {
 // // // // //           height: 300,
 // // // // //           margin: { l: 50, r: 20, t: 30, b: 50 },
@@ -872,14 +869,14 @@
 // // // // //     if (data && chartRef.current) {
 // // // // //       const labels = definition.config_template?.labels;
 // // // // //       const values = definition.config_template?.values;
-      
+
 // // // // //       if (labels && values && data[0]) {
 // // // // //         const trace = {
 // // // // //           labels: data.map((d: any) => d[labels]),
 // // // // //           values: data.map((d: any) => d[values]),
 // // // // //           type: 'pie'
 // // // // //         };
-        
+
 // // // // //         Plotly.newPlot(chartRef.current, [trace], {
 // // // // //           height: 300,
 // // // // //           margin: { l: 20, r: 20, t: 30, b: 20 }
@@ -1021,7 +1018,7 @@
 // // // // //   const renderWidget = (widget: DashboardWidget) => {
 // // // // //     const definition = widgetDefinitions[widget.definitionId];
 // // // // //     const data = widgetData[widget.id];
-    
+
 // // // // //     if (!definition || !data) return null;
 
 // // // // //     const WidgetWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
@@ -1058,7 +1055,7 @@
 // // // // //   const renderKPIWidget = (widget: DashboardWidget, definition: WidgetDefinition, data: any, Wrapper: React.FC<{ children: React.ReactNode }>) => {
 // // // // //     const metricKey = definition.config_template?.metricKey;
 // // // // //     const value = data?.[0]?.[metricKey] || 0;
-    
+
 // // // // //     return (
 // // // // //       <Wrapper>
 // // // // //         <Statistic 
@@ -1101,7 +1098,7 @@
 // // // // //   // Table Widget Renderer
 // // // // //   const renderTableWidget = (widget: DashboardWidget, definition: WidgetDefinition, data: any, Wrapper: React.FC<{ children: React.ReactNode }>) => {
 // // // // //     const columns = definition.config_template?.columns || [];
-    
+
 // // // // //     const tableColumns = columns.map((col: string) => ({
 // // // // //       title: col.replace(/_/g, ' ').toUpperCase(),
 // // // // //       dataIndex: col,
@@ -1166,7 +1163,6 @@
 
 // // // // import React, { useState, useEffect, useRef, useCallback } from 'react';
 // // // // import { Card, Row, Col, Table, Tag, Statistic, Spin, Typography, Alert, Button } from 'antd';
-// // // // import { SyncOutlined } from '@ant-design/icons';
 // // // // import Plotly from 'plotly.js-dist-min';
 // // // // import { useAuthStore } from '@/core/lib/store';
 // // // // import { supabase } from '../lib/supabase';
@@ -1238,7 +1234,7 @@
 
 // // // //     const xAxis = definition.config_template?.xAxis;
 // // // //     const yAxis = definition.config_template?.yAxis;
-    
+
 // // // //     // Validate configuration
 // // // //     if (!xAxis || !yAxis) {
 // // // //       console.error(`[LineChart] Missing xAxis or yAxis configuration for ${widgetId}`);
@@ -1267,7 +1263,7 @@
 // // // //         mode: 'lines+markers',
 // // // //         name: yKey
 // // // //       }));
-      
+
 // // // //       Plotly.newPlot(chartRef.current, traces, {
 // // // //         height: 300,
 // // // //         margin: { l: 50, r: 20, t: 30, b: 50 },
@@ -1329,7 +1325,7 @@
 
 // // // //     const xAxis = definition.config_template?.xAxis;
 // // // //     const yAxis = definition.config_template?.yAxis;
-    
+
 // // // //     // Validate configuration
 // // // //     if (!xAxis || !yAxis) {
 // // // //       console.error(`[BarChart] Missing xAxis or yAxis configuration for ${widgetId}`);
@@ -1357,7 +1353,7 @@
 // // // //         type: 'bar',
 // // // //         name: yKey
 // // // //       }));
-      
+
 // // // //       Plotly.newPlot(chartRef.current, traces, {
 // // // //         height: 300,
 // // // //         margin: { l: 50, r: 20, t: 30, b: 100 }, // Extra bottom margin for labels
@@ -1419,7 +1415,7 @@
 
 // // // //     const labels = definition.config_template?.labels;
 // // // //     const values = definition.config_template?.values;
-    
+
 // // // //     // Validate configuration
 // // // //     if (!labels || !values) {
 // // // //       console.error(`[PieChart] Missing labels or values configuration for ${widgetId}`);
@@ -1446,7 +1442,7 @@
 // // // //         textposition: 'outside',
 // // // //         hoverinfo: 'label+percent+value'
 // // // //       };
-      
+
 // // // //       Plotly.newPlot(chartRef.current, [trace], {
 // // // //         height: 300,
 // // // //         margin: { l: 20, r: 20, t: 30, b: 20 },
@@ -1508,7 +1504,7 @@
 
 // // // //       try {
 // // // //         console.log('[Dashboard] Loading dashboard configuration...');
-        
+
 // // // //         // Load the Operations Command Center dashboard
 // // // //         const { data: dashboardData, error } = await supabase
 // // // //           .schema('core')
@@ -1519,7 +1515,7 @@
 // // // //           .single();
 
 // // // //         if (error) throw error;
-        
+
 // // // //         console.log('[Dashboard] Loaded dashboard:', dashboardData?.name);
 // // // //         setDashboard(dashboardData);
 
@@ -1537,7 +1533,7 @@
 // // // //         definitions?.forEach(def => {
 // // // //           defMap[def.id] = def;
 // // // //         });
-        
+
 // // // //         console.log(`[Dashboard] Loaded ${Object.keys(defMap).length} widget definitions`);
 // // // //         setWidgetDefinitions(defMap);
 
@@ -1597,7 +1593,7 @@
 // // // //         }
 
 // // // //         const widgetResult = result as { data: any[]; lastCalculatedAt: string; error?: string };
-        
+
 // // // //         console.log(`[Dashboard] Widget ${widget.title} result:`, {
 // // // //           dataLength: widgetResult.data?.length,
 // // // //           sampleData: widgetResult.data?.[0],
@@ -1658,11 +1654,11 @@
 // // // //    */
 // // // //   const renderKPIWidget = (widget: DashboardWidget, definition: WidgetDefinition, data: any, Wrapper: React.FC<{ children: React.ReactNode }>) => {
 // // // //     const metricKey = definition.config_template?.metricKey;
-    
+
 // // // //     // If no specific metricKey, try to use the first numeric value
 // // // //     let value = 0;
 // // // //     let displayValue = value;
-    
+
 // // // //     if (metricKey && data?.[0]?.[metricKey] !== undefined) {
 // // // //       value = data[0][metricKey];
 // // // //       displayValue = value;
@@ -1683,14 +1679,14 @@
 // // // //     if (definition.config_template?.format === 'percent' && typeof value === 'number') {
 // // // //       displayValue = value * 100; // Convert decimal to percentage
 // // // //     }
-    
+
 // // // //     console.log(`[KPI Widget] ${widget.title}:`, {
 // // // //       metricKey,
 // // // //       value,
 // // // //       displayValue,
 // // // //       dataSample: data?.[0]
 // // // //     });
-    
+
 // // // //     return (
 // // // //       <Wrapper>
 // // // //         <Statistic 
@@ -1714,7 +1710,7 @@
 // // // //     // Use configured columns or fall back to all available columns from first data row
 // // // //     const columns = definition.config_template?.columns || 
 // // // //                    (data?.[0] ? Object.keys(data[0]) : []);
-    
+
 // // // //     console.log(`[Table Widget] ${widget.title}:`, {
 // // // //       columnCount: columns.length,
 // // // //       dataLength: data?.length,
@@ -1754,7 +1750,7 @@
 // // // //   const renderWidget = (widget: DashboardWidget) => {
 // // // //     const definition = widgetDefinitions[widget.definitionId];
 // // // //     const data = widgetData[widget.id];
-    
+
 // // // //     if (!definition) {
 // // // //       console.warn(`[Dashboard] No definition found for widget ${widget.id}`);
 // // // //       return (
@@ -1933,7 +1929,6 @@
 // // // // // pages/Dashboard.tsx
 // // // // import React, { useState } from 'react';
 // // // // import { Tabs, Button, Space } from 'antd';
-// // // // import { EditOutlined, EyeOutlined } from '@ant-design/icons';
 // // // // import DashboardDesigner from './DashboardDesigner';
 // // // // import DashboardRenderer from './DashboardRenderer';
 
@@ -2009,7 +2004,7 @@
 
 // // // import React, { useState, useEffect, useCallback } from 'react';
 // // // import { Layout, Select, Button, Space, message, Drawer, Spin, Empty } from 'antd';
-// // // import { SaveOutlined, PlusOutlined, EditOutlined, EyeOutlined, ReloadOutlined } from '@ant-design/icons';
+// // // import { Save, Plus, Pencil, Eye, RefreshCw } from 'lucide-react';
 // // // import { useAuthStore } from '@/core/lib/store'; // Your store
 // // // import { supabase } from '../lib/supabase'; // Your supabase client
 // // // import DashboardCanvas from './DashboardCanvas';
@@ -2028,16 +2023,16 @@
 
 // // // const DashboardPage: React.FC = () => {
 // // //   const { organization, location } = useAuthStore();
-  
+
 // // //   // --- State ---
 // // //   const [dashboards, setDashboards] = useState<Dashboard[]>([]);
 // // //   const [currentDashboard, setCurrentDashboard] = useState<Dashboard | null>(null);
 // // //   const [widgetDefinitions, setWidgetDefinitions] = useState<any>({});
-  
+
 // // //   // Data State
 // // //   const [widgetData, setWidgetData] = useState<any>({});
 // // //   const [loadingData, setLoadingData] = useState(false);
-  
+
 // // //   // UI State
 // // //   const [isEditMode, setIsEditMode] = useState(false);
 // // //   const [isLibraryOpen, setIsLibraryOpen] = useState(false);
@@ -2059,7 +2054,7 @@
 
 // // //       // Load Dashboards
 // // //       const { data: dashData } = await supabase.schema('core').from('user_dashboards').select('*');
-      
+
 // // //       if (dashData) {
 // // //         setDashboards(dashData);
 // // //         // Auto-select "Operations Command Center" or first available
@@ -2127,7 +2122,7 @@
 
 // // //   const handleLayoutChange = (layout: any[]) => {
 // // //     if (!currentDashboard) return;
-    
+
 // // //     // Map RGL layout back to our schema
 // // //     const updatedWidgets = currentDashboard.widgets.map(w => {
 // // //       const layoutItem = layout.find(l => l.i === w.id);
@@ -2174,7 +2169,7 @@
 // // //   };
 
 // // //   // --- 4. Drag & Drop from Library ---
-  
+
 // // //   // This requires the "onDrop" HTML5 event on the container, or handling it via RGL
 // // //   const addWidget = (defId: string) => {
 // // //       const def = widgetDefinitions[defId];
@@ -2191,7 +2186,7 @@
 // // //       const newWidgets = [...currentDashboard.widgets, newWidget];
 // // //       setCurrentDashboard({ ...currentDashboard, widgets: newWidgets });
 // // //       setIsDirty(true);
-      
+
 // // //       // Fetch data for new widget immediately
 // // //       fetchMetricData([newWidget]);
 // // //       message.success('Widget added');
@@ -2288,7 +2283,7 @@
 
 // // import React, { useState, useEffect, useCallback } from 'react';
 // // import { Layout, Select, Button, Space, message, Drawer, Empty, Spin, Card } from 'antd';
-// // import { SaveOutlined, PlusOutlined, EditOutlined, EyeOutlined, ReloadOutlined } from '@ant-design/icons';
+// // import { Save, Plus, Pencil, Eye, RefreshCw } from 'lucide-react';
 // // import { useAuthStore } from '@/core/lib/store';
 // // import { supabase } from '../lib/supabase';
 // // import DashboardCanvas from './DashboardCanvas';
@@ -2299,14 +2294,14 @@
 
 // // const DashboardPage: React.FC = () => {
 // //   const { organization, location } = useAuthStore();
-  
+
 // //   const [dashboards, setDashboards] = useState<any[]>([]);
 // //   const [currentDashboard, setCurrentDashboard] = useState<any | null>(null);
 // //   const [widgetDefinitions, setWidgetDefinitions] = useState<any>({});
-  
+
 // //   const [widgetData, setWidgetData] = useState<any>({});
 // //   const [loading, setLoading] = useState(true);
-  
+
 // //   const [isEditMode, setIsEditMode] = useState(false);
 // //   const [isLibraryOpen, setIsLibraryOpen] = useState(false);
 // //   const [isDirty, setIsDirty] = useState(false);
@@ -2315,7 +2310,7 @@
 // //   // 1. Load Definitions & Dashboards
 // //   useEffect(() => {
 // //     if (!organization?.id) return;
-    
+
 // //     const init = async () => {
 // //       setLoading(true);
 // //       try {
@@ -2325,7 +2320,7 @@
 
 // //         // Load User Dashboards
 // //         const { data: dashData } = await supabase.schema('core').from('user_dashboards').select('*');
-        
+
 // //         if (dashData && dashData.length > 0) {
 // //           setDashboards(dashData);
 // //           // Select Operations Command Center by default, or the first one
@@ -2394,7 +2389,7 @@
 // //         // Find the layout item for this widget
 // //         // RGL uses string IDs, make sure we compare safely
 // //         const layoutItem = newLayout.find((l: any) => String(l.i) === String(widget.id));
-        
+
 // //         if (layoutItem) {
 // //           return {
 // //             ...widget,
@@ -2575,7 +2570,7 @@
 
 // import React, { useState, useEffect, useCallback } from 'react';
 // import { Layout, Select, Button, Space, message, Drawer, Empty, Spin, Card } from 'antd';
-// import { SaveOutlined, PlusOutlined, EditOutlined, EyeOutlined, ReloadOutlined } from '@ant-design/icons';
+// import { Save, Plus, Pencil, Eye, RefreshCw } from 'lucide-react';
 // import { useAuthStore } from '@/core/lib/store';
 // import { supabase } from '../lib/supabase';
 // import DashboardCanvas from './DashboardCanvas';
@@ -2588,7 +2583,7 @@
 //   // FIX 3: Safe Store Access
 //   const organization = useAuthStore((state) => state.organization);
 //   const location = useAuthStore((state) => state.location);
-  
+
 //   // If your store is defined differently, you might need:
 //   // const { organization, location } = useAuthStore(); 
 //   // But ensure 'setOrganization' isn't being destructured if not used here.
@@ -2596,10 +2591,10 @@
 //   const [dashboards, setDashboards] = useState<any[]>([]);
 //   const [currentDashboard, setCurrentDashboard] = useState<any | null>(null);
 //   const [widgetDefinitions, setWidgetDefinitions] = useState<any>({});
-  
+
 //   const [widgetData, setWidgetData] = useState<any>({});
 //   const [loading, setLoading] = useState(true);
-  
+
 //   const [isEditMode, setIsEditMode] = useState(false);
 //   const [isLibraryOpen, setIsLibraryOpen] = useState(false);
 //   const [isDirty, setIsDirty] = useState(false);
@@ -2608,7 +2603,7 @@
 //   // 1. Init Loading
 //   useEffect(() => {
 //     if (!organization?.id) return;
-    
+
 //     const init = async () => {
 //       setLoading(true);
 //       try {
@@ -2616,7 +2611,7 @@
 //         setWidgetDefinitions(_.keyBy(defs, 'id'));
 
 //         const { data: dashData } = await supabase.schema('core').from('user_dashboards').select('*');
-        
+
 //         if (dashData && dashData.length > 0) {
 //           setDashboards(dashData);
 //           const defaultDash = dashData.find(d => d.name === 'Operations Command Center') || dashData[0];
@@ -2706,7 +2701,7 @@
 //         .eq('id', currentDashboard.id);
 
 //       if (error) throw error;
-      
+
 //       // FIX: Update the main dashboards list locally so switching works immediately
 //       setDashboards(prev => prev.map(d => 
 //         d.id === currentDashboard.id 
@@ -2729,7 +2724,7 @@
 //     const def = widgetDefinitions[defId];
 //     if (!currentDashboard || !def) return;
 //     const maxY = Math.max(0, ...currentDashboard.widgets.map((w: any) => (w.position?.y || 0) + (w.position?.h || 0)));
-    
+
 //     const newWidget = {
 //         id: `w-${Date.now()}`,
 //         definitionId: defId,
@@ -2857,7 +2852,7 @@
 // GOLD STANDARD - configs for LG< MD< SM
 import React, { useState, useEffect, useCallback } from 'react';
 import { Layout, Select, Button, Space, message, Drawer, Empty, Spin, Card } from 'antd';
-import { SaveOutlined, PlusOutlined, EditOutlined, EyeOutlined, ReloadOutlined } from '@ant-design/icons';
+import { Save, Plus, Pencil, Eye, RefreshCw } from 'lucide-react';
 import { useAuthStore } from '@/core/lib/store';
 import { supabase } from '../lib/supabase';
 import DashboardCanvas from './DashboardCanvas';
@@ -2869,13 +2864,13 @@ const { Option } = Select;
 const DashboardPage: React.FC = () => {
   const organization = useAuthStore((state) => state.organization);
   const location = useAuthStore((state) => state.location);
-  
+
   const [dashboards, setDashboards] = useState<any[]>([]);
   const [currentDashboard, setCurrentDashboard] = useState<any | null>(null);
   const [widgetDefinitions, setWidgetDefinitions] = useState<any>({});
   const [widgetData, setWidgetData] = useState<any>({});
   const [loading, setLoading] = useState(true);
-  
+
   const [isEditMode, setIsEditMode] = useState(false);
   const [isLibraryOpen, setIsLibraryOpen] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
@@ -2938,7 +2933,7 @@ const DashboardPage: React.FC = () => {
     if (currentDashboard?.widgets && !_.isEmpty(widgetDefinitions)) {
       fetchMetricData(currentDashboard.widgets);
     }
-  }, [currentDashboard?.id, widgetDefinitions,location]);
+  }, [currentDashboard?.id, widgetDefinitions, location]);
 
   // 3. Layout Handler - NOW SUPPORTS MULTI-BREAKPOINT
   // 'allLayouts' comes from RGL as: { lg: [...], md: [...], sm: [...] }
@@ -2952,17 +2947,17 @@ const DashboardPage: React.FC = () => {
         const newLayouts: any = { ...(widget.layouts || {}) };
 
         Object.keys(allLayouts).forEach(breakpoint => {
-           const item = allLayouts[breakpoint].find((l: any) => String(l.i) === String(widget.id));
-           if (item) {
-             newLayouts[breakpoint] = {
-               x: item.x,
-               y: item.y,
-               w: item.w,
-               h: item.h
-             };
-           }
+          const item = allLayouts[breakpoint].find((l: any) => String(l.i) === String(widget.id));
+          if (item) {
+            newLayouts[breakpoint] = {
+              x: item.x,
+              y: item.y,
+              w: item.w,
+              h: item.h
+            };
+          }
         });
-        
+
         // Backward compatibility: Keep 'position' synced with 'lg' for simpler queries if needed
         const lgItem = allLayouts.lg?.find((l: any) => String(l.i) === String(widget.id));
         const basePos = lgItem ? { x: lgItem.x, y: lgItem.y, w: lgItem.w, h: lgItem.h } : widget.position;
@@ -2990,14 +2985,14 @@ const DashboardPage: React.FC = () => {
       const { error } = await supabase
         .schema('core')
         .from('user_dashboards')
-        .update({ 
+        .update({
           widgets: currentDashboard.widgets,
-          updated_at: new Date() 
+          updated_at: new Date()
         })
         .eq('id', currentDashboard.id);
 
       if (error) throw error;
-      
+
       setDashboards(prev => prev.map(d => d.id === currentDashboard.id ? { ...d, widgets: currentDashboard.widgets } : d));
       message.success('Dashboard layout saved successfully');
       setIsDirty(false);
@@ -3013,23 +3008,23 @@ const DashboardPage: React.FC = () => {
   const addWidget = (defId: string) => {
     const def = widgetDefinitions[defId];
     if (!currentDashboard || !def) return;
-    
+
     // Find bottom of dashboard
     const maxY = Math.max(0, ...currentDashboard.widgets.map((w: any) => (w.position?.y || 0) + (w.position?.h || 0)));
-    
+
     const newWidget = {
-        id: `w-${Date.now()}`,
-        definitionId: defId,
-        title: def.name,
-        // Default position
-        position: { x: 0, y: maxY, w: 4, h: 4 },
-        // Initialize layouts
-        layouts: {
-            lg: { x: 0, y: maxY, w: 4, h: 4 },
-            md: { x: 0, y: maxY, w: 4, h: 4 },
-            sm: { x: 0, y: maxY, w: 12, h: 4 }
-        },
-        config: {} 
+      id: `w-${Date.now()}`,
+      definitionId: defId,
+      title: def.name,
+      // Default position
+      position: { x: 0, y: maxY, w: 4, h: 4 },
+      // Initialize layouts
+      layouts: {
+        lg: { x: 0, y: maxY, w: 4, h: 4 },
+        md: { x: 0, y: maxY, w: 4, h: 4 },
+        sm: { x: 0, y: maxY, w: 12, h: 4 }
+      },
+      config: {}
     };
 
     const newWidgets = [...currentDashboard.widgets, newWidget];
@@ -3050,15 +3045,15 @@ const DashboardPage: React.FC = () => {
   if (loading && !currentDashboard) return <div className="flex h-screen items-center justify-center"><Spin size="large" /></div>;
 
   return (
-    <Layout className="min-h-screen bg-gray-50">
-      <Header className="bg-white border-b px-4 sm:px-6 flex justify-between items-center h-16 sticky top-0 z-20 shadow-sm">
+    <Layout className="min-h-screen">
+      <Header className="border-b px-4 sm:px-6 flex justify-between items-center h-16 sticky top-0 z-20 shadow-sm bg-[var(--color-bg-primary)]">
         <div className="flex items-center gap-4">
-          <Select 
+          <Select
             value={currentDashboard?.id}
             style={{ width: 240 }}
             onChange={(id) => {
               const d = dashboards.find(x => x.id === id);
-              if(d) setCurrentDashboard(d);
+              if (d) setCurrentDashboard(d);
             }}
             disabled={isEditMode}
           >
@@ -3070,19 +3065,19 @@ const DashboardPage: React.FC = () => {
         <Space>
           {!isEditMode ? (
             <>
-              <Button icon={<ReloadOutlined />} onClick={() => fetchMetricData(currentDashboard?.widgets || [], true)}>Refresh</Button>
-              <Button type="primary" icon={<EditOutlined />} onClick={() => { setIsEditMode(true); setIsLibraryOpen(true); }}>Design</Button>
+              <Button icon={<RefreshCw size={16} />} onClick={() => fetchMetricData(currentDashboard?.widgets || [], true)}>Refresh</Button>
+              <Button type="primary" icon={<Pencil size={16} />} onClick={() => { setIsEditMode(true); setIsLibraryOpen(true); }}>Design</Button>
             </>
           ) : (
             <>
-               <Button icon={<EyeOutlined />} onClick={() => { 
-                 const original = dashboards.find(d => d.id === currentDashboard.id);
-                 setCurrentDashboard(original);
-                 setIsEditMode(false); 
-                 setIsDirty(false);
-               }}>Cancel</Button>
-               <Button icon={<PlusOutlined />} onClick={() => setIsLibraryOpen(true)}>Add Widget</Button>
-               <Button type="primary" icon={<SaveOutlined />} loading={saving} onClick={handleSave}>Save</Button>
+              <Button icon={<Eye size={16} />} onClick={() => {
+                const original = dashboards.find(d => d.id === currentDashboard.id);
+                setCurrentDashboard(original);
+                setIsEditMode(false);
+                setIsDirty(false);
+              }}>Cancel</Button>
+              <Button icon={<Plus size={16} />} onClick={() => setIsLibraryOpen(true)}>Add Widget</Button>
+              <Button type="primary" icon={<Save size={16} />} loading={saving} onClick={handleSave}>Save</Button>
             </>
           )}
         </Space>
@@ -3090,17 +3085,17 @@ const DashboardPage: React.FC = () => {
 
       <Content className="p-2 sm:p-6 overflow-y-auto h-[calc(100vh-64px)]">
         {currentDashboard ? (
-             <DashboardCanvas 
-                widgets={currentDashboard.widgets || []}
-                widgetData={widgetData}
-                widgetDefinitions={widgetDefinitions}
-                isEditMode={isEditMode}
-                onLayoutChange={handleLayoutChange}
-                onRemoveWidget={removeWidget}
-                onEditWidget={(w) => console.log(w)}
-             />
+          <DashboardCanvas
+            widgets={currentDashboard.widgets || []}
+            widgetData={widgetData}
+            widgetDefinitions={widgetDefinitions}
+            isEditMode={isEditMode}
+            onLayoutChange={handleLayoutChange}
+            onRemoveWidget={removeWidget}
+            onEditWidget={(w) => console.log(w)}
+          />
         ) : (
-            <Empty description="No dashboard selected" className="mt-20" />
+          <Empty description="No dashboard selected" className="mt-20" />
         )}
       </Content>
 
@@ -3113,23 +3108,23 @@ const DashboardPage: React.FC = () => {
         width={320}
       >
         <div className="space-y-3">
-           {_.map(widgetDefinitions, (def) => (
-               <Card 
-                  key={def.id} 
-                  size="small"
-                  hoverable
-                  className="cursor-pointer border-l-4 border-l-transparent hover:border-l-blue-500"
-                  onClick={() => addWidget(def.id)}
-               >
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <div className="font-semibold">{def.name}</div>
-                      <div className="text-xs text-gray-400">{def.widget_type}</div>
-                    </div>
-                    <PlusOutlined className="text-blue-500"/>
-                  </div>
-               </Card>
-           ))}
+          {_.map(widgetDefinitions, (def) => (
+            <Card
+              key={def.id}
+              size="small"
+              hoverable
+              className="cursor-pointer border-l-4 border-l-transparent hover:border-l-blue-500"
+              onClick={() => addWidget(def.id)}
+            >
+              <div className="flex justify-between items-center">
+                <div>
+                  <div className="font-semibold">{def.name}</div>
+                  <div className="text-xs text-gray-400">{def.widget_type}</div>
+                </div>
+                <Plus size={16} className="text-blue-500" />
+              </div>
+            </Card>
+          ))}
         </div>
       </Drawer>
     </Layout>

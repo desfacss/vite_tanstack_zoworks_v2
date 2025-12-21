@@ -1,29 +1,45 @@
+/**
+ * Tickets Module Registry
+ * Registers tabs, routes, actions, and translations for the tickets module.
+ */
 
 import { registry } from '@/core/registry';
+import { registerModuleTranslations } from '@/core/i18n';
 
-/**
- * Register function for the Tickets module.
- * @param config Module-specific configuration for the tenant.
- * Example config: { "features": { "messages": true, "logs": true } }
- */
-export function register(config: any = {}) {
-  console.log('[Module] Registering tickets with config:', config);
+export interface TicketsModuleConfig {
+  features?: {
+    messages?: boolean;
+    logs?: boolean;
+  };
+}
 
-  // Core Ticket Summary is always available
+export async function register(
+  config: TicketsModuleConfig = {},
+  enabledLanguages: string[] = ['en']
+) {
+  console.log('[Tickets] Registering module');
+
+  // 1. Register translations FIRST
+  await registerModuleTranslations('tickets', {
+    en: () => import('./i18n/en.json'),
+    // hi: () => import('./i18n/hi.json'),
+  }, enabledLanguages);
+
+  // 2. Core Ticket Summary is always available
   registry.registerTab({
     id: 'ticket-summary',
     entityTypes: ['tickets'],
-    label: 'Summary',
+    label: 'tickets:tabs.summary',
     component: () => import('./components/TicketSummary'),
     order: 5,
   });
 
-  // Conditional Registration based on tenant config
+  // 3. Conditional Registration based on tenant config
   if (config.features?.messages !== false) {
     registry.registerTab({
       id: 'ticket-messages',
       entityTypes: ['tickets'],
-      label: 'Messages',
+      label: 'Messages',  // Could be tickets:tabs.messages
       component: () => import('./components/Messages'),
       order: 10,
     });
@@ -39,7 +55,7 @@ export function register(config: any = {}) {
     });
   }
 
-  // Register Client Details
+  // 4. Register Client Details
   registry.registerTab({
     id: 'client-details',
     entityTypes: ['clients'],
@@ -48,8 +64,7 @@ export function register(config: any = {}) {
     order: 1,
   });
 
-
-  // Register Global Action
+  // 5. Register Global Action
   registry.registerAction({
     id: 'new-ticket',
     entityTypes: ['tickets'],
@@ -58,7 +73,7 @@ export function register(config: any = {}) {
     component: () => import('./components/TicketNew'),
   });
 
-  // Register Row Action
+  // 6. Register Row Action
   registry.registerAction({
     id: 'edit-ticket',
     entityTypes: ['tickets'],
@@ -66,4 +81,6 @@ export function register(config: any = {}) {
     label: 'Edit',
     component: () => import('./components/TicketEdit'),
   });
+
+  console.log('[Tickets] ✓ Module registered');
 }
