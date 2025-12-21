@@ -1,0 +1,67 @@
+stateDiagram-v2
+    direction LR
+
+    [*] --> PPM_SCHEDULED: PPM Created
+
+    PPM_SCHEDULED --> PPM_SCHEDULED: T_ASSIGN_PPM_TEAM
+    PPM_SCHEDULED --> PPM_IN_PROGRESS: T_START_PPM
+    PPM_SCHEDULED --> JUNK_PPM: T_MARK_JUNK
+
+    state PPM_Phase {
+        PPM_IN_PROGRESS --> PPM_IN_PROGRESS: T_LOG_PROGRESS
+        PPM_IN_PROGRESS --> PPM_COMPLETED: T_COMPLETE_PPM
+        PPM_IN_PROGRESS --> LOST_PPM: T_MARK_LOST
+    }
+
+    PPM_COMPLETED --> [*]: T_FINALIZE_PPM
+    JUNK_PPM --> [*]: AR_ARCHIVE_JUNK_PPM
+    LOST_PPM --> [*]: T_MARK_LOST
+
+    note right of PPM_SCHEDULED
+        Automation: AR_AUTO_ASSIGN_PPM_TEAM
+        RACI: Maintenance Planner (Consulted), Operations Manager (Informed)
+    end note
+
+    note right of PPM_IN_PROGRESS
+        Automation: Increment progress log
+        RACI: Field Technician (Responsible), manager_of_lead_owner (Accountable)
+    end note
+
+    note left of PPM_COMPLETED
+        Automation: Generate service reports
+        RACI: QA Engineer (Responsible), Client Manager (Informed)
+    end note
+
+    note left of PPM_IN_PROGRESS
+        Condition: All assets serviced
+    end note
+
+    %% Additional automation rules
+    AR_AUTO_ASSIGN_PPM_TEAM --> PPM_SCHEDULED : Auto-assign if unassigned
+    PPM_SCHEDULED --> AR_REMINDER_NOT_STARTED : 2-day reminder
+    AR_REMINDER_NOT_STARTED --> AR_ESCALATE_IF_DELAYED : 5-day escalation
+
+    PPM_SCHEDULED --> AR_AUTO_GENERATE_SUBTASKS : Auto-generate tasks per asset
+    PPM_IN_PROGRESS --> AR_NOTIFY_CLIENT_PROGRESS : Notify client weekly
+
+    %% Bidirectional transitions for all states to capture manual adjustments
+    PPM_IN_PROGRESS --> PPM_SCHEDULED : T_REVERT_TO_SCHEDULED
+    PPM_COMPLETED --> PPM_IN_PROGRESS : T_REVERT_TO_IN_PROGRESS
+    JUNK_PPM --> PPM_SCHEDULED : T_REACTIVATE_JUNK
+    LOST_PPM --> PPM_SCHEDULED : T_REACTIVATE_LOST
+
+    state "PPM Lifecycle" as PPM_Lifecycle {
+        [*] --> PPM_SCHEDULED
+        PPM_SCHEDULED --> PPM_IN_PROGRESS
+        PPM_IN_PROGRESS --> PPM_COMPLETED
+        PPM_COMPLETED --> [*]
+    }
+
+    state "Automation Rules" as AUTOMATION {
+        AR_AUTO_ASSIGN_PPM_TEAM --> PPM_SCHEDULED
+        AR_REMINDER_NOT_STARTED --> PPM_SCHEDULED
+        AR_ESCALATE_IF_DELAYED --> PPM_SCHEDULED
+        AR_AUTO_GENERATE_SUBTASKS --> PPM_SCHEDULED
+        AR_NOTIFY_CLIENT_PROGRESS --> PPM_IN_PROGRESS
+        AR_ARCHIVE_JUNK_PPM --> JUNK_PPM
+    }

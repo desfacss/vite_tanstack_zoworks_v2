@@ -1,0 +1,62 @@
+{
+  "translation": {
+    "auth": {
+      "login": "लॉगिन"
+    },
+    "subscriptions": {
+      "list": "सदस्यताएँ",
+      "limits": "सीमाएँ",
+      "moduleFeatures": "विशेषताएँ",
+      "add": "जोड़ें"
+    },
+    "teams": {
+      "add": "जोड़ें"
+    },
+    "common": {
+      "_crud-page": "_CRUD पेज",
+      "_service-reports": "सेवा रिपोर्ट",
+      "_users-dyn": "उपयोगकर्ता डाइन",
+      "actions": "कार्य",
+      "active": "सक्रिय",
+      "add": "जोड़ें",
+      "admin": "एडमिन",
+      "analytics": "विश्लेषण",
+      "businesses": "व्यवसाय",
+      "client-contacts": "ग्राहक संपर्क",
+      "clients": "ग्राहक",
+      "config": "कॉन्फ़िग",
+      "contracts": "अनुबंध",
+      "createdAt": "बनाया गया",
+      "dashboard": "डैशबोर्ड",
+      "fsm": "एफएसएम",
+      "invoices": "चालान",
+      "leaves": "छुट्टियां",
+      "my-tickets": "मेरे टिकट",
+      "name": "नाम",
+      "organizations": "संगठन",
+      "organizations copy": "संगठन कॉपी",
+      "process": "प्रक्रिया",
+      "projects": "परियोजनाएँ",
+      "service-assets": "सेवा संपत्तियां",
+      "service-categories": "सेवा श्रेणियाँ",
+      "service-contracts": "सेवा अनुबंध",
+      "service-offerings": "सेवा प्रस्ताव",
+      "service-reports": "सेवा रिपोर्ट",
+      "service-types": "सेवा प्रकार",
+      "settings": "सेटिंग्स",
+      "subscriptions": "सदस्यताएँ",
+      "support": "समर्थन",
+      "teams": "टीमें",
+      "teams-users": "टीम उपयोगकर्ता",
+      "tickets": "टिकट",
+      "tracking": "ट्रैकिंग",
+      "user-settings": "उपयोगकर्ता सेटिंग्स",
+      "users": "उपयोगकर्ता",
+      "users copy": "उपयोगकर्ता कॉपी",
+      "users copy copy": "उपयोगकर्ता कॉपी कॉपी",
+      "users-view": "उपयोगकर्ता दृश्य",
+      "workflow": "कार्यप्रवाह",
+      "workforce": "कार्यबल"
+    }
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "translation": {
+    "auth": {
+      "login": "లాగిన్"
+    },
+    "subscriptions": {
+      "list": "సబ్‌స్క్రిప్షన్లు",
+      "limits": "పరిమితులు",
+      "moduleFeatures": "ఫీచర్లు",
+      "add": "జోడించు"
+    },
+    "teams": {
+      "add": "జోడించు"
+    },
+    "common": {
+      "_crud-page": "_CRUD పేజీ",
+      "_service-reports": "సేవా నివేదికలు",
+      "_users-dyn": "వినియోగదారులు డైన్",
+      "actions": "చర్యలు",
+      "active": "యాక్టివ్",
+      "add": "జోడించు",
+      "admin": "నిర్వాహకుడు",
+      "analytics": "అనలిటిక్స్",
+      "businesses": "వ్యాపారాలు",
+      "client-contacts": "క్లయింట్ కాంటాక్ట్‌లు",
+      "clients": "క్లయింట్‌లు",
+      "config": "కాన్ఫిగ్",
+      "contracts": "ఒప్పందాలు",
+      "createdAt": "సృష్టించబడింది",
+      "dashboard": "డాష్‌బోర్డ్",
+      "fsm": "FSM",
+      "invoices": "ఇన్‌వాయిస్‌లు",
+      "leaves": "సెలవులు",
+      "my-tickets": "నా టిక్కెట్‌లు",
+      "name": "పేరు",
+      "organizations": "సంస్థలు",
+      "organizations copy": "సంస్థలు కాపీ",
+      "process": "ప్రక్రియ",
+      "projects": "ప్రాజెక్టులు",
+      "service-assets": "సేవా ఆస్తులు",
+      "service-categories": "సేవా విభాగాలు",
+      "service-contracts": "సేవా ఒప్పందాలు",
+      "service-offerings": "సేవా ఆఫరింగ్‌లు",
+      "service-reports": "సేవా నివేదికలు",
+      "service-types": "సేవా రకాలు",
+      "settings": "సెట్టింగ్‌లు",
+      "subscriptions": "సబ్‌స్క్రిప్షన్లు",
+      "support": "మద్దతు",
+      "teams": "టీమ్‌లు",
+      "teams-users": "టీమ్ వినియోగదారులు",
+      "tickets": "టిక్కెట్‌లు",
+      "tracking": "ట్రాకింగ్",
+      "user-settings": "వినియోగదారు సెట్టింగ్‌లు",
+      "users": "వినియోగదారులు",
+      "users copy": "వినియోగదారులు కాపీ",
+      "users copy copy": "వినియోగదారులు కాపీ కాపీ",
+      "users-view": "వినియోగదారుల వీక్షణ",
+      "workflow": "వర్క్‌ఫ్లో",
+      "workforce": "కార్యబలం"
+    }
+  }
+}

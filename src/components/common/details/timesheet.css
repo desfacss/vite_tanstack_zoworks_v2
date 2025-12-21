@@ -1,0 +1,73 @@
+.sticky-left {
+    position: sticky !important; 
+    left: 0;
+    z-index: 3;
+    background: #f7f7f7;
+    /* background: #fff; */
+    box-shadow: 1px 0 4px rgba(126, 126, 126, 0.1);
+}
+
+.sticky-right {
+    position: sticky !important; 
+    right: 0;
+    z-index: 3;
+    background: #f7f7f7;
+    /* background: #fff; */
+    box-shadow: -1px 0 4px rgba(126, 126, 126, 0.1);
+}
+
+.table-summary-row {
+    background-color: #f7f7f7;
+    font-weight: bold;
+}
+
+.table-summary-row {
+    padding: 25px !important;
+    /* font-weight: bold; */
+}
+
+/* .user-total {
+    background-color: #f4f4f4; 
+    font-weight: bold; 
+} */
+
+/* General styles for print media */
+@media print {
+    .sticky-left, .sticky-right {
+        position: static !important; /* Reset sticky positioning for print */
+        z-index: auto !important;   /* Remove z-index effect */
+        background: transparent !important; /* Optional: Remove background colors */
+        box-shadow: none !important; /* Remove shadows */
+    }
+
+    .table-summary-row {
+        background-color: transparent !important; /* Remove background for print clarity */
+        font-weight: normal !important; /* Adjust font weight for readability */
+    }
+
+    .table-summary-row {
+        padding: 25px !important; /* Retain padding if necessary for print alignment */
+    }
+
+    /* Uncomment if you want specific user total styling for print */
+    /*
+    .user-total {
+        background-color: transparent !important; 
+        font-weight: normal !important; 
+    }
+    */
+}
+
+@media print {
+    /* .ant-table {
+      font-size: 10px; /* Reduce font size */
+    /* } */
+    /* .vertical-header {
+      writing-mode: vertical-lr; /* Rotate headers vertically */
+      /* transform: rotate(180deg); Adjust vertical orientation */
+      /* text-align: left; */
+    /* } */
+    .ant-table-content {
+      overflow: visible !important; /* Ensure all columns show up */
+    }
+  }

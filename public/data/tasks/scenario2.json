@@ -1,0 +1,217 @@
+{
+  "scenario": {
+    "id": "goal_critical_project_B",
+    "name": "Critical Deadline: Project B"
+  },
+  "events": [
+    {
+      "id": "taskA1",
+      "title": "Develop Landing Page",
+      "start": "2025-07-21T08:00:00",
+      "end": "2025-07-21T15:00:00",
+      "backgroundColor": "#45B7D1",
+      "borderColor": "#45B7D1",
+      "extendedProps": {
+        "project_id": "projA",
+        "project_name": "projA",
+        "resource_names": [
+          "Alex"
+        ]
+      }
+    },
+    {
+      "id": "taskA2",
+      "title": "Backend Integration",
+      "start": "2025-07-21T15:00:00",
+      "end": "2025-07-22T10:00:00",
+      "backgroundColor": "#45B7D1",
+      "borderColor": "#45B7D1",
+      "extendedProps": {
+        "project_id": "projA",
+        "project_name": "projA",
+        "resource_names": [
+          "Alex"
+        ]
+      }
+    },
+    {
+      "id": "taskA3",
+      "title": "CNC Part Production",
+      "start": "2025-07-22T10:00:00",
+      "end": "2025-07-22T20:00:00",
+      "backgroundColor": "#45B7D1",
+      "borderColor": "#45B7D1",
+      "extendedProps": {
+        "project_id": "projA",
+        "project_name": "projA",
+        "resource_names": [
+          "Alex"
+        ]
+      }
+    },
+    {
+      "id": "taskA4_testing",
+      "title": "Website Testing",
+      "start": "2025-07-23T08:00:00",
+      "end": "2025-07-23T20:00:00",
+      "backgroundColor": "#45B7D1",
+      "borderColor": "#45B7D1",
+      "extendedProps": {
+        "project_id": "projA",
+        "project_name": "projA",
+        "resource_names": [
+          "Alex"
+        ]
+      }
+    },
+    {
+      "id": "taskB1a",
+      "title": "App UI Wireframing Part 1",
+      "start": "2025-07-21T08:00:00",
+      "end": "2025-07-22T12:00:00",
+      "backgroundColor": "#45B7D1",
+      "borderColor": "#45B7D1",
+      "extendedProps": {
+        "project_id": "projB_new",
+        "project_name": "projB_new",
+        "resource_names": [
+          "Diana"
+        ]
+      }
+    },
+    {
+      "id": "taskB1b",
+      "title": "App UI Wireframing Part 2",
+      "start": "2025-07-22T12:00:00",
+      "end": "2025-07-23T16:00:00",
+      "backgroundColor": "#45B7D1",
+      "borderColor": "#45B7D1",
+      "extendedProps": {
+        "project_id": "projB_new",
+        "project_name": "projB_new",
+        "resource_names": [
+          "Diana"
+        ]
+      }
+    },
+    {
+      "id": "taskB2_prototype_dev",
+      "title": "Prototype Development (Coding)",
+      "start": "2025-07-23T16:00:00",
+      "end": "2025-07-26T20:00:00",
+      "backgroundColor": "#45B7D1",
+      "borderColor": "#45B7D1",
+      "extendedProps": {
+        "project_id": "projB_new",
+        "project_name": "projB_new",
+        "resource_names": [
+          "Bob"
+        ]
+      }
+    },
+    {
+      "id": "taskB3_3d_print",
+      "title": "3D Print Model",
+      "start": "2025-07-23T16:00:00",
+      "end": "2025-07-24T20:00:00",
+      "backgroundColor": "#45B7D1",
+      "borderColor": "#45B7D1",
+      "extendedProps": {
+        "project_id": "projB_new",
+        "project_name": "projB_new",
+        "resource_names": []
+      }
+    },
+    {
+      "id": "taskB4_final_review",
+      "title": "Final Design Review",
+      "start": "2025-07-26T16:00:00",
+      "end": "2025-07-26T20:00:00",
+      "backgroundColor": "#45B7D1",
+      "borderColor": "#45B7D1",
+      "extendedProps": {
+        "project_id": "projB_new",
+        "project_name": "projB_new",
+        "resource_names": [
+          "Alex"
+        ]
+      }
+    },
+    {
+      "id": "taskC1_data_analysis",
+      "title": "Market Data Analysis",
+      "start": "2025-07-24T08:00:00",
+      "end": "2025-07-25T11:00:00",
+      "backgroundColor": "#96CEB4",
+      "borderColor": "#96CEB4",
+      "extendedProps": {
+        "project_id": "projC_expansion",
+        "project_name": "projC_expansion",
+        "resource_names": [
+          "Alex"
+        ]
+      }
+    },
+    {
+      "id": "taskC2_report_gen",
+      "title": "Generate Report",
+      "start": "2025-07-25T11:00:00",
+      "end": "2025-07-26T15:00:00",
+      "backgroundColor": "#96CEB4",
+      "borderColor": "#96CEB4",
+      "extendedProps": {
+        "project_id": "projC_expansion",
+        "project_name": "projC_expansion",
+        "resource_names": [
+          "Alex"
+        ]
+      }
+    },
+    {
+      "id": "taskC3_prototyping_v2",
+      "title": "Advanced Prototype Design",
+      "start": "2025-07-27T08:00:00",
+      "end": "2025-07-29T09:00:00",
+      "backgroundColor": "#96CEB4",
+      "borderColor": "#96CEB4",
+      "extendedProps": {
+        "project_id": "projC_expansion",
+        "project_name": "projC_expansion",
+        "resource_names": [
+          "Diana",
+          "Bob"
+        ]
+      }
+    },
+    {
+      "id": "taskC4_final_presentation",
+      "title": "Prepare Final Presentation",
+      "start": "2025-07-29T09:00:00",
+      "end": "2025-07-29T19:00:00",
+      "backgroundColor": "#96CEB4",
+      "borderColor": "#96CEB4",
+      "extendedProps": {
+        "project_id": "projC_expansion",
+        "project_name": "projC_expansion",
+        "resource_names": [
+          "Diana"
+        ]
+      }
+    }
+  ],
+  "summary": {
+    "status": "OPTIMAL",
+    "notes": "Optimal schedule found.",
+    "project_completion_date": "2025-07-29 19:00",
+    "total_project_duration_days": 9,
+    "resource_utilization": {
+      "overall_worker_utilization_percent": 62.65432098765432,
+      "overall_machine_utilization_percent": 12.037037037037036
+    },
+    "milestone_adherence": {
+      "met": 13,
+      "missed": 0
+    },
+    "unscheduled_tasks_count": 0
+  }
+}

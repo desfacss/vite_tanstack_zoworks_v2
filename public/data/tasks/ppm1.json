@@ -1,0 +1,419 @@
+{
+    "workflow_name": "Preventive Maintenance Project",
+    "description": "Defines the lifecycle and automation rules for managing Preventive Maintenance (PPM) projects from scheduling to completion. Includes team-based roles, PERT time estimates, automation rules, and aspirational metrics for each step.",
+    "start_state": "PPM_SCHEDULED",
+    "stages": [
+      {
+        "id": "PPM_SCHEDULED",
+        "name": "Scheduled",
+        "raci": {
+          "informed": [
+            {
+              "id": "Operations Manager",
+              "type": "role"
+            }
+          ],
+          "consulted": [
+            {
+              "id": "Maintenance Planner",
+              "type": "role"
+            }
+          ],
+          "accountable": [
+            {
+              "id": "director_of_ppm_lead",
+              "type": "hierarchical_context"
+            }
+          ],
+          "responsible": [
+            {
+              "id": "PPM Team Lead",
+              "type": "role"
+            }
+          ]
+        },
+        "sequence": 1,
+        "pert_time": {
+          "optimistic_hours": 1,
+          "most_likely_hours": 2,
+          "pessimistic_hours": 4
+        },
+        "description": "PPM cycle is scheduled with team and start date.",
+        "display_label": "Scheduled",
+        "aspirational_metrics": {
+          "target_cost_usd": 20,
+          "target_time_hours": 1.5
+        },
+        "system_status_category": "SCHEDULED",
+        "required_skills": ["planning", "scheduling"]
+      },
+      {
+        "id": "PPM_IN_PROGRESS",
+        "name": "In Progress",
+        "raci": {
+          "informed": [],
+          "consulted": [],
+          "accountable": [
+            {
+              "id": "manager_of_ppm_lead",
+              "type": "hierarchical_context"
+            }
+          ],
+          "responsible": [
+            {
+              "id": "Field Technician Team",
+              "type": "team"
+            }
+          ]
+        },
+        "sequence": 2,
+        "pert_time": {
+          "optimistic_hours": 40,
+          "most_likely_hours": 60,
+          "pessimistic_hours": 80
+        },
+        "description": "Team is servicing assets.",
+        "display_label": "In Progress",
+        "aspirational_metrics": {
+          "target_cost_usd": 500,
+          "target_time_hours": 60
+        },
+        "system_status_category": "IN_PROGRESS",
+        "required_skills": ["HVAC", "Electrical", "Plumbing", "Firefighting"],
+        "dependencies": [
+          {
+            "task_id": "T_START_PPM",
+            "type": "FS",
+            "lag_hours": 0
+          }
+        ]
+      },
+      {
+        "id": "PPM_COMPLETED",
+        "name": "Completed",
+        "raci": {
+          "informed": [
+            {
+              "id": "Client Manager",
+              "type": "role"
+            }
+          ],
+          "consulted": [],
+          "accountable": [
+            {
+              "id": "manager_of_ppm_lead",
+              "type": "hierarchical_context"
+            }
+          ],
+          "responsible": [
+            {
+              "id": "QA / Supervisor",
+              "type": "role"
+            }
+          ]
+        },
+        "sequence": 3,
+        "pert_time": {
+          "optimistic_hours": 2,
+          "most_likely_hours": 4,
+          "pessimistic_hours": 6
+        },
+        "description": "All assets have been serviced and verified.",
+        "display_label": "Completed",
+        "aspirational_metrics": {
+          "target_cost_usd": 30,
+          "target_time_hours": 3
+        },
+        "system_status_category": "CLOSED_WON",
+        "dependencies": [
+          {
+            "task_id": "T_COMPLETE_PPM",
+            "type": "FS",
+            "lag_hours": 0
+          }
+        ]
+      },
+      {
+        "id": "JUNK_PPM",
+        "name": "Junk PPM",
+        "sequence": 4,
+        "description": "PPM project is invalid or canceled.",
+        "display_label": "Junk PPM",
+        "system_status_category": "CLOSED_LOST"
+      }
+    ],
+    "transitions": [
+      {
+        "id": "T_SCHEDULE_PPM",
+        "raci": {
+          "informed": [
+            {
+              "id": "Operations Manager",
+              "type": "role"
+            }
+          ],
+          "consulted": [
+            {
+              "id": "Maintenance Planner",
+              "type": "role"
+            }
+          ],
+          "accountable": [
+            {
+              "id": "director_of_ppm_lead",
+              "type": "hierarchical_context"
+            }
+          ],
+          "responsible": [
+            {
+              "id": "PPM Team Lead",
+              "type": "role"
+            }
+          ]
+        },
+        "action": "Schedule PPM Cycle",
+        "trigger": "manual",
+        "to_state": "PPM_SCHEDULED",
+        "pert_time": {
+          "optimistic_hours": 0.5,
+          "most_likely_hours": 1,
+          "pessimistic_hours": 2
+        },
+        "automation": {
+          "type": "notify_user",
+          "recipients": ["{{ppm_team}}"],
+          "template_id": "PPM_SCHEDULED_NOTIFICATION"
+        },
+        "from_state": "PPM_SCHEDULED",
+        "aspirational_metrics": {
+          "target_cost_usd": 5,
+          "target_time_hours": 0.75
+        },
+        "required_skills": ["scheduling"],
+        "dependencies": [
+          {
+            "task_id": "PPM_SCHEDULED",
+            "type": "FS",
+            "lag_hours": 0
+          }
+        ]
+      },
+      {
+        "id": "T_START_PPM",
+        "raci": {
+          "informed": [],
+          "consulted": [],
+          "accountable": [
+            {
+              "id": "manager_of_ppm_lead",
+              "type": "hierarchical_context"
+            }
+          ],
+          "responsible": [
+            {
+              "id": "Field Technician Team",
+              "type": "team"
+            }
+          ]
+        },
+        "action": "Start PPM Execution",
+        "trigger": "manual",
+        "to_state": "PPM_IN_PROGRESS",
+        "pert_time": {
+          "optimistic_hours": 0.5,
+          "most_likely_hours": 1,
+          "pessimistic_hours": 2
+        },
+        "automation": {
+          "type": "update_field",
+          "field": "start_time",
+          "value_expression": "{{current_timestamp}}"
+        },
+        "from_state": "PPM_SCHEDULED",
+        "aspirational_metrics": {
+          "target_cost_usd": 10,
+          "target_time_hours": 1
+        },
+        "required_skills": ["field_execution"],
+        "dependencies": [
+          {
+            "task_id": "PPM_SCHEDULED",
+            "type": "FS",
+            "lag_hours": 0
+          }
+        ]
+      },
+      {
+        "id": "T_COMPLETE_PPM",
+        "raci": {
+          "informed": [
+            {
+              "id": "Client Manager",
+              "type": "role"
+            }
+          ],
+          "consulted": [],
+          "accountable": [
+            {
+              "id": "manager_of_ppm_lead",
+              "type": "hierarchical_context"
+            }
+          ],
+          "responsible": [
+            {
+              "id": "QA / Supervisor",
+              "type": "role"
+            }
+          ]
+        },
+        "action": "Mark as Completed",
+        "trigger": "manual",
+        "to_state": "PPM_COMPLETED",
+        "pert_time": {
+          "optimistic_hours": 0.5,
+          "most_likely_hours": 1,
+          "pessimistic_hours": 2
+        },
+        "automation": {
+          "type": "generate_service_reports",
+          "recipients": ["{{client_manager}}"],
+          "template_id": "PPM_COMPLETED_REPORT"
+        },
+        "from_state": "PPM_IN_PROGRESS",
+        "aspirational_metrics": {
+          "target_cost_usd": 15,
+          "target_time_hours": 1
+        },
+        "required_skills": ["qa_verification"],
+        "dependencies": [
+          {
+            "task_id": "PPM_IN_PROGRESS",
+            "type": "FS",
+            "lag_hours": 0
+          }
+        ]
+      },
+      {
+        "id": "T_MARK_JUNK",
+        "raci": {
+          "informed": [],
+          "consulted": [],
+          "accountable": [
+            {
+              "id": "manager_of_ppm_lead",
+              "type": "hierarchical_context"
+            }
+          ],
+          "responsible": [
+            {
+              "id": "Field Technician Team",
+              "type": "team"
+            }
+          ]
+        },
+        "action": "Mark as Junk PPM",
+        "trigger": "manual",
+        "to_state": "JUNK_PPM",
+        "pert_time": {
+          "optimistic_hours": 0.05,
+          "most_likely_hours": 0.1,
+          "pessimistic_hours": 0.2
+        },
+        "automation": {
+          "type": "archive_record"
+        },
+        "from_state": [
+          "PPM_SCHEDULED",
+          "PPM_IN_PROGRESS"
+        ],
+        "aspirational_metrics": {
+          "target_cost_usd": 0.5,
+          "target_time_hours": 0.1
+        }
+      }
+    ],
+    "automation_rules": [
+      {
+        "id": "AR_AUTO_GENERATE_SUBTASKS",
+        "name": "Auto-Generate Subtasks for All Assets",
+        "action": {
+          "type": "generate_subtasks",
+          "target_entity": "service_reports",
+          "target_id_field": "asset_id"
+        },
+        "trigger_event": "state_entry",
+        "to_state": "PPM_SCHEDULED",
+        "delay_seconds": 0,
+        "condition": {
+          "rule": "{{ppm.total_assets}} > 0",
+          "type": "expression",
+          "description": "Only generate subtasks if assets exist."
+        }
+      },
+      {
+        "id": "AR_GENERATE_SERVICE_REPORTS",
+        "name": "Generate Service Reports for All Assets",
+        "action": {
+          "type": "generate_service_reports",
+          "target_entity": "service_reports",
+          "target_id_field": "asset_id"
+        },
+        "trigger_event": "state_exit",
+        "to_state": "PPM_COMPLETED",
+        "delay_seconds": 0
+      },
+      {
+        "id": "AR_NOTIFY_CLIENT",
+        "name": "Notify Client of Completion",
+        "action": {
+          "type": "send_email",
+          "recipients": ["{{client_manager}}"],
+          "template_id": "PPM_COMPLETED_NOTIFICATION"
+        },
+        "trigger_event": "state_exit",
+        "to_state": "PPM_COMPLETED",
+        "delay_seconds": 0
+      },
+      {
+        "id": "AR_ESCALATE_IF_DELAYED",
+        "name": "Escalate if PPM is Delayed",
+        "action": {
+          "type": "notify_user_group",
+          "group": "maintenance_managers",
+          "message": "PPM project '{{ppm.project_name}}' is delayed beyond scheduled date."
+        },
+        "from_state": "PPM_SCHEDULED",
+        "trigger_event": "time_elapsed_in_state",
+        "time_threshold_days": 2,
+        "delay_seconds": 0
+      }
+    ],
+    "initial_metadata": {
+      "total_assets": 100,
+      "average_time_per_asset_hours": 0.5,
+      "assigned_team": "HVAC Team A",
+      "start_date": "{{current_date}}",
+      "end_date": "{{current_date + 2 days}}",
+      "contact_attempts": 0,
+      "last_contact_date": null,
+      "completion_date": null,
+      "category_avg_time": {
+        "HVAC": 0.5,
+        "Electrical": 0.3,
+        "Plumbing": 0.4,
+        "Firefighting": 0.6
+      },
+      "category_avg_cost": {
+        "HVAC": 50,
+        "Electrical": 30,
+        "Plumbing": 40,
+        "Firefighting": 60
+      }
+    },
+    "context_variables": {
+      "ppm": "current_entity",
+      "ppm_team": "ppm.assigned_team",
+      "client_manager": "organization.client_manager_id",
+      "total_hours": "ppm.total_assets * ppm.average_time_per_asset_hours"
+    }
+}

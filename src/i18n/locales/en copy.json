@@ -1,0 +1,58 @@
+{
+  "translation": {
+    "auth": {
+      "login": "Login"
+    },
+    "subscriptions": {
+      "list": "Subscriptions",
+      "limits": "Limits",
+      "moduleFeatures" : "Features",
+      "add" : "Add"
+    },
+    "teams": {
+      "add" : "Add" 
+    },    
+    "common": {
+      "name" : "Name",
+      "active" : "Active",
+      "createdAt" : "Created",
+      "actions": "Actions",
+      "add" : "Add",
+      "_crud-page": "_crud Page",
+      "_service-reports": "_service Reports",
+      "_users-dyn": "Users Dyn",
+      "admin": "Admin",
+      "analytics": "Analytics",
+      "businesses": "Businesses",
+      "client-contacts": "Client Contacts",
+      "clients": "Clients",
+      "config": "Config",
+      "contracts": "Contracts",
+      "dashboard": "Dashboard",
+      "fsm": "Fsm",
+      "leaves": "Leaves",
+      "my-tickets": "My Tickets",
+      "organizations": "Organizations",
+      "process": "Process",
+      "projects": "Projects",
+      "service-assets": "Service Assets",
+      "service-categories": "Service Categories",
+      "service-contracts": "Service Contracts",
+      "service-offerings": "Service Offerings",
+      "service-reports": "Service Reports",
+      "service-types": "Service Types",
+      "settings": "Settings",
+      "subscriptions": "Subscriptions",
+      "support": "Support",
+      "teams": "Teams",
+      "teams-users": "Teams Users",
+      "tickets": "Tickets",
+      "tracking": "Tracking",
+      "user-settings": "User Settings",
+      "users": "Users",
+      "users-view": "Users View",
+      "workflow": "Workflow",
+      "workforce": "Workforce"
+    }
+  }
+}

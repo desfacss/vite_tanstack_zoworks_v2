@@ -1,0 +1,160 @@
+flowchart TB
+    %% === 1. STYLING ===
+    classDef ticketStage fill:#E3F2FD,stroke:#1976D2,stroke-width:2px,color:#000
+    classDef taskStage fill:#FFF3E0,stroke:#F57C00,stroke-width:2px,color:#000
+    classDef reportStage fill:#F3E5F5,stroke:#7B1FA2,stroke-width:2px,color:#000
+    classDef invoiceStage fill:#E8F5E9,stroke:#388E3C,stroke-width:2px,color:#000
+    classDef automation fill:#FFEBEE,stroke:#C62828,stroke-width:2px,color:#000
+    classDef decision fill:#FFF9C4,stroke:#F9A825,stroke-width:2px,color:#000
+    classDef cancelled fill:#FFCDD2,stroke:#B71C1C,stroke-width:2px,color:#000
+
+    %% === 2. SWIMLANES & NODES ===
+    %% (Define all nodes within their swimlanes first)
+
+    %% TICKET (Main Lane)
+    subgraph TICKET["🎫 CUSTOMER SERVICE TICKET"]
+        direction TB
+
+        %% TICKET - Sub-lane A (Manual Prep)
+        subgraph A_TRIAGE["A: Triage & Prep (Manual)"]
+            direction TB
+            T_NEW([🆕 New]):::ticketStage
+            T_TRIAGE([🧐 Triage]):::ticketStage
+            T_AWAIT_INFO([ℹ️ Awaiting Info]):::ticketStage
+            T_ASSIGNED([🧑‍💼 Assigned]):::ticketStage
+            T_HOLD([⏸️ On Hold]):::ticketStage
+        end
+
+        %% TICKET - Sub-lane B (Service Delivery)
+        subgraph B_SERVICE["B: Service Delivery (Auto-Driven)"]
+            direction TB
+            T_SCHEDULED([📅 Scheduled]):::ticketStage
+            T_IN_PROGRESS([⚙️ In Progress]):::ticketStage
+            T_OBSERVING([👁️ Observing]):::ticketStage
+            T_PARTS([🔧 Parts Pending]):::ticketStage
+            T_INVOICED([💰 Invoiced]):::ticketStage
+        end
+
+        %% TICKET - Sub-lane C (Final States)
+        subgraph C_FINAL["C: Final States"]
+            direction TB
+            T_COMPLETED([✅ Completed]):::ticketStage
+            T_CANCELLED([❌ Cancelled]):::cancelled
+        end
+    end
+
+    %% TASK (Work Order)
+    subgraph TASK["🛠️ FIELD WORK ORDER"]
+        direction TB
+        W1([📝 Task Created]):::taskStage
+        W2([🚗 In Progress]):::taskStage
+        W3([✔️ Task Completed]):::taskStage
+        W4([🏭 Task Parts Needed]):::taskStage
+    end
+    
+    %% REPORT (Service Report)
+    subgraph REPORT["📊 SERVICE REPORT"]
+        direction TB
+        R1([📄 Report Submitted]):::reportStage
+        R2{{Report Status?}}:::decision
+    end
+    
+    %% INVOICE (Billing)
+    subgraph INVOICE["💵 BILLING & PAYMENT"]
+        direction TB
+        I1([📨 Invoice Generated]):::invoiceStage
+        I2([💳 Payment Received]):::invoiceStage
+    end
+    
+    %% AUTOMATION (Placed at bottom as requested)
+    subgraph AUTO["⏰ AUTOMATION & SLA (Below)"]
+        direction TB
+        A1([🚨 SLA: 4h Alert]):::automation
+        A2([⚠️ SLA: 24h Escalate]):::automation
+        A3([🔴 SLA: 48h Critical]):::automation
+        A4([⏱️ Obs. Timer]):::automation
+    end
+
+    %% Final End Nodes (outside all lanes)
+    END_COMPLETED([🏁 Process Complete])
+    END_CANCELLED([🏁 Process Cancelled])
+
+
+    %% === 3. PROCESS FLOWS (LINKS) ===
+    %% (Define all connections between nodes here)
+
+    %% Flow 1: Triage & Prep (Manual)
+    T_NEW -->|Manual| T_TRIAGE
+    T_TRIAGE -->|Manual: Request Info| T_AWAIT_INFO
+    T_AWAIT_INFO -->|Manual: Info Received| T_TRIAGE
+    T_TRIAGE -->|Manual: Assign Tech| T_ASSIGNED
+    T_ASSIGNED -->|Manual: Schedule Visit| T_SCHEDULED
+    T_TRIAGE -->|Manual: Assign & Schedule| T_SCHEDULED
+    
+    %% Flow 2: Hold & Cancel (Manual)
+    T_TRIAGE -->|Manual: Hold| T_HOLD
+    T_AWAIT_INFO -->|Manual: Hold| T_HOLD
+    T_ASSIGNED -->|Manual: Hold| T_HOLD
+    T_SCHEDULED -->|Manual: Hold| T_HOLD
+    T_HOLD -->|Manual: Resume| T_TRIAGE
+    
+    T_NEW -->|Manual: Cancel| T_CANCELLED
+    T_TRIAGE -->|Manual: Cancel| T_CANCELLED
+    T_AWAIT_INFO -->|Manual: Cancel| T_CANCELLED
+    T_ASSIGNED -->|Manual: Cancel| T_CANCELLED
+    T_SCHEDULED -->|Manual: Cancel| T_CANCELLED
+    T_HOLD -->|Manual: Cancel| T_CANCELLED
+    
+    %% Flow 3: Service Delivery (Automated)
+    T_SCHEDULED -.->|🤖 AUTO: Create Task| W1
+    T_SCHEDULED -.->|🤖 AUTO: Update Status| T_IN_PROGRESS
+    
+    W1 -->|Manual: Start Work| W2
+    W2 -->|Manual: Submit Report| R1
+    R1 --> R2
+    
+    %% Flow 4: Report Decision Routing (Automated)
+    R2 -->|"Status: resolved<br/>🤖 AUTO"| T_COMPLETED
+    R2 -.->|"🤖 AUTO: Close Task"| W3
+    
+    R2 -->|"Status: observation<br/>🤖 AUTO"| T_OBSERVING
+    R2 -.->|"🤖 AUTO: Close Task"| W3
+    
+    R2 -->|"Status: awaiting_parts<br/>🤖 AUTO"| T_PARTS
+    R2 -.->|"🤖 AUTO: Update Task"| W4
+    
+    R2 -->|"Status: paid_activity<br/>🤖 AUTO"| T_INVOICED
+    R2 -.->|"🤖 AUTO: Close Task"| W3
+    
+    %% Flow 5: Follow-up Loops (Auto/Manual)
+    T_OBSERVING -.->|🤖 AUTO: Start Timer| A4
+    A4 -.->|⏰ Timer Expires| T_COMPLETED
+    
+    T_PARTS -.->|🤖 AUTO: Schedule Follow-up| T_SCHEDULED
+    
+    T_INVOICED -.->|🤖 AUTO: Generate Invoice| I1
+    I1 -->|Manual: Payment| I2
+    I2 -.->|🤖 AUTO: Close| T_COMPLETED
+    
+    %% Flow 6: SLA Monitoring (Automated)
+    T_NEW -.->|4h| A1
+    T_TRIAGE -.->|4h| A1
+    T_ASSIGNED -.->|4h| A1
+    A1 -.->|Alert| T_TRIAGE
+    
+    T_NEW -.->|24h| A2
+    T_TRIAGE -.->|24h| A2
+    T_ASSIGNED -.->|24h| A2
+    A2 -.->|Escalate| T_TRIAGE
+    
+    T_NEW -.->|48h| A3
+    T_TRIAGE -.->|48h| A3
+    T_ASSIGNED -.->|48h| A3
+    A3 -.->|Critical| T_TRIAGE
+    
+    %% Flow 7: End States
+    T_COMPLETED --> END_COMPLETED
+    T_CANCELLED --> END_CANCELLED
+
+    %% Link styles for automation (0-indexed)
+    linkStyle 17,18,22,24,26,28,29,30,31,32,34,35,36,37,38,39,40,41,42,43,44,45,46 stroke:#C62828,stroke-width:2px,stroke-dasharray:5

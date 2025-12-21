@@ -1,0 +1,627 @@
+{
+  "workflow_name": "Quarterly Preventive Maintenance Project Cycle",
+  "description": "Defines the lifecycle and automation rules for a quarterly preventive maintenance project for MEP assets, from planning to closure. Each 'stage' represents a major project task or phase. Includes dynamic task creation, resource allocation (RACI, skills, teams, machines, materials), PERT, and aspirational metrics.",
+  "start_state": "PROJECT_INITIATION_AND_PLANNING",
+  "stages": [
+    {
+      "id": "PROJECT_INITIATION_AND_PLANNING",
+      "name": "Project Initiation & Planning",
+      "raci": {
+        "informed": [
+          {"id": "Finance Department", "type": "team"},
+          {"id": "Customer Service", "type": "team"}
+        ],
+        "consulted": [
+          {"id": "Maintenance Manager", "type": "role"}
+        ],
+        "accountable": [
+          {"id": "Project Manager", "type": "role"}
+        ],
+        "responsible": [
+          {"id": "Project Coordinator", "type": "role"}
+        ]
+      },
+      "sequence": 1,
+      "pert_time": {
+        "optimistic_hours": 8,
+        "most_likely_hours": 16,
+        "pessimistic_hours": 24
+      },
+      "description": "Define scope, allocate budget, identify assets for the quarter, schedule initial inspections.",
+      "display_label": "Planning Phase",
+      "required_skills": ["project_planning", "resource_allocation", "scheduling"],
+      "aspirational_metrics": {
+        "target_cost_usd": 500,
+        "target_time_hours": 12
+      },
+      "system_status_category": "NEW",
+      "automation_on_entry": [
+        {
+          "type": "create_sub_tasks_from_template",
+          "template_id": "PLANNING_SUB_TASK_TEMPLATE",
+          "data_source": {
+            "type": "fixed_list",
+            "items": [
+              {"name": "Verify Asset List for Q{{project.quarter}}", "description": "Confirm all contracted assets are included for this quarter's cycle.", "assignee_role": "Project Coordinator", "due_offset_days": 2, "task_id": "ST_VERIFY_ASSETS"},
+              {"name": "Allocate Budget for Q{{project.quarter}}", "description": "Ensure budget is secured and allocated for the current quarter's PM.", "assignee_role": "Finance Department", "due_offset_days": 3, "task_id": "ST_ALLOCATE_BUDGET"}
+            ]
+          },
+          "task_creation_rule": {
+            "name_template": "{{item.name}}",
+            "description_template": "{{item.description}}",
+            "assignee_role_template": "{{item.assignee_role}}",
+            "due_offset_days_template": "{{item.due_offset_days}}"
+          }
+        },
+        {
+          "type": "notify_user_group",
+          "group": "Project Management Team",
+          "message": "New PM cycle {{project.name}} initiated for {{project.quarter}}."
+        },
+        {
+          "type": "update_field",
+          "field": "planned_start_date",
+          "value_expression": "CURRENT_DATE()"
+        }
+      ]
+    },
+    {
+      "id": "INSPECTION_PREPARATION",
+      "name": "Inspection Preparation",
+      "raci": {
+        "informed": [
+          {"id": "Asset Managers", "type": "role"}
+        ],
+        "consulted": [
+          {"id": "Field Operations Manager", "type": "role"}
+        ],
+        "accountable": [
+          {"id": "Project Manager", "type": "role"}
+        ],
+        "responsible": [
+          {"id": "Project Coordinator", "type": "role"}
+        ]
+      },
+      "sequence": 2,
+      "pert_time": {
+        "optimistic_hours": 4,
+        "most_likely_hours": 8,
+        "pessimistic_hours": 16
+      },
+      "description": "Finalize inspection schedules, assign inspection teams, gather necessary tools and access.",
+      "display_label": "Inspection Prep",
+      "required_skills": ["logistics", "scheduling"],
+      "aspirational_metrics": {
+        "target_cost_usd": 200,
+        "target_time_hours": 6
+      },
+      "system_status_category": "IN_PROGRESS",
+      "automation_on_entry": [
+        {
+          "type": "create_sub_tasks_from_template",
+          "template_id": "ASSET_INSPECTION_TASK_TEMPLATE",
+          "data_source": {
+            "type": "query_assets_for_quarter",
+            "quarter_field": "current_project.quarter",
+            "status_filter": "active",
+            "asset_properties_to_fetch": ["id", "name", "type", "location", "customer_id", "required_inspection_skills", "required_inspection_tools"]
+          },
+          "task_creation_rule": {
+            "name_template": "Inspect {{item.name}} (ID: {{item.id}})",
+            "description_template": "Perform quarterly inspection for {{item.type}} as per checklist. Located at {{item.location}}.",
+            "assignee_logic": {
+              "type": "dynamic_role_assignment",
+              "role_mapping": {
+                "HVAC Asset": "HVAC Technician",
+                "Plumbing Asset": "Plumbing Technician",
+                "Electrical Asset": "Electrical Technician"
+              },
+              "default_role": "Field Technician"
+            },
+            "due_offset_days": 10,
+            "required_skills_from_data": "item.required_inspection_skills",
+            "required_tools_from_data": "item.required_inspection_tools",
+            "required_materials": [],
+            "expected_report_template": "Inspection Report Form V2.1",
+            "related_asset_id": "{{item.id}}",
+            "related_customer_id": "{{item.customer_id}}"
+          }
+        },
+        {
+          "type": "allocate_resources_for_stage",
+          "resource_type": "technician",
+          "quantity_expression": "COUNT_TASKS_GENERATED_BY('ASSET_INSPECTION_TASK_TEMPLATE')",
+          "skills_expression": "AGGREGATE_REQUIRED_SKILLS_FROM_GENERATED_TASKS('ASSET_INSPECTION_TASK_TEMPLATE')",
+          "assignment_method": "least_busy_qualified"
+        },
+        {
+          "type": "notify_user_group",
+          "group": "Field Technicians",
+          "message": "New inspection tasks assigned for Q{{project.quarter}}. Check your schedule and tool assignments."
+        }
+      ]
+    },
+    {
+      "id": "INSPECTION_EXECUTION",
+      "name": "Inspection Execution",
+      "raci": {
+        "informed": [],
+        "consulted": [],
+        "accountable": [
+          {"id": "Field Operations Manager", "type": "role"}
+        ],
+        "responsible": [
+          {"id": "Field Technician", "type": "role"}
+        ]
+      },
+      "sequence": 3,
+      "pert_time": {
+        "optimistic_hours": 40,
+        "most_likely_hours": 80,
+        "pessimistic_hours": 160
+      },
+      "description": "Field technicians perform all scheduled inspections, document findings using digital forms.",
+      "display_label": "Inspections In Progress",
+      "system_status_category": "IN_PROGRESS",
+      "automation_on_entry": [],
+      "automation_on_exit": [
+        {
+          "type": "generate_report_from_sub_tasks",
+          "report_type": "summary_inspection_findings",
+          "data_source": "ALL_SUB_TASKS_FROM_STAGE('INSPECTION_EXECUTION')",
+          "target_field": "project.inspection_summary_report"
+        }
+      ]
+    },
+    {
+      "id": "REPAIR_ASSESSMENT_AND_SCHEDULING",
+      "name": "Repair Assessment & Scheduling",
+      "raci": {
+        "informed": [
+          {"id": "Customer Service", "type": "team"}
+        ],
+        "consulted": [
+          {"id": "Procurement", "type": "team"}
+        ],
+        "accountable": [
+          {"id": "Maintenance Manager", "type": "role"}
+        ],
+        "responsible": [
+          {"id": "Project Coordinator", "type": "role"}
+        ]
+      },
+      "sequence": 4,
+      "pert_time": {
+        "optimistic_hours": 8,
+        "most_likely_hours": 24,
+        "pessimistic_hours": 48
+      },
+      "description": "Review inspection reports, identify necessary repairs, get quotes for parts, schedule repair work.",
+      "display_label": "Repair Planning",
+      "required_skills": ["technical_analysis", "cost_estimation", "vendor_management"],
+      "aspirational_metrics": {
+        "target_cost_usd": 300,
+        "target_time_hours": 18
+      },
+      "system_status_category": "IN_PROGRESS",
+      "automation_on_entry": [
+        {
+          "type": "create_sub_tasks_from_template",
+          "template_id": "ASSET_REPAIR_TASK_TEMPLATE",
+          "data_source": {
+            "type": "query_inspection_findings",
+            "project_id_filter": "{{project.id}}",
+            "condition": "finding.repair_required == true",
+            "properties_to_fetch": ["asset_id", "asset_name", "finding_description", "detailed_repair_plan", "required_repair_skills", "required_materials", "required_specialized_machines"]
+          },
+          "task_creation_rule": {
+            "name_template": "Repair {{item.asset_name}} (Issue: {{item.finding_description}})",
+            "description_template": "Address identified issue: {{item.detailed_repair_plan}}.",
+            "assignee_logic": {
+              "type": "dynamic_role_assignment",
+              "role_mapping": {
+                "HVAC Repair": "HVAC Technician",
+                "Plumbing Repair": "Plumbing Technician",
+                "Electrical Repair": "Electrical Technician"
+              },
+              "default_role": "Field Technician"
+            },
+            "due_offset_days": 14,
+            "required_skills_from_data": "item.required_repair_skills",
+            "required_materials_from_data": "item.required_materials",
+            "required_machines_from_data": "item.required_specialized_machines",
+            "expected_report_template": "Repair Completion Report Form V1.0",
+            "related_asset_id": "{{item.asset_id}}"
+          }
+        },
+        {
+          "type": "initiate_material_procurement_requests",
+          "condition_expression": "COUNT_TASKS_GENERATED_BY('ASSET_REPAIR_TASK_TEMPLATE') > 0 AND ANY(GENERATED_TASKS_BY('ASSET_REPAIR_TASK_TEMPLATE') WHERE required_materials.length > 0)",
+          "request_type": "Purchase Order",
+          "recipients": ["Procurement Team"],
+          "materials_expression": "AGGREGATE_REQUIRED_MATERIALS_FROM_GENERATED_TASKS('ASSET_REPAIR_TASK_TEMPLATE')"
+        },
+        {
+          "type": "notify_customer_of_repairs_needed",
+          "condition_expression": "COUNT_TASKS_GENERATED_BY('ASSET_REPAIR_TASK_TEMPLATE') > 0",
+          "template_id": "CUSTOMER_REPAIR_NOTIFICATION",
+          "recipients_expression": "{{project.customer_contacts}}",
+          "repair_summary_expression": "SUMMARIZE_REPAIRS_FROM_GENERATED_TASKS('ASSET_REPAIR_TASK_TEMPLATE')"
+        }
+      ]
+    },
+    {
+      "id": "REPAIR_EXECUTION",
+      "name": "Repair Execution",
+      "raci": {
+        "informed": [],
+        "consulted": [],
+        "accountable": [
+          {"id": "Field Operations Manager", "type": "role"}
+        ],
+        "responsible": [
+          {"id": "Field Technician", "type": "role"}
+        ]
+      },
+      "sequence": 5,
+      "pert_time": {
+        "optimistic_hours": 80,
+        "most_likely_hours": 160,
+        "pessimistic_hours": 320
+      },
+      "description": "Field technicians perform all scheduled repairs, ensure parts are available, and document completion.",
+      "display_label": "Repairs In Progress",
+      "system_status_category": "IN_PROGRESS",
+      "automation_on_entry": [],
+      "automation_on_exit": [
+        {
+          "type": "generate_report_from_sub_tasks",
+          "report_type": "summary_repair_findings",
+          "data_source": "ALL_SUB_TASKS_FROM_STAGE('REPAIR_EXECUTION')",
+          "target_field": "project.repair_summary_report"
+        }
+      ]
+    },
+    {
+      "id": "REPORTING_AND_INVOICING",
+      "name": "Reporting & Invoicing",
+      "raci": {
+        "informed": [
+          {"id": "Customer", "type": "external_party"},
+          {"id": "Sales Department", "type": "team"}
+        ],
+        "consulted": [
+          {"id": "Legal Department", "type": "team"}
+        ],
+        "accountable": [
+          {"id": "Project Manager", "type": "role"}
+        ],
+        "responsible": [
+          {"id": "Billing Specialist", "type": "role"}
+        ]
+      },
+      "sequence": 6,
+      "pert_time": {
+        "optimistic_hours": 4,
+        "most_likely_hours": 8,
+        "pessimistic_hours": 16
+      },
+      "description": "Compile comprehensive service reports, generate invoices for repairs (if applicable), send to customer, and provide customer feedback opportunity.",
+      "display_label": "Reporting & Billing",
+      "required_skills": ["report_writing", "billing", "customer_relations"],
+      "aspirational_metrics": {
+        "target_cost_usd": 150,
+        "target_time_hours": 6
+      },
+      "system_status_category": "PENDING_CUSTOMER_ACTION",
+      "automation_on_entry": [
+        {
+          "type": "generate_consolidated_service_report",
+          "data_sources": ["project.inspection_summary_report", "project.repair_summary_report"],
+          "output_format": "PDF",
+          "target_field": "project.final_service_report",
+          "template_id": "CONSOLIDATED_SERVICE_REPORT_TEMPLATE"
+        },
+        {
+          "type": "generate_invoice_for_repairs",
+          "condition_expression": "project.total_repairs_identified > 0",
+          "data_source": "project.repair_summary_report",
+          "target_field": "project.invoice",
+          "template_id": "REPAIR_INVOICE_TEMPLATE"
+        },
+        {
+          "type": "send_customer_service_report_and_invoice",
+          "recipients_expression": "{{project.customer_contacts}}",
+          "attachments_expression": "[{{project.final_service_report}}, {{project.invoice}}]",
+          "subject_template": "Quarterly MEP Service Report - Q{{project.quarter}} - {{project.customer_name}}"
+        },
+        {
+          "type": "send_customer_feedback_survey",
+          "survey_link_expression": "GENERATE_SURVEY_LINK({{project.id}})",
+          "recipients_expression": "{{project.customer_contacts}}",
+          "delay_hours": 1
+        }
+      ]
+    },
+    {
+      "id": "PROJECT_CLOSURE",
+      "name": "Project Closure",
+      "raci": {
+        "informed": [
+          {"id": "All Project Stakeholders", "type": "team"}
+        ],
+        "consulted": [],
+        "accountable": [
+          {"id": "Project Manager", "type": "role"}
+        ],
+        "responsible": [
+          {"id": "Project Coordinator", "type": "role"}
+        ]
+      },
+      "sequence": 7,
+      "pert_time": {
+        "optimistic_hours": 2,
+        "most_likely_hours": 4,
+        "pessimistic_hours": 8
+      },
+      "description": "Final review, archive project documents, close out all financial items, conduct post-project performance review.",
+      "display_label": "Project Closed",
+      "required_skills": ["project_management", "documentation", "financial_reconciliation"],
+      "aspirational_metrics": {
+        "target_cost_usd": 50,
+        "target_time_hours": 3
+      },
+      "system_status_category": "CLOSED_WON",
+      "automation_on_entry": [
+        {
+          "type": "archive_project_record",
+          "project_id": "{{project.id}}"
+        },
+        {
+          "type": "update_field",
+          "field": "actual_completion_date",
+          "value_expression": "CURRENT_DATE()"
+        },
+        {
+          "type": "conduct_post_project_review",
+          "project_id": "{{project.id}}",
+          "recipients": ["Project Manager", "Maintenance Manager"]
+        }
+      ]
+    },
+    {
+      "id": "PROJECT_CANCELED",
+      "name": "Project Canceled",
+      "sequence": 8,
+      "description": "The project was canceled for unforeseen reasons, potentially due to customer request or internal issues.",
+      "display_label": "Canceled",
+      "system_status_category": "CLOSED_LOST",
+      "automation_on_entry": [
+        {
+          "type": "notify_user_group",
+          "group": "Project Management Team",
+          "message": "Project {{project.name}} (ID: {{project.id}}) has been canceled. Reason: {{project.cancellation_reason}}."
+        },
+        {
+          "type": "update_field",
+          "field": "actual_completion_date",
+          "value_expression": "CURRENT_DATE()"
+        }
+      ]
+    }
+  ],
+  "transitions": [
+    {
+      "id": "T_PLANNING_COMPLETE",
+      "action": "Complete Planning",
+      "trigger": "manual",
+      "to_state": "INSPECTION_PREPARATION",
+      "from_state": "PROJECT_INITIATION_AND_PLANNING",
+      "condition": {
+        "rule": "ALL(GET_SUB_TASKS_FOR_STAGE('PROJECT_INITIATION_AND_PLANNING') WHERE status='Completed')",
+        "type": "expression",
+        "description": "All planning sub-tasks must be completed before proceeding to inspection preparation."
+      },
+      "raci": {
+        "responsible": [ {"id": "Project Coordinator", "type": "role"} ]
+      }
+    },
+    {
+      "id": "T_INSPECTION_PREP_COMPLETE",
+      "action": "Ready for Inspections",
+      "trigger": "manual",
+      "to_state": "INSPECTION_EXECUTION",
+      "from_state": "INSPECTION_PREPARATION",
+      "condition": {
+        "rule": "ALL(GET_SUB_TASKS_FOR_STAGE('INSPECTION_PREPARATION') WHERE status='Completed')",
+        "type": "expression",
+        "description": "All inspection preparation (individual inspection task generation) sub-tasks must be completed."
+      },
+      "raci": {
+        "responsible": [ {"id": "Project Coordinator", "type": "role"} ]
+      }
+    },
+    {
+      "id": "T_INSPECTIONS_COMPLETE",
+      "action": "All Inspections Done",
+      "trigger": "manual",
+      "to_state": "REPAIR_ASSESSMENT_AND_SCHEDULING",
+      "from_state": "INSPECTION_EXECUTION",
+      "condition": {
+        "rule": "ALL(GET_SUB_TASKS_FOR_STAGE('INSPECTION_EXECUTION') WHERE status='Completed')",
+        "type": "expression",
+        "description": "All individual asset inspection tasks must be completed."
+      },
+      "raci": {
+        "responsible": [ {"id": "Field Operations Manager", "type": "role"} ]
+      }
+    },
+    {
+      "id": "T_REPAIR_ASSESSMENT_COMPLETE",
+      "action": "Repair Scheduling Complete",
+      "trigger": "manual",
+      "to_state": "REPAIR_EXECUTION",
+      "from_state": "REPAIR_ASSESSMENT_AND_SCHEDULING",
+      "condition": {
+        "rule": "ALL(GET_SUB_TASKS_FOR_STAGE('REPAIR_ASSESSMENT_AND_SCHEDULING') WHERE status='Completed')",
+        "type": "expression",
+        "description": "All repair assessment and scheduling sub-tasks (including procurement) must be completed."
+      },
+      "raci": {
+        "responsible": [ {"id": "Project Coordinator", "type": "role"} ]
+      }
+    },
+    {
+      "id": "T_REPAIRS_COMPLETE",
+      "action": "All Repairs Done",
+      "trigger": "manual",
+      "to_state": "REPORTING_AND_INVOICING",
+      "from_state": "REPAIR_EXECUTION",
+      "condition": {
+        "rule": "ALL(GET_SUB_TASKS_FOR_STAGE('REPAIR_EXECUTION') WHERE status='Completed')",
+        "type": "expression",
+        "description": "All individual asset repair tasks must be completed."
+      },
+      "raci": {
+        "responsible": [ {"id": "Field Operations Manager", "type": "role"} ]
+      }
+    },
+    {
+      "id": "T_REPORTS_SENT",
+      "action": "Reports & Invoices Sent",
+      "trigger": "manual",
+      "to_state": "PROJECT_CLOSURE",
+      "from_state": "REPORTING_AND_INVOICING",
+      "condition": {
+        "rule": "({{project.customer_feedback_received}} == true OR NOW() > ADD_DAYS({{project.service_report_sent_date}}, 7))",
+        "type": "expression",
+        "description": "Customer feedback received or 7 days elapsed since service report sent (feedback timeout)."
+      },
+      "raci": {
+        "responsible": [ {"id": "Billing Specialist", "type": "role"} ]
+      }
+    },
+    {
+      "id": "T_CANCEL_PROJECT",
+      "action": "Cancel Project",
+      "trigger": "manual",
+      "to_state": "PROJECT_CANCELED",
+      "from_state": [
+        "PROJECT_INITIATION_AND_PLANNING",
+        "INSPECTION_PREPARATION",
+        "INSPECTION_EXECUTION",
+        "REPAIR_ASSESSMENT_AND_SCHEDULING",
+        "REPAIR_EXECUTION",
+        "REPORTING_AND_INVOICING"
+      ],
+      "raci": {
+        "responsible": [ {"id": "Project Manager", "type": "role"} ]
+      }
+    }
+  ],
+  "automation_rules": [
+    {
+      "id": "AR_AUTO_SET_ACTUAL_START_DATE",
+      "name": "Auto-set Actual Start Date",
+      "action": {
+        "type": "update_field",
+        "field": "actual_start_date",
+        "value_expression": "CURRENT_DATE()"
+      },
+      "from_state": "PROJECT_INITIATION_AND_PLANNING",
+      "delay_seconds": 0,
+      "trigger_event": "state_entry"
+    },
+    {
+      "id": "AR_ESCALATE_OVERDUE_INSPECTIONS",
+      "name": "Escalate Overdue Inspection Tasks",
+      "action": {
+        "type": "notify_user_group",
+        "group": "Field Operations Management",
+        "message": "URGENT: Project {{project.name}} - Q{{project.quarter}}: Multiple inspection tasks overdue in 'Inspection Execution' phase. Please review and re-assign if necessary. Overdue tasks: {{OVERDUE_TASKS_SUMMARY(GET_SUB_TASKS_FOR_STAGE('INSPECTION_EXECUTION'))}}"
+      },
+      "from_state": "INSPECTION_EXECUTION",
+      "delay_seconds": 0,
+      "trigger_event": "time_elapsed_in_state",
+      "time_threshold_days": 10,
+      "condition": {
+        "rule": "ANY(GET_SUB_TASKS_FOR_STAGE('INSPECTION_EXECUTION') WHERE status != 'Completed' AND due_date < CURRENT_DATE())",
+        "type": "expression",
+        "description": "Checks for any overdue sub-tasks within the Inspection Execution phase."
+      }
+    },
+    {
+      "id": "AR_REMIND_CUSTOMER_FEEDBACK",
+      "name": "Reminder for Customer Feedback",
+      "action": {
+        "type": "send_email",
+        "recipients_expression": "{{project.customer_contacts}}",
+        "template_id": "CUSTOMER_FEEDBACK_REMINDER",
+        "subject_template": "Reminder: Your Feedback on Q{{project.quarter}} Maintenance Service"
+      },
+      "from_state": "REPORTING_AND_INVOICING",
+      "delay_seconds": 0,
+      "trigger_event": "time_elapsed_in_state",
+      "time_threshold_days": 5,
+      "condition": {
+        "rule": "{{project.customer_feedback_received}} == false",
+        "type": "expression",
+        "description": "Only send reminder if feedback has not been received."
+      }
+    },
+    {
+      "id": "AR_ARCHIVE_COMPLETED_PROJECT",
+      "name": "Auto-Archive Completed Project",
+      "action": {
+        "type": "schedule_automation",
+        "target_entity": "project_instances",
+        "automation_type": "archive_record",
+        "target_id_field": "id"
+      },
+      "to_state": "PROJECT_CLOSURE",
+      "delay_seconds": 2592000,
+      "trigger_event": "state_entry",
+      "notes": "Archives project record 30 days after closure."
+    }
+  ],
+  "initial_metadata": {
+    "project_id": null,
+    "project_name": "Quarterly PM Cycle QX YYYY",
+    "customer_id": null,
+    "customer_name": null,
+    "customer_contacts": [],
+    "quarter": null,
+    "year": null,
+    "planned_start_date": null,
+    "actual_start_date": null,
+    "planned_end_date": null,
+    "actual_completion_date": null,
+    "total_assets_in_scope": 0,
+    "total_assets_inspected": 0,
+    "total_repairs_identified": 0,
+    "total_repairs_completed": 0,
+    "inspection_summary_report": null,
+    "repair_summary_report": null,
+    "final_service_report": null,
+    "invoice": null,
+    "customer_feedback_received": false,
+    "cancellation_reason": null,
+    "service_report_sent_date": null,
+    "sub_tasks": {}
+  },
+  "context_variables": {
+    "project": "current_entity",
+    "Project Manager": "project.project_manager_id",
+    "Project Coordinator": "project.project_coordinator_id",
+    "Maintenance Manager": "organization.maintenance_manager_id",
+    "Field Operations Manager": "organization.field_ops_manager_id",
+    "Field Technician": "organization.field_technician_pool",
+    "Billing Specialist": "organization.billing_specialist_id",
+    "Procurement Team": "organization.procurement_team_id",
+    "Customer Service": "organization.customer_service_team_id",
+    "Finance Department": "organization.finance_department_id",
+    "Asset Managers": "organization.asset_management_team_id",
+    "Legal Department": "organization.legal_department_id",
+    "All Project Stakeholders": "organization.all_project_stakeholders_group"
+  }
+}

@@ -1,0 +1,130 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light dark;
+  
+  /* Light theme variables */
+  --color-primary: theme('colors.blue.400');
+  --color-primary-light: theme('colors.blue.300');
+  --color-primary-dark: theme('colors.blue.500');
+  
+  --color-background: #f1f9ff; /* Main layout background */
+  --color-background-secondary: #f8f8f8; /* Sidebar background */
+  
+  --color-text: #212121;
+  --color-text-secondary: #757575;
+  
+  --color-border: rgba(208, 208, 208, 0.8); /* Matches AntD colorBorder */
+  --color-border-hover: rgba(192, 192, 192, 0.8); /* Slightly darker on hover */
+  
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+
+  /* Gradients */
+  --gradient-primary: linear-gradient(135deg, #40c4ff 0%, #0091ea 100%);
+  --gradient-background: radial-gradient(circle at top left, #E3F2FD 0%, #BBDEFB 50%, #D1C4E9 100%); /* Changed to circular gradient: light blue to subtle purple */
+  --gradient-card: linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.9) 100%); 
+}
+
+/* Dark theme variables */
+:root.dark {
+  --color-primary: theme('colors.blue.400');
+  --color-primary-light: theme('colors.blue.300');
+  --color-primary-dark: theme('colors.blue.500');
+  
+  --color-background: #0d1a26; /* Main layout background */
+  --color-background-secondary: #161B22; /* Sidebar background, slightly darker than main content */
+  
+  --color-text: #e0e0e0;
+  --color-text-secondary: #b0bec5;
+  
+  --color-border: rgba(74, 85, 104, 0.8); /* Matches AntD colorBorder */
+  --color-border-hover: rgba(90, 100, 120, 0.8); /* Slightly lighter on hover */
+  
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.25);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.3);
+
+  /* Gradients */
+  --gradient-primary: linear-gradient(135deg, #4fc3f7 0%, #0288d1 100%);
+  --gradient-background: linear-gradient(135deg, #0d1a26 0%, #1A232E 100%); /* Subtle gradient from layout to container background */
+  --gradient-card: linear-gradient(180deg, rgba(26, 35, 46, 0.95) 0%, rgba(26, 35, 46, 0.9) 100%); 
+}
+
+/* Base styles */
+body {
+  @apply transition-colors duration-300;
+  background-image: var(--gradient-background); /* Uses the updated gradient for overall background */
+  min-height: 100vh;
+}
+
+/* Enhanced component styles */
+.ant-btn-primary {
+  background-image: var(--gradient-primary);
+  border: none;
+  @apply shadow-md hover:shadow-lg transition-all duration-300;
+}
+
+.ant-card {
+  @apply transition-all duration-300;
+}
+
+/* .ant-card:hover {
+  transform: translateY(-2px);
+  @apply shadow-lg;
+} */
+
+.ant-menu-item.ant-menu-item-selected {
+  background: var(--gradient-primary); 
+  @apply text-white shadow-md; 
+}
+
+.ant-input, .ant-select-selector {
+  backdrop-filter: blur(10px); 
+  @apply transition-all duration-200;
+}
+
+.ant-input:focus, .ant-select-selector:focus {
+  outline: 2px solid var(--color-primary); 
+  outline-offset: 2px;
+  @apply shadow-md;
+}
+
+/* Table styles */
+.ant-table {
+  @apply bg-transparent backdrop-blur-sm transition-all duration-200;
+}
+
+.ant-table-thead > tr > th {
+  background: var(--color-background-secondary) !important; 
+  @apply border-[var(--color-border)] backdrop-blur-sm;
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  .ant-table {
+    @apply min-w-full overflow-x-auto;
+  }
+  
+  .ant-card {
+    @apply w-full;
+  }
+}
+
+/* Scrollbars */
+::-webkit-scrollbar {
+  @apply w-2 h-2;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--gradient-primary);
+  @apply rounded hover:bg-[var(--color-primary-dark)];
+}
+

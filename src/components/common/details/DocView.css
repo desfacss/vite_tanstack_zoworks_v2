@@ -1,0 +1,54 @@
+/* DocView.css */
+.doc-view-container {
+  padding: 40px;
+  background: #fff;
+  border: 1px solid #e8e8e8;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  font-family: Arial, sans-serif;
+  min-height: 80vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.doc-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.doc-header .doc-title {
+  margin: 0;
+  font-size: 24px;
+  color: #1890ff;
+}
+
+.doc-header .doc-subtitle {
+  color: #555;
+  font-size: 14px;
+}
+
+.doc-body {
+  flex-grow: 1;
+}
+
+.doc-group {
+  margin-bottom: 20px;
+}
+
+.doc-field {
+  margin-bottom: 8px;
+}
+
+.doc-label {
+  display: inline-block;
+  min-width: 100px; /* Aligns the values */
+}
+
+.doc-value {
+  color: #333;
+}
+
+.doc-footer {
+  text-align: center;
+  margin-top: 40px;
+  color: #888;
+}

@@ -1,0 +1,27 @@
+{
+  "modules": {
+    "crm": [
+      {
+        "filePath": "src/pages/crm/Contacts.tsx",
+        "routePath": "/crm/contacts",
+        "translationKey": "crm-contacts",
+        "key": "crm-contacts",
+        "submoduleKey": "crm-contacts"
+      }
+    ]
+  },
+  "root": [
+    {
+      "filePath": "src/pages/Dashboard.tsx",
+      "routePath": "/dashboard",
+      "translationKey": "dashboard",
+      "key": "dashboard"
+    },
+    {
+      "filePath": "src/pages/SamplePage.tsx",
+      "routePath": "/sample",
+      "translationKey": "sample",
+      "key": "sample"
+    }
+  ]
+}

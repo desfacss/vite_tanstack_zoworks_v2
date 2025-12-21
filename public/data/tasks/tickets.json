@@ -1,0 +1,506 @@
+{
+  "name": "Integrated Support Ticket Process",
+  "stages": [
+    {
+      "id": "NEW_TICKET",
+      "name": "New Ticket",
+      "pertTime": {
+        "mostLikelyHours": 0.1,
+        "optimisticHours": 0.05,
+        "pessimisticHours": 0.2
+      },
+      "sequence": 1,
+      "description": "Ticket created. System is auto-assigning to support and notifying the customer.",
+      "displayLabel": "New",
+      "automationOnEntry": [
+        {
+          "type": "log_activity",
+          "description": "Ticket created via {{ticket.source}}.",
+          "activityType": "Ticket Created"
+        },
+        {
+          "type": "send_email",
+          "templateId": "TICKET_RECEIVED_ACKNOWLEDGEMENT",
+          "recipientsExpression": "{{ticket.customer_contact_email}}"
+        },
+        {
+          "type": "auto_assign_user_to_field",
+          "field": "assigned_support_rep_id",
+          "userGroupId": "customer_support_team_uuid",
+          "assignmentRule": "round_robin"
+        }
+      ],
+      "aspirationalMetrics": {
+        "targetCostUsd": 2.5,
+        "targetTimeHours": 0.05
+      },
+      "resourceRequirements": [
+        {
+          "type": "system",
+          "skills": [
+            "automation_engine"
+          ]
+        }
+      ],
+      "systemStatusCategory": "NEW"
+    },
+    {
+      "id": "TRIAGED",
+      "name": "Triaged",
+      "pertTime": {
+        "mostLikelyHours": 0.25,
+        "optimisticHours": 0.1,
+        "pessimisticHours": 1
+      },
+      "sequence": 2,
+      "description": "Ticket assigned to a support rep for review. Rep verifies details and decides the next step.",
+      "displayLabel": "Triage",
+      "aspirationalMetrics": {
+        "targetCostUsd": 5,
+        "targetTimeHours": 0.1
+      },
+      "resourceRequirements": [
+        {
+          "type": "worker",
+          "skills": [
+            "ticket_triage",
+            "client_communication"
+          ]
+        }
+      ],
+      "systemStatusCategory": "IN_PROGRESS"
+    },
+    {
+      "id": "CUSTOMER_INPUT_AWAITED",
+      "name": "Customer Input Awaited",
+      "pertTime": {
+        "mostLikelyHours": 24,
+        "optimisticHours": 2,
+        "pessimisticHours": 72
+      },
+      "sequence": 3,
+      "description": "Waiting for specific information from the customer to proceed.",
+      "displayLabel": "Awaiting Customer",
+      "automationOnEntry": [
+        {
+          "type": "log_activity",
+          "description": "Request for information sent to customer.",
+          "activityType": "Awaiting Customer Input"
+        }
+      ],
+      "aspirationalMetrics": {
+        "targetCostUsd": 100,
+        "targetTimeHours": 2
+      },
+      "resourceRequirements": [],
+      "systemStatusCategory": "IN_PROGRESS"
+    },
+    {
+      "id": "ASSIGNED_TO_TECHNICIAN",
+      "name": "Assigned to Technician",
+      "pertTime": {
+        "mostLikelyHours": 0.5,
+        "optimisticHours": 0.1,
+        "pessimisticHours": 2
+      },
+      "sequence": 4,
+      "description": "A technician has been assigned. The visit now needs to be scheduled.",
+      "displayLabel": "Assigned (Tech)",
+      "automationOnEntry": [
+        {
+          "type": "notify_user",
+          "message": "You have been assigned to ticket {{ticket.id}}. Please coordinate a schedule.",
+          "templateId": "TECHNICIAN_ASSIGNED_TICKET",
+          "userIdExpression": "{{ticket.assigned_technician_id}}"
+        }
+      ],
+      "aspirationalMetrics": {
+        "targetCostUsd": 5,
+        "targetTimeHours": 0.1
+      },
+      "resourceRequirements": [
+        {
+          "type": "worker",
+          "skills": [
+            "dispatch_management"
+          ]
+        }
+      ],
+      "systemStatusCategory": "IN_PROGRESS"
+    },
+    {
+      "id": "SCHEDULED",
+      "name": "Scheduled",
+      "pertTime": {
+        "mostLikelyHours": 0.5,
+        "optimisticHours": 0.25,
+        "pessimisticHours": 1
+      },
+      "sequence": 5,
+      "description": "A visit is scheduled. A field work task is being created automatically.",
+      "displayLabel": "Scheduled",
+      "automationOnEntry": [
+        {
+          "type": "log_activity",
+          "description": "Visit scheduled for {{ticket.scheduled_start_time}}. Creating linked field task.",
+          "activityType": "Visit Scheduled"
+        },
+        {
+          "name": "Field Work for Ticket: {{ticket.id}}",
+          "type": "create_task",
+          "initialMetadata": {
+            "source_id": "{{ticket.id}}",
+            "source_type": "service_tickets",
+            "scheduled_start_time": "{{ticket.scheduled_start_time}}"
+          },
+          "workflowDefinitionId": "FIELD_WORK_ORDER_EXECUTION_WORKFLOW_ID",
+          "assigneeResourceExpression": "{{ticket.assigned_technician_id}}"
+        }
+      ],
+      "aspirationalMetrics": {
+        "targetCostUsd": 12.5,
+        "targetTimeHours": 0.25
+      },
+      "resourceRequirements": [
+        {
+          "type": "worker",
+          "skills": [
+            "scheduling"
+          ]
+        }
+      ],
+      "systemStatusCategory": "IN_PROGRESS"
+    },
+    {
+      "id": "WORK_IN_PROGRESS",
+      "name": "Work in Progress",
+      "pertTime": {
+        "mostLikelyHours": 4,
+        "optimisticHours": 2,
+        "pessimisticHours": 8
+      },
+      "sequence": 6,
+      "description": "A field task has been created and is being executed by the technician. This ticket is awaiting task completion.",
+      "displayLabel": "Work in Progress",
+      "aspirationalMetrics": {
+        "targetCostUsd": 100,
+        "targetTimeHours": 2
+      },
+      "resourceRequirements": [],
+      "systemStatusCategory": "IN_PROGRESS"
+    },
+    {
+      "id": "WORK_REPORT_SUBMITTED",
+      "name": "Work Report Submitted",
+      "pertTime": {
+        "mostLikelyHours": 0.2,
+        "optimisticHours": 0.1,
+        "pessimisticHours": 0.5
+      },
+      "sequence": 7,
+      "description": "The technician has submitted their work report from the field task.",
+      "displayLabel": "Report Submitted",
+      "automationOnEntry": [
+        {
+          "type": "log_activity",
+          "description": "Work report from linked task {{ticket.linked_task_id}} has been received.",
+          "activityType": "Task Report Submitted"
+        }
+      ],
+      "aspirationalMetrics": {
+        "targetCostUsd": 5,
+        "targetTimeHours": 0.1
+      },
+      "resourceRequirements": [
+        {
+          "type": "worker",
+          "skills": [
+            "review"
+          ]
+        }
+      ],
+      "systemStatusCategory": "IN_PROGRESS"
+    },
+    {
+      "id": "AWAITING_FEEDBACK",
+      "name": "Awaiting Feedback",
+      "pertTime": {
+        "mostLikelyHours": 24,
+        "optimisticHours": 1,
+        "pessimisticHours": 168
+      },
+      "sequence": 8,
+      "description": "Work is complete. Awaiting feedback from the customer before closing the ticket.",
+      "displayLabel": "Awaiting Feedback",
+      "automationOnEntry": [
+        {
+          "type": "send_email",
+          "templateId": "CUSTOMER_FEEDBACK_REQUEST",
+          "recipientsExpression": "{{ticket.customer_contact_email}}"
+        }
+      ],
+      "aspirationalMetrics": {
+        "targetCostUsd": 50,
+        "targetTimeHours": 1
+      },
+      "resourceRequirements": [],
+      "systemStatusCategory": "IN_PROGRESS"
+    },
+    {
+      "id": "COMPLETED",
+      "name": "Completed",
+      "pertTime": {
+        "mostLikelyHours": 0.1,
+        "optimisticHours": 0.1,
+        "pessimisticHours": 0.2
+      },
+      "sequence": 9,
+      "description": "The ticket is resolved and closed.",
+      "displayLabel": "Completed",
+      "automationOnEntry": [
+        {
+          "type": "log_activity",
+          "description": "Ticket successfully resolved and closed.",
+          "activityType": "Ticket Completed"
+        }
+      ],
+      "aspirationalMetrics": {
+        "targetCostUsd": 5,
+        "targetTimeHours": 0.1
+      },
+      "resourceRequirements": [],
+      "systemStatusCategory": "CLOSED_WON"
+    },
+    {
+      "id": "ON_HOLD",
+      "name": "On Hold",
+      "pertTime": {
+        "mostLikelyHours": 0,
+        "optimisticHours": 0,
+        "pessimisticHours": 0
+      },
+      "sequence": 10,
+      "description": "Ticket progress is paused.",
+      "displayLabel": "On Hold",
+      "aspirationalMetrics": {
+        "targetCostUsd": 0,
+        "targetTimeHours": 0
+      },
+      "resourceRequirements": [],
+      "systemStatusCategory": "IN_PROGRESS"
+    },
+    {
+      "id": "CANCELLED",
+      "name": "Cancelled",
+      "pertTime": {
+        "mostLikelyHours": 0,
+        "optimisticHours": 0,
+        "pessimisticHours": 0
+      },
+      "sequence": 11,
+      "description": "Ticket was cancelled before completion.",
+      "displayLabel": "Cancelled",
+      "aspirationalMetrics": {
+        "targetCostUsd": 0,
+        "targetTimeHours": 0
+      },
+      "resourceRequirements": [],
+      "systemStatusCategory": "CANCELLED"
+    }
+  ],
+  "version": "3.1",
+  "isActive": true,
+  "entityType": "service_tickets",
+  "description": "Manages a support ticket from creation, through triage and delegation to a field task, to final resolution. Includes multi-level SLA escalations for unscheduled tickets.",
+  "processType": "STATE_DRIVEN",
+  "transitions": [
+    {
+      "id": "T_FINISH_INTAKE",
+      "name": "Finish Intake",
+      "action": "Finish Intake",
+      "trigger": "automatic",
+      "toStateId": "TRIAGED",
+      "fromStateId": "NEW_TICKET"
+    },
+    {
+      "id": "T_AWAIT_CUSTOMER_INPUT",
+      "name": "Request Info",
+      "action": "Request Info",
+      "trigger": "manual",
+      "toStateId": "CUSTOMER_INPUT_AWAITED",
+      "fromStateId": "TRIAGED"
+    },
+    {
+      "id": "T_INFO_RECEIVED",
+      "name": "Information Received",
+      "action": "Info Received",
+      "trigger": "manual",
+      "toStateId": "TRIAGED",
+      "fromStateId": "CUSTOMER_INPUT_AWAITED"
+    },
+    {
+      "id": "T_ASSIGN_TECHNICIAN",
+      "name": "Assign Technician",
+      "action": "Assign Tech",
+      "trigger": "manual",
+      "condition": {
+        "rule": "{{ticket.assigned_technician_id}} IS NOT NULL",
+        "type": "expression"
+      },
+      "toStateId": "ASSIGNED_TO_TECHNICIAN",
+      "fromStateId": "TRIAGED"
+    },
+    {
+      "id": "T_SCHEDULE_FROM_ASSIGNED",
+      "name": "Schedule Visit",
+      "action": "Schedule",
+      "trigger": "manual",
+      "condition": {
+        "rule": "{{ticket.scheduled_start_time}} IS NOT NULL",
+        "type": "expression"
+      },
+      "toStateId": "SCHEDULED",
+      "fromStateId": "ASSIGNED_TO_TECHNICIAN"
+    },
+    {
+      "id": "T_SCHEDULE_FROM_TRIAGE",
+      "name": "Assign & Schedule",
+      "action": "Assign & Schedule",
+      "trigger": "manual",
+      "condition": {
+        "rule": "{{ticket.assigned_technician_id}} IS NOT NULL AND {{ticket.scheduled_start_time}} IS NOT NULL",
+        "type": "expression"
+      },
+      "toStateId": "SCHEDULED",
+      "fromStateId": "TRIAGED"
+    },
+    {
+      "id": "T_TASK_CREATED",
+      "name": "Move to In Progress",
+      "action": "Move to In Progress",
+      "trigger": "automatic",
+      "toStateId": "WORK_IN_PROGRESS",
+      "fromStateId": "SCHEDULED"
+    },
+    {
+      "id": "T_TASK_REPORT_RECEIVED",
+      "name": "Task Report Received",
+      "action": "Task Report Received",
+      "trigger": "event",
+      "condition": {
+        "rule": "{{event.type}} == 'task_report_submitted' AND {{event.source_task_id}} == {{ticket.linked_task_id}}",
+        "type": "expression"
+      },
+      "toStateId": "WORK_REPORT_SUBMITTED",
+      "fromStateId": "WORK_IN_PROGRESS"
+    },
+    {
+      "id": "T_REQUEST_FEEDBACK",
+      "name": "Request Feedback",
+      "action": "Request Feedback",
+      "trigger": "manual",
+      "toStateId": "AWAITING_FEEDBACK",
+      "fromStateId": "WORK_REPORT_SUBMITTED"
+    },
+    {
+      "id": "T_COMPLETE_TICKET",
+      "name": "Complete Ticket",
+      "action": "Complete",
+      "trigger": "manual",
+      "toStateId": "COMPLETED",
+      "fromStateId": [
+        "AWAITING_FEEDBACK",
+        "WORK_REPORT_SUBMITTED"
+      ]
+    },
+    {
+      "id": "T_HOLD_TICKET",
+      "name": "Put On Hold",
+      "action": "Hold",
+      "trigger": "manual",
+      "toStateId": "ON_HOLD",
+      "fromStateId": [
+        "TRIAGED",
+        "CUSTOMER_INPUT_AWAITED",
+        "ASSIGNED_TO_TECHNICIAN",
+        "SCHEDULED",
+        "AWAITING_FEEDBACK"
+      ]
+    },
+    {
+      "id": "T_CANCEL_TICKET",
+      "name": "Cancel Ticket",
+      "action": "Cancel",
+      "trigger": "manual",
+      "toStateId": "CANCELLED",
+      "fromStateId": [
+        "TRIAGED",
+        "CUSTOMER_INPUT_AWAITED",
+        "ASSIGNED_TO_TECHNICIAN",
+        "SCHEDULED",
+        "AWAITING_FEEDBACK",
+        "ON_HOLD"
+      ]
+    }
+  ],
+  "startStateId": "NEW_TICKET",
+  "automationRules": [
+    {
+      "id": "AR_ESCALATE_UNSCHEDULED_4H",
+      "name": "Escalate Unscheduled Ticket (4 Hours)",
+      "action": {
+        "type": "notify_user",
+        "message": "SLA Alert (4h): Ticket {{ticket.id}}, assigned to {{USER_NAME(ticket.assigned_support_rep_id)}}, requires scheduling.",
+        "userIdExpression": "{{ticket.assigned_support_rep_id.manager_id}}"
+      },
+      "stateId": [
+        "TRIAGED",
+        "ASSIGNED_TO_TECHNICIAN"
+      ],
+      "condition": {
+        "rule": "{{ticket.scheduled_start_time}} IS NULL",
+        "type": "expression"
+      },
+      "triggerEvent": "time_elapsed_in_state",
+      "timeThresholdHours": 4
+    },
+    {
+      "id": "AR_ESCALATE_UNSCHEDULED_24H",
+      "name": "Escalate Unscheduled Ticket to Branch Manager (24 Hours)",
+      "action": {
+        "type": "notify_role",
+        "message": "SLA Alert (24h): Ticket {{ticket.id}} has been unscheduled for 24 hours. Please ensure it is assigned and scheduled.",
+        "roleName": "Branch Manager"
+      },
+      "stateId": [
+        "TRIAGED",
+        "ASSIGNED_TO_TECHNICIAN"
+      ],
+      "condition": {
+        "rule": "{{ticket.scheduled_start_time}} IS NULL",
+        "type": "expression"
+      },
+      "triggerEvent": "time_elapsed_in_state",
+      "timeThresholdHours": 24
+    },
+    {
+      "id": "AR_ESCALATE_UNSCHEDULED_48H",
+      "name": "Escalate Unscheduled Ticket to Super Admin (48 Hours)",
+      "action": {
+        "type": "notify_role",
+        "message": "CRITICAL SLA BREACH (48h): Ticket {{ticket.id}} remains unscheduled for 48 hours. Immediate action required.",
+        "roleName": "superadmin"
+      },
+      "stateId": [
+        "TRIAGED",
+        "ASSIGNED_TO_TECHNICIAN"
+      ],
+      "condition": {
+        "rule": "{{ticket.scheduled_start_time}} IS NULL",
+        "type": "expression"
+      },
+      "triggerEvent": "time_elapsed_in_state",
+      "timeThresholdHours": 48
+    }
+  ]
+}

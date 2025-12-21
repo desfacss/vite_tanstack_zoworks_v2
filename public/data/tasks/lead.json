@@ -1,0 +1,908 @@
+{
+  "name": "B2B Lead Qualification Process",
+  "stages": [
+    {
+      "id": "NEW_LEAD",
+      "name": "New Lead",
+      "raci": {
+        "informed": [
+          {
+            "id": "CRM Administrator",
+            "type": "role"
+          }
+        ],
+        "consulted": [
+          {
+            "id": "Marketing Team",
+            "type": "team"
+          }
+        ],
+        "accountable": [
+          {
+            "id": "manager_of_lead_owner",
+            "type": "hierarchical_context"
+          }
+        ],
+        "responsible": [
+          {
+            "id": "Sales Representative",
+            "type": "role"
+          }
+        ]
+      },
+      "tiers": [
+        {
+          "name": "Standard",
+          "maxTimeHours": 24,
+          "notificationRules": [
+            {
+              "to": [
+                "responsible"
+              ],
+              "action": "send_reminder",
+              "atPercentComplete": 75
+            },
+            {
+              "to": [
+                "accountable"
+              ],
+              "onBreach": "escalate"
+            }
+          ]
+        },
+        {
+          "name": "Hot Lead",
+          "maxTimeHours": 2,
+          "notificationRules": [
+            {
+              "to": [
+                "responsible"
+              ],
+              "action": "send_reminder",
+              "atPercentComplete": 50
+            },
+            {
+              "to": [
+                "accountable",
+                "Sales Director"
+              ],
+              "onBreach": "escalate_immediately"
+            }
+          ]
+        }
+      ],
+      "pertTime": {
+        "mostLikelyHours": 0.5,
+        "optimisticHours": 0.25,
+        "pessimisticHours": 1
+      },
+      "sequence": 1,
+      "description": "Lead has just been created or imported. Requires initial assignment and contact.",
+      "displayLabel": "New",
+      "requiredSkills": [
+        "crm_data_entry"
+      ],
+      "automationOnEntry": [
+        {
+          "type": "update_field",
+          "field": "date_entered_new_lead",
+          "valueExpression": "CURRENT_DATE()"
+        },
+        {
+          "type": "log_activity",
+          "description": "Lead record created in the system.",
+          "activityType": "Lead Created"
+        }
+      ],
+      "aspirationalMetrics": {
+        "targetCostUsd": 2,
+        "targetTimeHours": 0.5
+      },
+      "systemStatusCategory": "NEW"
+    },
+    {
+      "id": "CONTACT_ATTEMPTED",
+      "name": "Contact Attempted",
+      "raci": {
+        "informed": [],
+        "consulted": [],
+        "accountable": [
+          {
+            "id": "manager_of_lead_owner",
+            "type": "hierarchical_context"
+          }
+        ],
+        "responsible": [
+          {
+            "id": "Sales Representative",
+            "type": "role"
+          }
+        ]
+      },
+      "tiers": [
+        {
+          "name": "Standard",
+          "maxTimeHours": 48,
+          "notificationRules": [
+            {
+              "to": [
+                "responsible"
+              ],
+              "action": "send_reminder",
+              "atPercentComplete": 75
+            },
+            {
+              "to": [
+                "accountable"
+              ],
+              "onBreach": "escalate"
+            }
+          ]
+        }
+      ],
+      "pertTime": {
+        "mostLikelyHours": 1,
+        "optimisticHours": 0.5,
+        "pessimisticHours": 2
+      },
+      "sequence": 2,
+      "description": "Initial attempt to contact the lead has been made.",
+      "displayLabel": "Contact Attempted",
+      "requiredSkills": [
+        "communication"
+      ],
+      "automationOnEntry": [
+        {
+          "type": "increment_field",
+          "field": "contact_attempts",
+          "value": 1
+        },
+        {
+          "type": "update_field",
+          "field": "last_contact_attempt_date",
+          "valueExpression": "CURRENT_DATE()"
+        }
+      ],
+      "aspirationalMetrics": {
+        "targetCostUsd": 3,
+        "targetTimeHours": 1
+      },
+      "systemStatusCategory": "IN_PROGRESS"
+    },
+    {
+      "id": "CONTACT_ESTABLISHED",
+      "name": "Contact Established",
+      "raci": {
+        "informed": [
+          {
+            "id": "Marketing Team",
+            "type": "team"
+          }
+        ],
+        "consulted": [],
+        "accountable": [
+          {
+            "id": "manager_of_lead_owner",
+            "type": "hierarchical_context"
+          }
+        ],
+        "responsible": [
+          {
+            "id": "Sales Representative",
+            "type": "role"
+          }
+        ]
+      },
+      "tiers": [
+        {
+          "name": "Standard",
+          "maxTimeHours": 72,
+          "notificationRules": [
+            {
+              "to": [
+                "responsible"
+              ],
+              "action": "send_reminder",
+              "atPercentComplete": 75
+            },
+            {
+              "to": [
+                "accountable"
+              ],
+              "onBreach": "escalate"
+            }
+          ]
+        }
+      ],
+      "pertTime": {
+        "mostLikelyHours": 0.5,
+        "optimisticHours": 0.25,
+        "pessimisticHours": 1
+      },
+      "sequence": 3,
+      "description": "Successful initial contact has been made with the lead.",
+      "displayLabel": "Contact Established",
+      "requiredSkills": [
+        "communication",
+        "discovery"
+      ],
+      "automationOnEntry": [
+        {
+          "type": "update_field",
+          "field": "last_contact_date",
+          "valueExpression": "CURRENT_DATE()"
+        },
+        {
+          "name": "Schedule Discovery Call",
+          "type": "create_task",
+          "pertTime": {
+            "mostLikelyHours": 0.5,
+            "optimisticHours": 0.25,
+            "pessimisticHours": 1
+          },
+          "description": "Schedule a discovery call with the contacted lead.",
+          "assigneeRole": "Sales Representative",
+          "dueOffsetDays": 2
+        }
+      ],
+      "aspirationalMetrics": {
+        "targetCostUsd": 2,
+        "targetTimeHours": 0.5
+      },
+      "systemStatusCategory": "IN_PROGRESS"
+    },
+    {
+      "id": "QUALIFICATION_IN_PROGRESS",
+      "name": "Qualification In Progress",
+      "raci": {
+        "informed": [
+          {
+            "id": "director_of_lead_owner",
+            "type": "hierarchical_context"
+          }
+        ],
+        "consulted": [
+          {
+            "id": "Product Specialist",
+            "type": "role"
+          }
+        ],
+        "accountable": [
+          {
+            "id": "manager_of_lead_owner",
+            "type": "hierarchical_context"
+          }
+        ],
+        "responsible": [
+          {
+            "id": "Sales Representative",
+            "type": "role"
+          }
+        ]
+      },
+      "tiers": [
+        {
+          "name": "Standard",
+          "maxTimeHours": 168,
+          "notificationRules": [
+            {
+              "to": [
+                "responsible"
+              ],
+              "action": "send_reminder",
+              "atPercentComplete": 50
+            },
+            {
+              "to": [
+                "accountable"
+              ],
+              "action": "send_reminder",
+              "atPercentComplete": 85
+            },
+            {
+              "to": [
+                "accountable",
+                "Sales Director"
+              ],
+              "onBreach": "escalate"
+            }
+          ]
+        }
+      ],
+      "pertTime": {
+        "mostLikelyHours": 4,
+        "optimisticHours": 2,
+        "pessimisticHours": 8
+      },
+      "sequence": 4,
+      "description": "Lead is undergoing the qualification process (BANT).",
+      "displayLabel": "Qualifying",
+      "requiredSkills": [
+        "sales",
+        "analytical_thinking"
+      ],
+      "automationOnEntry": [
+        {
+          "name": "Complete Qualification Checklist",
+          "type": "create_task",
+          "pertTime": {
+            "mostLikelyHours": 2,
+            "optimisticHours": 1,
+            "pessimisticHours": 4
+          },
+          "description": "Fill out the BANT qualification checklist in CRM.",
+          "assigneeRole": "Sales Representative",
+          "dueOffsetDays": 3
+        }
+      ],
+      "aspirationalMetrics": {
+        "targetCostUsd": 10,
+        "targetTimeHours": 4
+      },
+      "systemStatusCategory": "IN_PROGRESS"
+    },
+    {
+      "id": "QUALIFIED",
+      "name": "Qualified",
+      "raci": {
+        "informed": [
+          {
+            "id": "Account Executive Team",
+            "type": "team"
+          }
+        ],
+        "consulted": [],
+        "accountable": [
+          {
+            "id": "director_of_lead_owner",
+            "type": "hierarchical_context"
+          }
+        ],
+        "responsible": [
+          {
+            "id": "manager_of_lead_owner",
+            "type": "hierarchical_context"
+          }
+        ]
+      },
+      "pertTime": {
+        "mostLikelyHours": 0.25,
+        "optimisticHours": 0.1,
+        "pessimisticHours": 0.5
+      },
+      "sequence": 5,
+      "description": "Lead meets all qualification criteria and is ready for the sales process.",
+      "displayLabel": "Qualified",
+      "automationOnEntry": [
+        {
+          "type": "convert_lead_to_opportunity",
+          "leadIdField": "{{lead.id}}",
+          "opportunityOwnerExpression": "GET_NEXT_AVAILABLE_ACCOUNT_EXECUTIVE()"
+        },
+        {
+          "type": "notify_user_group",
+          "group": "Account Executive Team",
+          "message": "New qualified opportunity created from lead: '{{lead.company}}' (ID: {{lead.id}}). Assigned to {{opportunity.owner}}."
+        },
+        {
+          "type": "update_field",
+          "field": "qualification_date",
+          "valueExpression": "CURRENT_DATE()"
+        }
+      ],
+      "aspirationalMetrics": {
+        "targetCostUsd": 1,
+        "targetTimeHours": 0.25
+      },
+      "resourceRequirements": [
+        {
+          "type": "worker",
+          "skills": [
+            "sales",
+            "closing"
+          ],
+          "teamId": "account_executives_team_uuid"
+        }
+      ],
+      "systemStatusCategory": "CLOSED_WON"
+    },
+    {
+      "id": "NOT_QUALIFIED",
+      "name": "Not Qualified",
+      "pertTime": {
+        "mostLikelyHours": 0.25,
+        "optimisticHours": 0.1,
+        "pessimisticHours": 0.5
+      },
+      "sequence": 6,
+      "description": "Lead does not meet qualification criteria.",
+      "displayLabel": "Not Qualified",
+      "automationOnEntry": [
+        {
+          "type": "update_field",
+          "field": "disqualification_reason",
+          "valueExpression": "USER_INPUT()"
+        },
+        {
+          "type": "log_activity",
+          "description": "Lead marked as Not Qualified.",
+          "activityType": "Lead Disqualified"
+        }
+      ],
+      "aspirationalMetrics": {
+        "targetCostUsd": 1,
+        "targetTimeHours": 0.25
+      },
+      "systemStatusCategory": "CLOSED_LOST"
+    },
+    {
+      "id": "JUNK_LEAD",
+      "name": "Junk Lead",
+      "pertTime": {
+        "mostLikelyHours": 0.1,
+        "optimisticHours": 0.05,
+        "pessimisticHours": 0.2
+      },
+      "sequence": 7,
+      "description": "Lead is invalid, spam, or completely irrelevant.",
+      "displayLabel": "Junk",
+      "automationOnEntry": [
+        {
+          "type": "update_field",
+          "field": "disqualification_reason",
+          "value": "Junk/Spam"
+        },
+        {
+          "type": "log_activity",
+          "description": "Lead marked as Junk.",
+          "activityType": "Lead Junked"
+        }
+      ],
+      "aspirationalMetrics": {
+        "targetCostUsd": 0.5,
+        "targetTimeHours": 0.1
+      },
+      "systemStatusCategory": "CLOSED_LOST"
+    }
+  ],
+  "version": "1.0",
+  "isActive": true,
+  "entityType": "leads",
+  "description": "Manages the qualification of B2B leads through defined stages with tiered SLAs, automated actions, and escalations for timely follow-up and conversion.",
+  "processType": "STATE_DRIVEN",
+  "transitions": [
+    {
+      "id": "T_ASSIGN_LEAD",
+      "name": "Assign Lead Owner",
+      "raci": {
+        "informed": [
+          {
+            "id": "lead_owner",
+            "type": "user_context"
+          }
+        ],
+        "consulted": [],
+        "accountable": [
+          {
+            "id": "director_of_lead_owner",
+            "type": "hierarchical_context"
+          }
+        ],
+        "responsible": [
+          {
+            "id": "manager_of_lead_owner",
+            "type": "hierarchical_context"
+          }
+        ]
+      },
+      "action": "Assign Owner",
+      "trigger": "manual",
+      "pertTime": {
+        "mostLikelyHours": 0.25,
+        "optimisticHours": 0.1,
+        "pessimisticHours": 0.5
+      },
+      "condition": {
+        "rule": "{{lead.lead_owner_id}} IS NOT NULL",
+        "type": "expression",
+        "description": "Lead owner must be assigned."
+      },
+      "toStateId": "NEW_LEAD",
+      "automation": [
+        {
+          "type": "notify_user",
+          "templateId": "LEAD_ASSIGNED_NOTIFICATION",
+          "userIdExpression": "{{lead.lead_owner_id}}"
+        }
+      ],
+      "fromStateId": "NEW_LEAD",
+      "requiredSkills": [
+        "assignment_management"
+      ],
+      "aspirationalMetrics": {
+        "targetCostUsd": 1,
+        "targetTimeHours": 0.2
+      }
+    },
+    {
+      "id": "T_CONTACT_ATTEMPT",
+      "name": "Log Contact Attempt",
+      "raci": {
+        "informed": [],
+        "consulted": [],
+        "accountable": [
+          {
+            "id": "manager_of_lead_owner",
+            "type": "hierarchical_context"
+          }
+        ],
+        "responsible": [
+          {
+            "id": "Sales Representative",
+            "type": "role"
+          }
+        ]
+      },
+      "action": "Log Attempt",
+      "trigger": "manual",
+      "pertTime": {
+        "mostLikelyHours": 0.25,
+        "optimisticHours": 0.1,
+        "pessimisticHours": 0.5
+      },
+      "toStateId": "CONTACT_ATTEMPTED",
+      "fromStateId": [
+        "NEW_LEAD",
+        "CONTACT_ATTEMPTED"
+      ],
+      "requiredSkills": [
+        "communication",
+        "crm_data_entry"
+      ],
+      "aspirationalMetrics": {
+        "targetCostUsd": 1,
+        "targetTimeHours": 0.2
+      }
+    },
+    {
+      "id": "T_CONTACT_SUCCESS",
+      "name": "Successful Contact",
+      "raci": {
+        "informed": [
+          {
+            "id": "Marketing Team",
+            "type": "team"
+          }
+        ],
+        "consulted": [],
+        "accountable": [
+          {
+            "id": "manager_of_lead_owner",
+            "type": "hierarchical_context"
+          }
+        ],
+        "responsible": [
+          {
+            "id": "Sales Representative",
+            "type": "role"
+          }
+        ]
+      },
+      "action": "Mark Contacted",
+      "trigger": "manual",
+      "pertTime": {
+        "mostLikelyHours": 0.2,
+        "optimisticHours": 0.1,
+        "pessimisticHours": 0.3
+      },
+      "toStateId": "CONTACT_ESTABLISHED",
+      "automation": [
+        {
+          "type": "send_email",
+          "recipients": [
+            "{{lead.lead_owner_id}}"
+          ],
+          "templateId": "LEAD_CONTACTED_CONFIRMATION"
+        }
+      ],
+      "fromStateId": [
+        "NEW_LEAD",
+        "CONTACT_ATTEMPTED"
+      ],
+      "requiredSkills": [
+        "communication"
+      ],
+      "aspirationalMetrics": {
+        "targetCostUsd": 1,
+        "targetTimeHours": 0.15
+      }
+    },
+    {
+      "id": "T_START_QUALIFICATION",
+      "name": "Begin Qualification",
+      "raci": {
+        "informed": [
+          {
+            "id": "director_of_lead_owner",
+            "type": "hierarchical_context"
+          }
+        ],
+        "consulted": [
+          {
+            "id": "Product Specialist",
+            "type": "role"
+          }
+        ],
+        "accountable": [
+          {
+            "id": "manager_of_lead_owner",
+            "type": "hierarchical_context"
+          }
+        ],
+        "responsible": [
+          {
+            "id": "Sales Representative",
+            "type": "role"
+          }
+        ]
+      },
+      "action": "Start Qualifying",
+      "trigger": "manual",
+      "pertTime": {
+        "mostLikelyHours": 0.5,
+        "optimisticHours": 0.25,
+        "pessimisticHours": 1
+      },
+      "toStateId": "QUALIFICATION_IN_PROGRESS",
+      "automation": [
+        {
+          "type": "notify_user_group",
+          "group": "sales_team",
+          "message": "Lead '{{lead.company}}' is now in Qualification."
+        }
+      ],
+      "fromStateId": "CONTACT_ESTABLISHED",
+      "requiredSkills": [
+        "sales",
+        "discovery"
+      ],
+      "aspirationalMetrics": {
+        "targetCostUsd": 2,
+        "targetTimeHours": 0.5
+      }
+    },
+    {
+      "id": "T_QUALIFY_LEAD",
+      "name": "Mark as Qualified",
+      "raci": {
+        "informed": [
+          {
+            "id": "Account Executive Team",
+            "type": "team"
+          }
+        ],
+        "consulted": [],
+        "accountable": [
+          {
+            "id": "director_of_lead_owner",
+            "type": "hierarchical_context"
+          }
+        ],
+        "responsible": [
+          {
+            "id": "manager_of_lead_owner",
+            "type": "hierarchical_context"
+          }
+        ]
+      },
+      "action": "Qualify",
+      "trigger": "manual",
+      "pertTime": {
+        "mostLikelyHours": 0.25,
+        "optimisticHours": 0.1,
+        "pessimisticHours": 0.5
+      },
+      "condition": {
+        "rule": "{{lead.lead_score}} >= 70 AND {{lead.budget_confirmed}} == true AND {{lead.authority_identified}} == true",
+        "type": "expression",
+        "description": "Lead score must be 70+, budget and authority must be confirmed."
+      },
+      "toStateId": "QUALIFIED",
+      "automation": [
+        {
+          "type": "send_email",
+          "recipients": [
+            "{{lead.sales_manager_id}}",
+            "{{lead.lead_owner_id}}"
+          ],
+          "templateId": "LEAD_QUALIFIED_NOTIFICATION"
+        }
+      ],
+      "fromStateId": "QUALIFICATION_IN_PROGRESS",
+      "requiredSkills": [
+        "management_approval"
+      ],
+      "aspirationalMetrics": {
+        "targetCostUsd": 1,
+        "targetTimeHours": 0.2
+      }
+    },
+    {
+      "id": "T_DISQUALIFY_LEAD",
+      "name": "Mark as Not Qualified",
+      "raci": {
+        "informed": [],
+        "consulted": [],
+        "accountable": [
+          {
+            "id": "manager_of_lead_owner",
+            "type": "hierarchical_context"
+          }
+        ],
+        "responsible": [
+          {
+            "id": "Sales Representative",
+            "type": "role"
+          }
+        ]
+      },
+      "action": "Disqualify",
+      "trigger": "manual",
+      "pertTime": {
+        "mostLikelyHours": 0.25,
+        "optimisticHours": 0.1,
+        "pessimisticHours": 0.5
+      },
+      "toStateId": "NOT_QUALIFIED",
+      "fromStateId": [
+        "CONTACT_ATTEMPTED",
+        "CONTACT_ESTABLISHED",
+        "QUALIFICATION_IN_PROGRESS"
+      ],
+      "aspirationalMetrics": {
+        "targetCostUsd": 1,
+        "targetTimeHours": 0.2
+      }
+    },
+    {
+      "id": "T_JUNK_LEAD",
+      "name": "Mark as Junk",
+      "raci": {
+        "informed": [
+          {
+            "id": "Sales Operations",
+            "type": "team"
+          }
+        ],
+        "consulted": [],
+        "accountable": [
+          {
+            "id": "manager_of_lead_owner",
+            "type": "hierarchical_context"
+          }
+        ],
+        "responsible": [
+          {
+            "id": "Sales Representative",
+            "type": "role"
+          }
+        ]
+      },
+      "action": "Junk Lead",
+      "trigger": "manual",
+      "pertTime": {
+        "mostLikelyHours": 0.1,
+        "optimisticHours": 0.05,
+        "pessimisticHours": 0.2
+      },
+      "toStateId": "JUNK_LEAD",
+      "fromStateId": [
+        "NEW_LEAD",
+        "CONTACT_ATTEMPTED",
+        "CONTACT_ESTABLISHED",
+        "QUALIFICATION_IN_PROGRESS"
+      ],
+      "aspirationalMetrics": {
+        "targetCostUsd": 0.5,
+        "targetTimeHours": 0.1
+      }
+    }
+  ],
+  "startStateId": "NEW_LEAD",
+  "automationRules": [
+    {
+      "id": "AR_AUTO_NOTIFY_NEW_LEAD",
+      "name": "Notify on New Lead Entry",
+      "action": {
+        "type": "notify_user_group",
+        "groupId": "sales_managers_team_uuid",
+        "message": "New lead '{{lead.company}}' requires assignment. ID: {{lead.id}}",
+        "priority": "high"
+      },
+      "stateId": "NEW_LEAD",
+      "condition": {
+        "rule": "{{lead.lead_owner_id}} IS NULL",
+        "type": "expression",
+        "description": "Trigger only if lead owner is not yet assigned."
+      },
+      "delaySeconds": 0,
+      "triggerEvent": "state_entry"
+    },
+    {
+      "id": "AR_AUTO_ESCALATE_STALE_NEW_LEAD",
+      "name": "Escalate Stale New Lead",
+      "action": {
+        "type": "notify_user",
+        "message": "SLA Breach Alert: Lead '{{lead.company}}' (ID: {{lead.id}}) has been in 'New Lead' state for over 24 hours without contact.",
+        "userIdExpression": "{{lead.sales_manager_id}}"
+      },
+      "stateId": "NEW_LEAD",
+      "condition": {
+        "rule": "{{lead.tier}} == 'Standard' AND {{lead.lead_owner_id}} IS NOT NULL",
+        "type": "expression",
+        "description": "Escalate if Standard tier, owner assigned, and SLA breached."
+      },
+      "triggerEvent": "time_elapsed_in_state",
+      "timeThresholdHours": 24
+    },
+    {
+      "id": "AR_AUTO_ESCALATE_HOT_LEAD",
+      "name": "Escalate Breached Hot Lead",
+      "action": {
+        "type": "notify_users",
+        "message": "HOT LEAD SLA Breach Alert: Lead '{{lead.company}}' (ID: {{lead.id}}) has been in 'New Lead' state for over 2 hours without contact.",
+        "userIds": [
+          "{{lead.sales_manager_id}}",
+          "{{lead.sales_director_id}}"
+        ]
+      },
+      "stateId": "NEW_LEAD",
+      "condition": {
+        "rule": "{{lead.tier}} == 'Hot Lead' AND {{lead.lead_owner_id}} IS NOT NULL",
+        "type": "expression",
+        "description": "Escalate if Hot Lead tier, owner assigned, and SLA breached."
+      },
+      "triggerEvent": "time_elapsed_in_state",
+      "timeThresholdHours": 2
+    },
+    {
+      "id": "AR_AUTO_CLOSE_STALE_CONTACT_ATTEMPT",
+      "name": "Auto Disqualify Stale Contact Attempt",
+      "action": {
+        "type": "execute_transition",
+        "reason": "Exceeded contact attempts and time limit.",
+        "transitionId": "T_DISQUALIFY_LEAD"
+      },
+      "stateId": "CONTACT_ATTEMPTED",
+      "condition": {
+        "rule": "{{lead.contact_attempts}} >= 3",
+        "type": "expression",
+        "description": "Auto-disqualify if 3 attempts made and 1 week passed."
+      },
+      "triggerEvent": "time_elapsed_in_state",
+      "timeThresholdHours": 168
+    }
+  ],
+  "initialMetadata": {
+    "tier": "Standard",
+    "company": null,
+    "lead_id": null,
+    "lead_score": 0,
+    "lead_owner_id": null,
+    "budget_confirmed": false,
+    "contact_attempts": 0,
+    "sales_manager_id": null,
+    "last_contact_date": null,
+    "qualification_date": null,
+    "authority_identified": false,
+    "date_entered_new_lead": null,
+    "disqualification_reason": null,
+    "last_contact_attempt_date": null
+  },
+  "contextVariables": {
+    "lead": "current_entity",
+    "lead_owner": "lead.lead_owner_id",
+    "sales_manager": "lead.sales_manager_id",
+    "sales_director": "organization.sales_director_id"
+  }
+}

@@ -1,0 +1,139 @@
+flowchart LR
+    %% ===== STYLES =====
+    classDef ticketStage fill:#E3F2FD,stroke:#1976D2,stroke-width:2px,color:#000
+    classDef taskStage fill:#FFF3E0,stroke:#F57C00,stroke-width:2px,color:#000
+    classDef reportStage fill:#F3E5F5,stroke:#7B1FA2,stroke-width:2px,color:#000
+    classDef invoiceStage fill:#E8F5E9,stroke:#388E3C,stroke-width:2px,color:#000
+    classDef automation fill:#FFEBEE,stroke:#C62828,stroke-width:2px,color:#000
+    classDef decision fill:#FFF9C4,stroke:#F9A825,stroke-width:2px,color:#000
+    classDef cancelled fill:#FFCDD2,stroke:#B71C1C,stroke-width:2px,color:#000
+    classDef endState fill:#E0E0E0,stroke:#616161,stroke-width:2px,color:#000
+
+    %% ===== SWIMLANES (as columns) =====
+
+    subgraph CS["🎫 Customer Service"]
+        direction TB
+        T_NEW([🆕 New]):::ticketStage
+        T_TRIAGE([🧐 Triage]):::ticketStage
+        T_AWAIT_INFO([ℹ️ Awaiting Info]):::ticketStage
+        T_ASSIGNED([🧑‍💼 Assigned]):::ticketStage
+        T_HOLD([⏸️ On Hold]):::ticketStage
+        T_SCHEDULED([📅 Scheduled]):::ticketStage
+        T_IN_PROGRESS([⚙️ In Progress]):::ticketStage
+        T_OBSERVING([👁️ Observing]):::ticketStage
+        T_PARTS([🔧 Parts Pending]):::ticketStage
+        T_INVOICED([💰 Invoiced]):::ticketStage
+        T_COMPLETED([✅ Completed]):::ticketStage
+        T_CANCELLED([❌ Cancelled]):::cancelled
+    end
+
+    subgraph FIELD["🛠️ Field Work"]
+        direction TB
+        W1([📝 Task Created]):::taskStage
+        W2([🚗 In Progress]):::taskStage
+        W3([✔️ Completed]):::taskStage
+        W4([🏭 Parts Needed]):::taskStage
+    end
+
+    subgraph REPORTING["📊 Reporting"]
+        direction TB
+        R1([📄 Report Submitted]):::reportStage
+        R2{{Report Status?}}:::decision
+    end
+
+    subgraph BILLING["💵 Billing"]
+        direction TB
+        I1([📨 Invoice Generated]):::invoiceStage
+        I2([💳 Paid]):::invoiceStage
+    end
+
+    subgraph AUTO["⏰ Automation & SLA"]
+        direction TB
+        A1([🚨 4h Alert]):::automation
+        A2([⚠️ 24h Escalation]):::automation
+        A3([🔴 48h Critical]):::automation
+        A4([⏱️ Observation Timer]):::automation
+    end
+
+    subgraph END["🏁 End States"]
+        direction TB
+        END_OK([Process Complete]):::endState
+        END_CANCEL([Process Cancelled]):::endState
+    end
+
+    %% ===== MAIN FLOW (Left → Right) =====
+
+    %% Triage & Prep (within CS)
+    T_NEW -->|Triage| T_TRIAGE
+    T_TRIAGE -->|Request Info| T_AWAIT_INFO
+    T_AWAIT_INFO -->|Info Received| T_TRIAGE
+    T_TRIAGE -->|Assign Tech| T_ASSIGNED
+    T_ASSIGNED -->|Schedule Visit| T_SCHEDULED
+    T_TRIAGE -->|Assign & Schedule| T_SCHEDULED
+
+    %% Hold & Cancel (within CS)
+    T_TRIAGE -->|Hold| T_HOLD
+    T_AWAIT_INFO -->|Hold| T_HOLD
+    T_ASSIGNED -->|Hold| T_HOLD
+    T_SCHEDULED -->|Hold| T_HOLD
+    T_HOLD -->|Resume| T_TRIAGE
+
+    T_NEW -->|Cancel| T_CANCELLED
+    T_TRIAGE -->|Cancel| T_CANCELLED
+    T_AWAIT_INFO -->|Cancel| T_CANCELLED
+    T_ASSIGNED -->|Cancel| T_CANCELLED
+    T_SCHEDULED -->|Cancel| T_CANCELLED
+    T_HOLD -->|Cancel| T_CANCELLED
+
+    %% Service Delivery (CS → FIELD → REPORTING)
+    T_SCHEDULED -.->|🤖 Create Task| W1
+    W1 -->|Start Work| W2
+    W2 -->|Submit Report| R1
+    R1 --> R2
+
+    %% Decision Logic (REPORTING → CS / FIELD)
+    R2 -->|"resolved"| T_COMPLETED
+    R2 -.->|"resolved"| W3
+
+    R2 -->|"observation"| T_OBSERVING
+    R2 -.->|"observation"| W3
+
+    R2 -->|"awaiting_parts"| T_PARTS
+    R2 -.->|"awaiting_parts"| W4
+
+    R2 -->|"paid_activity"| T_INVOICED
+    R2 -.->|"paid_activity"| W3
+
+    %% Follow-ups (CS loops)
+    T_OBSERVING -.->|🤖 Start Timer| A4
+    A4 -.->|Timer Expired| T_COMPLETED
+
+    T_PARTS -.->|🤖 Schedule Follow-up| T_SCHEDULED
+
+    %% Billing (CS → BILLING → CS)
+    T_INVOICED -.->|🤖 Generate Invoice| I1
+    I1 -->|Payment Received| I2
+    I2 -.->|🤖 Close| T_COMPLETED
+
+    %% SLA Monitoring (CS ↔ AUTO)
+    T_NEW -.->|4h| A1
+    T_TRIAGE -.->|4h| A1
+    T_ASSIGNED -.->|4h| A1
+    A1 -.->|Alert| T_TRIAGE
+
+    T_NEW -.->|24h| A2
+    T_TRIAGE -.->|24h| A2
+    T_ASSIGNED -.->|24h| A2
+    A2 -.->|Escalate| T_TRIAGE
+
+    T_NEW -.->|48h| A3
+    T_TRIAGE -.->|48h| A3
+    T_ASSIGNED -.->|48h| A3
+    A3 -.->|Critical| T_TRIAGE
+
+    %% End States
+    T_COMPLETED --> END_OK
+    T_CANCELLED --> END_CANCEL
+
+    %% ===== AUTOMATION LINK STYLING (MUST USE FULL STYLE, NOT CLASS) =====
+    linkStyle 16,17,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47 stroke:#C62828,stroke-width:2px,stroke-dasharray:5

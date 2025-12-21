@@ -1,0 +1,457 @@
+{
+  "name": "Automated Preventive Maintenance Project",
+  "stages": [
+    {
+      "id": "PLANNING_AND_SCHEDULING",
+      "name": "Planning & Scheduling",
+      "raci": {
+        "informed": [
+          {
+            "id": "Branch Manager",
+            "type": "role"
+          }
+        ],
+        "consulted": [],
+        "accountable": [
+          {
+            "id": "Service Manager",
+            "type": "role"
+          }
+        ],
+        "responsible": [
+          {
+            "id": "System",
+            "type": "process"
+          }
+        ]
+      },
+      "sequence": 1,
+      "description": "Triggered by the scheduler or user. The system automatically analyzes assets, calculates effort, and generates a tentative schedule and team assignment.",
+      "displayLabel": "Automated Planning",
+      "automationOnEntry": [
+        {
+          "type": "run_sql_function",
+          "parameters": {
+            "contract_id": "{{project.contract_id}}"
+          },
+          "function_name": "calculate_ppm_effort_and_schedule",
+          "output_mapping": {
+            "required_skills": "project.required_skills",
+            "tentative_end_date": "project.tentative_end_date",
+            "estimated_man_hours": "project.estimated_man_hours",
+            "suggested_team_size": "project.suggested_team_size",
+            "tentative_start_date": "project.tentative_start_date"
+          }
+        },
+        {
+          "type": "create_task",
+          "task_name": "Assign Field Technicians for {{project.name}}",
+          "description": "Based on system analysis ({{project.suggested_team_size}} technicians, skills: {{project.required_skills}}), assign specific technicians to this project.",
+          "assignee_role": "Service Manager",
+          "due_offset_days": 2,
+          "related_entity_id": "{{project.id}}"
+        }
+      ],
+      "aspirationalMetrics": {
+        "targetCostUsd": 25,
+        "targetTimeHours": 0.5
+      },
+      "resourceRequirements": [
+        {
+          "type": "system",
+          "skills": [
+            "data_analysis",
+            "scheduling_algorithm"
+          ]
+        }
+      ],
+      "systemStatusCategory": "NEW"
+    },
+    {
+      "id": "AWAITING_CONFIRMATION",
+      "name": "Awaiting Confirmation",
+      "raci": {
+        "accountable": [
+          {
+            "id": "Branch Manager",
+            "type": "role"
+          }
+        ],
+        "responsible": [
+          {
+            "id": "Service Manager",
+            "type": "role"
+          }
+        ]
+      },
+      "pertTime": {
+        "mostLikelyHours": 4,
+        "optimisticHours": 1,
+        "pessimisticHours": 24
+      },
+      "sequence": 2,
+      "description": "The automated plan and schedule are generated. Awaiting review and confirmation from the Service Manager before dispatching the team.",
+      "displayLabel": "Pending Confirmation",
+      "aspirationalMetrics": {
+        "targetCostUsd": 50,
+        "targetTimeHours": 1
+      },
+      "resourceRequirements": [
+        {
+          "type": "worker",
+          "skills": [
+            "planning_review",
+            "dispatch_management"
+          ]
+        }
+      ],
+      "systemStatusCategory": "IN_PROGRESS"
+    },
+    {
+      "id": "EXECUTION_IN_PROGRESS",
+      "name": "Execution In Progress",
+      "raci": {
+        "informed": [
+          {
+            "id": "Support Personnel",
+            "type": "role"
+          }
+        ],
+        "accountable": [
+          {
+            "id": "Service Manager",
+            "type": "role"
+          }
+        ],
+        "responsible": [
+          {
+            "id": "Field Technician",
+            "type": "role"
+          }
+        ]
+      },
+      "pertTime": {
+        "mostLikelyHours": 80,
+        "optimisticHours": 40,
+        "pessimisticHours": 120
+      },
+      "sequence": 3,
+      "description": "The plan is confirmed, and the team is on-site. Technicians scan asset QR codes to dynamically create and complete service records. Progress is tracked in real-time.",
+      "displayLabel": "On-Site Execution",
+      "aspirationalMetrics": {
+        "targetCostUsd": 2000,
+        "targetTimeHours": 40
+      },
+      "resourceRequirements": [
+        {
+          "type": "team",
+          "skills_expression": "{{project.required_skills}}",
+          "team_size_expression": "{{project.suggested_team_size}}"
+        }
+      ],
+      "systemStatusCategory": "IN_PROGRESS",
+      "dynamic_event_handlers": [
+        {
+          "event": "ON_ASSET_SCAN",
+          "actions": [
+            {
+              "type": "create_asset_service_record",
+              "set_status": "In Progress",
+              "capture_fields": [
+                "asset_id",
+                "technician_id",
+                "start_time"
+              ]
+            }
+          ]
+        },
+        {
+          "event": "ON_SERVICE_FORM_SUBMIT",
+          "actions": [
+            {
+              "type": "update_asset_service_record",
+              "set_status": "Completed",
+              "capture_fields": [
+                "end_time",
+                "service_notes",
+                "parts_used"
+              ]
+            },
+            {
+              "type": "increment_field",
+              "field": "project.serviced_asset_count",
+              "value": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "AWAITING_CUSTOMER_FEEDBACK",
+      "name": "Awaiting Customer Feedback",
+      "raci": {
+        "accountable": [
+          {
+            "id": "Service Manager",
+            "type": "role"
+          }
+        ],
+        "responsible": [
+          {
+            "id": "Support Personnel",
+            "type": "role"
+          }
+        ]
+      },
+      "pertTime": {
+        "mostLikelyHours": 8,
+        "optimisticHours": 1,
+        "pessimisticHours": 168
+      },
+      "sequence": 4,
+      "description": "All on-site work is complete. A summary report has been sent to the customer, and the project is awaiting their feedback on the overall service.",
+      "displayLabel": "Awaiting Feedback",
+      "automationOnEntry": [
+        {
+          "type": "generate_project_summary_report",
+          "target_field": "project.summary_report_url",
+          "data_source_expression": "GET_ALL_ASSET_SERVICE_RECORDS({{project.id}})"
+        },
+        {
+          "type": "send_email",
+          "templateId": "PPM_PROJECT_COMPLETE_FEEDBACK_REQUEST",
+          "attachments": [
+            "{{project.summary_report_url}}"
+          ],
+          "recipientsExpression": "{{project.customer_contact_email}}"
+        }
+      ],
+      "aspirationalMetrics": {
+        "targetCostUsd": 50,
+        "targetTimeHours": 1
+      },
+      "resourceRequirements": [
+        {
+          "type": "worker",
+          "skills": [
+            "reporting",
+            "customer_communication"
+          ]
+        }
+      ],
+      "systemStatusCategory": "PENDING_CUSTOMER_ACTION"
+    },
+    {
+      "id": "RESOLVED",
+      "name": "Resolved",
+      "raci": {
+        "accountable": [
+          {
+            "id": "Branch Manager",
+            "type": "role"
+          }
+        ],
+        "responsible": [
+          {
+            "id": "Service Manager",
+            "type": "role"
+          }
+        ]
+      },
+      "pertTime": {
+        "mostLikelyHours": 24,
+        "optimisticHours": 8,
+        "pessimisticHours": 48
+      },
+      "sequence": 5,
+      "description": "Project work is complete and acknowledged. Ready for financial closure.",
+      "displayLabel": "Resolved",
+      "aspirationalMetrics": {
+        "targetCostUsd": 400,
+        "targetTimeHours": 8
+      },
+      "resourceRequirements": [
+        {
+          "type": "worker",
+          "skills": [
+            "finance_admin",
+            "reconciliation"
+          ]
+        }
+      ],
+      "systemStatusCategory": "CLOSED_WON"
+    },
+    {
+      "id": "CLOSED",
+      "name": "Closed",
+      "sequence": 6,
+      "description": "Project is financially reconciled and all documentation has been archived.",
+      "displayLabel": "Closed",
+      "automationOnEntry": [
+        {
+          "type": "archive_project_record",
+          "project_id": "{{project.id}}"
+        }
+      ],
+      "aspirationalMetrics": {
+        "targetCostUsd": 50,
+        "targetTimeHours": 1
+      },
+      "resourceRequirements": [
+        {
+          "type": "system",
+          "skills": [
+            "archiving"
+          ]
+        }
+      ],
+      "systemStatusCategory": "CLOSED_WON"
+    },
+    {
+      "id": "CANCELLED",
+      "name": "Cancelled",
+      "sequence": 7,
+      "description": "The project was cancelled.",
+      "displayLabel": "Cancelled",
+      "aspirationalMetrics": {
+        "targetCostUsd": 0,
+        "targetTimeHours": 0
+      },
+      "resourceRequirements": [],
+      "systemStatusCategory": "CANCELLED"
+    }
+  ],
+  "version": "2.1",
+  "isActive": true,
+  "entityType": "ppm_projects",
+  "description": "A PPM workflow that automates planning and is enhanced with metrics and resource definitions. On-site execution is dynamic, driven by technicians scanning assets.",
+  "processType": "PROJECT_DRIVEN",
+  "transitions": [
+    {
+      "id": "T_PLAN_GENERATED",
+      "name": "Generate Plan",
+      "trigger": "automatic",
+      "condition": {
+        "rule": "{{project.estimated_man_hours}} > 0",
+        "type": "expression"
+      },
+      "toStateId": "AWAITING_CONFIRMATION",
+      "fromStateId": "PLANNING_AND_SCHEDULING"
+    },
+    {
+      "id": "T_CONFIRM_PLAN",
+      "name": "Confirm Plan & Dispatch",
+      "trigger": "manual",
+      "condition": {
+        "rule": "COUNT({{project.assigned_technician_ids}}) > 0",
+        "type": "expression"
+      },
+      "toStateId": "EXECUTION_IN_PROGRESS",
+      "fromStateId": "AWAITING_CONFIRMATION"
+    },
+    {
+      "id": "T_MODIFY_PLAN",
+      "name": "Modify Plan",
+      "trigger": "manual",
+      "toStateId": "PLANNING_AND_SCHEDULING",
+      "fromStateId": "AWAITING_CONFIRMATION"
+    },
+    {
+      "id": "T_EXECUTION_COMPLETE",
+      "name": "Complete On-Site Work",
+      "trigger": "manual",
+      "condition": {
+        "rule": "{{project.serviced_asset_count}} >= {{project.scope_asset_count}}",
+        "type": "expression"
+      },
+      "toStateId": "AWAITING_CUSTOMER_FEEDBACK",
+      "fromStateId": "EXECUTION_IN_PROGRESS"
+    },
+    {
+      "id": "T_FEEDBACK_RECEIVED",
+      "name": "Feedback Received",
+      "trigger": "manual",
+      "toStateId": "RESOLVED",
+      "fromStateId": "AWAITING_CUSTOMER_FEEDBACK"
+    },
+    {
+      "id": "T_CLOSE_PROJECT",
+      "name": "Close Project",
+      "trigger": "manual",
+      "toStateId": "CLOSED",
+      "fromStateId": "RESOLVED"
+    },
+    {
+      "id": "T_CANCEL_PROJECT",
+      "name": "Cancel Project",
+      "trigger": "manual",
+      "toStateId": "CANCELLED",
+      "fromStateId": [
+        "PLANNING_AND_SCHEDULING",
+        "AWAITING_CONFIRMATION",
+        "EXECUTION_IN_PROGRESS"
+      ]
+    }
+  ],
+  "startStateId": "PLANNING_AND_SCHEDULING",
+  "automationRules": [
+    {
+      "id": "AR_ESCALATE_UNCONFIRMED_PROJECT_48H",
+      "name": "Escalate Unconfirmed Project (48h)",
+      "action": {
+        "type": "notify_user",
+        "message": "PPM project '{{project.name}}' for customer '{{project.customer_name}}' has been awaiting confirmation for over 48 hours.",
+        "userIdExpression": "{{project.branch_manager_id}}"
+      },
+      "stateId": "AWAITING_CONFIRMATION",
+      "triggerEvent": "time_elapsed_in_state",
+      "timeThresholdHours": 48
+    },
+    {
+      "id": "AR_ESCALATE_UNCONFIRMED_PROJECT_1W",
+      "name": "Escalate Unconfirmed Project (1 week)",
+      "action": {
+        "type": "notify_user",
+        "message": "CRITICAL: PPM project '{{project.name}}' has been awaiting confirmation for over 1 week.",
+        "userIdExpression": "{{project.division_manager_id}}"
+      },
+      "stateId": "AWAITING_CONFIRMATION",
+      "triggerEvent": "time_elapsed_in_state",
+      "timeThresholdHours": 168
+    },
+    {
+      "id": "AR_AUTO_RESOLVE_NO_FEEDBACK",
+      "name": "Auto-Resolve on Feedback Timeout",
+      "action": {
+        "type": "execute_transition",
+        "transitionId": "T_FEEDBACK_RECEIVED"
+      },
+      "stateId": "AWAITING_CUSTOMER_FEEDBACK",
+      "triggerEvent": "time_elapsed_in_state",
+      "timeThresholdHours": 168
+    }
+  ],
+  "initialMetadata": {
+    "project_id": null,
+    "contract_id": null,
+    "project_name": null,
+    "customer_name": null,
+    "actual_end_date": null,
+    "required_skills": [],
+    "actual_start_date": null,
+    "branch_manager_id": null,
+    "feedback_received": false,
+    "scope_asset_count": 0,
+    "service_manager_id": null,
+    "summary_report_url": null,
+    "tentative_end_date": null,
+    "cancellation_reason": null,
+    "division_manager_id": null,
+    "estimated_man_hours": 0,
+    "suggested_team_size": 0,
+    "serviced_asset_count": 0,
+    "tentative_start_date": null,
+    "customer_contact_email": null,
+    "assigned_technician_ids": []
+  }
+}

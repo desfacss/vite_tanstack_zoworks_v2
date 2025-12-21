@@ -1,0 +1,57 @@
+{
+  "entity_type": "users",
+  "available_views": [
+    "tableview",
+    "gridview",
+    "kanbanview"
+  ],
+  "default_view": "tableview",
+  "form_name": [
+    "user_self_edit_form"
+  ],
+  "filters": [
+    {
+      "name": "search",
+      "type": "text",
+      "label": "Search",
+      "placeholder": "Search users..."
+    },
+    {
+      "name": "dateRange",
+      "type": "date-range",
+      "label": "Date Range"
+    },
+    {
+      "name": "roleFilter",
+      "type": "select",
+      "label": "Role",
+      "options": [
+        {
+          "label": "Admin",
+          "value": "admin"
+        },
+        {
+          "label": "User",
+          "value": "user"
+        }
+      ],
+      "placeholder": "Select role"
+    }
+  ],
+  "features": {
+    "export": true,
+    "import": true,
+    "sorting": true,
+    "filtering": true,
+    "pagination": true,
+    "bulkActions": true
+  },
+  "cache_ttl": "24:00:00",
+  "version": 1,
+  "form_schema_name": null,
+  "view_config_name": null,
+  "global_actions": {
+    "form": "user_self_edit_form",
+    "label": "add_user"
+  }
+}

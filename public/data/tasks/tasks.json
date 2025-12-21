@@ -1,0 +1,672 @@
+{
+  "name": "Field Work Order Execution (Enhanced Flow)",
+  "stages": [
+    {
+      "id": "NEW_TASK",
+      "name": "New Task",
+      "tiers": [
+        {
+          "name": "High Priority",
+          "maxTimeHours": 2,
+          "notificationRules": [
+            {
+              "to": [
+                "task_owner"
+              ],
+              "onBreach": "escalate"
+            }
+          ]
+        },
+        {
+          "name": "Standard",
+          "maxTimeHours": 4,
+          "notificationRules": [
+            {
+              "to": [
+                "task_owner"
+              ],
+              "onBreach": "escalate"
+            }
+          ]
+        }
+      ],
+      "pertTime": {
+        "mostLikelyHours": 0.25,
+        "optimisticHours": 0.1,
+        "pessimisticHours": 1
+      },
+      "sequence": 1,
+      "description": "Work order/task has been created, awaiting assignment to a technician.",
+      "displayLabel": "New",
+      "automationOnEntry": [
+        {
+          "type": "log_activity",
+          "description": "Task created from source {{task.source_type}} (ID: {{task.source_id}}).",
+          "activityType": "Task Created"
+        }
+      ],
+      "aspirationalMetrics": {
+        "targetCostUsd": 5,
+        "targetTimeHours": 0.1
+      },
+      "resourceRequirements": [
+        {
+          "type": "worker",
+          "skills": [
+            "dispatch_support"
+          ]
+        }
+      ],
+      "systemStatusCategory": "NEW"
+    },
+    {
+      "id": "ASSIGNED",
+      "name": "Assigned",
+      "raci": {
+        "informed": [
+          "assigned_to"
+        ],
+        "accountable": [
+          "manager"
+        ],
+        "responsible": [
+          "task_owner"
+        ]
+      },
+      "pertTime": {
+        "mostLikelyHours": 0.5,
+        "optimisticHours": 0.1,
+        "pessimisticHours": 2
+      },
+      "sequence": 2,
+      "description": "Task is assigned to a specific field resource, awaiting scheduling.",
+      "displayLabel": "Assigned",
+      "automationOnEntry": [
+        {
+          "type": "log_activity",
+          "description": "Assigned to {{USER_NAME(task.assigned_to)}}.",
+          "activityType": "Task Assigned"
+        },
+        {
+          "type": "notify_user",
+          "message": "New task assigned to you, please schedule: {{task.name}} (ID: {{task.id}}).",
+          "templateId": "TASK_ASSIGNED_NOTIFICATION",
+          "userIdExpression": "{{task.assigned_to}}"
+        }
+      ],
+      "aspirationalMetrics": {
+        "targetCostUsd": 5,
+        "targetTimeHours": 0.1
+      },
+      "resourceRequirements": [
+        {
+          "type": "worker",
+          "skills": [
+            "dispatch_management"
+          ]
+        }
+      ],
+      "systemStatusCategory": "IN_PROGRESS"
+    },
+    {
+      "id": "SCHEDULED",
+      "name": "Scheduled",
+      "pertTime": {
+        "mostLikelyHours": 0.5,
+        "optimisticHours": 0.25,
+        "pessimisticHours": 1
+      },
+      "sequence": 3,
+      "description": "Task has been scheduled for a specific date/time with the customer.",
+      "displayLabel": "Scheduled",
+      "automationOnEntry": [
+        {
+          "type": "log_activity",
+          "description": "Task scheduled for {{task.scheduled_start_time}}.",
+          "activityType": "Task Scheduled"
+        },
+        {
+          "data": {
+            "task_id": "{{task.id}}"
+          },
+          "type": "create_scheduled_job",
+          "jobType": "task_reminder",
+          "targetDateExpression": "SUB_HOURS({{task.scheduled_start_time}}, 1)"
+        }
+      ],
+      "aspirationalMetrics": {
+        "targetCostUsd": 12.5,
+        "targetTimeHours": 0.25
+      },
+      "resourceRequirements": [
+        {
+          "type": "worker",
+          "skills": [
+            "scheduling",
+            "customer_communication"
+          ]
+        }
+      ],
+      "systemStatusCategory": "IN_PROGRESS"
+    },
+    {
+      "id": "RESCHEDULED",
+      "name": "Rescheduled",
+      "pertTime": {
+        "mostLikelyHours": 8,
+        "optimisticHours": 1,
+        "pessimisticHours": 24
+      },
+      "sequence": 4,
+      "description": "The scheduled visit needs to be rescheduled. Awaiting a new confirmed date/time.",
+      "displayLabel": "Rescheduled",
+      "automationOnEntry": [
+        {
+          "type": "log_activity",
+          "description": "Task visit requires rescheduling. Reason: {{task.reschedule_reason}}.",
+          "activityType": "Task Rescheduled"
+        }
+      ],
+      "aspirationalMetrics": {
+        "targetCostUsd": 50,
+        "targetTimeHours": 1
+      },
+      "resourceRequirements": [
+        {
+          "type": "worker",
+          "skills": [
+            "scheduling",
+            "negotiation"
+          ]
+        }
+      ],
+      "systemStatusCategory": "IN_PROGRESS"
+    },
+    {
+      "id": "ON_SITE",
+      "name": "On-site",
+      "pertTime": {
+        "mostLikelyHours": 2,
+        "optimisticHours": 1,
+        "pessimisticHours": 4
+      },
+      "sequence": 5,
+      "description": "Assigned resource has arrived at the work location and is performing the work.",
+      "displayLabel": "On-site",
+      "requiredSkills": [
+        "field_service_basic",
+        "safety_protocol"
+      ],
+      "automationOnEntry": [
+        {
+          "type": "log_activity",
+          "description": "Technician arrived at location and started work.",
+          "activityType": "Arrived On-Site"
+        },
+        {
+          "type": "update_field",
+          "field": "actual_start_time",
+          "valueExpression": "CURRENT_TIMESTAMP()"
+        }
+      ],
+      "aspirationalMetrics": {
+        "targetCostUsd": 50,
+        "targetTimeHours": 1
+      },
+      "resourceRequirements": [
+        {
+          "type": "worker",
+          "skills": [
+            "field_service_basic",
+            "technical_troubleshooting"
+          ]
+        }
+      ],
+      "systemStatusCategory": "IN_PROGRESS"
+    },
+    {
+      "id": "WORK_COMPLETED",
+      "name": "Work Completed",
+      "tiers": [
+        {
+          "name": "All",
+          "maxTimeHours": 2,
+          "notificationRules": [
+            {
+              "to": [
+                "assigned_to",
+                "task_owner"
+              ],
+              "onBreach": "escalate"
+            }
+          ]
+        }
+      ],
+      "pertTime": {
+        "mostLikelyHours": 1,
+        "optimisticHours": 0.5,
+        "pessimisticHours": 2
+      },
+      "sequence": 6,
+      "description": "Assigned resource has finished the primary work. Service report pending submission.",
+      "displayLabel": "Work Done",
+      "automationOnEntry": [
+        {
+          "type": "log_activity",
+          "description": "Technician marked work as completed.",
+          "activityType": "Work Completed"
+        },
+        {
+          "name": "Submit Service Report",
+          "type": "create_task",
+          "description": "Complete and submit the service report for this task.",
+          "dueOffsetHours": 2,
+          "assigneeResourceExpression": "{{task.assigned_to}}"
+        }
+      ],
+      "aspirationalMetrics": {
+        "targetCostUsd": 25,
+        "targetTimeHours": 0.5
+      },
+      "resourceRequirements": [
+        {
+          "type": "worker",
+          "skills": [
+            "work_documentation"
+          ]
+        }
+      ],
+      "systemStatusCategory": "IN_PROGRESS"
+    },
+    {
+      "id": "REPORT_SUBMITTED",
+      "name": "Report Submitted",
+      "pertTime": {
+        "mostLikelyHours": 0.5,
+        "optimisticHours": 0.25,
+        "pessimisticHours": 1
+      },
+      "sequence": 7,
+      "description": "Service report has been submitted and is awaiting review/approval.",
+      "displayLabel": "Report Submitted",
+      "automationOnEntry": [
+        {
+          "type": "log_activity",
+          "description": "Service report submitted by technician.",
+          "activityType": "Report Submitted"
+        },
+        {
+          "type": "notify_user",
+          "message": "Service report for task '{{task.name}}' (ID: {{task.id}}) is awaiting your review.",
+          "templateId": "REPORT_AWAITING_REVIEW",
+          "userIdExpression": "{{task.task_owner}}"
+        }
+      ],
+      "aspirationalMetrics": {
+        "targetCostUsd": 12.5,
+        "targetTimeHours": 0.25
+      },
+      "resourceRequirements": [
+        {
+          "type": "worker",
+          "skills": [
+            "quality_assurance",
+            "review"
+          ]
+        }
+      ],
+      "systemStatusCategory": "IN_PROGRESS"
+    },
+    {
+      "id": "REPORT_REJECTED",
+      "name": "Report Rejected",
+      "pertTime": {
+        "mostLikelyHours": 1,
+        "optimisticHours": 0.25,
+        "pessimisticHours": 4
+      },
+      "sequence": 8,
+      "description": "The submitted service report was rejected. Requires amendment by the technician.",
+      "displayLabel": "Report Rejected",
+      "automationOnEntry": [
+        {
+          "type": "log_activity",
+          "description": "Report rejected by {{USER_NAME(task.updated_by)}}. Reason: {{task.rejection_reason}}",
+          "activityType": "Report Rejected"
+        },
+        {
+          "type": "notify_user",
+          "message": "Your report for task '{{task.name}}' was rejected. Please amend and resubmit.",
+          "templateId": "REPORT_REJECTED_NOTIFICATION",
+          "userIdExpression": "{{task.assigned_to}}"
+        }
+      ],
+      "aspirationalMetrics": {
+        "targetCostUsd": 12.5,
+        "targetTimeHours": 0.25
+      },
+      "resourceRequirements": [
+        {
+          "type": "worker",
+          "skills": [
+            "work_documentation",
+            "amendment"
+          ]
+        }
+      ],
+      "systemStatusCategory": "IN_PROGRESS"
+    },
+    {
+      "id": "INVOICING_NEEDED",
+      "name": "Invoicing Needed",
+      "pertTime": {
+        "mostLikelyHours": 0.25,
+        "optimisticHours": 0.1,
+        "pessimisticHours": 0.5
+      },
+      "sequence": 9,
+      "description": "Task requires invoicing based on service type and contract rules.",
+      "displayLabel": "Needs Invoice",
+      "automationOnEntry": [
+        {
+          "type": "create_invoice_request",
+          "taskId": "{{task.id}}",
+          "contractId": "{{task.contract_id}}",
+          "customerId": "{{task.customer_id}}",
+          "serviceType": "{{task.service_type}}"
+        }
+      ],
+      "aspirationalMetrics": {
+        "targetCostUsd": 5,
+        "targetTimeHours": 0.1
+      },
+      "resourceRequirements": [
+        {
+          "type": "worker",
+          "skills": [
+            "finance_admin",
+            "billing"
+          ]
+        }
+      ],
+      "systemStatusCategory": "PENDING_CUSTOMER_ACTION"
+    },
+    {
+      "id": "COMPLETED",
+      "name": "Completed",
+      "pertTime": {
+        "mostLikelyHours": 0.25,
+        "optimisticHours": 0.1,
+        "pessimisticHours": 0.5
+      },
+      "sequence": 10,
+      "description": "Work is done, report is approved, and invoicing is handled (if applicable). The task is closed.",
+      "displayLabel": "Completed",
+      "automationOnEntry": [
+        {
+          "type": "log_activity",
+          "description": "Task fully completed and closed.",
+          "activityType": "Task Completed"
+        },
+        {
+          "type": "update_field",
+          "field": "actual_end_time",
+          "valueExpression": "CURRENT_TIMESTAMP()"
+        }
+      ],
+      "aspirationalMetrics": {
+        "targetCostUsd": 5,
+        "targetTimeHours": 0.1
+      },
+      "resourceRequirements": [],
+      "systemStatusCategory": "CLOSED_WON"
+    },
+    {
+      "id": "ON_HOLD",
+      "name": "On Hold",
+      "pertTime": {
+        "mostLikelyHours": 0,
+        "optimisticHours": 0,
+        "pessimisticHours": 0
+      },
+      "sequence": 11,
+      "description": "Task progress is paused (e.g., awaiting parts, customer unavailability).",
+      "displayLabel": "On Hold",
+      "automationOnEntry": [
+        {
+          "type": "log_activity",
+          "description": "Task put on hold. Reason: {{task.hold_reason}}.",
+          "activityType": "Task On Hold"
+        }
+      ],
+      "aspirationalMetrics": {
+        "targetCostUsd": 0,
+        "targetTimeHours": 0
+      },
+      "resourceRequirements": [],
+      "systemStatusCategory": "IN_PROGRESS"
+    },
+    {
+      "id": "CANCELLED",
+      "name": "Cancelled",
+      "pertTime": {
+        "mostLikelyHours": 0,
+        "optimisticHours": 0,
+        "pessimisticHours": 0
+      },
+      "sequence": 12,
+      "description": "Task was cancelled before completion.",
+      "displayLabel": "Cancelled",
+      "automationOnEntry": [
+        {
+          "type": "log_activity",
+          "description": "Task cancelled. Reason: {{task.cancellation_reason}}.",
+          "activityType": "Task Cancelled"
+        }
+      ],
+      "aspirationalMetrics": {
+        "targetCostUsd": 0,
+        "targetTimeHours": 0
+      },
+      "resourceRequirements": [],
+      "systemStatusCategory": "CANCELLED"
+    }
+  ],
+  "version": "1.3",
+  "isActive": true,
+  "entityType": "tasks",
+  "description": "Manages the field work order lifecycle with a practical flow, enhanced with aspirational metrics, resource requirements, SLA tiers, RACI definitions, and a report rejection loop.",
+  "processType": "STATE_DRIVEN",
+  "transitions": [
+    {
+      "id": "T_ASSIGN_TASK",
+      "name": "Assign Task",
+      "action": "Assign",
+      "trigger": "manual",
+      "condition": {
+        "rule": "{{task.assigned_to}} IS NOT NULL",
+        "type": "expression"
+      },
+      "toStateId": "ASSIGNED",
+      "fromStateId": "NEW_TASK"
+    },
+    {
+      "id": "T_SCHEDULE_VISIT",
+      "name": "Schedule Visit",
+      "action": "Schedule",
+      "trigger": "manual",
+      "condition": {
+        "rule": "{{task.scheduled_start_time}} IS NOT NULL",
+        "type": "expression"
+      },
+      "toStateId": "SCHEDULED",
+      "fromStateId": "ASSIGNED"
+    },
+    {
+      "id": "T_ARRIVE_ON_SITE",
+      "name": "Arrive On-Site",
+      "action": "Arrive On-Site",
+      "trigger": "manual",
+      "toStateId": "ON_SITE",
+      "fromStateId": "SCHEDULED"
+    },
+    {
+      "id": "T_RESCHEDULE_VISIT",
+      "name": "Reschedule Visit",
+      "action": "Reschedule",
+      "trigger": "manual",
+      "toStateId": "RESCHEDULED",
+      "fromStateId": "SCHEDULED"
+    },
+    {
+      "id": "T_CONFIRM_RESCHEDULE",
+      "name": "Confirm New Schedule",
+      "action": "Confirm Schedule",
+      "trigger": "manual",
+      "condition": {
+        "rule": "{{task.scheduled_start_time}} IS NOT NULL",
+        "type": "expression"
+      },
+      "toStateId": "SCHEDULED",
+      "fromStateId": "RESCHEDULED"
+    },
+    {
+      "id": "T_WORK_DONE",
+      "name": "Work Done",
+      "action": "Work Completed",
+      "trigger": "manual",
+      "toStateId": "WORK_COMPLETED",
+      "fromStateId": "ON_SITE"
+    },
+    {
+      "id": "T_SUBMIT_REPORT",
+      "name": "Submit Report",
+      "action": "Submit Report",
+      "trigger": "manual",
+      "toStateId": "REPORT_SUBMITTED",
+      "fromStateId": "WORK_COMPLETED"
+    },
+    {
+      "id": "T_REJECT_REPORT",
+      "name": "Reject Report",
+      "action": "Reject Report",
+      "trigger": "manual",
+      "toStateId": "REPORT_REJECTED",
+      "fromStateId": "REPORT_SUBMITTED"
+    },
+    {
+      "id": "T_RESUBMIT_REPORT",
+      "name": "Resubmit Report",
+      "action": "Resubmit",
+      "trigger": "manual",
+      "toStateId": "REPORT_SUBMITTED",
+      "fromStateId": "REPORT_REJECTED"
+    },
+    {
+      "id": "T_APPROVE_AND_CLOSE",
+      "name": "Approve Report & Close",
+      "action": "Approve & Close",
+      "trigger": "manual",
+      "condition": {
+        "rule": "SHOULD_INVOICE_TASK({{task.service_type}}) == false",
+        "type": "expression"
+      },
+      "toStateId": "COMPLETED",
+      "fromStateId": "REPORT_SUBMITTED"
+    },
+    {
+      "id": "T_APPROVE_FOR_INVOICE",
+      "name": "Approve for Invoicing",
+      "action": "Approve & Invoice",
+      "trigger": "manual",
+      "condition": {
+        "rule": "SHOULD_INVOICE_TASK({{task.service_type}}) == true",
+        "type": "expression"
+      },
+      "toStateId": "INVOICING_NEEDED",
+      "fromStateId": "REPORT_SUBMITTED"
+    },
+    {
+      "id": "T_INVOICE_HANDLED",
+      "name": "Invoice Handled",
+      "action": "Complete Invoicing",
+      "trigger": "manual",
+      "toStateId": "COMPLETED",
+      "fromStateId": "INVOICING_NEEDED"
+    },
+    {
+      "id": "T_HOLD_TASK",
+      "name": "Put On Hold",
+      "action": "Hold",
+      "trigger": "manual",
+      "toStateId": "ON_HOLD",
+      "fromStateId": [
+        "ASSIGNED",
+        "SCHEDULED",
+        "RESCHEDULED",
+        "ON_SITE",
+        "WORK_COMPLETED",
+        "REPORT_SUBMITTED",
+        "REPORT_REJECTED",
+        "INVOICING_NEEDED"
+      ]
+    },
+    {
+      "id": "T_RESUME_TASK",
+      "name": "Resume Task",
+      "action": "Resume",
+      "trigger": "manual",
+      "toStateId": "ASSIGNED",
+      "fromStateId": "ON_HOLD"
+    },
+    {
+      "id": "T_CANCEL_TASK",
+      "name": "Cancel Task",
+      "action": "Cancel",
+      "trigger": "manual",
+      "toStateId": "CANCELLED",
+      "fromStateId": [
+        "NEW_TASK",
+        "ASSIGNED",
+        "SCHEDULED",
+        "RESCHEDULED",
+        "ON_SITE",
+        "WORK_COMPLETED",
+        "REPORT_SUBMITTED",
+        "REPORT_REJECTED",
+        "INVOICING_NEEDED",
+        "ON_HOLD"
+      ]
+    }
+  ],
+  "startStateId": "NEW_TASK",
+  "automationRules": [
+    {
+      "id": "AR_ESCALATE_UNASSIGNED_TASK",
+      "name": "Escalate Unassigned Task",
+      "action": {
+        "type": "notify_user_group",
+        "groupId": "dispatchers_team_uuid",
+        "message": "SLA Alert: Task '{{task.name}}' (ID: {{task.id}}) has been unassigned for over 4 hours!"
+      },
+      "stateId": "NEW_TASK",
+      "condition": {
+        "rule": "{{task.assigned_to}} IS NULL",
+        "type": "expression"
+      },
+      "triggerEvent": "time_elapsed_in_state",
+      "timeThresholdHours": 4
+    },
+    {
+      "id": "AR_AUTO_ARCHIVE_COMPLETED_TASK",
+      "name": "Auto Archive Completed Task",
+      "action": {
+        "type": "archive_task_record",
+        "taskId": "{{task.id}}"
+      },
+      "stateId": "COMPLETED",
+      "triggerEvent": "time_elapsed_in_state",
+      "timeThresholdHours": 168
+    }
+  ]
+}
