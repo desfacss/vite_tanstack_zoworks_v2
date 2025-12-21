@@ -39,6 +39,16 @@ export function register(config: any = {}) {
     });
   }
 
+  // Register Client Details
+  registry.registerTab({
+    id: 'client-details',
+    entityTypes: ['clients'],
+    label: 'Details',
+    component: () => import('./components/ClientDetails'),
+    order: 1,
+  });
+
+
   // Register Global Action
   registry.registerAction({
     id: 'new-ticket',

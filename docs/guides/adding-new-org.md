@@ -14,12 +14,48 @@ Adding a new organization involves:
 
 ---
 
-## 1. Create Organization (Database)
+### 1. Create Organization & defaults
 
-### Via Supabase Dashboard
+Since the system does NOT auto-create roles or locations, use this transaction to set up a functional tenant:
 
 ```sql
--- Insert new organization
+BEGIN;
+
+-- 1. Create Organization
+INSERT INTO identity.organizations (id, name, subdomain)
+VALUES ('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'Acme Corp', 'acme');
+
+-- 2. Create Default Location (Required for some logic)
+INSERT INTO identity.locations (organization_id, name, code)
+VALUES ('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'Main Office', 'HQ');
+
+-- 3. Create Admin Role (Required for permissions)
+INSERT INTO identity.roles (organization_id, name, permissions)
+VALUES (
+  'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 
+  'Admin', 
+  '{"admin": "all", "tickets": "all", "workforce": "all"}'
+);
+
+COMMIT;
+```
+
+> **Why manually seed?**
+> *   **Roles**: You need at least one role (e.g., 'Admin') to assign to your first user.
+> *   **Locations**: Recommended if you plan to use location-based features (e.g., Workforce).
+> *   **Teams**: Optional. Can be added later.
+
+
+> **What happens with Minimal Setup?**
+> *   **Theme**: Defaults to "Zoworks" Light Theme.
+> *   **Modules**: Enables all default modules (Core, CRM, Tickets, etc.).
+> *   **Settings**: Inherits standard Zoworks platform settings.
+> *   **Languages**: Defaults to English (`en`).
+
+### Full Setup (Custom Config)
+
+```sql
+-- Insert new organization with custom settings
 INSERT INTO identity.organizations (
   id,
   name,

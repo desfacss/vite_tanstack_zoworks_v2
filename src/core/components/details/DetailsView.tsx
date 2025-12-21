@@ -8,7 +8,6 @@ import EntityImages from './EntityImages';
 import ActivitiesManager from './ActivitiesManager';
 import Logs from './Logs';
 import { useNestedContext } from '../../lib/NestedContext';
-import TaskReportPage from '@/components/common/doc/TaskReportPage';
 import { registry } from '@/core/registry';
 
 const DynamicComponent = lazy(() => import('./DynamicTab'));
@@ -54,7 +53,7 @@ const DetailsView: React.FC<DetailsViewProps> = ({
     const generatedTabs: { key: string; label: string; children: React.ReactNode; order: number }[] = [];
     const safeEditItem = editItem || {};
 
-    // 1. Static Components Mapping (Legacy/Transition)
+    // 1. Static Components Mapping (Core Only)
     const staticComponentMap: Record<string, { component: React.ComponentType<any>; props: any }> = {
       'Overview': { component: DetailOverview, props: { openMessageModal, data: editItem, viewConfig, config } },
       'Status': { component: StatusTab, props: {} },
@@ -62,15 +61,8 @@ const DetailsView: React.FC<DetailsViewProps> = ({
       'Files': { component: EntityImages, props: { entity_type: entityType, entity_id: editItem?.id } },
       'Activities': { component: ActivitiesManager, props: { entity_name: entityType, entity_id: editItem?.id } },
       'Logs': { component: Logs, props: { entity_type: entityType, entity_id: editItem?.id } },
-      'ClientDetails': { component: lazy(() => import('@/components/pages/Clients/ClientDetails')), props: { editItem, rawData, viewConfig } },
-      'TicketEdit': { component: lazy(() => import('@/components/pages/Clients/TicketEdit')), props: { editItem, rawData, viewConfig } },
-      'LogViewer': { component: lazy(() => import('@/components/pages/Clients/LogViewer')), props: { editItem, rawData, viewConfig } },
-      'Messages': { component: lazy(() => import('@/modules/tickets/components/Messages')), props: { editItem, rawData, viewConfig } },
-      'TeamMembers': { component: lazy(() => import('./TeamMembers')), props: { editItem, rawData, viewConfig } },
-      'RoleUsers': { component: lazy(() => import('./RoleUsers')), props: { editItem, rawData, viewConfig } },
-      'AgentActivityReport': { component: lazy(() => import('@/components/pages/Team/AgentActivityReport')), props: { editItem, rawData, viewConfig } },
-      'TaskReportPage': { component: TaskReportPage, props: { editItem } },
     };
+
 
     // Process viewConfig-based static tabs
     const processedStaticTabs = (viewConfig?.detailview?.staticTabs || [])

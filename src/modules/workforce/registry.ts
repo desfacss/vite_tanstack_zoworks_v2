@@ -30,4 +30,14 @@ export function register(config: any = {}) {
     component: () => import('./components/Timesheet'),
     order: 20,
   });
+
+
+  // Register Agent Activity Report
+  registry.registerTab({
+    id: 'agent-activity-report',
+    entityTypes: ['users'],
+    label: 'Activity Report',
+    component: () => import('./components/AgentActivityReport'),
+    order: 30,
+  });
 }

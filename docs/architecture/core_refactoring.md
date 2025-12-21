@@ -1,5 +1,15 @@
 # Core Refactoring: AI-Native Multi-Tenant SaaS Architecture
 
+> [!NOTE]
+> **Implementation Status (Dec 2025):**
+> *   ✅ **Phase 1: Bootstrap & Registry** - Completed (Tenant Resolver, Module Loader, Registry Pattern).
+> *   ✅ **Phase 2: Core Refactoring** - `DetailsView` fully decoupled; `GlobalActions` supports hybrid mode.
+> *   ✅ **Phase 3: Module Migration** - ALL modules migrated to registry pattern.
+> *   ✅ **Phase 4: Verification** - Build PASSED. Multi-tenant configuration verified.
+
+
+
+
 **Document Version:** 1.0  
 **Created:** 2025-12-21  
 **Author:** Principal Architecture  
@@ -133,68 +143,47 @@ vkbs.zoworks.com → main deployment
 
 ## Part 2: Tenant Configuration Schema
 
-### 2.1 Database Schema
+### 2.1 Database Schema (Existing)
+
+We utilize the existing `identity.organizations` table and `identity.v_organizations` view which already provide all necessary tenant configuration fields.
 
 ```sql
--- identity.tenant_configs
-CREATE TABLE identity.tenant_configs (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  slug TEXT UNIQUE NOT NULL,                    -- 'vkbs', 'sk', 'demo_crm_retail'
-  organization_id UUID REFERENCES identity.organizations(id),
-  
-  -- Domain Configuration
-  custom_domain TEXT,                           -- 'app.clientcompany.com'
-  subdomain TEXT UNIQUE NOT NULL,               -- 'vkbs'
-  
-  -- Module Configuration
-  enabled_modules TEXT[] DEFAULT '{"core"}',    -- ['core', 'crm', 'tickets']
-  module_config JSONB DEFAULT '{}',             -- Module-specific settings
-  
-  -- Appearance
-  theme_config JSONB DEFAULT '{
-    "mode": "system",
-    "primaryColor": "#1890ff",
-    "logoUrl": null,
-    "faviconUrl": null,
-    "brandName": "Zoworks"
-  }',
-  
-  -- Localization
-  enabled_languages TEXT[] DEFAULT '{"en"}',    -- ['en', 'ar', 'hi']
+-- identity.organizations (Existing)
+CREATE TABLE identity.organizations (
+  id UUID PRIMARY KEY DEFAULT extensions.uuid_generate_v4(),
+  name TEXT NOT NULL,
+  subdomain TEXT,                               -- Tenant subdomain (e.g., 'vkbs')
+  module_features JSONB DEFAULT '["core"]',     -- Enabled modules list
+  app_settings JSONB DEFAULT '{}',              -- General settings
+  theme_config JSONB DEFAULT '{...}',           -- Tenant theme settings
+  enabled_languages TEXT[] DEFAULT '{en}',      -- Supported languages
   default_language TEXT DEFAULT 'en',
-  rtl_languages TEXT[] DEFAULT '{"ar", "he"}',  -- RTL support languages
-  
-  -- Partition Configuration
-  partition_config JSONB DEFAULT '{
-    "organization": {"required": true, "visible": false},
-    "location": {"required": false, "visible": true},
-    "team": {"required": false, "visible": false},
-    "role": {"required": false, "visible": false}
-  }',
-  
-  -- Feature Flags
-  features JSONB DEFAULT '{
-    "ai_assistant": false,
-    "workflow_automation": false,
-    "api_access": false,
-    "white_label": false,
-    "sso": false,
-    "audit_logs": true
-  }',
-  
-  -- System
   is_demo BOOLEAN DEFAULT FALSE,
-  demo_credentials JSONB,                       -- For demo instances
-  created_at TIMESTAMPTZ DEFAULT now(),
-  updated_at TIMESTAMPTZ DEFAULT now()
+  ...
 );
 
--- Indexes for fast lookup
-CREATE INDEX idx_tenant_configs_subdomain ON identity.tenant_configs(subdomain);
-CREATE INDEX idx_tenant_configs_custom_domain ON identity.tenant_configs(custom_domain);
+-- identity.v_organizations (View for simple access)
+-- Selects organization details along with computed fields
 ```
 
-### 2.2 Module Configuration Examples
+### 2.2 Tenant Configuration Object
+
+The `TenantResolver` will query `identity.v_organizations` and map it to this internal config interface:
+
+```typescript
+interface TenantConfig {
+  id: string;             // Organization ID
+  slug: string;           // Subdomain
+  name: string;           // Organization Name
+  enabled_modules: string[]; // Mapped from module_features
+  theme_config: ThemeConfig;
+  enabled_languages: string[];
+  default_language: string;
+  app_settings: Record<string, any>;
+  is_demo: boolean;
+}
+```
+
 
 ```jsonc
 // CRM-focused tenant (small retail)
@@ -401,27 +390,45 @@ export async function resolveTenant(subdomain: string): Promise<TenantConfig> {
     return cached.config;
   }
   
-  // Fetch from database
+  // Fetch from database (identity.v_organizations)
   console.log(`[Tenant] Fetching config: ${subdomain}`);
   const { data, error } = await supabase
     .schema('identity')
-    .from('tenant_configs')
+    .from('v_organizations')
     .select('*')
-    .or(`subdomain.eq.${subdomain},custom_domain.eq.${window.location.hostname}`)
+    .eq('subdomain', subdomain)
     .single();
   
   if (error || !data) {
     console.warn(`[Tenant] Not found: ${subdomain}, using default`);
     return getDefaultConfig(subdomain);
   }
+
+  // Map DB result to TenantConfig
+  const config: TenantConfig = {
+    id: data.organization_id,
+    slug: data.subdomain,
+    name: data.organization_name,
+    enabled_modules: data.module_features || ['core'],
+    theme_config: data.theme_config,
+    enabled_languages: data.enabled_languages || ['en'],
+    default_language: data.default_language || 'en',
+    app_settings: data.app_settings || {},
+    is_demo: data.is_demo || false,
+    // Construct partition config if not present in settings
+    partition_config: data.app_settings?.partition_config || {
+      organization: { required: true, visible: false },
+       location: { required: false, visible: false },
+    }
+  };
   
   // Cache result
   tenantCache.set(subdomain, {
-    config: data,
+    config,
     expiry: Date.now() + CACHE_TTL
   });
   
-  return data;
+  return config;
 }
 
 function getSpecialConfig(subdomain: string): TenantConfig {
@@ -559,15 +566,39 @@ export function getModuleCapability<T>(moduleId: string, capability: string): T 
 
 ## Part 4: Theme System (Per-Tenant)
 
-### 4.1 Theme Registry
+> **Design Decision:** One tenant = One fixed theme. No user toggle.  
+> The theme is configured at tenant registration and applies to ALL users of that tenant.
+
+### 4.1 Theme Model
+
+```typescript
+// Each tenant has exactly ONE theme configuration
+interface TenantTheme {
+  mode: 'light' | 'dark';           // Fixed - no 'system' option
+  primaryColor: string;             // Brand color
+  secondaryColor?: string;          // Accent color
+  logoUrl?: string;                 // Tenant logo
+  faviconUrl?: string;              // Browser favicon
+  brandName: string;                // Document title, UI branding
+  borderRadius?: number;            // UI roundness (default: 8)
+  fontFamily?: string;              // Font (default: Inter)
+}
+
+// Examples:
+// - vkbs.zoworks.com: { mode: 'light', primaryColor: '#1890ff' }
+// - sk.zoworks.com: { mode: 'dark', primaryColor: '#722ed1' }
+// Users CANNOT toggle theme - it's fixed per tenant
+```
+
+### 4.2 Theme Registry (No Toggle)
 
 ```typescript
 // src/core/theme/ThemeRegistry.ts
 
-import { ConfigProvider, theme as antTheme } from 'antd';
+import { theme as antTheme } from 'antd';
 
 interface TenantTheme {
-  mode: 'light' | 'dark' | 'system';
+  mode: 'light' | 'dark';
   primaryColor: string;
   secondaryColor?: string;
   logoUrl?: string;
@@ -577,31 +608,12 @@ interface TenantTheme {
   fontFamily?: string;
 }
 
-// Default themes
-const defaultThemes = {
-  light: {
-    algorithm: antTheme.defaultAlgorithm,
-    token: {
-      colorPrimary: '#1890ff',
-      borderRadius: 8,
-      fontFamily: 'Inter, sans-serif',
-    },
-  },
-  dark: {
-    algorithm: antTheme.darkAlgorithm,
-    token: {
-      colorPrimary: '#1890ff',
-      borderRadius: 8,
-      fontFamily: 'Inter, sans-serif',
-    },
-  },
-};
-
-// Current loaded theme
-let currentTheme: TenantTheme | null = null;
+// Single tenant theme - immutable after load
+let tenantTheme: TenantTheme | null = null;
 
 export async function loadTheme(config: TenantTheme): Promise<void> {
-  currentTheme = config;
+  // Set once, never changes during session
+  tenantTheme = Object.freeze(config);
   
   // Apply favicon
   if (config.faviconUrl) {
@@ -613,65 +625,62 @@ export async function loadTheme(config: TenantTheme): Promise<void> {
     document.head.appendChild(link);
   }
   
-  // Apply brand name to title
+  // Apply brand name to document title
   document.title = config.brandName || 'Zoworks';
   
-  // Set CSS variables
+  // Set CSS variables (used by custom styles)
   const root = document.documentElement;
   root.style.setProperty('--primary-color', config.primaryColor);
   root.style.setProperty('--brand-name', config.brandName);
   
-  // Set dark mode class
-  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-  const isDark = config.mode === 'dark' || (config.mode === 'system' && prefersDark);
+  // Apply dark mode class - FIXED for tenant, no toggle
+  const isDark = config.mode === 'dark';
   root.classList.toggle('dark', isDark);
   
-  console.log('[Theme] Loaded:', config);
+  console.log('[Theme] Loaded (fixed for tenant):', config.mode);
 }
 
 export function getAntdTheme() {
-  if (!currentTheme) return defaultThemes.light;
+  if (!tenantTheme) {
+    return {
+      algorithm: antTheme.defaultAlgorithm,
+      token: { colorPrimary: '#1890ff', borderRadius: 8 },
+    };
+  }
   
-  const isDark = currentTheme.mode === 'dark' || 
-    (currentTheme.mode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-  
+  // Fixed theme - no system preference checking
   return {
-    algorithm: isDark ? antTheme.darkAlgorithm : antTheme.defaultAlgorithm,
+    algorithm: tenantTheme.mode === 'dark' 
+      ? antTheme.darkAlgorithm 
+      : antTheme.defaultAlgorithm,
     token: {
-      colorPrimary: currentTheme.primaryColor,
-      borderRadius: currentTheme.borderRadius || 8,
-      fontFamily: currentTheme.fontFamily || 'Inter, sans-serif',
+      colorPrimary: tenantTheme.primaryColor,
+      borderRadius: tenantTheme.borderRadius || 8,
+      fontFamily: tenantTheme.fontFamily || 'Inter, sans-serif',
     },
   };
 }
 
-export function getCurrentTheme(): TenantTheme | null {
-  return currentTheme;
+export function getTenantTheme(): TenantTheme | null {
+  return tenantTheme;
 }
+
+// NO toggleTheme function - theme is fixed per tenant
 ```
 
-### 4.2 Theme Provider Component
+### 4.3 Theme Provider (Simple, No Toggle)
 
 ```typescript
 // src/core/theme/ThemeProvider.tsx
 
-import { ConfigProvider, App as AntApp, theme } from 'antd';
-import { getAntdTheme, getCurrentTheme } from './ThemeRegistry';
-import { useTenantConfig } from '../bootstrap/TenantProvider';
+import { ConfigProvider, App as AntApp } from 'antd';
+import { getAntdTheme } from './ThemeRegistry';
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const tenantConfig = useTenantConfig();
+  // Theme is loaded once during bootstrap - never changes
   const antdTheme = getAntdTheme();
   
-  // Listen for system theme changes
-  useEffect(() => {
-    if (tenantConfig?.theme_config.mode === 'system') {
-      const mq = window.matchMedia('(prefers-color-scheme: dark)');
-      const handler = () => forceUpdate(); // Re-render on system theme change
-      mq.addEventListener('change', handler);
-      return () => mq.removeEventListener('change', handler);
-    }
-  }, [tenantConfig?.theme_config.mode]);
+  // NO useEffect for theme changes - theme is immutable per tenant
   
   return (
     <ConfigProvider theme={antdTheme}>
@@ -687,7 +696,31 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
 ## Part 5: i18n System (Per-Tenant Languages)
 
-### 5.1 Language Registry
+> **Design Decision:** Only load languages configured for the tenant.  
+> If tenant has `enabled_languages: ['en']`, we never load Arabic, Hindi, etc.  
+> This reduces bundle size and memory footprint.
+
+### 5.1 Language Loading Model
+
+```typescript
+// Tenant A: Small US business
+// enabled_languages: ['en']  
+// → Only loads: en.json (~15KB)
+// → No language selector shown
+
+// Tenant B: India multi-regional
+// enabled_languages: ['en', 'hi', 'ta', 'te']
+// → Only loads: en.json, hi.json, ta.json, te.json (~60KB)
+// → Language selector shown with 4 options
+
+// Tenant C: MENA enterprise  
+// enabled_languages: ['en', 'ar']
+// → Only loads: en.json, ar.json (~30KB)
+// → RTL applied when Arabic selected
+// → Language selector shown with 2 options
+```
+
+### 5.2 Language Registry (Tenant-Specific Loading)
 
 ```typescript
 // src/core/i18n/I18nRegistry.ts
@@ -695,7 +728,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 
-// Language manifest - maps language codes to lazy imports
+// Language manifest - these are all AVAILABLE languages
+// But we only LOAD what the tenant needs
 const LANGUAGE_MANIFEST: Record<string, () => Promise<{ default: object }>> = {
   'en': () => import('@/i18n/locales/en.json'),
   'ar': () => import('@/i18n/locales/ar.json'),
@@ -715,13 +749,19 @@ const LANGUAGE_MANIFEST: Record<string, () => Promise<{ default: object }>> = {
 // RTL languages
 const RTL_LANGUAGES = ['ar', 'he', 'fa', 'ur'];
 
+// Track which languages are loaded for THIS tenant
 let loadedLanguages: Set<string> = new Set();
 
+/**
+ * Load ONLY the languages enabled for this tenant.
+ * This function is called once during bootstrap.
+ * Languages not in enabledLanguages are NEVER loaded.
+ */
 export async function loadLanguages(
   enabledLanguages: string[],
   defaultLanguage: string = 'en'
 ): Promise<void> {
-  console.log('[i18n] Loading languages:', enabledLanguages);
+  console.log('[i18n] Loading ONLY tenant languages:', enabledLanguages);
   
   // Initialize i18next if not already
   if (!i18n.isInitialized) {
@@ -781,7 +821,7 @@ export function isLanguageLoaded(language: string): boolean {
 }
 ```
 
-### 5.2 Language Selector (Tenant-Aware)
+### 5.3 Language Selector (Only if Multiple Languages)
 
 ```typescript
 // src/core/i18n/LanguageSelect.tsx
@@ -801,19 +841,26 @@ const LANGUAGE_LABELS: Record<string, string> = {
   'mr': 'मराठी',
   'fr': 'Français',
   'es': 'Español',
-  // ...
+  'de': 'Deutsch',
+  'pt': 'Português',
+  'zh': '中文',
+  'ja': '日本語',
 };
 
 export function LanguageSelect() {
   const { i18n } = useTranslation();
   const tenantConfig = useTenantConfig();
   
-  // Only show if tenant has multiple languages enabled
+  // Get languages enabled for THIS tenant only
   const enabledLanguages = tenantConfig?.enabled_languages || ['en'];
+  
+  // CRITICAL: Don't render if single language tenant
+  // Most tenants will have only English - no selector needed
   if (enabledLanguages.length <= 1) {
-    return null; // Don't render selector for single-language tenants
+    return null; 
   }
   
+  // Only show languages that are both enabled AND loaded
   const options = enabledLanguages
     .filter(lang => getLoadedLanguages().includes(lang))
     .map(lang => ({
@@ -827,10 +874,20 @@ export function LanguageSelect() {
       onChange={changeLanguage}
       options={options}
       style={{ width: 120 }}
+      size="small"
     />
   );
 }
 ```
+
+### 5.4 Bundle Impact Summary
+
+| Tenant Config | Languages Loaded | Approx Size | Selector Shown |
+|---------------|------------------|-------------|----------------|
+| `['en']` | English only | ~15KB | ❌ No |
+| `['en', 'ar']` | English + Arabic | ~30KB | ✅ Yes |
+| `['en', 'hi', 'ta', 'te']` | 4 Indian languages | ~60KB | ✅ Yes |
+| `['en', 'fr', 'es', 'de']` | 4 European languages | ~60KB | ✅ Yes |
 
 ---
 

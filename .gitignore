@@ -13,6 +13,7 @@ node_modules
 dist
 dist-ssr
 *.local
+*dump.sql
 
 # Editor directories and files
 .vscode/*

@@ -14,13 +14,9 @@ import { useLocation } from 'react-router-dom';
 import { isLocationPartition } from '@/components/common/utils/partitionPermissions';
 import { registry } from '@/core/registry';
 
-// Legacy Component Map for backward compatibility
-const legacyComponentMap: Record<string, React.ComponentType<any>> = {
-  "../pages/Clients/TicketEdit": lazy(() => import("@/modules/tickets/components/TicketEdit").catch(() => ({ default: () => <div>Component not found</div> }))),
-  "../pages/Clients/LogViewer": lazy(() => import("@/modules/tickets/components/LogViewer").catch(() => ({ default: () => <div>Component not found</div> }))),
-  "../common/details/Task": lazy(() => import("@/modules/tickets/components/TaskForm").catch(() => ({ default: () => <div>Component not found</div> }))),
-  // Add other legacy mappings as needed
-};
+// Legacy Component Map Removed - Use Registry or Dynamic Forms
+const legacyComponentMap: Record<string, React.ComponentType<any>> = {};
+
 
 interface RowActionsProps {
   entityType: string;

@@ -222,7 +222,7 @@ The main App component now uses:
 
 | Task | Status | Description |
 |------|--------|-------------|
-| DetailsView Refactoring | ⚠️ Partial | Verify registry-based tab loading |
+| DetailsView Refactoring | ✅ Complete | Fully decoupled, registry-based tab loading |
 | Bundle Analysis | 🔴 Pending | Run `yarn build --analyze` for size verification |
 
 ### Low Priority
