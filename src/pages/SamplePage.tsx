@@ -5,7 +5,7 @@ import React from 'react';
 import { Card, Typography, Button, Space, Divider } from 'antd';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import { useAuthStore } from '../lib/store';
+import { useAuthStore } from '@/core/lib/store';
 import { PlusOutlined, SettingOutlined } from '@ant-design/icons';
 
 const { Title, Text, Paragraph } = Typography;

@@ -10,7 +10,7 @@ import DocView from './DocView';
 import ApprovalActionButtons from './ApprovalActionButtons';
 import Expensesheet from './Expensesheet';
 import Timesheet from './Timesheet';
-import { useAuthStore } from '../../../lib/store';
+import { useAuthStore } from '../@/core/lib/store';
 
 const { Text, Title } = Typography;
 

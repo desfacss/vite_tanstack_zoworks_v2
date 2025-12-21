@@ -3,7 +3,7 @@
 
 import React, { Suspense, lazy, useEffect, useMemo } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { useAuthStore } from '../lib/store';
+import { useAuthStore } from '@/core/lib/store';
 import { useTranslation } from 'react-i18next';
 
 // Direct imports for critical components

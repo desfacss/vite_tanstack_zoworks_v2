@@ -1,0 +1,52 @@
+vite v5.4.20 building for production...
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+transforming...
+✓ 3208 modules transformed.
+vite v5.4.20 building for production...
+transforming...
+.yarn/__virtual__/gantt-task-react-virtual-904480d9a3/3/.yarn/berry/cache/gantt-task-react-npm-0.3.9-989793037d-10c0.zip/node_modules/gantt-task-react/dist/index.modern.js (1012:24): A comment
+
+"/*#__PURE__*/"
+
+in ".yarn/__virtual__/gantt-task-react-virtual-904480d9a3/3/.yarn/berry/cache/gantt-task-react-npm-0.3.9-989793037d-10c0.zip/node_modules/gantt-task-react/dist/index.modern.js" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.
+.yarn/__virtual__/gantt-task-react-virtual-904480d9a3/3/.yarn/berry/cache/gantt-task-react-npm-0.3.9-989793037d-10c0.zip/node_modules/gantt-task-react/dist/index.modern.js (1014:29): A comment
+
+"/*#__PURE__*/"
+
+in ".yarn/__virtual__/gantt-task-react-virtual-904480d9a3/3/.yarn/berry/cache/gantt-task-react-npm-0.3.9-989793037d-10c0.zip/node_modules/gantt-task-react/dist/index.modern.js" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.
+✓ 90 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/sw.js  68.21 kB │ gzip: 18.65 kB │ map: 235.36 kB
+✓ built in 24.40s
+
+PWA v0.17.5
+mode      injectManifest
+precache  6 entries (0.00 KiB)
+files generated
+  dist/sw.js
+  dist/sw.js.map
+warnings
+  One of the glob patterns doesn't match any files. Please remove or fix the following: {
+  "globDirectory": "/Users/macbookpro/zo_v2/mini_project/dist",
+  "globPattern": "**/*.{js,wasm,css,html}",
+  "globIgnores": [
+    "**/node_modules/**/*",
+    "sw.js",
+    "sw.js"
+  ]
+}
+
+x Build failed in 37.21s
+error during build:
+[vite-plugin-pwa:build] [plugin vite-plugin-pwa:build] src/pages/settings/_UserSettings.tsx: There was an error during the build:
+  Could not resolve "../@/core/lib/store" from "src/pages/settings/_UserSettings.tsx"
+Additionally, handling the error in the 'buildEnd' hook caused the following error:
+  Could not resolve "../@/core/lib/store" from "src/pages/settings/_UserSettings.tsx"
+file: /Users/macbookpro/zo_v2/mini_project/src/pages/settings/_UserSettings.tsx
+    at getRollupError (file:///Users/macbookpro/.yarn/berry/cache/rollup-npm-4.52.4-76faa8bcd6-10c0.zip/node_modules/rollup/dist/es/shared/parseAst.js:401:41)
+    at file:///Users/macbookpro/.yarn/berry/cache/rollup-npm-4.52.4-76faa8bcd6-10c0.zip/node_modules/rollup/dist/es/shared/node-entry.js:23322:39
+    at async catchUnfinishedHookActions (file:///Users/macbookpro/.yarn/berry/cache/rollup-npm-4.52.4-76faa8bcd6-10c0.zip/node_modules/rollup/dist/es/shared/node-entry.js:22780:16)
+    at async rollupInternal (file:///Users/macbookpro/.yarn/berry/cache/rollup-npm-4.52.4-76faa8bcd6-10c0.zip/node_modules/rollup/dist/es/shared/node-entry.js:23305:5)
+    at async build (file:///Users/macbookpro/zo_v2/mini_project/.yarn/__virtual__/vite-virtual-38d0513951/3/.yarn/berry/cache/vite-npm-5.4.20-8cd91efe67-10c0.zip/node_modules/vite/dist/node/chunks/dep-D_zLpgQd.js:65708:14)
+    at async CAC.<anonymous> (file:///Users/macbookpro/zo_v2/mini_project/.yarn/__virtual__/vite-virtual-38d0513951/3/.yarn/berry/cache/vite-npm-5.4.20-8cd91efe67-10c0.zip/node_modules/vite/dist/node/cli.js:829:5)

@@ -1,5 +1,5 @@
 // src/components/Layout/GlobalLoader.tsx
-import { useAuthStore } from '@/lib/store';
+import { useAuthStore } from '@/core/lib/store';
 import { Spin } from 'antd';
 
 export const GlobalLoader = () => {

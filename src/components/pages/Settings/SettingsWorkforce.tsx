@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Form, Input, InputNumber, Select, Checkbox, Row, Col, Typography, Button, message, Collapse, Badge, Popconfirm } from 'antd';
 import { supabase } from '@/lib/supabase';
-import { useAuthStore } from '@/lib/store';
+import { useAuthStore } from '@/core/lib/store';
 import { DeleteOutlined } from '@ant-design/icons';
 
 const { Option } = Select;

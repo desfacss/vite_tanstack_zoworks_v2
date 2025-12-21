@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Form, Input, Select, Row, Col, Table, Button, DatePicker, Typography } from 'antd';
 import { DeleteOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
-import { useAuthStore } from '../../../lib/store';
+import { useAuthStore } from '../@/core/lib/store';
 const { Title } = Typography;
 
 const { Option } = Select;

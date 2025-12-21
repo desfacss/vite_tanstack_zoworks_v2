@@ -5,7 +5,7 @@
 // // import { useNavigate, Link } from 'react-router-dom';
 // // import { Mail, Lock, LogIn } from 'lucide-react';
 // // import { supabase } from '../../lib/supabase';
-// // import { useAuthStore } from '../../lib/store';
+// // import { useAuthStore } from '@/core/lib/store';
 
 // // const Login = () => {
 // //   const navigate = useNavigate();
@@ -202,7 +202,7 @@
 // import { Mail, Lock, LogIn } from 'lucide-react';
 // import { supabase } from '../../lib/supabase';
 // // 💡 We only need 'reset' from the store, not fetchUserSession
-// import { useAuthStore } from '../../lib/store'; 
+// import { useAuthStore } from '@/core/lib/store'; 
 
 // const Login = () => {
 //   const { message } = App.useApp();
@@ -424,7 +424,7 @@ import { motion } from 'framer-motion';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Mail, Lock, LogIn, Building2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
-import { useAuthStore } from '../../lib/store';
+import { useAuthStore } from '@/core/lib/store';
 import {
   isDevelopment,
   getTenantUrl

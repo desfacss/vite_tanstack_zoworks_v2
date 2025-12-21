@@ -1,6 +1,6 @@
 // import { useQuery } from '@tanstack/react-query';
 // import { supabase } from '@/lib/supabase';
-// import { useAuthStore } from '../../../lib/store';
+// import { useAuthStore } from '../@/core/lib/store';
 
 // interface ViewConfig {
 //   entity_type: string;
@@ -91,7 +91,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
-import { useAuthStore } from '../../../lib/store';
+import { useAuthStore } from '../@/core/lib/store';
 
 // Use import.meta.glob to import all JSON files in the specified directory
 const configFiles = import.meta.glob('../../../schemas/config/*.json');

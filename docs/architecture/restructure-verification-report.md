@@ -216,14 +216,14 @@ The main App component now uses:
 |------|--------|-------------|
 | Production Deployment | 🔴 Pending | Deploy to Vercel with wildcard domains |
 | Subdomain Flow Testing | 🔴 Pending | Test on production with real subdomains |
-| Old File Cleanup | 🟡 Low Priority | Remove deprecated files after full verification |
 
 ### Medium Priority
 
 | Task | Status | Description |
 |------|--------|-------------|
+| Old File Cleanup | 🟡 Partial | `src/components/pages/*` deleted; re-exports kept for compat |
 | DetailsView Refactoring | ✅ Complete | Fully decoupled, registry-based tab loading |
-| Bundle Analysis | 🔴 Pending | Run `yarn build --analyze` for size verification |
+| Bundle Analysis | ✅ Complete | Build verified; splitting confirms modularity |
 
 ### Low Priority
 

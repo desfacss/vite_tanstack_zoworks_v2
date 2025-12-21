@@ -3,7 +3,7 @@ import { Button, message, Select, Spin, List, Card, Row, Col, Typography } from 
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../../lib/supabase';
-import { useAuthStore } from '../../../lib/store';
+import { useAuthStore } from '../@/core/lib/store';
 import { TeamOutlined, UserOutlined } from '@ant-design/icons';
 
 const { Option } = Select;

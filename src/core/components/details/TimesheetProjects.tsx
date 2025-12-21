@@ -18,7 +18,7 @@
 // // DEV NOTE: The Supabase client and AuthStore are mocked for this environment.
 // // In a real application, you would use your actual imports.
 // // import { supabase } from '@/lib/supabase'; 
-// // import { useAuthStore } from '@/lib/store';
+// // import { useAuthStore } from '@/core/lib/store';
 // import dayjs from 'dayjs';
 // import weekday from 'dayjs/plugin/weekday';
 // // import './timesheet.css'; // Removed as CSS is handled inline or by AntD
@@ -617,7 +617,7 @@ import {
 // DEV NOTE: The Supabase client and AuthStore are mocked for this environment.
 // In a real application, you would use your actual imports.
 // import { supabase } from '@/lib/supabase'; 
-// import { useAuthStore } from '@/lib/store';
+// import { useAuthStore } from '@/core/lib/store';
 import dayjs from 'dayjs';
 import weekday from 'dayjs/plugin/weekday';
 // import './timesheet.css'; // Removed as CSS is handled inline or by AntD

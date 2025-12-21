@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button } from 'antd';
 import { Sun, Moon } from 'lucide-react';
-import { useAuthStore, useThemeStore } from '../../lib/store';
+import { useAuthStore, useThemeStore } from '@/core/lib/store';
 import env_def from '@/utils/constants';
 
 export const ThemeToggle = () => {

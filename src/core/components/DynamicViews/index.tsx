@@ -13,7 +13,7 @@
 // } from '@ant-design/icons';
 // import { useQuery } from '@tanstack/react-query';
 // import { supabase } from '../../lib/supabase';
-// import { useAuthStore } from '../../lib/store';
+// import { useAuthStore } from '@/core/lib/store';
 // import { useAuthedLayoutConfig } from '../Layout/AuthedLayoutContext';
 // import { useViewState } from './hooks/useViewState';
 // import { loadView, type ViewType } from './registry';
@@ -719,7 +719,7 @@ import {
 } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabase';
-import { useAuthStore } from '../../lib/store';
+import { useAuthStore } from '@/core/lib/store';
 import { useAuthedLayoutConfig } from '../Layout/AuthedLayoutContext';
 import { useViewState } from './hooks/useViewState';
 import { loadView, type ViewType } from './registry';

@@ -2,7 +2,7 @@
 import { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
-import { useAuthStore, UserSessionData } from '@/lib/store';
+import { useAuthStore, UserSessionData } from '@/core/lib/store';
 
 /**
  * @component GlobalSessionWatcher

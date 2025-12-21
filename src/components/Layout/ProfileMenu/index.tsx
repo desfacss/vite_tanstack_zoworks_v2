@@ -5,7 +5,7 @@
 // // import { LogOut, User, Settings } from 'lucide-react';
 // // import { useTranslation } from 'react-i18next';
 // // import { useQueryClient } from '@tanstack/react-query';
-// // import { useAuthStore } from '../../../lib/store';
+// // import { useAuthStore } from '../@/core/lib/store';
 // // import { supabase } from '../../../lib/supabase';
 
 // // export const ProfileMenu: React.FC<{ isMobile?: boolean }> = ({ isMobile }) => {
@@ -100,7 +100,7 @@
 // import { LogOut, User, Settings } from 'lucide-react';
 // import { useTranslation } from 'react-i18next';
 // import { useQueryClient } from '@tanstack/react-query';
-// import { useAuthStore } from '../../../lib/store';
+// import { useAuthStore } from '../@/core/lib/store';
 // import { supabase } from '../../../lib/supabase';
 
 // export const ProfileMenu: React.FC<{ isMobile?: boolean }> = ({ isMobile }) => {
@@ -203,7 +203,7 @@ import { useNavigate } from 'react-router-dom';
 import { LogOut, User, Settings } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
-import { useAuthStore } from '../../../lib/store';
+import { useAuthStore } from '../@/core/lib/store';
 import { supabase } from '../../../lib/supabase';
 
 export const ProfileMenu: React.FC<{ isMobile?: boolean }> = ({ isMobile }) => {

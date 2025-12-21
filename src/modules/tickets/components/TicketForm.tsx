@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Form, Input, Select, Button, message, Spin, Modal, Space, DatePicker, Row, Col } from 'antd';
-import { useAuthStore } from '@/lib/store';
+import { useAuthStore } from '@/core/lib/store';
 import { supabase } from '@/lib/supabase';
 import FileUploader from '@/core/components/shared/ImageUploader';
 import dayjs from 'dayjs';

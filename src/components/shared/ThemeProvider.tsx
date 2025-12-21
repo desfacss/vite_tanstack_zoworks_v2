@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { ConfigProvider, App } from 'antd';
-import { useThemeStore } from '../../lib/store';
+import { useThemeStore } from '@/core/lib/store';
 import { lightTheme, darkTheme } from '../../lib/theme';
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {

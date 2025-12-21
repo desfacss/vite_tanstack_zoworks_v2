@@ -5,7 +5,7 @@ import { ThemeToggle } from '../ThemeToggle';
 import { LanguageSelect } from '../LanguageSelect';
 import { useSettings } from '../../../hooks/useSettings';
 import env_def from '../../../utils/constants';
-import { useAuthStore } from '../../../lib/store';
+import { useAuthStore } from '../@/core/lib/store';
 
 const { Title, Text } = Typography;
 

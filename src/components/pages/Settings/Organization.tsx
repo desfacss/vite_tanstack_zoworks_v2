@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Form, Input, Button, Select, message, Row, Col, Typography } from 'antd';
 import { supabase } from '@/lib/supabase';
-import { useAuthStore } from '@/lib/store';
+import { useAuthStore } from '@/core/lib/store';
 import DetailsAndSettingsForm from './DetailsAndSettingsForm';
 const { Title } = Typography;
 const { Option } = Select;

@@ -5,7 +5,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { LogIn, CreditCard } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { useAuthStore } from '@/lib/store';
+import { useAuthStore } from '@/core/lib/store';
 
 const Home = () => {
   const navigate = useNavigate();

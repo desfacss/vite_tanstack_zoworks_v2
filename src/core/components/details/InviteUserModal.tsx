@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Button, Drawer, Form, Spin, message, notification } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import { supabase } from "@/lib/supabase";
-import { useAuthStore } from "@/lib/store";
+import { useAuthStore } from "@/core/lib/store";
 import DynamicForm from "../../common/DynamicForm";
 import env_def from "../../../utils/constants";
 import { useQueryClient } from "@tanstack/react-query";

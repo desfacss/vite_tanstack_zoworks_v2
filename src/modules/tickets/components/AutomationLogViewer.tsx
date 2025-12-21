@@ -28,7 +28,7 @@ import {
   DollarCircleOutlined,
 } from '@ant-design/icons';
 import { supabase } from '@/lib/supabase';
-import { useAuthStore } from '@/lib/store';
+import { useAuthStore } from '@/core/lib/store';
 
 const { Title, Text, Paragraph } = Typography;
 const { Panel } = Collapse;

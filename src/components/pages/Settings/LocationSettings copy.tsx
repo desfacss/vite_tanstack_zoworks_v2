@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Button, Card, notification, Table, Drawer, Form, Input, DatePicker, Grid, message, Modal } from 'antd';
 import { PlusOutlined, EditFilled, DeleteOutlined, ExclamationCircleFilled } from '@ant-design/icons';
 import { supabase } from '@/lib/supabase';
-import { useAuthStore } from '@/lib/store';
+import { useAuthStore } from '@/core/lib/store';
 import dayjs from 'dayjs';
 import Utils from './utils';
 import { serverErrorParsing } from '../../common/api/serverErrorParsing';

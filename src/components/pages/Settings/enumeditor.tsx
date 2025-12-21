@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Select, Button, Input, Form, Row, Col, message, Modal, List, Popconfirm } from 'antd';
 import { supabase } from '@/lib/supabase';
-import { useAuthStore } from '@/lib/store';
+import { useAuthStore } from '@/core/lib/store';
 
 const { Option } = Select;
 

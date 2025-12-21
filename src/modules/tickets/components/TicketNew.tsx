@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Button, Drawer, Tooltip } from 'antd'; // Add Tooltip
 import { Plus } from 'lucide-react'; // Import Plus icon
 import TicketForm from './TicketForm'; // Adjust the import path as needed
-import { useAuthStore } from '@/lib/store';
+import { useAuthStore } from '@/core/lib/store';
 import { useQueryClient } from '@tanstack/react-query';
 import { useDeviceType } from '@/utils/deviceTypeStore';
 interface TicketNewProps {

@@ -3,7 +3,7 @@ import { Select, Tabs, Spin, message } from 'antd';
 import { supabase } from '@/lib/supabase';
 import RolePermissions from './Roles';
 import ModuleConfigForm from './ModuleForm';
-import { useAuthStore } from '@/lib/store';
+import { useAuthStore } from '@/core/lib/store';
 import RoleManagement from './RoleManagement';
 import UserManagement from './UserManagement';
 

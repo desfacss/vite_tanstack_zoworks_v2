@@ -4,7 +4,7 @@ import { Form, Input, Select, Button, Modal, message, Spin, Alert } from 'antd';
 import { supabase } from '@/lib/supabase';
 import moment from 'moment';
 import { PlusOutlined } from '@ant-design/icons';
-import { useAuthStore } from '@/lib/store';
+import { useAuthStore } from '@/core/lib/store';
 
 const { TextArea } = Input;
 const { Option } = Select;

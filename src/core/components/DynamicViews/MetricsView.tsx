@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Card, Row, Col, Select, Statistic, message, Drawer, Button, Typography, Space } from 'antd';
 import { DashboardOutlined, ReloadOutlined } from '@ant-design/icons';
 import { supabase } from '@/lib/supabase';
-import { useAuthStore } from '@/lib/store';
+import { useAuthStore } from '@/core/lib/store';
 import { snakeToTitleCase } from '@/components/common/utils/casing';
 import dayjs from 'dayjs';
 

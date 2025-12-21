@@ -3,7 +3,7 @@
 // import { supabase } from '@/lib/supabase';
 // import { message, Button, Upload, Typography, Space, Tooltip, Dropdown, Menu, Drawer } from 'antd';
 // import { UploadOutlined, ExportOutlined, FilePdfOutlined, EllipsisOutlined, QrcodeOutlined } from '@ant-design/icons';
-// import { useAuthStore } from '../../lib/store';
+// import { useAuthStore } from '@/core/lib/store';
 // import { useReactToPrint } from 'react-to-print';
 // import QRCard from '@/components/common/details/QRCard';
 
@@ -553,7 +553,7 @@ import Papa from 'papaparse';
 import { supabase } from '@/lib/supabase';
 import { message, Button, Upload, Typography, Space, Tooltip, Dropdown, MenuProps, Drawer, Modal, Form, Select, InputNumber } from 'antd';
 import { UploadOutlined, ExportOutlined, FilePdfOutlined, EllipsisOutlined, QrcodeOutlined } from '@ant-design/icons';
-import { useAuthStore } from '../../lib/store';
+import { useAuthStore } from '@/core/lib/store';
 import { useReactToPrint } from 'react-to-print';
 import QRCard from '@/components/common/details/QRCard';
 

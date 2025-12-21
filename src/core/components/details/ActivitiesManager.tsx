@@ -7,7 +7,7 @@ import moment from 'moment';
 // import { v4 as uuidv4 } from 'uuid'; // For generating UUIDs if needed, though Supabase handles it by default
 import { supabase } from '../../../lib/supabase';
 import DynamicForm from '../DynamicForm';
-import { useAuthStore } from '../../../lib/store';
+import { useAuthStore } from '../@/core/lib/store';
 
 // Define the structure for an Activity record
 interface Activity {

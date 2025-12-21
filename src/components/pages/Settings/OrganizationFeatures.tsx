@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Checkbox, Button, message, Input, Space } from 'antd';
 import { supabase } from '@/lib/supabase';
-import { useAuthStore } from '@/lib/store';
+import { useAuthStore } from '@/core/lib/store';
 // import { camelCaseToTitleCase } from 'components/util-components/utils';
 import { EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { camelCaseToTitleCase } from '../../common/utils/casing';

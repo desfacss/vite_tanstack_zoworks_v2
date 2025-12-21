@@ -2,7 +2,7 @@ import { Button, Card, notification, Table, Drawer, Modal, Form, Avatar, message
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { PlusOutlined, EditFilled, DeleteOutlined, SendOutlined, UnorderedListOutlined, MoreOutlined, AppstoreOutlined, SearchOutlined, CopyFilled, ExclamationCircleFilled, EyeOutlined } from "@ant-design/icons";
 import { supabase } from '@/lib/supabase';
-import { useAuthStore } from '@/lib/store';
+import { useAuthStore } from '@/core/lib/store';
 import './Services.css'; // Add a CSS file to style the cards grid
 import { serverErrorParsing } from "@/components/common/utils/serverErrorParsing";
 import { camelCaseToTitleCase } from "@/components/common/utils/casing";

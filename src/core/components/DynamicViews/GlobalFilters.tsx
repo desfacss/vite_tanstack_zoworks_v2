@@ -3,7 +3,7 @@ import { Form, Input, DatePicker, Select, Button, Space, Dropdown, Checkbox } fr
 import dayjs from 'dayjs';
 import { useViewConfigEnhanced } from './hooks/useEntityConfig';
 import { supabase } from '../../lib/supabase';
-import { useAuthStore } from "@/lib/store";
+import { useAuthStore } from "@/core/lib/store";
 import { Settings2 } from 'lucide-react';
 
 const { RangePicker } = DatePicker;

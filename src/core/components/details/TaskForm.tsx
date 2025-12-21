@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Form, Input, Select, Button, DatePicker, Row, Col, Typography, Spin, message } from 'antd';
 import { supabase } from '@/lib/supabase';
 import dayjs from 'dayjs';
-import { useAuthStore } from '../../../lib/store';
+import { useAuthStore } from '../@/core/lib/store';
 import { useQueryClient } from '@tanstack/react-query';
 
 const { Option } = Select;

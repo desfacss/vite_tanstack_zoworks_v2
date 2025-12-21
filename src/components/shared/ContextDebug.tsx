@@ -1,5 +1,5 @@
 import React from 'react';
-import { useAuthStore } from '@/lib/store';
+import { useAuthStore } from '@/core/lib/store';
 
 const ContextDebug: React.FC = () => {
     const { user, organization, location } = useAuthStore();

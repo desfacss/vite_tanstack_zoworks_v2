@@ -2,7 +2,7 @@ import React from 'react';
 import { Result, Button } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { Home } from 'lucide-react';
-import { useAuthStore } from '../../lib/store';
+import { useAuthStore } from '@/core/lib/store';
 
 export const NotFound: React.FC = () => {
   const navigate = useNavigate();

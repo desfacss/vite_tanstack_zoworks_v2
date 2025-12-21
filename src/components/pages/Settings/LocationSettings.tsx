@@ -18,7 +18,7 @@ import {
   ExclamationCircleFilled,
 } from '@ant-design/icons'
 import { supabase } from '@/lib/supabase'
-import { useAuthStore } from '@/lib/store'
+import { useAuthStore } from '@/core/lib/store'
 import DetailsAndSettingsForm from './DetailsAndSettingsForm'
 import Utils from './utils'
 

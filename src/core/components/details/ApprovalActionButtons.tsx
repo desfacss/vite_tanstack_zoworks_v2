@@ -5,7 +5,7 @@ import { Button, Space, message, Modal, Spin } from 'antd';
 import { Check, X } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase'; // Assuming this path is correct
-import { useAuthStore } from '@/lib/store'; // Assuming this path is correct
+import { useAuthStore } from '@/core/lib/store'; // Assuming this path is correct
 
 // --- Configuration ---
 // NOTE: Use the actual HR Role ID from your system.

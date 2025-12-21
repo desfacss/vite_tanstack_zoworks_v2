@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button, Select, Spin, Row, Col, Typography, message, Space, Popconfirm, Card } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, ReloadOutlined } from '@ant-design/icons';
 import { supabase } from '@/lib/supabase';
-import { useAuthStore } from '@/lib/store';
+import { useAuthStore } from '@/core/lib/store';
 import MetricChartWidget, { MetricWidgetConfig } from './MetricChartWidget'; 
 import DashboardEditor from './DashboardEditor'; // Import the editor
 import dayjs from 'dayjs';

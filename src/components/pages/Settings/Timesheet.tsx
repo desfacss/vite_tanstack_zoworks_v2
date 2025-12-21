@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Form, Button, Select, Switch, InputNumber, Collapse, message, Divider } from 'antd';
 import { supabase } from '@/lib/supabase';
-import { useAuthStore } from '@/lib/store';
+import { useAuthStore } from '@/core/lib/store';
 
 const { Panel } = Collapse;
 const { Option } = Select;

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Modal, Badge, List } from 'antd';
 import { BellOutlined } from '@ant-design/icons';
 import { supabase } from '@/lib/supabase';
-import { useAuthStore } from '@/lib/store';
+import { useAuthStore } from '@/core/lib/store';
 import { Database } from '@/types/database.types';
 
 // Define the type for a single notification based on your Supabase schema

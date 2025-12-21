@@ -5,7 +5,7 @@ import Publitio from 'publitio_js_sdk';
 // import ReactCrop from 'react-image-crop';
 // import 'react-image-crop/dist/ReactCrop.css';
 import moment from 'moment';
-import { useAuthStore } from '@/lib/store';
+import { useAuthStore } from '@/core/lib/store';
 
 // Publitio configuration
 const publitio = new Publitio(import.meta.env.VITE_PUBLITIO_API_KEY, import.meta.env.VITE_PUBLITIO_API_SECRET);

@@ -7,7 +7,7 @@ import { motion } from 'framer-motion';
 import RowActions from './RowActions';
 import { useAuthedLayoutConfig } from '../Layout/AuthedLayoutContext';
 import { supabase } from '../../lib/supabase';
-import { useAuthStore } from '../../lib/store';
+import { useAuthStore } from '@/core/lib/store';
 import { useQueryClient } from '@tanstack/react-query';
 
 // Styled components remains unchanged

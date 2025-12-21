@@ -8,7 +8,7 @@ import { FileDown, UserIcon } from 'lucide-react';
 import { useAuthedLayoutConfig } from '../Layout/AuthedLayoutContext';
 import RowActions from './RowActions';
 import { supabase } from '../../lib/supabase';
-import { useAuthStore } from '../../lib/store';
+import { useAuthStore } from '@/core/lib/store';
 import dayjs from 'dayjs';
 
 interface GanttViewConfig {

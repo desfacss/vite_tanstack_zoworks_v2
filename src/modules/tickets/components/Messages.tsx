@@ -4,7 +4,7 @@
 // import { MailOutlined, ClockCircleOutlined, SendOutlined } from '@ant-design/icons';
 // import { v4 as uuidv4 } from 'uuid';
 // import dayjs from 'dayjs';
-// import { useAuthStore } from '@/lib/store';
+// import { useAuthStore } from '@/core/lib/store';
 
 // // Optional: Uncomment when email sending is implemented
 // import { sendEmail } from '@/core/components/shared/email';
@@ -460,7 +460,7 @@ import { Collapse, Spin, Alert, Typography, Card, Input, Button, App } from 'ant
 import { MailOutlined, ClockCircleOutlined, SendOutlined } from '@ant-design/icons';
 import { v4 as uuidv4 } from 'uuid';
 import dayjs from 'dayjs';
-import { useAuthStore } from '@/lib/store';
+import { useAuthStore } from '@/core/lib/store';
 
 // Optional: Uncomment when email sending is implemented
 import { sendEmail } from '@/core/components/shared/email';

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { message, Spin, Image, Tooltip, Button, Modal, Row, Col } from 'antd';
 import { FileOutlined, DeleteOutlined } from '@ant-design/icons';
 import { supabase } from '@/lib/supabase';
-import { useAuthStore } from '@/lib/store';
+import { useAuthStore } from '@/core/lib/store';
 import moment from 'moment';
 import FileUploader from '@/components/common/ImageUploader';
 

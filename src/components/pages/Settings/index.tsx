@@ -9,7 +9,7 @@ import LeaveSettings from './LeaveSettings';
 import LeaveTypes from './LeaveTypes';
 // import OrganizationFeatureEdit from './OrganizationFeatures';
 import SettingsWorkforce from './SettingsWorkforce';
-import { useAuthStore } from '@/lib/store';
+import { useAuthStore } from '@/core/lib/store';
 import Roles from './Roles';
 import EntityConfig from './EntityConfigForm';
 import MermaidViewer from './MermaidViewer';

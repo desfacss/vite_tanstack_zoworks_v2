@@ -6,7 +6,7 @@
 // // // // // // //   FolderOpenOutlined, LineChartOutlined, PieChartOutlined, UsergroupAddOutlined, SyncOutlined
 // // // // // // // } from '@ant-design/icons';
 // // // // // // // import Plotly from 'plotly.js-dist-min';
-// // // // // // // import { useAuthStore } from '../lib/store';
+// // // // // // // import { useAuthStore } from '@/core/lib/store';
 // // // // // // // import { supabase } from '../lib/supabase';
 // // // // // // // import { groupBy, map, sumBy } from 'lodash';
 
@@ -309,7 +309,7 @@
 // // // // // //   FolderOpenOutlined, LineChartOutlined, PieChartOutlined, UsergroupAddOutlined, SyncOutlined
 // // // // // // } from '@ant-design/icons';
 // // // // // // import Plotly from 'plotly.js-dist-min';
-// // // // // // import { useAuthStore } from '../lib/store';
+// // // // // // import { useAuthStore } from '@/core/lib/store';
 // // // // // // import { supabase } from '../lib/supabase';
 // // // // // // import { groupBy, map, sumBy } from 'lodash';
 // // // // // // import { subscribeToPushNotifications } from '../components/utils/push-notifications';
@@ -733,7 +733,7 @@
 // // // // // import { Card, Row, Col, Table, Tag, Statistic, Spin, Typography, Alert, Button } from 'antd';
 // // // // // import { SyncOutlined } from '@ant-design/icons';
 // // // // // import Plotly from 'plotly.js-dist-min';
-// // // // // import { useAuthStore } from '../lib/store';
+// // // // // import { useAuthStore } from '@/core/lib/store';
 // // // // // import { supabase } from '../lib/supabase';
 // // // // // import { groupBy, map, sumBy } from 'lodash';
 
@@ -1168,7 +1168,7 @@
 // // // // import { Card, Row, Col, Table, Tag, Statistic, Spin, Typography, Alert, Button } from 'antd';
 // // // // import { SyncOutlined } from '@ant-design/icons';
 // // // // import Plotly from 'plotly.js-dist-min';
-// // // // import { useAuthStore } from '../lib/store';
+// // // // import { useAuthStore } from '@/core/lib/store';
 // // // // import { supabase } from '../lib/supabase';
 // // // // import { groupBy, map, sumBy } from 'lodash';
 
@@ -2010,7 +2010,7 @@
 // // // import React, { useState, useEffect, useCallback } from 'react';
 // // // import { Layout, Select, Button, Space, message, Drawer, Spin, Empty } from 'antd';
 // // // import { SaveOutlined, PlusOutlined, EditOutlined, EyeOutlined, ReloadOutlined } from '@ant-design/icons';
-// // // import { useAuthStore } from '../lib/store'; // Your store
+// // // import { useAuthStore } from '@/core/lib/store'; // Your store
 // // // import { supabase } from '../lib/supabase'; // Your supabase client
 // // // import DashboardCanvas from './DashboardCanvas';
 // // // import _ from 'lodash';
@@ -2289,7 +2289,7 @@
 // // import React, { useState, useEffect, useCallback } from 'react';
 // // import { Layout, Select, Button, Space, message, Drawer, Empty, Spin, Card } from 'antd';
 // // import { SaveOutlined, PlusOutlined, EditOutlined, EyeOutlined, ReloadOutlined } from '@ant-design/icons';
-// // import { useAuthStore } from '../lib/store';
+// // import { useAuthStore } from '@/core/lib/store';
 // // import { supabase } from '../lib/supabase';
 // // import DashboardCanvas from './DashboardCanvas';
 // // import _ from 'lodash';
@@ -2576,7 +2576,7 @@
 // import React, { useState, useEffect, useCallback } from 'react';
 // import { Layout, Select, Button, Space, message, Drawer, Empty, Spin, Card } from 'antd';
 // import { SaveOutlined, PlusOutlined, EditOutlined, EyeOutlined, ReloadOutlined } from '@ant-design/icons';
-// import { useAuthStore } from '../lib/store';
+// import { useAuthStore } from '@/core/lib/store';
 // import { supabase } from '../lib/supabase';
 // import DashboardCanvas from './DashboardCanvas';
 // import _ from 'lodash';
@@ -2858,7 +2858,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Layout, Select, Button, Space, message, Drawer, Empty, Spin, Card } from 'antd';
 import { SaveOutlined, PlusOutlined, EditOutlined, EyeOutlined, ReloadOutlined } from '@ant-design/icons';
-import { useAuthStore } from '../lib/store';
+import { useAuthStore } from '@/core/lib/store';
 import { supabase } from '../lib/supabase';
 import DashboardCanvas from './DashboardCanvas';
 import _ from 'lodash';

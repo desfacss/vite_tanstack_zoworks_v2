@@ -10,7 +10,7 @@ import { Sider } from './Sider';
 import { NotificationsDrawer } from './NotificationsDrawer';
 import { MobileMenu } from './MobileMenu';
 import { Settings } from './Settings';
-import { useAuthStore } from '../../lib/store';
+import { useAuthStore } from '@/core/lib/store';
 import { supabase } from '../../lib/supabase';
 import type { Notification } from '../../lib/types';
 import { useTranslation } from 'react-i18next';

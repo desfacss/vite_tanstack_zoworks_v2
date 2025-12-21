@@ -1,7 +1,7 @@
 // // // // // src/hooks/useUserSession.ts - working before revision
 // // // // import { useQuery } from '@tanstack/react-query';
 // // // // import { supabase } from '@/lib/supabase';
-// // // // import type { UserSessionData, RpcSessionData } from '@/lib/store'; // Assuming types are in store.ts for now
+// // // // import type { UserSessionData, RpcSessionData } from '@/core/lib/store'; // Assuming types are in store.ts for now
 // // // // import type { User, Organization, Location } from '@/lib/types';
 
 // // // // // The core fetching logic, extracted into a standalone async function.
@@ -110,7 +110,7 @@
 // // // // src/hooks/useUserSession.ts
 // // // import { useQuery } from '@tanstack/react-query';
 // // // import { supabase } from '@/lib/supabase';
-// // // import type { UserSessionData, RpcSessionData } from '@/lib/store';
+// // // import type { UserSessionData, RpcSessionData } from '@/core/lib/store';
 // // // import type { User, Organization, Location } from '@/lib/types';
 
 // // // /**
@@ -224,7 +224,7 @@
 // // // // src/hooks/useUserSession.ts - working before revision
 // // // import { useQuery } from '@tanstack/react-query';
 // // // import { supabase } from '@/lib/supabase';
-// // // import type { UserSessionData, RpcSessionData } from '@/lib/store'; // Assuming types are in store.ts for now
+// // // import type { UserSessionData, RpcSessionData } from '@/core/lib/store'; // Assuming types are in store.ts for now
 // // // import type { User, Organization, Location } from '@/lib/types';
 
 // // // // The core fetching logic, extracted into a standalone async function.
@@ -333,8 +333,8 @@
 // // // src/hooks/useUserSession.ts
 // // import { useQuery } from '@tanstack/react-query';
 // // import { supabase } from '@/lib/supabase';
-// // import { useAuthStore } from '@/lib/store';
-// // import type { UserSessionData, RpcSessionData } from '@/lib/store';
+// // import { useAuthStore } from '@/core/lib/store';
+// // import type { UserSessionData, RpcSessionData } from '@/core/lib/store';
 // // import type { User, Organization, Location } from '@/lib/types';
 
 // // /**
@@ -455,8 +455,8 @@
 // // src/hooks/useUserSession.ts
 // import { useQuery } from '@tanstack/react-query';
 // import { supabase } from '@/lib/supabase';
-// import { useAuthStore } from '@/lib/store';
-// import type { UserSessionData, RpcSessionData } from '@/lib/store';
+// import { useAuthStore } from '@/core/lib/store';
+// import type { UserSessionData, RpcSessionData } from '@/core/lib/store';
 // import type { User, Organization, Location } from '@/lib/types';
 
 // const fetchUserSessionData = async (): Promise<UserSessionData> => {
@@ -529,7 +529,7 @@
 // THE REACTIVE LOGIC
 import { useQuery, QueryFunctionContext } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
-import type { UserSessionData, RpcSessionData } from '@/lib/store';
+import type { UserSessionData, RpcSessionData } from '@/core/lib/store';
 import type { User, Organization, Location } from '@/lib/types';
 
 // Define the Query Key type for type-safety

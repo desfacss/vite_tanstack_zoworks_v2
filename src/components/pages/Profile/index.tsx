@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, Divider, Tag, Typography } from 'antd';
 import { UserOutlined, EnvironmentOutlined, TeamOutlined, IdcardOutlined } from '@ant-design/icons';
-import { useAuthStore } from '@/lib/store';
+import { useAuthStore } from '@/core/lib/store';
 import DetailOverview from '../../common/details/DetailOverview';
 
 const { Title } = Typography;

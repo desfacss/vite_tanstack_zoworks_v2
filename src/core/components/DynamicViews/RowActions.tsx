@@ -4,7 +4,7 @@ import { Button, Drawer, Space, message, Modal, Dropdown, Menu, Spin } from 'ant
 import { Edit2, Trash2, Eye, Copy, MoreHorizontal } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
-import { useAuthStore } from '@/lib/store';
+import { useAuthStore } from '@/core/lib/store';
 import DynamicForm from '../DynamicForm';
 import DetailsView from '../details/DetailsView';
 import { useFormConfig } from '../DynamicViews/hooks/useFormConfig';

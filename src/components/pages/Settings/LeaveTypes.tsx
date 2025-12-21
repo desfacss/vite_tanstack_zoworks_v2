@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Table, Button, Modal, Form, Input, message, Select } from 'antd';
 import { supabase } from '@/lib/supabase';
-import { useAuthStore } from '@/lib/store';
+import { useAuthStore } from '@/core/lib/store';
 import { EditFilled } from '@ant-design/icons';
 import EnumManager from '../../common/EnumManager';
 

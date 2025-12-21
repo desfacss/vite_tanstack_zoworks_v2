@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Table, Input, Button, Typography, Select, message, Row, Col, InputNumber, DatePicker } from 'antd';
 // NOTE: Assuming the new project has these imports/configs
 import { supabase } from '@/lib/supabase'; // Updated path for supabase config
-import { useAuthStore } from '@/lib/store'; // Updated path to get session/user
+import { useAuthStore } from '@/core/lib/store'; // Updated path to get session/user
 import dayjs from 'dayjs'
 import { generateEmailData, sendEmail } from '@/components/common/email';
 // NOTE: Assuming you will create/port these common utilities or replace them

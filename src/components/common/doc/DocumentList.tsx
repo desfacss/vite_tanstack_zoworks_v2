@@ -26,7 +26,7 @@ import { DocumentRecord, DocumentForm, DOCUMENT_TYPES } from './types/document';
 import DocumentFormModal from './DocumentFormModal';
 import DocumentViewer from './DocumentViewer';
 import TemplateManager from './TemplateManager';
-import { useAuthStore } from '@/lib/store';
+import { useAuthStore } from '@/core/lib/store';
 
 const { Title } = Typography;
 const { Search } = Input;

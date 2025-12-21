@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Form, Input, Button, message, Select, Typography, Space } from 'antd';
 import { supabase } from '@/lib/supabase';
-import { useAuthStore } from '@/lib/store';
+import { useAuthStore } from '@/core/lib/store';
 import { MetricWidgetConfig } from './MetricChartWidget';
 
 // A mock Dashboard type for demonstration

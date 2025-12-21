@@ -1,7 +1,7 @@
 // // // import React, { useEffect, useState, useMemo } from 'react';
 // // // import { Table, Input, Button, Typography, Select, message, Row, Col, InputNumber, DatePicker, Radio } from 'antd';
 // // // import { supabase } from '@/lib/supabase';
-// // // import { useAuthStore } from '@/lib/store';
+// // // import { useAuthStore } from '@/core/lib/store';
 // // // import dayjs from 'dayjs';
 // // // import weekday from 'dayjs/plugin/weekday';
 // // // import './timesheet.css';
@@ -346,7 +346,7 @@ import {
 } from 'antd';
 // DEV NOTE: Mocking imports for Canvas environment
 // import { supabase } from '@/lib/supabase';
-// import { useAuthStore } from '@/lib/store';
+// import { useAuthStore } from '@/core/lib/store';
 import dayjs from 'dayjs';
 import weekday from 'dayjs/plugin/weekday';
 // import './timesheet.css'; 

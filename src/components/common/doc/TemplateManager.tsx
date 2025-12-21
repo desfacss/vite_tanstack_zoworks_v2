@@ -23,7 +23,7 @@ import {
 import { DocumentService } from './services/documentService';
 import { DocumentTemplate, DocumentForm } from './types/document';
 import TemplateCustomizer from './TemplateCustomizer';
-import { useAuthStore } from '@/lib/store';
+import { useAuthStore } from '@/core/lib/store';
 
 const { Title, Text } = Typography;
 

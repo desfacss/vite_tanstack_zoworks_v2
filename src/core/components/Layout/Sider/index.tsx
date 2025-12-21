@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Layout, Menu } from 'antd';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useAuthStore } from '../../../lib/store';
+import { useAuthStore } from '../@/core/lib/store';
 
 const { Sider: AntSider } = Layout;
 

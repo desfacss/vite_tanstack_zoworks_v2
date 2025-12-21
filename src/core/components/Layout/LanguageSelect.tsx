@@ -1,7 +1,7 @@
 import { Select } from 'antd';
 import { useTranslation } from 'react-i18next';
 import env_def from '@/utils/constants';
-import { useAuthStore } from '../../lib/store';
+import { useAuthStore } from '@/core/lib/store';
 
 const { Option } = Select;
 

@@ -16,7 +16,7 @@ import {
 } from '@ant-design/icons';
 import { DisplayIdService } from './services/displayIdService';
 import { DisplayIdConfig } from './types/displayId';
-import { useAuthStore } from '@/lib/store';
+import { useAuthStore } from '@/core/lib/store';
 
 // Simple debounce utility function
 function debounce<T extends (...args: any[]) => any>(

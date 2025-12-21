@@ -3,7 +3,7 @@ import { Button, Transfer, message } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../../lib/supabase';
-import { useAuthStore } from '../../../lib/store';
+import { useAuthStore } from '../@/core/lib/store';
 
 interface RoleMembersProps {
   role_id: string | undefined;

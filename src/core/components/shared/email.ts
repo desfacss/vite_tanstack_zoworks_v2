@@ -89,7 +89,7 @@
 
 
 import { notification } from 'antd';
-import { useAuthStore } from "@/lib/store";
+import { useAuthStore } from "@/core/lib/store";
 
 // Define the Email interface for type safety
 interface Email {

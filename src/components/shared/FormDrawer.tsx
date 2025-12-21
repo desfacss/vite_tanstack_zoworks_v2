@@ -1,6 +1,6 @@
 import React from 'react';
 import { Drawer } from 'antd';
-import { useThemeStore } from '../../lib/store';
+import { useThemeStore } from '@/core/lib/store';
 
 interface FormDrawerProps {
   title: string;

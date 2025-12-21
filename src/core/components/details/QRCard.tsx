@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, Typography, Space } from 'antd';
 import { QRCodeCanvas } from 'qrcode.react';
-import { useAuthStore } from '@/lib/store';
+import { useAuthStore } from '@/core/lib/store';
 
 const { Text, Link } = Typography;
 

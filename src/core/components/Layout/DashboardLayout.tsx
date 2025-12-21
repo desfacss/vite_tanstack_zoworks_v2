@@ -16,11 +16,11 @@ import {
   Plus,
   Filter
 } from 'lucide-react';
-import { useAuthStore } from '../../lib/store';
+import { useAuthStore } from '@/core/lib/store';
 import { supabase, getCurrentOrganization, getCurrentUser} from '../../lib/supabase';
 import { ThemeToggle } from './ThemeToggle';
 import { LanguageSelect } from './LanguageSelect';
-import { useThemeStore } from '../../lib/store';
+import { useThemeStore } from '@/core/lib/store';
 import { SearchDateFilter } from '../shared/SearchDateFilter';
 
 const { Header, Sider, Content } = Layout;

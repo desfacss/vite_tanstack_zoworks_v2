@@ -2,7 +2,7 @@ import { Button, Card, notification, Table, Drawer, Form, Input, Select, DatePic
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { PlusOutlined, EditFilled, DeleteOutlined, ExclamationCircleFilled, SearchOutlined } from "@ant-design/icons";
 import { supabase } from '@/lib/supabase';
-import { useAuthStore } from "@/lib/store";
+import { useAuthStore } from "@/core/lib/store";
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import { camelCaseToTitleCase } from "@/core/components/common/utils/casing";

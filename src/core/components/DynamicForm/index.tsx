@@ -6,7 +6,7 @@ import { PostgrestFilterBuilder } from '@supabase/supabase-js';
 import Widgets from "./Widgets";
 import ObjectFieldTemplate from "./ObjectFieldTemplate";
 import { supabase } from "../../../lib/supabase";
-import { useAuthStore } from "../../../lib/store";
+import { useAuthStore } from "../@/core/lib/store";
 import CustomFieldTemplate from "./FieldTemplate";
 import { debounce } from "lodash"; 
 import dayjs from "dayjs";

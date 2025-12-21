@@ -5,7 +5,7 @@ import { DocumentService } from './services/documentService';
 import { DocumentRecord, DocumentTemplate, DocumentForm } from './types/document';
 import DynamicDocumentTemplate from './DynamicDocumentTemplate';
 import TemplateCustomizer from './TemplateCustomizer';
-import { useAuthStore } from '@/lib/store';
+import { useAuthStore } from '@/core/lib/store';
 import { useReactToPrint } from 'react-to-print';
 
 interface DocumentViewerProps {

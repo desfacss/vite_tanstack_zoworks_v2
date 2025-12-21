@@ -6,7 +6,7 @@
 // // // // // import { useTranslation } from 'react-i18next';
 // // // // // import { ProfileMenu } from '../ProfileMenu';
 // // // // // import { useAuthedLayoutConfig } from '../AuthedLayoutContext';
-// // // // // import { useAuthStore } from '@/lib/store';
+// // // // // import { useAuthStore } from '@/core/lib/store';
 // // // // // // NOTE: Removed unused functions like getAllOrganizations and getOrganizationLocations
 // // // // // import { supabase } from '@/lib/supabase';
 // // // // // import type { Organization, Location } from '@/lib/types';
@@ -339,7 +339,7 @@
 // // // // import { useTranslation } from 'react-i18next';
 // // // // import { ProfileMenu } from '../ProfileMenu';
 // // // // import { useAuthedLayoutConfig } from '../AuthedLayoutContext';
-// // // // import { useAuthStore } from '@/lib/store';
+// // // // import { useAuthStore } from '@/core/lib/store';
 // // // // // NOTE: Removed unused functions like getAllOrganizations and getOrganizationLocations
 // // // // import { supabase } from '@/lib/supabase';
 // // // // import type { Organization, Location } from '@/lib/types';
@@ -638,7 +638,7 @@
 // // // import { useTranslation } from 'react-i18next';
 // // // import { ProfileMenu } from '../ProfileMenu';
 // // // import { useAuthedLayoutConfig } from '../AuthedLayoutContext';
-// // // import { useAuthStore } from '@/lib/store';
+// // // import { useAuthStore } from '@/core/lib/store';
 // // // import { supabase } from '@/lib/supabase';
 // // // import type { Organization, Location } from '@/lib/types';
 
@@ -929,7 +929,7 @@
 // // import { useTranslation } from 'react-i18next';
 // // import { ProfileMenu } from '../ProfileMenu';
 // // import { useAuthedLayoutConfig } from '../AuthedLayoutContext';
-// // import { useAuthStore } from '@/lib/store';
+// // import { useAuthStore } from '@/core/lib/store';
 // // import { supabase } from '@/lib/supabase';
 // // import type { Organization, Location } from '@/lib/types';
 
@@ -1219,7 +1219,7 @@
 // import { useTranslation } from 'react-i18next';
 // import { ProfileMenu } from '../ProfileMenu';
 // import { useAuthedLayoutConfig } from '../AuthedLayoutContext';
-// import { useAuthStore } from '@/lib/store';
+// import { useAuthStore } from '@/core/lib/store';
 // import { supabase } from '@/lib/supabase';
 // import type { Organization, Location } from '@/lib/types';
 
@@ -1407,7 +1407,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { ProfileMenu } from '../ProfileMenu';
 import { useAuthedLayoutConfig } from '../AuthedLayoutContext';
-import { useAuthStore } from '@/lib/store';
+import { useAuthStore } from '@/core/lib/store';
 import { supabase } from '@/lib/supabase';
 import type { Organization, Location } from '@/lib/types';
 

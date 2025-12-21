@@ -1,7 +1,7 @@
 // // // // // // // // // src/components/Layout/SessionManager.tsx - working before revision
 // // // // // // // // import { useEffect, useState } from 'react';
-// // // // // // // // import { useAuthStore } from '@/lib/store';
-// // // // // // // // import { useUserSession } from '@/hooks/useUserSession';
+// // // // // // // // import { useAuthStore } from '@/core/lib/store';
+// // // // // // // // import { useUserSession } from '@/core/hooks/useUserSession';
 // // // // // // // // import { supabase } from '@/lib/supabase';
 // // // // // // // // import { Session } from '@supabase/supabase-js';
 
@@ -78,8 +78,8 @@
 
 // // // // // // // // src/components/Layout/SessionManager.tsx
 // // // // // // // import { useEffect, useState } from 'react';
-// // // // // // // import { useAuthStore } from '@/lib/store';
-// // // // // // // import { useUserSession } from '@/hooks/useUserSession';
+// // // // // // // import { useAuthStore } from '@/core/lib/store';
+// // // // // // // import { useUserSession } from '@/core/hooks/useUserSession';
 // // // // // // // import { supabase } from '@/lib/supabase';
 
 // // // // // // // /**
@@ -194,7 +194,7 @@
 // // // // // // import { useTranslation } from 'react-i18next';
 // // // // // // import { ProfileMenu } from './ProfileMenu';
 // // // // // // import { useAuthedLayoutConfig } from './AuthedLayoutContext';
-// // // // // // import { useAuthStore } from '@/lib/store';
+// // // // // // import { useAuthStore } from '@/core/lib/store';
 // // // // // // // NOTE: Removed unused functions like getAllOrganizations and getOrganizationLocations
 // // // // // // import { supabase } from '@/lib/supabase';
 // // // // // // import type { Organization, Location } from '@/lib/types';
@@ -489,8 +489,8 @@
 
 // // // // // // src/components/Layout/SessionManager.tsx
 // // // // // import { useEffect, useState } from 'react';
-// // // // // import { useAuthStore } from '@/lib/store';
-// // // // // import { useUserSession } from '@/hooks/useUserSession';
+// // // // // import { useAuthStore } from '@/core/lib/store';
+// // // // // import { useUserSession } from '@/core/hooks/useUserSession';
 // // // // // import { supabase } from '@/lib/supabase';
 
 // // // // // /**
@@ -602,8 +602,8 @@
 // // // // // src/hooks/useUserSession.ts
 // // // // import { useQuery } from '@tanstack/react-query';
 // // // // import { supabase } from '@/lib/supabase';
-// // // // import { useAuthStore } from '@/lib/store';
-// // // // import type { UserSessionData, RpcSessionData } from '@/lib/store';
+// // // // import { useAuthStore } from '@/core/lib/store';
+// // // // import type { UserSessionData, RpcSessionData } from '@/core/lib/store';
 // // // // import type { User, Organization, Location } from '@/lib/types';
 
 // // // // /**
@@ -722,8 +722,8 @@
 
 
 // // // import { useEffect, useState } from 'react';
-// // // import { useAuthStore } from '@/lib/store';
-// // // import { useUserSession } from '@/hooks/useUserSession';
+// // // import { useAuthStore } from '@/core/lib/store';
+// // // import { useUserSession } from '@/core/hooks/useUserSession';
 // // // import { supabase } from '@/lib/supabase';
 
 // // // /**
@@ -813,8 +813,8 @@
 // // // without stale data for switch org
 
 // // import { useEffect, useState } from 'react';
-// // import { useAuthStore } from '@/lib/store';
-// // import { useUserSession } from '@/hooks/useUserSession';
+// // import { useAuthStore } from '@/core/lib/store';
+// // import { useUserSession } from '@/core/hooks/useUserSession';
 // // import { supabase } from '@/lib/supabase';
 
 // // export const SessionManager = () => {
@@ -895,8 +895,8 @@
 // // THE REACTIVE LOGIC
 // // // // // // // // // src/components/Layout/SessionManager.tsx - working before revision
 // // // // // // // // import { useEffect, useState } from 'react';
-// // // // // // // // import { useAuthStore } from '@/lib/store';
-// // // // // // // // import { useUserSession } from '@/hooks/useUserSession';
+// // // // // // // // import { useAuthStore } from '@/core/lib/store';
+// // // // // // // // import { useUserSession } from '@/core/hooks/useUserSession';
 // // // // // // // // import { supabase } from '@/lib/supabase';
 // // // // // // // // import { Session } from '@supabase/supabase-js';
 
@@ -973,8 +973,8 @@
 
 // // // // // // // // src/components/Layout/SessionManager.tsx
 // // // // // // // import { useEffect, useState } from 'react';
-// // // // // // // import { useAuthStore } from '@/lib/store';
-// // // // // // // import { useUserSession } from '@/hooks/useUserSession';
+// // // // // // // import { useAuthStore } from '@/core/lib/store';
+// // // // // // // import { useUserSession } from '@/core/hooks/useUserSession';
 // // // // // // // import { supabase } from '@/lib/supabase';
 
 // // // // // // // /**
@@ -1089,7 +1089,7 @@
 // // // // // // import { useTranslation } from 'react-i18next';
 // // // // // // import { ProfileMenu } from './ProfileMenu';
 // // // // // // import { useAuthedLayoutConfig } from './AuthedLayoutContext';
-// // // // // // import { useAuthStore } from '@/lib/store';
+// // // // // // import { useAuthStore } from '@/core/lib/store';
 // // // // // // // NOTE: Removed unused functions like getAllOrganizations and getOrganizationLocations
 // // // // // // import { supabase } from '@/lib/supabase';
 // // // // // // import type { Organization, Location } from '@/lib/types';
@@ -1384,8 +1384,8 @@
 
 // // // // // // src/components/Layout/SessionManager.tsx
 // // // // // import { useEffect, useState } from 'react';
-// // // // // import { useAuthStore } from '@/lib/store';
-// // // // // import { useUserSession } from '@/hooks/useUserSession';
+// // // // // import { useAuthStore } from '@/core/lib/store';
+// // // // // import { useUserSession } from '@/core/hooks/useUserSession';
 // // // // // import { supabase } from '@/lib/supabase';
 
 // // // // // /**
@@ -1497,8 +1497,8 @@
 // // // // // src/hooks/useUserSession.ts
 // // // // import { useQuery } from '@tanstack/react-query';
 // // // // import { supabase } from '@/lib/supabase';
-// // // // import { useAuthStore } from '@/lib/store';
-// // // // import type { UserSessionData, RpcSessionData } from '@/lib/store';
+// // // // import { useAuthStore } from '@/core/lib/store';
+// // // // import type { UserSessionData, RpcSessionData } from '@/core/lib/store';
 // // // // import type { User, Organization, Location } from '@/lib/types';
 
 // // // // /**
@@ -1617,8 +1617,8 @@
 
 
 // // // import { useEffect, useState } from 'react';
-// // // import { useAuthStore } from '@/lib/store';
-// // // import { useUserSession } from '@/hooks/useUserSession';
+// // // import { useAuthStore } from '@/core/lib/store';
+// // // import { useUserSession } from '@/core/hooks/useUserSession';
 // // // import { supabase } from '@/lib/supabase';
 
 // // // /**
@@ -1708,8 +1708,8 @@
 // // // without stale data for switch org
 
 // // import { useEffect, useState } from 'react';
-// // import { useAuthStore } from '@/lib/store';
-// // import { useUserSession } from '@/hooks/useUserSession';
+// // import { useAuthStore } from '@/core/lib/store';
+// // import { useUserSession } from '@/core/hooks/useUserSession';
 // // import { supabase } from '@/lib/supabase';
 
 // // export const SessionManager = () => {
@@ -1789,8 +1789,8 @@
 
 // // THE REACTIVE LOGIC + LOGOUT
 // import { useEffect, useState } from 'react';
-// import { useAuthStore } from '@/lib/store';
-// import { useUserSession } from '@/hooks/useUserSession';
+// import { useAuthStore } from '@/core/lib/store';
+// import { useUserSession } from '@/core/hooks/useUserSession';
 // import { supabase } from '@/lib/supabase';
 
 // export const SessionManager = () => {
@@ -1869,8 +1869,8 @@
 
 
 import { useEffect, useState } from 'react';
-import { useAuthStore } from '@/lib/store';
-import { useUserSession } from '@/hooks/useUserSession';
+import { useAuthStore } from '@/core/lib/store';
+import { useUserSession } from '@/core/hooks/useUserSession';
 import { supabase } from '@/lib/supabase';
 
 export const SessionManager = () => {

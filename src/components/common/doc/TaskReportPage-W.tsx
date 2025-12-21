@@ -3,7 +3,7 @@
 // import { DocumentService } from './services/documentService';
 // import { DocumentForm } from './types/document';
 // import DocumentFormModal from './DocumentFormModal';
-// import { useAuthStore } from '@/lib/store';
+// import { useAuthStore } from '@/core/lib/store';
 // import dayjs from 'dayjs';
 
 // const { Title } = Typography;
@@ -123,7 +123,7 @@ import { message, Spin, Typography, Button } from 'antd';
 import { supabase } from '@/lib/supabase';
 import { DocumentForm } from './types/document';
 import DocumentFormModal from './DocumentFormModal';
-import { useAuthStore } from '@/lib/store';
+import { useAuthStore } from '@/core/lib/store';
 import dayjs from 'dayjs';
 
 const { Title } = Typography;

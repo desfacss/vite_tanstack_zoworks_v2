@@ -1,7 +1,7 @@
 // src/components/Layout/AuthGuard.tsx
 import React from 'react';
 import { Navigate, Outlet, useLocation, useSearchParams } from 'react-router-dom';
-import { useAuthStore } from '../../lib/store';
+import { useAuthStore } from '@/core/lib/store';
 import { LoadingFallback } from '../shared/LoadingFallback';
 import {
   isHubHost,

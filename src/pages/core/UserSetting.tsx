@@ -3,7 +3,7 @@ import { Card, Switch, Form, message } from 'antd';
 import { motion } from 'framer-motion';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabase';
-import { useAuthStore } from '../../lib/store';
+import { useAuthStore } from '@/core/lib/store';
 
 const Settings = () => {
   const { user } = useAuthStore();

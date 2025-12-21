@@ -5,7 +5,7 @@ import { ArrowRightOutlined, GoogleOutlined } from '@ant-design/icons';
 import { useNavigate, Link } from 'react-router-dom';
 import { UserPlus, Mail, Lock, User } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
-import { useThemeStore } from '../../lib/store';
+import { useThemeStore } from '@/core/lib/store';
 // import { ThemeToggle } from '../../components/Layout/ThemeToggle';
 // import { ThemeProvider } from '../../components/shared/ThemeProvider';
 
