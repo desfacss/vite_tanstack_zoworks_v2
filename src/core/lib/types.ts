@@ -1,5 +1,17 @@
 import { User as SupabaseUser } from '@supabase/supabase-js';
 
+export interface Location {
+  id: string;
+  name: string;
+  organization_id: string;
+  details: Record<string, any>;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  created_by: string;
+  updated_by: string | null;
+}
+
 export interface Organization {
   id: string;
   name: string;
@@ -71,6 +83,7 @@ export interface Subscription {
   is_active: boolean;
   created_at: string;
   updated_at: string;
+  updated_by: string | null; // Added to match Organization pattern if needed, or keeping minimal
 }
 
 export interface Team {

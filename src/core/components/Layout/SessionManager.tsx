@@ -31,7 +31,7 @@
 // // // // // // // //   // Effect to listen for Supabase auth events (login/logout)
 // // // // // // // //   useEffect(() => {
 // // // // // // // //     console.log('>>> [SessionManager] useEffect: Setting up onAuthStateChange listener...');
-    
+
 // // // // // // // //     // Check the initial session state on mount
 // // // // // // // //     supabase.auth.getSession().then(({ data: { session } }) => {
 // // // // // // // //       console.log('>>> [SessionManager] Initial session check:', session ? 'Session found' : 'No session');
@@ -189,7 +189,7 @@
 // // // // // // // Header.tsx
 // // // // // // import React, { useState, useEffect, useMemo } from 'react';
 // // // // // // import { Layout, Button, Space, Drawer, Select, message } from 'antd';
-// // // // // // import { Menu as MenuIcon, Bell, Search, Settings as SettingsIcon } from 'lucide-react';
+// // // // // // // import { Menu as MenuIcon, Bell, Search, Settings as SettingsIcon } from 'lucide-react-removed';
 // // // // // // import { useQueryClient, useIsFetching } from '@tanstack/react-query';
 // // // // // // import { useTranslation } from 'react-i18next';
 // // // // // // import { ProfileMenu } from './ProfileMenu';
@@ -238,10 +238,10 @@
 // // // // // //   const { user, organization, location, setOrganization, setLocation, viewPreferences, setViewPreferences, setIsSwitchingOrg } = useAuthStore();
 // // // // // //   const queryClient = useQueryClient();
 // // // // // //   const [showSearch, setShowSearch] = useState(false);
-  
+
 // // // // // //   // New state to hold the RPC result
 // // // // // //   const [userOrgLocations, setUserOrgLocations] = useState<UserOrgLocationData[]>([]);
-  
+
 // // // // // //   const [loadingOrgLocs, setLoadingOrgLocs] = useState(false);
 
 // // // // // //   /**
@@ -260,7 +260,7 @@
 // // // // // //       try {
 // // // // // //         // Call the RPC. No arguments are needed as it uses auth.uid()
 // // // // // //         const { data, error } = await supabase.schema('identity').rpc('get_my_organizations_v2');
-        
+
 // // // // // //         if (error) {
 // // // // // //           console.error('[Header] Error calling get_my_organizations RPC:', error);
 // // // // // //           // Handle error (e.g., show a notification)
@@ -331,14 +331,14 @@
 
 // // // // // //     if (selectedOrgData && user?.id) {
 // // // // // //       console.log(`[Header] Switching to organization: ${selectedOrgData.organization_name} (${orgId})`);
-      
+
 // // // // // //       setIsSwitchingOrg(true);
 // // // // // //       message.loading({ content: `Switching to ${selectedOrgData.organization_name}...`, key: 'orgSwitch' });
 
 // // // // // //       // Immediately update the store for a responsive UI.
 // // // // // //       // CRITICAL: This updates the store's organization.id, which useUserSession will read during the next fetch.
 // // // // // //       setOrganization({ id: selectedOrgData.organization_id, name: selectedOrgData.organization_name } as Organization);
-      
+
 // // // // // //       const newLocations = selectedOrgData.locations;
 // // // // // //       if (newLocations.length > 0) {
 // // // // // //         const stickyLocationId = viewPreferences[user.id]?.lastLocationByOrg?.[orgId];
@@ -444,7 +444,7 @@
 // // // // // //               disabled={loadingOrgLocs || currentLocations.length === 0}
 // // // // // //             />
 // // // // // //           )}
-          
+
 // // // // // //           {isMobile && config.searchFilters && (
 // // // // // //             <Button
 // // // // // //               type="text"
@@ -584,7 +584,7 @@
 // // // // //     if (isSuccess && data) {
 // // // // //       const logPrefix = isStale ? '[SessionManager] (STALE)' : '[SessionManager] (FRESH)';
 // // // // //       console.log(`${logPrefix} Syncing session data to Zustand for OrgID: ${data.org_id}`);
-      
+
 // // // // //       setSession(data);
 // // // // //     }
 // // // // //     if (isError) {
@@ -637,14 +637,14 @@
 // // // //   const orgIdToUse = currentOrgId || session?.user?.user_metadata?.org_id;
 
 // // // //   console.log(`>>> [useUserSession] fetchUserSessionData: 2. Calling RPC for OrgID: ${orgIdToUse} (Source: ${currentOrgId ? 'Store' : 'JWT Metadata'})`);
-  
+
 // // // //   const { data: rpcData, error: rpcError } = await supabase
 // // // //     .schema('identity')
 // // // //     .rpc('jwt_get_user_session', { p_organization_id: orgIdToUse });
 
 // // // //   if (rpcError) throw new Error(`RPC Error: ${rpcError.message}`);
 // // // //   if (!rpcData) throw new Error('No data returned from RPC.');
-  
+
 // // // //   const partialSession = (Array.isArray(rpcData) ? rpcData[0] : rpcData) as RpcSessionData;
 // // // //   console.log('>>> [useUserSession] fetchUserSessionData: 2. RPC Success.', { userId: partialSession.user_id, orgId: partialSession.org_id });
 
@@ -665,7 +665,7 @@
 // // // //   if (!userResponse.data) throw new Error(`User not found for ID: ${partialSession.user_id}`);
 // // // //   if (orgResponse.error) throw new Error(`Organization Fetch Error: ${orgResponse.error.message}`);
 // // // //   if (!orgResponse.data) throw new Error(`Organization not found for ID: ${partialSession.org_id}`);
-  
+
 // // // //   const userData = userResponse.data as User;
 // // // //   const orgData = orgResponse.data as Organization;
 // // // //   console.log('>>> [useUserSession] fetchUserSessionData: 4. User/Org fetch SUCCESS.');
@@ -676,7 +676,7 @@
 // // // //   if (locationId) {
 // // // //     console.log(`>>> [useUserSession] fetchUserSessionData: 5. Fetching Location ${locationId}...`);
 // // // //     const { data, error } = await supabase.schema('identity').from('locations').select('*').eq('id', locationId).maybeSingle();
-    
+
 // // // //     if (error) console.warn(`Location fetch warning: ${error.message}`); // Warn but don't fail.
 // // // //     else locationData = data as Location;
 // // // //   }
@@ -768,7 +768,7 @@
 // // //     // B. Subscribe to Changes
 // // //     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
 // // //       console.log(`>>> [SessionManager] Auth Event: ${event}`);
-      
+
 // // //       if (event === 'SIGNED_IN') {
 // // //         setEnabled(true);
 // // //       }
@@ -790,7 +790,7 @@
 // // //         `\n   Org: ${data.organization.name} (${data.org_id})`,
 // // //         `\n   User: ${data.user.email}`
 // // //       );
-      
+
 // // //       // This updates the global store, which triggers UI re-renders (e.g., Navigation, Dashboard)
 // // //       setSession(data);
 // // //     }
@@ -799,7 +799,7 @@
 // // //     if (isError) {
 // // //       console.error('[SessionManager] Error fetching session:', error);
 // // //       setAuthError(error.message);
-      
+
 // // //       // If we can't fetch the session (e.g., deleted user, bad permissions), 
 // // //       // we clear the store to prevent a broken UI state.
 // // //       clearUserSession();
@@ -877,7 +877,7 @@
 // //         `\n   Org: ${data.organization.name}`,
 // //         `\n   User: ${data.user.email}`
 // //       );
-      
+
 // //       setSession(data);
 // //     }
 
@@ -926,7 +926,7 @@
 // // // // // // // //   // Effect to listen for Supabase auth events (login/logout)
 // // // // // // // //   useEffect(() => {
 // // // // // // // //     console.log('>>> [SessionManager] useEffect: Setting up onAuthStateChange listener...');
-    
+
 // // // // // // // //     // Check the initial session state on mount
 // // // // // // // //     supabase.auth.getSession().then(({ data: { session } }) => {
 // // // // // // // //       console.log('>>> [SessionManager] Initial session check:', session ? 'Session found' : 'No session');
@@ -1084,7 +1084,7 @@
 // // // // // // // Header.tsx
 // // // // // // import React, { useState, useEffect, useMemo } from 'react';
 // // // // // // import { Layout, Button, Space, Drawer, Select, message } from 'antd';
-// // // // // // import { Menu as MenuIcon, Bell, Search, Settings as SettingsIcon } from 'lucide-react';
+// // // // // // // import { Menu as MenuIcon, Bell, Search, Settings as SettingsIcon } from 'lucide-react-removed';
 // // // // // // import { useQueryClient, useIsFetching } from '@tanstack/react-query';
 // // // // // // import { useTranslation } from 'react-i18next';
 // // // // // // import { ProfileMenu } from './ProfileMenu';
@@ -1133,10 +1133,10 @@
 // // // // // //   const { user, organization, location, setOrganization, setLocation, viewPreferences, setViewPreferences, setIsSwitchingOrg } = useAuthStore();
 // // // // // //   const queryClient = useQueryClient();
 // // // // // //   const [showSearch, setShowSearch] = useState(false);
-  
+
 // // // // // //   // New state to hold the RPC result
 // // // // // //   const [userOrgLocations, setUserOrgLocations] = useState<UserOrgLocationData[]>([]);
-  
+
 // // // // // //   const [loadingOrgLocs, setLoadingOrgLocs] = useState(false);
 
 // // // // // //   /**
@@ -1155,7 +1155,7 @@
 // // // // // //       try {
 // // // // // //         // Call the RPC. No arguments are needed as it uses auth.uid()
 // // // // // //         const { data, error } = await supabase.schema('identity').rpc('get_my_organizations_v2');
-        
+
 // // // // // //         if (error) {
 // // // // // //           console.error('[Header] Error calling get_my_organizations RPC:', error);
 // // // // // //           // Handle error (e.g., show a notification)
@@ -1226,14 +1226,14 @@
 
 // // // // // //     if (selectedOrgData && user?.id) {
 // // // // // //       console.log(`[Header] Switching to organization: ${selectedOrgData.organization_name} (${orgId})`);
-      
+
 // // // // // //       setIsSwitchingOrg(true);
 // // // // // //       message.loading({ content: `Switching to ${selectedOrgData.organization_name}...`, key: 'orgSwitch' });
 
 // // // // // //       // Immediately update the store for a responsive UI.
 // // // // // //       // CRITICAL: This updates the store's organization.id, which useUserSession will read during the next fetch.
 // // // // // //       setOrganization({ id: selectedOrgData.organization_id, name: selectedOrgData.organization_name } as Organization);
-      
+
 // // // // // //       const newLocations = selectedOrgData.locations;
 // // // // // //       if (newLocations.length > 0) {
 // // // // // //         const stickyLocationId = viewPreferences[user.id]?.lastLocationByOrg?.[orgId];
@@ -1339,7 +1339,7 @@
 // // // // // //               disabled={loadingOrgLocs || currentLocations.length === 0}
 // // // // // //             />
 // // // // // //           )}
-          
+
 // // // // // //           {isMobile && config.searchFilters && (
 // // // // // //             <Button
 // // // // // //               type="text"
@@ -1479,7 +1479,7 @@
 // // // // //     if (isSuccess && data) {
 // // // // //       const logPrefix = isStale ? '[SessionManager] (STALE)' : '[SessionManager] (FRESH)';
 // // // // //       console.log(`${logPrefix} Syncing session data to Zustand for OrgID: ${data.org_id}`);
-      
+
 // // // // //       setSession(data);
 // // // // //     }
 // // // // //     if (isError) {
@@ -1532,14 +1532,14 @@
 // // // //   const orgIdToUse = currentOrgId || session?.user?.user_metadata?.org_id;
 
 // // // //   console.log(`>>> [useUserSession] fetchUserSessionData: 2. Calling RPC for OrgID: ${orgIdToUse} (Source: ${currentOrgId ? 'Store' : 'JWT Metadata'})`);
-  
+
 // // // //   const { data: rpcData, error: rpcError } = await supabase
 // // // //     .schema('identity')
 // // // //     .rpc('jwt_get_user_session', { p_organization_id: orgIdToUse });
 
 // // // //   if (rpcError) throw new Error(`RPC Error: ${rpcError.message}`);
 // // // //   if (!rpcData) throw new Error('No data returned from RPC.');
-  
+
 // // // //   const partialSession = (Array.isArray(rpcData) ? rpcData[0] : rpcData) as RpcSessionData;
 // // // //   console.log('>>> [useUserSession] fetchUserSessionData: 2. RPC Success.', { userId: partialSession.user_id, orgId: partialSession.org_id });
 
@@ -1560,7 +1560,7 @@
 // // // //   if (!userResponse.data) throw new Error(`User not found for ID: ${partialSession.user_id}`);
 // // // //   if (orgResponse.error) throw new Error(`Organization Fetch Error: ${orgResponse.error.message}`);
 // // // //   if (!orgResponse.data) throw new Error(`Organization not found for ID: ${partialSession.org_id}`);
-  
+
 // // // //   const userData = userResponse.data as User;
 // // // //   const orgData = orgResponse.data as Organization;
 // // // //   console.log('>>> [useUserSession] fetchUserSessionData: 4. User/Org fetch SUCCESS.');
@@ -1571,7 +1571,7 @@
 // // // //   if (locationId) {
 // // // //     console.log(`>>> [useUserSession] fetchUserSessionData: 5. Fetching Location ${locationId}...`);
 // // // //     const { data, error } = await supabase.schema('identity').from('locations').select('*').eq('id', locationId).maybeSingle();
-    
+
 // // // //     if (error) console.warn(`Location fetch warning: ${error.message}`); // Warn but don't fail.
 // // // //     else locationData = data as Location;
 // // // //   }
@@ -1663,7 +1663,7 @@
 // // //     // B. Subscribe to Changes
 // // //     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
 // // //       console.log(`>>> [SessionManager] Auth Event: ${event}`);
-      
+
 // // //       if (event === 'SIGNED_IN') {
 // // //         setEnabled(true);
 // // //       }
@@ -1685,7 +1685,7 @@
 // // //         `\n   Org: ${data.organization.name} (${data.org_id})`,
 // // //         `\n   User: ${data.user.email}`
 // // //       );
-      
+
 // // //       // This updates the global store, which triggers UI re-renders (e.g., Navigation, Dashboard)
 // // //       setSession(data);
 // // //     }
@@ -1694,7 +1694,7 @@
 // // //     if (isError) {
 // // //       console.error('[SessionManager] Error fetching session:', error);
 // // //       setAuthError(error.message);
-      
+
 // // //       // If we can't fetch the session (e.g., deleted user, bad permissions), 
 // // //       // we clear the store to prevent a broken UI state.
 // // //       clearUserSession();
@@ -1772,7 +1772,7 @@
 // //         `\n   Org: ${data.organization.name}`,
 // //         `\n   User: ${data.user.email}`
 // //       );
-      
+
 // //       setSession(data);
 // //     }
 
@@ -1844,7 +1844,7 @@
 
 //     if (isSuccess && data) {
 //       const status = isStale ? '(STALE)' : '(FRESH)';
-      
+
 //       // Extra Check: Ensure we don't overwrite a new intent with old data
 //       // If the fetched data Org ID doesn't match our requested store Org ID (and we have one),
 //       // it means this is a lagging response from a previous switch. Ignore it.
@@ -1876,12 +1876,12 @@ import { supabase } from '@/lib/supabase';
 export const SessionManager = () => {
   const [enabled, setEnabled] = useState(false);
 
-  const { 
-    setSession, 
-    clearUserSession, 
-    setInitialized, 
+  const {
+    setSession,
+    clearUserSession,
+    setInitialized,
     setAuthError,
-    organization, 
+    organization,
     isLoggingOut,
     setIsLoggingOut // <--- 1. IMPORT THE SETTER
   } = useAuthStore(state => ({
@@ -1908,15 +1908,15 @@ export const SessionManager = () => {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       console.log(`>>> [SessionManager] Auth Event: ${event}`);
-      
+
       if (event === 'SIGNED_IN') {
         // 2. BREAK THE DEADLOCK
         // We must explicitly tell the store "We are done logging out, this is a new login".
         // This re-enables the useUserSession hook below.
-        setIsLoggingOut(false); 
+        setIsLoggingOut(false);
         setEnabled(true);
       }
-      
+
       if (event === 'SIGNED_OUT') {
         setEnabled(false);
         clearUserSession();
@@ -1935,7 +1935,7 @@ export const SessionManager = () => {
 
     if (isSuccess && data) {
       const status = isStale ? '(STALE)' : '(FRESH)';
-      
+
       // Extra Check for Org Switch consistency:
       if (organization?.id && data.organization.id !== organization.id) {
         return;

@@ -1,17 +1,4 @@
-// // // // // // Header.tsx
-// // // // // import React, { useState, useEffect, useMemo } from 'react';
-// // // // // import { Layout, Button, Space, Drawer, Select, message } from 'antd';
-// // // // // import { Menu as MenuIcon, Bell, Search, Settings as SettingsIcon } from 'lucide-react';
-// // // // // import { useQueryClient, useIsFetching } from '@tanstack/react-query';
-// // // // // import { useTranslation } from 'react-i18next';
-// // // // // import { ProfileMenu } from '../ProfileMenu';
-// // // // // import { useAuthedLayoutConfig } from '../AuthedLayoutContext';
-// // // // // import { useAuthStore } from '@/core/lib/store';
-// // // // // // NOTE: Removed unused functions like getAllOrganizations and getOrganizationLocations
-// // // // // import { supabase } from '@/lib/supabase';
-// // // // // import type { Organization, Location } from '@/lib/types';
-
-// // // // // const { Header: AntHeader } = Layout;
+// Header.tsx (Optimized)
 
 // // // // // // Define the structure of the data returned by the get_my_organizations RPC
 // // // // // interface UserOrgLocationData {
@@ -334,7 +321,8 @@
 // // // // // Header.tsx
 // // // // import React, { useState, useEffect, useMemo } from 'react';
 // // // // import { Layout, Button, Space, Drawer, Select, message } from 'antd';
-// // // // import { Menu as MenuIcon, Bell, Search, Settings as SettingsIcon } from 'lucide-react';
+// // // // // Active Component
+import { MenuOutlined, SearchOutlined, SettingOutlined } from '@ant-design/icons';
 // // // // import { useQueryClient, useIsFetching } from '@tanstack/react-query';
 // // // // import { useTranslation } from 'react-i18next';
 // // // // import { ProfileMenu } from '../ProfileMenu';
@@ -633,7 +621,7 @@
 
 // // // import React, { useState, useEffect, useMemo } from 'react';
 // // // import { Layout, Button, Space, Drawer, Select, message } from 'antd';
-// // // import { Menu as MenuIcon, Search, Settings as SettingsIcon } from 'lucide-react';
+// // // // import { Menu as MenuIcon, Search, Settings as SettingsIcon } from 'lucide-react-removed';
 // // // import { useQueryClient, useIsFetching } from '@tanstack/react-query';
 // // // import { useTranslation } from 'react-i18next';
 // // // import { ProfileMenu } from '../ProfileMenu';
@@ -924,7 +912,7 @@
 // // // corrected for users with multi org and rpc to set pref org on header change correctly 
 // // import React, { useState, useEffect, useMemo } from 'react';
 // // import { Layout, Button, Space, Drawer, Select, message } from 'antd';
-// // import { Menu as MenuIcon, Search, Settings as SettingsIcon } from 'lucide-react';
+// // // import { Menu as MenuIcon, Search, Settings as SettingsIcon } from 'lucide-react-removed';
 // // import { useQueryClient, useIsFetching } from '@tanstack/react-query';
 // // import { useTranslation } from 'react-i18next';
 // // import { ProfileMenu } from '../ProfileMenu';
@@ -1214,7 +1202,7 @@
 
 // import React, { useState, useEffect, useMemo } from 'react';
 // import { Layout, Button, Space, Drawer, Select, message } from 'antd';
-// import { Menu as MenuIcon, Search, Settings as SettingsIcon } from 'lucide-react';
+// // import { Menu as MenuIcon, Search, Settings as SettingsIcon } from 'lucide-react-removed';
 // import { useQueryClient, useIsFetching } from '@tanstack/react-query';
 // import { useTranslation } from 'react-i18next';
 // import { ProfileMenu } from '../ProfileMenu';
@@ -1401,7 +1389,7 @@
 // THE REACTIVE LOGIC + reset supabase auth metadata for next ogin
 import React, { useState, useEffect, useMemo } from 'react';
 import { Layout, Button, Space, Drawer, Select, message } from 'antd';
-import { Menu as MenuIcon, Search, Settings as SettingsIcon } from 'lucide-react';
+// import { Menu as MenuIcon, Search, Settings as SettingsIcon } from 'lucide-react-removed';
 import { useIsFetching } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';

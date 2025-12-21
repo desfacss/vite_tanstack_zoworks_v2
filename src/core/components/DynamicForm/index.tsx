@@ -6,9 +6,9 @@ import { PostgrestFilterBuilder } from '@supabase/supabase-js';
 import Widgets from "./Widgets";
 import ObjectFieldTemplate from "./ObjectFieldTemplate";
 import { supabase } from "../../../lib/supabase";
-import { useAuthStore } from "../@/core/lib/store";
+import { useAuthStore } from "@/core/lib/store";
 import CustomFieldTemplate from "./FieldTemplate";
-import { debounce } from "lodash"; 
+import { debounce } from "lodash";
 import dayjs from "dayjs";
 
 // Define interfaces for props and types
@@ -172,10 +172,10 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ schemas, formData, updateId, 
   const [localFormData, setLocalFormData] = useState<any>({});
   const [submitClicked, setSubmitClicked] = useState<boolean>(false);
   const [enumCache, setEnumCache] = useState<{ [key: string]: any[] }>({});
-  
+
   // 🎯 FIX: Use a state to hold the *active* button's default values
-  const [activeButtonDefaults, setActiveButtonDefaults] = useState<{ [key: string]: any } | null>(null); 
-  
+  const [activeButtonDefaults, setActiveButtonDefaults] = useState<{ [key: string]: any } | null>(null);
+
   const { organization: userOrganization, location } = useAuthStore();
 
   const getOrganization = async (): Promise<void> => {
@@ -204,7 +204,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ schemas, formData, updateId, 
   }, [userOrganization]);
 
   // Define a new interface to include the dynamic display column hint
-interface EnumSchema {
+  interface EnumSchema {
     table: string;
     column: string; // The ID column to select (e.g., 'id' or 'user_id')
     schema?: string;
@@ -214,10 +214,10 @@ interface EnumSchema {
     dependsOnField?: string;
     dependsOnColumn?: string;
     // NEW: Property to specify the column to select for display, potentially a foreign key path
-    display_column?: string; 
-}
+    display_column?: string;
+  }
 
-const fetchDataForDropdown = useCallback(async (
+  const fetchDataForDropdown = useCallback(async (
     schemaParam: string | undefined,
     tableParam: string,
     column: string,
@@ -225,183 +225,183 @@ const fetchDataForDropdown = useCallback(async (
     noId: boolean = false,
     isWorkflowStages: boolean = false,
     displayColumn?: string // Optional parameter for the display column
-): Promise<any[]> => {
+  ): Promise<any[]> => {
     // NOTE: This function assumes `enumCache`, `organization`, and `supabase` are available in the component's scope.
     try {
-        const cacheKey = JSON.stringify({ schemaParam, tableParam, column, filters, noId, isWorkflowStages, displayColumn });
-        if (enumCache[cacheKey]) {
-            return enumCache[cacheKey];
+      const cacheKey = JSON.stringify({ schemaParam, tableParam, column, filters, noId, isWorkflowStages, displayColumn });
+      if (enumCache[cacheKey]) {
+        return enumCache[cacheKey];
+      }
+
+      let actualSchema: string = schemaParam || 'public';
+      let actualTable: string = tableParam;
+
+      if (tableParam.includes('.')) {
+        const parts = tableParam.split('.');
+        actualSchema = parts[0];
+        actualTable = parts[1];
+      }
+
+      if (isWorkflowStages) {
+        // --- Workflow stages logic (omitted for brevity, assume unchanged) ---
+        let query = supabase
+          .schema('workflow')
+          .from('dynamic_workflow_definitions')
+          .select('definitions->stages')
+          .eq('entity_type', column)
+          .is('is_active', true);
+
+        filters.forEach(filter => {
+          query = applyFilter(query, filter);
+        });
+
+        let { data, error } = await query;
+
+        if (error) {
+          console.error("Error fetching workflow stages from Supabase:", error);
+          return [];
         }
 
-        let actualSchema: string = schemaParam || 'public';
-        let actualTable: string = tableParam;
+        const stages = data
+          ?.flatMap((item: any) => item?.stages || [])
+          .map((stage: any) => ({
+            name: stage?.name,
+            display_label: stage?.displayLabel,
+          }));
 
-        if (tableParam.includes('.')) {
-            const parts = tableParam.split('.');
-            actualSchema = parts[0];
-            actualTable = parts[1];
+        if (!stages || stages.length === 0) {
+          query = supabase
+            .schema('workflow')
+            .from('dynamic_workflow_definitions')
+            .select('definitions->stages')
+            .is('organization_id', null)
+            .eq('entity_type', column)
+            .is('is_active', true);
+
+          filters.forEach(filter => {
+            query = applyFilter(query, filter);
+          });
+
+          const { data: retryData, error: retryError } = await query;
+
+          if (retryError) {
+            console.error("Error retrying workflow stages fetch from Supabase:", retryError);
+            return [];
+          }
+
+          const retryStages = retryData
+            ?.flatMap((item: any) => item.stages || [])
+            ?.map((stage: any) => ({
+              id: stage?.id,
+              name: stage?.name,
+            }));
+
+          setEnumCache(prev => ({ ...prev, [cacheKey]: retryStages }));
+          return retryStages || [];
         }
 
-        if (isWorkflowStages) {
-            // --- Workflow stages logic (omitted for brevity, assume unchanged) ---
-            let query = supabase
-              .schema('workflow')
-              .from('dynamic_workflow_definitions')
-              .select('definitions->stages')
-              .eq('entity_type', column) 
-              .is('is_active', true);
+        setEnumCache(prev => ({ ...prev, [cacheKey]: stages }));
+        return stages || [];
+      } else {
+        // Determine the columns to select
+        const valueColumn = column;
+        const selectDisplayColumn = displayColumn || column;
 
-            filters.forEach(filter => {
-                query = applyFilter(query, filter);
-            });
+        let selectColumns = noId ? valueColumn : `id, ${valueColumn}`;
 
-            let { data, error } = await query;
+        if (displayColumn && displayColumn.includes('.')) {
+          // If deep reference (e.g., 'user_id.name'), construct the PostgREST relation syntax
+          const parts = displayColumn.split('.');
+          const relation = parts[0]; // e.g., 'user_id'
+          const displayField = parts[1]; // e.g., 'name'
 
-            if (error) {
-                console.error("Error fetching workflow stages from Supabase:", error);
-                return [];
-            }
+          // Construct the relation string: user_id(name)
+          const relationSelect = `${relation}(${displayField})`;
 
-            const stages = data
-                ?.flatMap((item: any) => item?.stages || [])
-                .map((stage: any) => ({
-                    name: stage?.name,
-                    display_label: stage?.displayLabel,
-                }));
+          // Ensure 'id' is selected for the value, and then the relationSelect for the display name
+          selectColumns = `id, ${relationSelect}`;
 
-            if (!stages || stages.length === 0) {
-                query = supabase
-                    .schema('workflow')
-                    .from('dynamic_workflow_definitions')
-                    .select('definitions->stages')
-                    .is('organization_id', null)
-                    .eq('entity_type', column) 
-                    .is('is_active', true);
-
-                filters.forEach(filter => {
-                    query = applyFilter(query, filter);
-                });
-
-                const { data: retryData, error: retryError } = await query;
-
-                if (retryError) {
-                    console.error("Error retrying workflow stages fetch from Supabase:", retryError);
-                    return [];
-                }
-
-                const retryStages = retryData
-                    ?.flatMap((item: any) => item.stages || [])
-                    ?.map((stage: any) => ({
-                        id: stage?.id,
-                        name: stage?.name,
-                    }));
-
-                setEnumCache(prev => ({ ...prev, [cacheKey]: retryStages }));
-                return retryStages || [];
-            }
-
-            setEnumCache(prev => ({ ...prev, [cacheKey]: stages }));
-            return stages || [];
         } else {
-            // Determine the columns to select
-            const valueColumn = column;
-            const selectDisplayColumn = displayColumn || column;
-            
-            let selectColumns = noId ? valueColumn : `id, ${valueColumn}`;
+          // Use the standard select for local columns
+          const normalizedColumn = selectDisplayColumn?.replace('-', '.');
+          // Use `->>` operator only for JSON fields, otherwise direct selection
+          const displaySelect = normalizedColumn.includes('.') ? `${normalizedColumn} ->>` : normalizedColumn;
 
-            if (displayColumn && displayColumn.includes('.')) {
-                // If deep reference (e.g., 'user_id.name'), construct the PostgREST relation syntax
-                const parts = displayColumn.split('.');
-                const relation = parts[0]; // e.g., 'user_id'
-                const displayField = parts[1]; // e.g., 'name'
-                
-                // Construct the relation string: user_id(name)
-                const relationSelect = `${relation}(${displayField})`;
-                
-                // Ensure 'id' is selected for the value, and then the relationSelect for the display name
-                selectColumns = `id, ${relationSelect}`;
-                
-            } else {
-                // Use the standard select for local columns
-                const normalizedColumn = selectDisplayColumn?.replace('-', '.');
-                // Use `->>` operator only for JSON fields, otherwise direct selection
-                const displaySelect = normalizedColumn.includes('.') ? `${normalizedColumn} ->>` : normalizedColumn;
-
-                selectColumns = noId 
-                    ? displaySelect 
-                    : `id, ${displaySelect}`;
-            }
-            
-            let query = supabase
-                .schema(actualSchema) 
-                .from(actualTable) 
-                .select(selectColumns) // Use the constructed select string
-                .eq('organization_id', organization?.id);
-
-            filters.forEach(filter => {
-                query = applyFilter(query, filter);
-            });
-
-            let { data, error } = await query;
-
-            if (error) {
-                console.error("Error fetching data from Supabase:", error);
-                return [];
-            }
-
-            // Fallback to null organization_id
-            if (data?.length === 0) {
-                query = supabase
-                    .schema(actualSchema) 
-                    .from(actualTable) 
-                    .select(selectColumns)
-                    .is('organization_id', null);
-
-                filters.forEach(filter => {
-                    query = applyFilter(query, filter);
-                });
-
-                const { data: retryData, error: retryError } = await query;
-
-                if (retryError) {
-                    console.error("Error retrying data fetch from Supabase:", retryError);
-                    return [];
-                }
-                setEnumCache(prev => ({ ...prev, [cacheKey]: retryData }));
-                return retryData || [];
-            }
-
-            setEnumCache(prev => ({ ...prev, [cacheKey]: data }));
-            return data;
+          selectColumns = noId
+            ? displaySelect
+            : `id, ${displaySelect}`;
         }
+
+        let query = supabase
+          .schema(actualSchema)
+          .from(actualTable)
+          .select(selectColumns) // Use the constructed select string
+          .eq('organization_id', organization?.id);
+
+        filters.forEach(filter => {
+          query = applyFilter(query, filter);
+        });
+
+        let { data, error } = await query;
+
+        if (error) {
+          console.error("Error fetching data from Supabase:", error);
+          return [];
+        }
+
+        // Fallback to null organization_id
+        if (data?.length === 0) {
+          query = supabase
+            .schema(actualSchema)
+            .from(actualTable)
+            .select(selectColumns)
+            .is('organization_id', null);
+
+          filters.forEach(filter => {
+            query = applyFilter(query, filter);
+          });
+
+          const { data: retryData, error: retryError } = await query;
+
+          if (retryError) {
+            console.error("Error retrying data fetch from Supabase:", retryError);
+            return [];
+          }
+          setEnumCache(prev => ({ ...prev, [cacheKey]: retryData }));
+          return retryData || [];
+        }
+
+        setEnumCache(prev => ({ ...prev, [cacheKey]: data }));
+        return data;
+      }
     } catch (error) {
-        console.error("Error fetching data:", error);
-        return [];
+      console.error("Error fetching data:", error);
+      return [];
     }
-}, [organization, enumCache]); 
+  }, [organization, enumCache]);
 
-// NOTE: Ensure your `replaceEnums` uses the correct logic to extract the name 
-// from the returned object structure when a join is performed.
+  // NOTE: Ensure your `replaceEnums` uses the correct logic to extract the name 
+  // from the returned object structure when a join is performed.
 
-const replaceEnums = useCallback(async (obj: any, formData: any = {}): Promise<void> => {
-    const keys = Object.keys(obj);
-    const promises: Promise<void>[] = [];
+  const replaceEnums = useCallback(async (obj: any, formData: any = {}): Promise<void> => {
+    const keys = Object.keys(obj);
+    const promises: Promise<void>[] = [];
 
-    for (const key of keys) {
-        const enumValue = obj[key]?.enum as EnumSchema; 
-        const noId = enumValue?.no_id || false;
-        let filterConditions: FilterType[] = enumValue?.filters || [];
+    for (const key of keys) {
+      const enumValue = obj[key]?.enum as EnumSchema;
+      const noId = enumValue?.no_id || false;
+      let filterConditions: FilterType[] = enumValue?.filters || [];
 
-        if (enumValue?.dependsOnColumn && formData[enumValue?.dependsOnField]) {
-            filterConditions = [
-                ...filterConditions,
-                {
-                    key: enumValue.dependsOnColumn,
-                    operator: 'eq',
-                    value: formData[enumValue?.dependsOnField],
-                },
-            ];
-        }
+      if (enumValue?.dependsOnColumn && formData[enumValue?.dependsOnField]) {
+        filterConditions = [
+          ...filterConditions,
+          {
+            key: enumValue.dependsOnColumn,
+            operator: 'eq',
+            value: formData[enumValue?.dependsOnField],
+          },
+        ];
+      }
 
       if (enumValue && typeof enumValue === 'object') {
         if (enumValue.table === 'dynamic_workflow_definitions') {
@@ -430,7 +430,7 @@ const replaceEnums = useCallback(async (obj: any, formData: any = {}): Promise<v
       }
     }
     await Promise.all(promises);
-  }, [fetchDataForDropdown]); 
+  }, [fetchDataForDropdown]);
 
   // Function to format date strings to YYYY-MM-DD
   const formatDatesInFormData = (data: any, uiSchema: any, dataSchema: any) => {
@@ -442,7 +442,7 @@ const replaceEnums = useCallback(async (obj: any, formData: any = {}): Promise<v
       if (value === null || value === undefined || value === "") {
         continue;
       }
-      
+
       const isDateSchema = dataSchema?.properties?.[key]?.type === "string" && dataSchema?.properties?.[key]?.format === "date";
       const isDateWidget = uiSchema?.[key]?.['ui:widget'] && String(uiSchema[key]['ui:widget']).includes("date");
 
@@ -474,7 +474,7 @@ const replaceEnums = useCallback(async (obj: any, formData: any = {}): Promise<v
     const initialSetup = async () => {
       if (!schemas || !organization) return;
       setLoading(true);
-      
+
       const schemaCopy = JSON.parse(JSON.stringify(schemas));
       if (schemaCopy?.ui_schema) {
         schemaCopy.ui_schema = transformUiSchema(schemaCopy?.ui_schema, Object.keys(schemaCopy?.data_schema?.properties));
@@ -515,18 +515,18 @@ const replaceEnums = useCallback(async (obj: any, formData: any = {}): Promise<v
   // 🎯 FIX: The onSubmit handler now checks and merges the activeButtonDefaults
   const onSubmit = async ({ formData }: { formData: any }): Promise<void> => {
     setSubmitClicked(true);
-    
+
     // 1. Merge form data with the active button's default values
-    const finalFormData = { 
-      ...localFormData, 
-      ...formData, 
+    const finalFormData = {
+      ...localFormData,
+      ...formData,
       ...(activeButtonDefaults || {}), // <--- THE FIX: Merge the payload here
     };
 
     if (!isMultiPage || currentPage === totalPages - 1) {
       console.log('Submitted formData:', finalFormData);
       onFinish(finalFormData);
-      
+
       // 2. Clear all state related to submission
       setLocalFormData({});
       setCurrentPage(0);
@@ -538,7 +538,7 @@ const replaceEnums = useCallback(async (obj: any, formData: any = {}): Promise<v
   // 🎯 FIX: This function now sets the state synchronously and then submits the form.
   const handleCustomSubmit = (defaults: { [key: string]: any }) => (e: React.MouseEvent) => {
     e.preventDefault();
-    
+
     // Set the default values for the upcoming submission
     setActiveButtonDefaults(defaults);
 
@@ -554,15 +554,15 @@ const replaceEnums = useCallback(async (obj: any, formData: any = {}): Promise<v
     // Force the form to submit after setting the default values
     const formElement = document.getElementById("rjsf-form");
     if (formElement) {
-        // Use a slight delay to help ensure the state update is processed, 
-        // though React doesn't guarantee this immediately.
-        // For production, a ref-based solution or a custom SubmitButton component 
-        // would be more robust, but this pattern is common for simple fixes.
-        setTimeout(() => {
-            (formElement as HTMLFormElement).dispatchEvent(
-                new Event('submit', { cancelable: true, bubbles: true })
-            );
-        }, 0); 
+      // Use a slight delay to help ensure the state update is processed, 
+      // though React doesn't guarantee this immediately.
+      // For production, a ref-based solution or a custom SubmitButton component 
+      // would be more robust, but this pattern is common for simple fixes.
+      setTimeout(() => {
+        (formElement as HTMLFormElement).dispatchEvent(
+          new Event('submit', { cancelable: true, bubbles: true })
+        );
+      }, 0);
     }
   };
 
@@ -570,7 +570,7 @@ const replaceEnums = useCallback(async (obj: any, formData: any = {}): Promise<v
   const pageFields: string[][] | undefined = schema?.ui_schema?.pageFields;
   const isMultiPage: boolean = pageFields && pageFields?.length > 1;
   const totalPages: number = pageFields ? pageFields?.length : 1;
-  
+
   const customSubmitButtons: CustomSubmitButton[] = schema?.ui_schema?.['ui:submitButtons'] || [];
 
 
@@ -624,7 +624,7 @@ const replaceEnums = useCallback(async (obj: any, formData: any = {}): Promise<v
             const formattedStartDate = startDate
               ? dayjs(startDate).toISOString()
               : undefined;
-            
+
             updatedFormData.allocations = updatedFormData.allocations?.map((alloc: any) => ({
               ...alloc,
               "details.start_date": formattedStartDate,
@@ -636,29 +636,29 @@ const replaceEnums = useCallback(async (obj: any, formData: any = {}): Promise<v
             const formattedEndDate = endDate
               ? dayjs(endDate).toISOString()
               : undefined;
-              
+
             updatedFormData.allocations = updatedFormData.allocations?.map((alloc: any) => ({
               ...alloc,
               "details.end_date": formattedEndDate,
             }));
           }
-          
+
           return updatedFormData;
         });
       }, 500),
     []
   );
-  
+
   useEffect(() => {
     return () => {
       debouncedHandleChange.cancel();
     };
   }, [debouncedHandleChange]);
-  
-  
+
+
   // Renders the pagination or custom submit buttons
   const renderSubmitButtons = (): React.ReactNode => {
-    
+
     // --- Multi-Page Logic ---
     if (isMultiPage) {
       return (
@@ -681,27 +681,27 @@ const replaceEnums = useCallback(async (obj: any, formData: any = {}): Promise<v
           <Typography.Text>
             Page {currentPage + 1} of {totalPages}
           </Typography.Text>
-          
+
           {currentPage < totalPages - 1 ? (
-             <Button type="default" onClick={handleNext}>Next</Button>
+            <Button type="default" onClick={handleNext}>Next</Button>
           ) : (
             // Last page: Render custom buttons or default submit
             <Space size="small">
-                {customSubmitButtons.length > 0 ? (
-                    customSubmitButtons.map((button) => (
-                        <Button
-                            key={button.name}
-                            type={button.variant || "default"}
-                            onClick={handleCustomSubmit(button.defaultValues || {})}
-                            className={button.className}
-                        >
-                            {button.label}
-                        </Button>
-                    ))
-                ) : (
-                    // Default submit for last page if no custom buttons
-                    <Button type="primary" htmlType="submit" onClick={handleCustomSubmit({})}>Submit</Button>
-                )}
+              {customSubmitButtons.length > 0 ? (
+                customSubmitButtons.map((button) => (
+                  <Button
+                    key={button.name}
+                    type={button.variant || "default"}
+                    onClick={handleCustomSubmit(button.defaultValues || {})}
+                    className={button.className}
+                  >
+                    {button.label}
+                  </Button>
+                ))
+              ) : (
+                // Default submit for last page if no custom buttons
+                <Button type="primary" htmlType="submit" onClick={handleCustomSubmit({})}>Submit</Button>
+              )}
             </Space>
           )}
         </Space>
@@ -710,47 +710,47 @@ const replaceEnums = useCallback(async (obj: any, formData: any = {}): Promise<v
 
     // --- Single-Page Logic ---
     if (customSubmitButtons.length > 0) {
-  return (
-    <div // Changed from <Space> to a <div> for better flex control
-      style={{
-        display: "flex",
-        justifyContent: "space-between", // Distribute buttons across the line
-        gap: 8, // Maintain the gap
-        marginTop: 16,
-        width: "100%",
-      }}
-    >
-      {customSubmitButtons.map((button) => (
-        <Button
-          key={button.name}
-          type={button.variant || "default"}
-          onClick={handleCustomSubmit(button.defaultValues || {})}
-          className={button.className}
-          style={{ flex: 1 }} // <--- MODIFICATION: Makes button take up equal width
+      return (
+        <div // Changed from <Space> to a <div> for better flex control
+          style={{
+            display: "flex",
+            justifyContent: "space-between", // Distribute buttons across the line
+            gap: 8, // Maintain the gap
+            marginTop: 16,
+            width: "100%",
+          }}
         >
-          {button.label}
-        </Button>
-      ))}
-    </div> // Changed from </Space> to </div>
-  );
-}
+          {customSubmitButtons.map((button) => (
+            <Button
+              key={button.name}
+              type={button.variant || "default"}
+              onClick={handleCustomSubmit(button.defaultValues || {})}
+              className={button.className}
+              style={{ flex: 1 }} // <--- MODIFICATION: Makes button take up equal width
+            >
+              {button.label}
+            </Button>
+          ))}
+        </div> // Changed from </Space> to </div>
+      );
+    }
 
     // Fallback default submit for single page, no custom buttons
     return (
-        <Button 
-            type="primary" 
-            htmlType="submit" 
-            style={{ marginTop: 16, width: "100%" }} 
-            onClick={handleCustomSubmit({})} // Triggers submit with empty defaults
-        >
-            Submit
-        </Button>
+      <Button
+        type="primary"
+        htmlType="submit"
+        style={{ marginTop: 16, width: "100%" }}
+        onClick={handleCustomSubmit({})} // Triggers submit with empty defaults
+      >
+        Submit
+      </Button>
     )
   };
 
   const _RJSFSchema = schema && (isMultiPage ? getPageSchema() : schema?.data_schema);
   const log = (type: string) => console.log.bind(console, type);
-  
+
 
   return (
     <>
@@ -760,9 +760,10 @@ const replaceEnums = useCallback(async (obj: any, formData: any = {}): Promise<v
           schema={_RJSFSchema}
           widgets={Widgets}
           validator={validator}
-          templates={{ ObjectFieldTemplate,
-              FieldTemplate: CustomFieldTemplate 
-            }}
+          templates={{
+            ObjectFieldTemplate,
+            FieldTemplate: CustomFieldTemplate
+          }}
           // Hide rjsf's default buttons, we render them in children
           uiSchema={{
             ...schema?.ui_schema,

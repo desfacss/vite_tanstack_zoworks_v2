@@ -26,7 +26,7 @@ interface ViewPreferences {
       filters?: Record<string, any>;
       sortBy?: { field: string; direction: 'asc' | 'desc' };
       lastPath?: string;
-    };
+    } | { [organizationId: string]: string } | undefined;
     lastLocationByOrg?: {
       [organizationId: string]: string; // { org_id: location_id }
     };
@@ -96,10 +96,12 @@ interface AuthState {
   setInitialized: (value: boolean) => void;
   setIsSwitchingOrg: (value: boolean) => void;
   setIsLoggingOut: (value: boolean) => void; // <--- ADDED
-  setOrganization: (organization: Organization | null) => void; 
+  setUser: (user: User | null) => void;
+  setOrganization: (organization: Organization | null) => void;
   setLocation: (location: Location | null) => void;
   setNavigationItems: (items: NavigationItem[]) => void;
   setViewPreferences: (userId: string, entityType: string, prefs: Partial<ViewPreferences[string][string]>) => void;
+  resetViewPreferences: (userId: string, entityType: string) => void;
   setIsOnline: (isOnline: boolean) => void;
   setAuthError: (error: string | null) => void;
 }
@@ -154,7 +156,7 @@ export const useThemeStore = create<ThemeState>()(
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
-      ...initialState,
+      ...initialState as AuthState,
       setSession: (sessionData) => {
         console.log('>>> [STORE] setSession: Hydrating store with new session data.');
         set({
@@ -174,22 +176,23 @@ export const useAuthStore = create<AuthState>()(
       clearUserSession: () => {
         console.log('🧹 [STORE] Clearing user session state.');
         set({
-            ...defaultSessionState,
-            initialized: true,
-            authError: null,
+          ...defaultSessionState,
+          initialized: true,
+          authError: null,
         });
       },
 
       reset: () => {
         console.log('💣 [STORE] Resetting full auth state and clearing persisted data.');
-        set({...initialState, initialized: true});
+        set({ ...initialState, initialized: true });
         try { localStorage.removeItem('auth-store'); } catch (e) { console.error(e) }
       },
 
       setInitialized: (value) => set({ initialized: value }),
       setIsSwitchingOrg: (value) => set({ isSwitchingOrg: value }),
       setIsLoggingOut: (value) => set({ isLoggingOut: value }), // <--- ADDED
-      setOrganization: (organization) => set({ organization }), 
+      setUser: (user) => set({ user }),
+      setOrganization: (organization) => set({ organization }),
       setLocation: (location) => set({ location }),
       setNavigationItems: (items) => set({ navigationItems: items }),
       setViewPreferences: (userId, entityType, prefs) => {
@@ -204,6 +207,17 @@ export const useAuthStore = create<AuthState>()(
           },
         }));
       },
+      resetViewPreferences: (userId, entityType) => {
+        if (!userId) return;
+        set((state) => {
+          const newPreferences = { ...state.viewPreferences };
+          if (newPreferences[userId]) {
+            const { [entityType]: _, ...rest } = newPreferences[userId];
+            newPreferences[userId] = rest;
+          }
+          return { viewPreferences: newPreferences };
+        });
+      },
       setIsOnline: (isOnline) => set({ isOnline }),
       setAuthError: (error) => set({ authError: error }),
     }),
@@ -216,31 +230,31 @@ export const useAuthStore = create<AuthState>()(
         navigationItems: state.navigationItems,
         appSettings: state.appSettings,
       }),
-       version: 1,
-       onRehydrateStorage: (_state, error) => {
-         if (error) {
-           console.error('❌ [STORE] Auth store rehydration error:', error);
-         } else {
-           console.log('🔄 [STORE] Auth store rehydrated successfully.');
-           // Defer the execution of these state updates until after the store is fully initialized.
-           setTimeout(() => {
-             useAuthStore.getState().setIsOnline(typeof navigator !== 'undefined' ? navigator.onLine : true);
-             useAuthStore.getState().setInitialized(false);
-            
-             // Clear navigationItems to prevent hydration errors with non-serializable data (e.g., React components for icons)
-             console.log('🧹 [STORE] Clearing navigationItems on rehydrate.');
-             useAuthStore.getState().setNavigationItems([]);
-             // Ensure no stuck state on page reload
-             useAuthStore.getState().setIsLoggingOut(false);
-           }, 0);
-         }
-       },
+      version: 1,
+      onRehydrateStorage: () => (state, error) => {
+        if (error) {
+          console.error('❌ [STORE] Auth store rehydration error:', error);
+        } else {
+          console.log('🔄 [STORE] Auth store rehydrated successfully.');
+          // Defer the execution of these state updates until after the store is fully initialized.
+          setTimeout(() => {
+            useAuthStore.getState().setIsOnline(typeof navigator !== 'undefined' ? navigator.onLine : true);
+            useAuthStore.getState().setInitialized(false);
+
+            // Clear navigationItems to prevent hydration errors with non-serializable data (e.g., React components for icons)
+            console.log('🧹 [STORE] Clearing navigationItems on rehydrate.');
+            useAuthStore.getState().setNavigationItems([]);
+            // Ensure no stuck state on page reload
+            useAuthStore.getState().setIsLoggingOut(false);
+          }, 0);
+        }
+      },
     }
   )
 );
 
 // --- GLOBAL EVENT LISTENERS ---
 if (typeof window !== 'undefined') {
-    window.addEventListener('online', () => useAuthStore.getState().setIsOnline(true));
-    window.addEventListener('offline', () => useAuthStore.getState().setIsOnline(false));
+  window.addEventListener('online', () => useAuthStore.getState().setIsOnline(true));
+  window.addEventListener('offline', () => useAuthStore.getState().setIsOnline(false));
 }

@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { Card, Select, Button, message } from 'antd';
-import { ChevronRight, ChevronLeft, Plus, GripVertical } from 'lucide-react';
+import { MoreHorizontal, Plus } from 'lucide-react';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import styled from 'styled-components';
 import { motion } from 'framer-motion';
@@ -116,7 +116,7 @@ const KanbanView: React.FC<KanbanViewProps> = ({
   const { organization, user } = useAuthStore();
   const queryClient = useQueryClient();
   const [collapsedLanes, setCollapsed] = useState<Record<string, boolean>>({});
-  
+
   // Initialize groupByType with a fallback to workflowDefinitions
   const [groupByType, setGroupBy] = useState<string>(() => {
     const types = viewConfig?.kanbanview?.types;
@@ -199,7 +199,7 @@ const KanbanView: React.FC<KanbanViewProps> = ({
           title: stage.name,   // Display title for the lane (e.g., "New Ticket")
           color: stage.color || '#f0f0f0',
           cards: [], // Cards will be filled below
-        })).sort((a,b) => a.sequence - b.sequence) || []; // Ensure lanes are sorted
+        })).sort((a, b) => a.sequence - b.sequence) || []; // Ensure lanes are sorted
       }
     } else {
       // Logic for grouping by viewConfig.kanbanview.types (existing logic)
@@ -390,7 +390,7 @@ const KanbanView: React.FC<KanbanViewProps> = ({
   const getFieldValue = (record: any, fieldPath: string) => {
     return record[fieldPath] || '-';
   };
-  
+
   // Get the label for the selected groupByType
   const selectedGroupLabel = useMemo(() => {
     const selectedOption = groupByOptions.find((option) => option.value === groupByType);
@@ -456,22 +456,21 @@ const KanbanView: React.FC<KanbanViewProps> = ({
                     {...(snapshot.isDraggingOver && { highlighted: 'true' })} //highlighted={snapshot.isDraggingOver}
                   >
                     <div
-                      className={`flex items-center justify-between mb-4 cursor-pointer ${
-                        collapsedLanes[lane.id] ? 'column-title-collapsed' : ''
-                      }`}
+                      className={`flex items-center justify-between mb-4 cursor-pointer ${collapsedLanes[lane.id] ? 'column-title-collapsed' : ''
+                        }`}
                       onClick={() => handleToggleLane(lane.id)}
                     >
                       <div className="flex items-center gap-2">
                         {collapsedLanes[lane.id] ? (
-                          <ChevronRight className="w-5 h-5" />
+                          <RightOutlined style={{ fontSize: 20 }} />
                         ) : (
-                          <ChevronLeft className="w-5 h-5" />
+                          <LeftOutlined style={{ fontSize: 20 }} />
                         )}
                         {/* Display lane.title (which is stage.name or laneConfig.name) */}
                         <h3 className="font-semibold text-lg text-gray-700">{lane.title}</h3>
                       </div>
                       {!collapsedLanes[lane.id] && viewConfig.kanbanview?.actions?.bulk?.some((action: any) => action.name === 'add_') && (
-                        <Button type="dashed" icon={<Plus className="w-4 h-4" />}>
+                        <Button type="dashed" block icon={<Plus size={14} />}>
                           Add
                         </Button>
                       )}
@@ -489,7 +488,7 @@ const KanbanView: React.FC<KanbanViewProps> = ({
                               >
                                 <Card>
                                   <div className="card-title">
-                                    <GripVertical className="w-4 h-4 text-gray-400" />
+                                    <HolderOutlined style={{ fontSize: 16 }} className="text-gray-400" />
                                     <span>{getFieldValue(card, viewConfig.kanbanview?.cardFields?.title)}</span>
                                   </div>
                                   <p className="card-description">

@@ -4,27 +4,27 @@ import { PlusOutlined, EditFilled, DeleteOutlined, SendOutlined, UnorderedListOu
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/core/lib/store';
 import './Services.css'; // Add a CSS file to style the cards grid
-import { serverErrorParsing } from "@/components/common/utils/serverErrorParsing";
-import { camelCaseToTitleCase } from "@/components/common/utils/casing";
+import { serverErrorParsing } from "@/core/components/common/utils/serverErrorParsing";
+import { camelCaseToTitleCase } from "@/core/components/common/utils/casing";
 import DynamicForm from "@/core/components/shared/DynamicForm";
 import AgentActivityReport from "./AgentActivityReport"; // Import the AgentActivityReport component
 import env_def from "@/utils/constants";
 
 export const getAllValues = (obj) => {
-    let values = [];
-    for (let key in obj) {
-        if (key.toLowerCase().includes("id")) {
-            // Skip properties containing 'id'
-            continue;
-        }
-        if (typeof obj[key] === "object" && obj[key] !== null) {
-            // Recursively get values from nested objects
-            values = values.concat(getAllValues(obj[key]));
-        } else {
-            values.push(obj[key]);
-        }
+  let values = [];
+  for (let key in obj) {
+    if (key.toLowerCase().includes("id")) {
+      // Skip properties containing 'id'
+      continue;
     }
-    return values;
+    if (typeof obj[key] === "object" && obj[key] !== null) {
+      // Recursively get values from nested objects
+      values = values.concat(getAllValues(obj[key]));
+    } else {
+      values.push(obj[key]);
+    }
+  }
+  return values;
 };
 
 const { confirm } = Modal;
@@ -145,7 +145,7 @@ const TeamUsers: React.FC<TeamUsersProps> = ({ selectedTeamId }) => {
       .eq('is_active', true)
       .order('name', { ascending: true });
     // Conditionally filter by location_id
-    if (location?.id && organization?.app_settings?.partition==='locations') {
+    if (location?.id && organization?.app_settings?.partition === 'locations') {
       query = query.eq('location_id', location.id);
     }
     // If a team is selected, filter users by team_id
@@ -177,7 +177,7 @@ const TeamUsers: React.FC<TeamUsersProps> = ({ selectedTeamId }) => {
 
   // Rest of the component remains the same
   // ... (handleAddOrEdit, handleEdit, showDeleteConfirm, showResendLoginLinkConfirm, columns, actionsMenu, etc.)
-const handleAddOrEdit = async (values: any) => {
+  const handleAddOrEdit = async (values: any) => {
     setLoading(true);
     const {
       email,
@@ -375,7 +375,7 @@ const handleAddOrEdit = async (values: any) => {
       },
     });
   };
-  const prefill={
+  const prefill = {
     "rate": 70,
     "email": "ganeshmr3003@gmail.com",
     "mobile": 2342342342,
@@ -387,7 +387,7 @@ const handleAddOrEdit = async (values: any) => {
     "id": "914bbeea-c7ed-4b78-93f8-4a8c33e2171c",
     "location_id": "22222222-1111-1111-1111-111111111111",
     "team_id": []
-}
+  }
 
 
   // New handler for opening the activity report drawer
@@ -568,7 +568,7 @@ const handleAddOrEdit = async (values: any) => {
         }}
         closable={true}
       >
-        {selectedUserId && <AgentActivityReport editItem={{id:selectedUserId}} />}
+        {selectedUserId && <AgentActivityReport editItem={{ id: selectedUserId }} />}
       </Drawer>
     </Card>
   );

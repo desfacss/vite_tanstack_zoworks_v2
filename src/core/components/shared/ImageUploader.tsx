@@ -1,2 +1,7 @@
-// Re-export from components common location
-export { default } from '@/components/common/ImageUploader';
+import React from 'react';
+
+const FileUploader = () => {
+    return <div>Image Uploader Stub</div>;
+};
+
+export default FileUploader;

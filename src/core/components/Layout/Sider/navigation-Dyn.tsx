@@ -1,6 +1,6 @@
 // Sider/navigation.tsx
 import React from 'react';
-import { Home, Users, Building2, CreditCard, FileText, Settings, Briefcase } from 'lucide-react';
+import { FileText, Home, Users, Building, CreditCard, Store, Settings } from 'lucide-react';
 import type { MenuProps } from 'antd';
 import type { TFunction } from 'i18next';
 import menuConfig from '@/config/menuConfig.json';
@@ -9,9 +9,9 @@ import menuConfig from '@/config/menuConfig.json';
 const iconMap: Record<string, React.ReactNode> = {
   dashboard: <Home size={20} />,
   users: <Users size={20} />,
-  organizations: <Building2 size={20} />,
+  organizations: <Building size={20} />,
   subscriptions: <CreditCard size={20} />,
-  businesses: <Briefcase size={20} />,
+  businesses: <Store size={20} />,
   settings: <Settings size={20} />,
   default: <FileText size={20} />
 };
@@ -65,13 +65,13 @@ export const getNavigationItems = (t: TFunction, permissions: any): MenuProps['i
 
 export const getAllowedRoutes = (permissions: any): string[] => {
   const routes = [...menuConfig.root.map(route => route.routePath)];
-console.log("permissions - menuConfig",permissions,menuConfig);
+  console.log("permissions - menuConfig", permissions, menuConfig);
   Object.entries(menuConfig.modules).forEach(([module, moduleRoutes]) => {
     if (permissions?.[module]?.permissions) {
       moduleRoutes.forEach(route => {
         const feature = route.key.replace('-view', '');
         const perms = permissions[module].permissions[feature];
-        
+
         if (Array.isArray(perms) && perms.includes('r')) {
           routes.push(route.routePath);
         }
@@ -86,7 +86,7 @@ console.log("permissions - menuConfig",permissions,menuConfig);
 
 // // Sider/navigation.tsx
 // import React from 'react';
-// import { FileText } from 'lucide-react';
+// import { FileText } from 'lucide-react-removed';
 // import type { MenuProps } from 'antd';
 // import menuConfig from '@/config/menuConfig.json';
 

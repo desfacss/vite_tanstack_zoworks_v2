@@ -3,10 +3,9 @@ import { Calendar, dateFnsLocalizer, Event } from 'react-big-calendar';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import { format, parse, startOfWeek, getDay } from 'date-fns';
 import enUS from 'date-fns/locale/en-US';
-import { Button, Dropdown, Menu } from 'antd';
-import { List } from 'antd-mobile';
+import { Button, Dropdown, Menu, List } from 'antd';
 import { motion } from 'framer-motion';
-import { FileDown, UserIcon } from 'lucide-react';
+import { DownloadOutlined, UserOutlined } from '@ant-design/icons';
 import { useAuthedLayoutConfig } from '../Layout/AuthedLayoutContext';
 import RowActions from './RowActions';
 import dayjs from 'dayjs';
@@ -71,7 +70,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
   const { setConfig } = useAuthedLayoutConfig();
   const isMobile = window.innerWidth <= 768;
   const calendarview = viewConfig?.calendarview || viewConfig?.tableview || defaultViewConfig;
-  console.log("yy",calendarview,data);
+  console.log("yy", calendarview, data);
 
   // Helper function to safely access nested object properties
   const getNestedField = (obj: any, path: string) => {
@@ -90,47 +89,47 @@ const CalendarView: React.FC<CalendarViewProps> = ({
   // }));
 
   const transformedEvents: Event[] = data.map((event) => {
-  const title = getNestedField(event, calendarview.fields?.name || 'name') || 'Unnamed Event';
-  const startDateField = getNestedField(event, calendarview.fields?.start_date || 'start_date');
-  const dueDateField = getNestedField(event, calendarview.fields?.due_date || 'due_date');
+    const title = getNestedField(event, calendarview.fields?.name || 'name') || 'Unnamed Event';
+    const startDateField = getNestedField(event, calendarview.fields?.start_date || 'start_date');
+    const dueDateField = getNestedField(event, calendarview.fields?.due_date || 'due_date');
 
-  let start;
-  let end;
+    let start;
+    let end;
 
-  if (startDateField && !dueDateField) {
-    // If only a start time is available, assume end time is end of the day (11:59:59)
-    const startDay = dayjs(startDateField);
-    start = startDay.toDate();
-    end = startDay.endOf('day').toDate();
-  } else if (!startDateField && dueDateField) {
-    // If only a due/end date is available, assume the start is 24 hours before
-    const endDay = dayjs(dueDateField);
-    end = endDay.toDate();
-    start = endDay.subtract(1, 'day').toDate();
-  } else {
-    // Default case: use available dates or current date if both are missing
-    start = startDateField ? new Date(startDateField) : new Date();
-    end = dueDateField ? new Date(dueDateField) : new Date();
-  }
+    if (startDateField && !dueDateField) {
+      // If only a start time is available, assume end time is end of the day (11:59:59)
+      const startDay = dayjs(startDateField);
+      start = startDay.toDate();
+      end = startDay.endOf('day').toDate();
+    } else if (!startDateField && dueDateField) {
+      // If only a due/end date is available, assume the start is 24 hours before
+      const endDay = dayjs(dueDateField);
+      end = endDay.toDate();
+      start = endDay.subtract(1, 'day').toDate();
+    } else {
+      // Default case: use available dates or current date if both are missing
+      start = startDateField ? new Date(startDateField) : new Date();
+      end = dueDateField ? new Date(dueDateField) : new Date();
+    }
 
-  return {
-    ...event,
-    title,
-    start,
-    end,
-  };
-});
+    return {
+      ...event,
+      title,
+      start,
+      end,
+    };
+  });
 
   // 👇️ useMemo to prevent `actionButtons` from being recreated on every render
   const actionButtons = useMemo(() => {
     return calendarview?.actions?.bulk && Array.isArray(calendarview.actions.bulk)
       ? calendarview.actions.bulk.map((action) => ({
-          name: action.name,
-          label: action.name === 'add_' ? 'Add Item' : action.name.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '),
-          type: 'primary' as const,
-          icon: undefined,
-          onClick: () => console.log(`Bulk action triggered: ${action.name}`),
-        }))
+        name: action.name,
+        label: action.name === 'add_' ? 'Add Item' : action.name.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '),
+        type: 'primary' as const,
+        icon: undefined,
+        onClick: () => console.log(`Bulk action triggered: ${action.name}`),
+      }))
       : [];
   }, [calendarview.actions.bulk]);
 
@@ -183,7 +182,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
                     }}
                     trigger={['click']}
                   >
-                    <Button icon={<FileDown />} style={{ marginLeft: 8 }} />
+                    <Button icon={<DownloadOutlined />} style={{ marginLeft: 8 }} />
                   </Dropdown>
                 )}
               </div>
@@ -209,7 +208,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
               {data.map((record) => (
                 <List.Item
                   key={record.id}
-                  prefix={<UserIcon size={24} />}
+                  prefix={<UserOutlined style={{ fontSize: 24 }} />}
                   description={getNestedField(record, 'details.email') || '-'}
                   arrow={false}
                   extra={

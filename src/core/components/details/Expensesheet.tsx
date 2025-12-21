@@ -4,7 +4,7 @@ import { Table, Input, Button, Typography, Select, message, Row, Col, InputNumbe
 import { supabase } from '@/lib/supabase'; // Updated path for supabase config
 import { useAuthStore } from '@/core/lib/store'; // Updated path to get session/user
 import dayjs from 'dayjs'
-import { generateEmailData, sendEmail } from '@/components/common/email';
+import { generateEmailData, sendEmail } from '@/core/components/shared/email';
 // NOTE: Assuming you will create/port these common utilities or replace them
 // import { generateEmailData, sendEmail } from 'components/common/SendEmail'; 
 // import { generateEmailData, sendEmail } from '@/utils/emailUtils'; // Placeholder for email utilities
@@ -25,10 +25,10 @@ const Expensesheet: React.FC<ExpensesheetProps> = ({ editItem, onFinish, viewMod
 
     const [types, setTypes] = useState<any[]>();
     // Initialize with a single row if not in edit mode
-    const [data, setData] = useState<any[]>(editItem?.details ? [] : [{ key: '1' }]); 
+    const [data, setData] = useState<any[]>(editItem?.details ? [] : [{ key: '1' }]);
     const [projects, setProjects] = useState<any[]>();
     // Use the project_id from editItem if available, otherwise default to first project
-    const [selectedProject, setSelectedProject] = useState<string | undefined>(editItem?.project_id); 
+    const [selectedProject, setSelectedProject] = useState<string | undefined>(editItem?.project_id);
     const [users, setUsers] = useState<any[]>();
     const [total, setTotal] = useState<number>(editItem?.grand_total || 0)
     const [loading, setLoading] = useState(false);
@@ -69,7 +69,7 @@ const Expensesheet: React.FC<ExpensesheetProps> = ({ editItem, onFinish, viewMod
 
             if (error && error.code === 'PGRST202') { // Check for function not found error
                 console.warn('RPC get_projects_with_allocation_v3 not found. Falling back to public.projects.');
-                
+
                 // Fallback: Fetch directly from public.projects
                 const tableResult = await supabase.from('projects').select('id, name');
                 data = tableResult.data;
@@ -97,7 +97,7 @@ const Expensesheet: React.FC<ExpensesheetProps> = ({ editItem, onFinish, viewMod
         const { data: fetchedTypes, error } = await supabase.schema('workforce').from('expense_type').select('*')
             .eq('organization_id', user?.pref_organization_id).order('ui_order', { ascending: true })
         if (fetchedTypes) {
-            console.log("dz",fetchedTypes);
+            console.log("dz", fetchedTypes);
             setTypes(fetchedTypes);
 
             // --- IMPORTANT: Data Normalization for Edit Mode ---
@@ -111,7 +111,7 @@ const Expensesheet: React.FC<ExpensesheetProps> = ({ editItem, onFinish, viewMod
 
                     // To be safe and address the potential issue with special characters in keys 
                     // (like 'misc(exc.vat)' in your example), we iterate over the *existing* // keys in the row and try to map them to the *expected* generated keys.
-                    
+
                     const generatedKeysMap: Record<string, string> = fetchedTypes.reduce((acc, type) => {
                         acc[type.name] = generateDataKey(type.name);
                         return acc;
@@ -127,12 +127,12 @@ const Expensesheet: React.FC<ExpensesheetProps> = ({ editItem, onFinish, viewMod
                         // We must rely on the assumption that the *column title* (type.name) 
                         // is the source of truth, but the database *stored* keys are inconsistent 
                         // with the generateDataKey() logic.
-                        
+
                         // We will rely on the fact that 'data' will be a mapping of the generated keys to their values.
                         // The existing row keys are the *old* keys. We need to find the correct *new* key for each.
                         // Since we don't know the full original type names, we will use a best-guess or
                         // a simple key-mapping if the `editItem.details` keys are stable database column names.
-                        
+
                         // Let's assume the database keys in `editItem.details` are the stable ones 
                         // and we need to map them to the generated keys for the Ant Design Table.
                         // NOTE: If the type names exactly match the database column names *before* the 
@@ -172,7 +172,7 @@ const Expensesheet: React.FC<ExpensesheetProps> = ({ editItem, onFinish, viewMod
                                         // "Misc (exc. VAT)", "Accommodation (exc. VAT)", "Business Ent Client (exc. VAT)"
                                         // And the *generated keys* are:
                                         // "miscexc.vat", "accommodationexc.vat", "businessentclientexc.vat"
-                                        
+
                                         // Let's stick to the generated key logic:
                                         // 'misc(exc.vat)' in the editItem is an *old* database column name.
                                         // 'miscexcvat' is the *new* generated key.
@@ -207,27 +207,27 @@ const Expensesheet: React.FC<ExpensesheetProps> = ({ editItem, onFinish, viewMod
         fetchProjects();
         getTypes()
     }, [user?.id, editItem]); // Added editItem to dependencies to run logic when it's present
-    
+
     // Recalculate total when data or types change
     useEffect(() => {
         if (types) {
-          getSummary(data, types);
+            getSummary(data, types);
         }
     }, [data, types]);
 
 
     const handleAddRow = () => {
         // Use current timestamp/random number for a better unique key
-        const newRow = { key: Date.now().toString() }; 
+        const newRow = { key: Date.now().toString() };
         setData([...data, newRow]);
     };
 
     const handleInputChange = (rowIndex: number, field: string, value: any) => {
         const newData = [...data];
-        
+
         // Enforce non-negative values for number inputs
         if (typeof value === 'number' && value < 0) {
-          value = 0;
+            value = 0;
         }
 
         newData[rowIndex][field] = value;
@@ -349,7 +349,7 @@ const Expensesheet: React.FC<ExpensesheetProps> = ({ editItem, onFinish, viewMod
         }
 
         setLoading(true)
-        
+
         const today = new Date();
         // Calculate last date for approval
         const approvalTimeLimit = timesheet_settings?.approvalWorkflow?.timeLimitForApproval || 0;
@@ -363,7 +363,7 @@ const Expensesheet: React.FC<ExpensesheetProps> = ({ editItem, onFinish, viewMod
             user_id: user?.id,
             details: data,
             // status,
-            stage_id:status,
+            stage_id: status,
             project_id: selectedProject,
             approver_id: status === 'Submitted' ? approver_id : null, // Only assign approver on submission
             last_date: status === 'Submitted' ? lastDate.toISOString() : null,
@@ -371,7 +371,7 @@ const Expensesheet: React.FC<ExpensesheetProps> = ({ editItem, onFinish, viewMod
             grand_total: total,
             organization_id: user?.pref_organization_id,
         };
-        
+
         // Email data preparation (only if submitting)
         let emailPayload: any[] = [];
         if (status === 'Submitted') {
@@ -460,7 +460,7 @@ const Expensesheet: React.FC<ExpensesheetProps> = ({ editItem, onFinish, viewMod
 
         try {
             await processAndSubmit();
-            
+
             message.success(status === 'Draft' ? 'Expenses Claim Saved.' : 'Expenses Claim Submitted.');
             onFinish(); // Close drawer on success
         } catch (error: any) {
@@ -523,13 +523,13 @@ const Expensesheet: React.FC<ExpensesheetProps> = ({ editItem, onFinish, viewMod
                 </Col>
             </Row>}
             {viewMode && <Typography.Title level={5}>Project: {projects?.find(p => p.id === editItem?.project_id)?.name || 'N/A'}</Typography.Title>}
-            <Table 
-              dataSource={data} 
-              columns={columns} 
-              pagination={false} 
-              summary={getSummary} 
-              scroll={{ x: 'max-content' }} 
-              rowKey="key"
+            <Table
+                dataSource={data}
+                columns={columns}
+                pagination={false}
+                summary={getSummary}
+                scroll={{ x: 'max-content' }}
+                rowKey="key"
             />
         </>
     );

@@ -7,12 +7,12 @@ import { useAuthStore } from '@/core/lib/store';
 import { useTranslation } from 'react-i18next';
 
 // Direct imports for critical components
-import PublicLayout from '../components/Layout/PublicLayout';
-import AuthGuard from '../components/Layout/AuthGuard';
-import AuthedLayout from '../components/Layout/AuthedLayout';
-import { AuthedLayoutProvider } from '../components/Layout/AuthedLayoutContext';
-import { NotFound } from '../components/Layout/NotFound';
-import { LoadingFallback } from '../components/shared/LoadingFallback';
+import PublicLayout from '../core/components/Layout/PublicLayout';
+import AuthGuard from '../core/components/Layout/AuthGuard';
+import AuthedLayout from '../core/components/Layout/AuthedLayout';
+import { AuthedLayoutProvider } from '../core/components/Layout/AuthedLayoutContext';
+import { NotFound } from '../core/components/Layout/NotFound';
+import { LoadingFallback } from '../core/components/shared/LoadingFallback';
 
 // Lazy load pages
 const Home = lazy(() => import('../pages/Home'));

@@ -1,19 +1,19 @@
 import { Empty, Button, Typography, Space, Card, Divider, Row, Col } from 'antd';
 import { FilterOutlined, FileTextOutlined } from '@ant-design/icons';
 import React, { useMemo, useEffect, useRef, useState } from 'react';
-import { snakeToTitleCase } from '@/components/common/utils/casing';
+import { snakeToTitleCase } from '@/core/components/common/utils/casing';
 
 // --- External Libraries ---
 import ReactMarkdown from 'react-markdown';
 import mermaid from 'mermaid';
 
 // Assuming your build system can load the markdown file as a string
-import RichZeroStateContent from './ZeroStateContent.md?raw'; 
+import RichZeroStateContent from './ZeroStateContent.md?raw';
 
 const { Title, Text, Paragraph } = Typography;
 
 // Unique delimiter to cleanly separate the prose from the mermaid code
-const MERMAID_DELIMITER = '```mermaid'; 
+const MERMAID_DELIMITER = '```mermaid';
 const MERMAID_END_DELIMITER = '```';
 
 // =====================================================================
@@ -33,7 +33,7 @@ const MermaidComponent: React.FC<MermaidComponentProps> = ({ chart, id }) => {
             const renderMermaid = async () => {
                 try {
                     // Initialize Mermaid (theme: neutral is generally good for dark/light mode compatibility)
-                    mermaid.initialize({ startOnLoad: false, theme: 'neutral', securityLevel: 'loose' }); 
+                    mermaid.initialize({ startOnLoad: false, theme: 'neutral', securityLevel: 'loose' });
                     // Use mermaid.render() to get the SVG string
                     const { svg } = await mermaid.render(id, chart);
                     setSvgContent(svg);
@@ -53,12 +53,12 @@ const MermaidComponent: React.FC<MermaidComponentProps> = ({ chart, id }) => {
     }
 
     return (
-        <div 
+        <div
             // Injects the generated SVG content
-            dangerouslySetInnerHTML={{ __html: svgContent }} 
+            dangerouslySetInnerHTML={{ __html: svgContent }}
             className="mermaid-diagram flex justify-center items-center p-4 rounded-lg"
-            style={{ 
-                minHeight: '100px', 
+            style={{
+                minHeight: '100px',
                 backgroundColor: 'var(--color-background-secondary)',
                 border: '1px solid var(--color-border)'
             }}
@@ -79,20 +79,20 @@ const CustomMarkdownRenderer: React.FC<{ content: string; entityTitle: string }>
     // 1. Split content into prose and mermaid code using unique delimiters
     let textContent = processedContent;
     let mermaidChart: string | null = null;
-    
+
     const MERMAID_REGEX_GLOBAL = /```mermaid[\s\S]*?```/g;
     if (processedContent.includes(MERMAID_DELIMITER)) {
         // Get the part after '```mermaid'
         const afterStart = processedContent.split(MERMAID_DELIMITER)[1] || '';
         // Get the part before '```'
         mermaidChart = afterStart.split(MERMAID_END_DELIMITER)[0]?.trim() || null;
-        
+
         // Remove the entire mermaid block from the text content for ReactMarkdown
         textContent = processedContent.replace(MERMAID_REGEX_GLOBAL, '').trim();
     }
-    
+
     // Regex for removing the entire code block for ReactMarkdown processing
-    
+
     // 2. Define custom Ant Design components for rich styling
     const components = {
         h1: ({ children }) => <Title level={4} className="mt-4 mb-2 text-center">{children}</Title>,
@@ -106,7 +106,7 @@ const CustomMarkdownRenderer: React.FC<{ content: string; entityTitle: string }>
 
     // Determine if we need a two-column layout
     const isTwoColumn = !!mermaidChart;
-    
+
     // If two-column, we need to extract the bullet points section to put it next to the diagram
     let proseContent = textContent;
     let bulletContent = null;
@@ -119,7 +119,7 @@ const CustomMarkdownRenderer: React.FC<{ content: string; entityTitle: string }>
             bulletContent = parts[1].trim();
         } else {
             // If the structure isn't exactly matched, just render everything in one column
-            bulletContent = textContent; 
+            bulletContent = textContent;
             proseContent = '';
         }
     }
@@ -153,9 +153,9 @@ const CustomMarkdownRenderer: React.FC<{ content: string; entityTitle: string }>
                             <Text type="secondary" className="uppercase text-xs font-medium w-full text-center">
                                 {entityTitle} Process Flow
                             </Text>
-                            <MermaidComponent 
-                                chart={mermaidChart!} 
-                                id={`mermaid-diagram-${entityTitle}`} 
+                            <MermaidComponent
+                                chart={mermaidChart!}
+                                id={`mermaid-diagram-${entityTitle}`}
                             />
                         </Space>
                     </Col>
@@ -171,124 +171,124 @@ const CustomMarkdownRenderer: React.FC<{ content: string; entityTitle: string }>
 // =====================================================================
 
 interface DynamicViewsProps {
-  searchConfig?: {
-    serverSideFilters: string[];
-    noDataMessage: string;
-    searchButton: React.ReactNode;
-  };
+    searchConfig?: {
+        serverSideFilters: string[];
+        noDataMessage: string;
+        searchButton: React.ReactNode;
+    };
 }
 
 interface ZeroStateContentProps {
-  entityName: string;
-  globalFiltersElement: React.ReactNode | null;
-  globalActionsElement: React.ReactNode;
-  searchConfig?: DynamicViewsProps['searchConfig'];
-  hasActiveFilters: boolean;
-  clearFilters: () => void;
+    entityName: string;
+    globalFiltersElement: React.ReactNode | null;
+    globalActionsElement: React.ReactNode;
+    searchConfig?: DynamicViewsProps['searchConfig'];
+    hasActiveFilters: boolean;
+    clearFilters: () => void;
 }
 
 export const ZeroStateContent: React.FC<ZeroStateContentProps> = ({
-  entityName,
-  globalFiltersElement,
-  globalActionsElement,
-  searchConfig,
-  hasActiveFilters,
-  clearFilters,
+    entityName,
+    globalFiltersElement,
+    globalActionsElement,
+    searchConfig,
+    hasActiveFilters,
+    clearFilters,
 }) => {
-  const entityTitle = snakeToTitleCase(entityName);
+    const entityTitle = snakeToTitleCase(entityName);
 
-  const mainTitle = useMemo(() => {
-    if (hasActiveFilters) {
-      return `No ${entityTitle} Match Current Filters 😞`;
-    }
-    return `Welcome to the ${entityTitle} Dashboard!`;
-  }, [hasActiveFilters, entityTitle]);
+    const mainTitle = useMemo(() => {
+        if (hasActiveFilters) {
+            return `No ${entityTitle} Match Current Filters 😞`;
+        }
+        return `Welcome to the ${entityTitle} Dashboard!`;
+    }, [hasActiveFilters, entityTitle]);
 
-  const description = useMemo(() => {
-    if (hasActiveFilters) {
-      return (
-        <>
-          <p>
-            {searchConfig?.noDataMessage ||
-              'Your current filters are too restrictive.'}
-          </p>
-          <p>
-            **Try removing some filters** to see all available records.
-          </p>
-        </>
-      );
-    }
-    return null; 
-  }, [hasActiveFilters, searchConfig]);
+    const description = useMemo(() => {
+        if (hasActiveFilters) {
+            return (
+                <>
+                    <p>
+                        {searchConfig?.noDataMessage ||
+                            'Your current filters are too restrictive.'}
+                    </p>
+                    <p>
+                        **Try removing some filters** to see all available records.
+                    </p>
+                </>
+            );
+        }
+        return null;
+    }, [hasActiveFilters, searchConfig]);
 
-  const extraContent = useMemo(() => {
-    if (hasActiveFilters) {
-      return (
-        <Button
-          type="primary"
-          size="large"
-          icon={<FilterOutlined />}
-          onClick={clearFilters}
-          className="mt-4 shadow-md"
-        >
-          Clear All Filters
-        </Button>
-      );
-    }
-    
-    // Display GlobalActions prominently in the zero-state
-    return (
-        <Space direction="vertical" align="center" size="large" className="w-full">
-            {globalActionsElement}
-        </Space>
-    );
+    const extraContent = useMemo(() => {
+        if (hasActiveFilters) {
+            return (
+                <Button
+                    type="primary"
+                    size="large"
+                    icon={<FilterOutlined />}
+                    onClick={clearFilters}
+                    className="mt-4 shadow-md"
+                >
+                    Clear All Filters
+                </Button>
+            );
+        }
 
-  }, [hasActiveFilters, clearFilters, globalActionsElement]);
+        // Display GlobalActions prominently in the zero-state
+        return (
+            <Space direction="vertical" align="center" size="large" className="w-full">
+                {globalActionsElement}
+            </Space>
+        );
+
+    }, [hasActiveFilters, clearFilters, globalActionsElement]);
 
 
-  return (
-    <div className="py-8 space-y-4">
-      {/* 1. Filters (Top-level element) */}
-      {globalFiltersElement} 
+    return (
+        <div className="py-8 space-y-4">
+            {/* 1. Filters (Top-level element) */}
+            {globalFiltersElement}
 
-      {/* 2. Main Content Card (The Rich Container) */}
-      <Card bordered={false} className="shadow-2xl bg-[var(--color-component-background)] rounded-xl p-4">
-        <Empty
-          image={hasActiveFilters ? Empty.PRESENTED_IMAGE_DEFAULT : <FileTextOutlined style={{ fontSize: 48, color: 'var(--color-primary)' }} />}
-          description={
-            <div className="mt-4 max-w-6xl mx-auto">
-              {/* Main Page Title (Top-level container title) */}
-              <Title level={3} className="text-center font-bold mb-2 text-[var(--color-text-title)]">{mainTitle}</Title>
-              <div className="text-[var(--color-text-secondary)] text-sm mb-6 text-center">
-                    {description}
-                </div>
+            {/* 2. Main Content Card (The Rich Container) */}
+            <Card bordered={false} className="shadow-2xl bg-[var(--color-component-background)] rounded-xl p-4">
+                <Empty
+                    image={hasActiveFilters ? Empty.PRESENTED_IMAGE_DEFAULT : <FileTextOutlined style={{ fontSize: 48, color: 'var(--color-primary)' }} />}
+                    description={
+                        <div className="mt-4 max-w-6xl mx-auto">
+                            {/* Main Page Title (Top-level container title) */}
+                            <Title level={3} className="text-center font-bold mb-2 text-[var(--color-text-title)]">{mainTitle}</Title>
+                            <div className="text-[var(--color-text-secondary)] text-sm mb-6 text-center">
+                                {description}
+                            </div>
 
-                {/* Conditional Rich Content from MD file */}
-                {!hasActiveFilters ? (
-                    <div className="markdown-content mt-8">
-                        <CustomMarkdownRenderer 
-                            content={RichZeroStateContent} 
-                            entityTitle={entityTitle} 
-                        />
-                    </div>
-                ) : (
-                    // If filters are active, we center the action/filter clearing button below the text
-                    <div className="w-full text-center">
-                        {extraContent}
-                    </div>
-                )}
-            </div>
-          }
-        >
-            {/* When not filtered, the actions are handled inside the CustomMarkdownRenderer's flow */}
-            {!hasActiveFilters && (
-                <div className="mt-6 w-full text-center">
-                    {extraContent}
-                </div>
-            )}
-        </Empty>
-      </Card>
-    </div>
-  );
+                            {/* Conditional Rich Content from MD file */}
+                            {!hasActiveFilters ? (
+                                <div className="markdown-content mt-8">
+                                    <CustomMarkdownRenderer
+                                        content={RichZeroStateContent}
+                                        entityTitle={entityTitle}
+                                    />
+                                </div>
+                            ) : (
+                                // If filters are active, we center the action/filter clearing button below the text
+                                <div className="w-full text-center">
+                                    {extraContent}
+                                </div>
+                            )}
+                        </div>
+                    }
+                >
+                    {/* When not filtered, the actions are handled inside the CustomMarkdownRenderer's flow */}
+                    {!hasActiveFilters && (
+                        <div className="mt-6 w-full text-center">
+                            {extraContent}
+                        </div>
+                    )}
+                </Empty>
+            </Card>
+        </div>
+    );
 };
 export default ZeroStateContent;

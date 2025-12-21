@@ -1,23 +1,31 @@
 import React, { useState, useEffect } from 'react';
 import { Layout, Menu, Button, Drawer, FloatButton } from 'antd';
-import { TabBar } from 'antd-mobile';
+// import { TabBar } from 'antd-mobile';
 import { motion } from 'framer-motion';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
+  Menu as MenuIcon,
+  Search,
+  Filter,
+  LogOut,
   Home,
   Users,
   Building2,
-  Menu as MenuIcon,
-  LogOut,
   CreditCard,
   Users2,
-  Search,
-  Plus,
-  Filter
+  Plus
 } from 'lucide-react';
+import {
+  MenuFoldOutlined,
+  MenuUnfoldOutlined,
+  BellOutlined,
+  SearchOutlined,
+  SettingOutlined,
+  UserOutlined
+} from '@ant-design/icons';
 import { useAuthStore } from '@/core/lib/store';
-import { supabase, getCurrentOrganization, getCurrentUser} from '../../lib/supabase';
+import { supabase, getCurrentOrganization, getCurrentUser } from '../../lib/supabase';
 import { ThemeToggle } from './ThemeToggle';
 import { LanguageSelect } from './LanguageSelect';
 import { useThemeStore } from '@/core/lib/store';
@@ -64,7 +72,7 @@ const DashboardLayout = () => {
         // const availableModules = modules?.filter(module => 
         //   orgData.module_features.includes(module.prefix)
         // ) || [];
-        
+
         const items = [
           { key: '/dashboard', icon: <Home size={20} />, label: t('common.dashboard') }
         ];
@@ -155,9 +163,9 @@ const DashboardLayout = () => {
   return (
     <Layout className="min-h-screen">
       {!isMobile && (
-        <Sider 
-          trigger={null} 
-          collapsible 
+        <Sider
+          trigger={null}
+          collapsible
           collapsed={collapsed}
           className={isDarkMode ? 'bg-copper-800' : 'bg-blue-50'}
         >
@@ -181,7 +189,7 @@ const DashboardLayout = () => {
           </motion.div>
         </Sider>
       )}
-      
+
       <Layout>
         <Header className={`p-0 ${headerBgColor} transition-colors duration-300`}>
           <div className="flex justify-between items-center px-4 h-full">
@@ -221,7 +229,7 @@ const DashboardLayout = () => {
             </div>
           </div>
         </Header>
-        
+
         <Content className={`m-4 p-6 ${contentBgColor} rounded-lg transition-colors duration-300`}>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -235,7 +243,7 @@ const DashboardLayout = () => {
 
       {isMobile && (
         <>
-          <TabBar
+          {/*           <TabBar
             activeKey={location.pathname}
             onChange={(key) => navigate(key)}
             className={isDarkMode ? 'bg-copper-900' : 'bg-blue-50'}
@@ -247,7 +255,7 @@ const DashboardLayout = () => {
                 title={item.label}
               />
             ))}
-          </TabBar>
+          </TabBar> */}
 
           <FloatButton.Group
             trigger="click"

@@ -1,9 +1,12 @@
 import React, { useEffect } from 'react';
+import { Button, message } from "antd";
+import {
+  LogIn,
+  CreditCard
+} from "lucide-react";
 import { motion } from 'framer-motion';
-import { Button, message } from 'antd';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { LogIn, CreditCard } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/core/lib/store';
 
@@ -97,24 +100,12 @@ const Home = () => {
             Experience the power of our application with advanced features and intuitive design.
           </p>
           <div className="space-y-4">
-            <Button
-              type="primary"
-              size="large"
-              block
-              icon={<LogIn size={20} />}
-              onClick={() => navigate('/login')}
-            >
-              {t('auth.login')}
+            <Button type="primary" size="large" block onClick={() => navigate('/login')} icon={<LogIn size={20} />}>
+              Login to Dashboard
             </Button>
-            {/* <Button
-              size="large"
-              block
-              icon={<CreditCard size={20} />}
-              onClick={() => navigate('/subscriptions')}
-              className="bg-[var(--color-background-secondary)]"
-            >
-              {t('subscriptions.list')}
-            </Button> */}
+            <Button size="large" block onClick={() => navigate('/subscription')} icon={<CreditCard size={20} />} className="bg-[var(--color-background-secondary)]">
+              Manage Subscription
+            </Button>
           </div>
         </div>
       </motion.div>

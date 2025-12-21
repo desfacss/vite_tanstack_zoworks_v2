@@ -309,18 +309,6 @@
 // import AppRoutes from './routes';
 // import { ThemeProvider } from './components/shared/ThemeProvider';
 // import './i18n';
-// import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persister';
-// import { persistQueryClient } from '@tanstack/react-query-persist-client';
-// import './App.css';
-// import { NestedProvider } from './lib/NestedContext';
-// import { supabase } from './lib/supabase';
-// import { SessionManager } from './components/Layout/SessionManager'; // Import the new SessionManager
-// import { GlobalSessionWatcher } from './components/Layout/GlobalSessionWatcher'; // Import the new GlobalSessionWatcher
-
-// const isDev = import.meta.env.VITE_APP_ENV === 'development';
-
-// const queryClient = new QueryClient({
-//   defaultOptions: {
 //     queries: {
 //       staleTime: isDev ? 10 : 1000 * 60 * 5,
 //       cacheTime: isDev ? 10 : 1000 * 60 * 30,
@@ -711,17 +699,17 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter } from 'react-router-dom';
 import { App as AntApp } from 'antd';
 import AppRoutes from './routes';
-import { ThemeProvider } from './components/shared/ThemeProvider';
+import { ThemeProvider } from './core/components/shared/ThemeProvider';
 import './i18n';
 import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persister';
 import { persistQueryClient } from '@tanstack/react-query-persist-client';
 import './App.css';
 import { NestedProvider } from './lib/NestedContext';
 import { supabase } from './lib/supabase';
-import { SessionManager } from './components/Layout/SessionManager'; // Import the new SessionManager
-import { GlobalSessionWatcher } from './components/Layout/GlobalSessionWatcher'; // Import the new GlobalSessionWatcher
+import { SessionManager } from './core/components/Layout/SessionManager'; // Import the new SessionManager
+import { GlobalSessionWatcher } from './core/components/Layout/GlobalSessionWatcher'; // Import the new GlobalSessionWatcher
 
-const isDev = import.meta.env.VITE_APP_ENV === 'development';
+const isDev = import.meta.env.DEV;
 
 const queryClient = new QueryClient({
   defaultOptions: {

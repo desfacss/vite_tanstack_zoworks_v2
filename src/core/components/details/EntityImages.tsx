@@ -4,7 +4,7 @@ import { FileOutlined, DeleteOutlined } from '@ant-design/icons';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/core/lib/store';
 import moment from 'moment';
-import FileUploader from '@/components/common/ImageUploader';
+import FileUploader from '@/core/components/shared/ImageUploader';
 
 interface FileObject {
   url: string;

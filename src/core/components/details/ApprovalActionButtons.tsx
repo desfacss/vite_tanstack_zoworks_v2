@@ -1,18 +1,19 @@
+
 // components/common/ApprovalActionButtons.tsx
 
 import React, { useState, useEffect } from 'react';
 import { Button, Space, message, Modal, Spin } from 'antd';
-import { Check, X } from 'lucide-react';
+import { CheckCircle, XCircle } from "lucide-react";
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase'; // Assuming this path is correct
 import { useAuthStore } from '@/core/lib/store'; // Assuming this path is correct
 
 // --- Configuration ---
 // NOTE: Use the actual HR Role ID from your system.
-const HR_ROLE_ID = '80d2b431-7b95-453a-9a24-b697eefeca42'; 
+const HR_ROLE_ID = '80d2b431-7b95-453a-9a24-b697eefeca42';
 // Define the stage ID(s) that permit an approval/rejection action
-const ELIGIBLE_STATUSES = ['Submitted', 'Pending','Under Review', null, undefined]; 
-const COMPLETED_STATUSES = ['Approved', 'Rwejected']; 
+const ELIGIBLE_STATUSES = ['Submitted', 'Pending', 'Under Review', null, undefined];
+const COMPLETED_STATUSES = ['Approved', 'Rwejected'];
 // ---------------------
 
 interface ApprovalActionButtonsProps {
@@ -43,12 +44,12 @@ const ApprovalActionButtons: React.FC<ApprovalActionButtonsProps> = ({
       setIsApprover(false);
       return;
     }
-    
+
     // Check if the current status allows for approval/rejection
     const statusIsEligible = ELIGIBLE_STATUSES.some(s => s === currentStatus);
     if (!statusIsEligible) {
-        setIsApprover(false);
-        return;
+      setIsApprover(false);
+      return;
     }
 
     setIsCheckingEligibility(true);
@@ -62,13 +63,13 @@ const ApprovalActionButtons: React.FC<ApprovalActionButtonsProps> = ({
         p_created_at: createdAt,
         p_current_time: new Date().toISOString(),
       });
-console.log("bz",{
+      console.log("bz", {
         p_submitter_user_id: submitterUserId,
         p_hr_role_id: HR_ROLE_ID,
         p_organization_id: organization.id,
         p_created_at: createdAt,
         p_current_time: new Date().toISOString(),
-      },approvers,user?.id);
+      }, approvers, user?.id);
       if (error) {
         console.error('Error fetching approvers:', error);
         setIsApprover(false);
@@ -77,7 +78,7 @@ console.log("bz",{
 
       // Check if the current user's ID is in the list of eligible approvers
       const isEligible = Array.isArray(approvers) && approvers.some(approver => approver.user_id === user.id);
-      
+
       setIsApprover(isEligible);
 
     } catch (error) {
@@ -100,8 +101,8 @@ console.log("bz",{
 
       const payload = {
         // The column in your table that holds the status/stage information
-        status: newStatus, 
-        stage_id: newStatus, 
+        status: newStatus,
+        stage_id: newStatus,
         // Add audit fields if necessary
         // approved_by: newStatus === 'Approved' ? user?.id : null,
         // rejected_by: newStatus === 'Rejected' ? user?.id : null,
@@ -112,7 +113,7 @@ console.log("bz",{
       // Use the core_upsert_data_v7 RPC for the update
       // const { error } = await supabase.rpc('core_upsert_data_v7', {
       const { error } = await supabase.schema('analytics').rpc('core_upsert_data_v8', {
-        // table_name: `${entitySchema}.${entityType}`,
+        // table_name: `${ entitySchema }.${ entityType } `,
         table_name: entityType,
         data: payload,
         id: entityId,
@@ -122,7 +123,7 @@ console.log("bz",{
     },
     onSuccess: (_, newStatus) => {
       queryClient.invalidateQueries({ queryKey: [entityType?.split('.')[1], organization?.id] });
-      message.success(`Successfully ${newStatus}!`);
+      message.success(`Successfully ${newStatus} !`);
       // Re-run eligibility check to hide buttons after update
       setIsApprover(false);
       // checkApproverEligibility(); 
@@ -157,31 +158,32 @@ console.log("bz",{
     return <Spin tip={isCheckingEligibility ? "Checking eligibility..." : "Submitting action..."} style={{ marginTop: '20px' }} />;
   }
 
-  if (!isApprover ) return null;
+  if (!isApprover) return null;
 
   return (
-    <Space 
-        style={{ 
-            marginTop: '20px', 
-            padding: '15px 0', 
-            borderTop: '1px solid #f0f0f0',
-            width: '100%',
-            justifyContent: 'flex-start'
-        }}
+    <Space
+      style={{
+        marginTop: '20px',
+        padding: '15px 0',
+        borderTop: '1px solid #f0f0f0',
+        width: '100%',
+        justifyContent: 'flex-start'
+      }}
     >
       <Button
         type="primary"
-        icon={<Check size={16} />}
-        onClick={() => handleAction('Approved')}
+        className="bg-green-600 hover:bg-green-700 border-green-600"
+        icon={<CheckCircle size={16} />}
         loading={updateStatusMutation.isPending}
+        onClick={() => handleAction('Approved')}
       >
         Approve
       </Button>
       <Button
         danger
-        icon={<X size={16} />}
-        onClick={() => handleAction('Rejected')}
+        icon={<XCircle size={16} />}
         loading={updateStatusMutation.isPending}
+        onClick={() => handleAction('Rejected')}
       >
         Reject
       </Button>

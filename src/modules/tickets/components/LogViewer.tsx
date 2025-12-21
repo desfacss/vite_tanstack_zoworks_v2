@@ -1,10 +1,6 @@
-// LogViewer.tsx
 import React, { useState } from 'react';
-import { Button, Drawer, Tooltip } from 'antd'; // Add Tooltip
+import { Button, Drawer } from 'antd'; // Add Tooltip
 import { Plus } from 'lucide-react'; // Import Plus icon
-import TicketForm from './TicketForm'; // Adjust the import path as needed
-import { useAuthStore } from '@/core/lib/store';
-import { useQueryClient } from '@tanstack/react-query';
 import { useDeviceType } from '@/utils/deviceTypeStore';
 import AutomationLogViewer from './AutomationLogViewer';
 interface LogViewerProps {
@@ -12,7 +8,7 @@ interface LogViewerProps {
   asset_id?: string;
 }
 
-const LogViewer: React.FC<LogViewerProps> = ({editItem}) => {
+const LogViewer: React.FC<LogViewerProps & { editItem?: any }> = ({ editItem }) => {
   const [open, setOpen] = useState<boolean>(false);
   const deviceType = useDeviceType();
   const isDesktop = deviceType === 'desktop';
@@ -28,10 +24,11 @@ const LogViewer: React.FC<LogViewerProps> = ({editItem}) => {
 
   return (
     <>
-      {/* <Button
+      <Button
         type="primary"
-        onClick={showDrawer}
-        icon={!isDesktop ? <Plus size={16} /> : undefined} // Add icon for mobile
+        icon={<Plus size={16} />}
+        onClick={showDrawer} // Changed to showDrawer to match existing state logic
+        className="mb-4"
       >
         {isDesktop && "Create Ticket"}
       </Button>
@@ -41,9 +38,9 @@ const LogViewer: React.FC<LogViewerProps> = ({editItem}) => {
         onClose={onClose}
         open={open}
         width={isDesktop ? 800 : '100%'} // Adjust width for mobile
-      > */}
+      >
         <AutomationLogViewer ticketId={editItem?.id} />
-      {/* </Drawer> */}
+      </Drawer>
     </>
   );
 };

@@ -4,7 +4,7 @@ import { Card, Row, Col, Select, Statistic, message, Drawer, Button, Typography,
 import { DashboardOutlined, ReloadOutlined } from '@ant-design/icons';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/core/lib/store';
-import { snakeToTitleCase } from '@/components/common/utils/casing';
+import { snakeToTitleCase } from '@/core/components/common/utils/casing';
 import dayjs from 'dayjs';
 
 interface MetricsViewProps {
@@ -25,7 +25,7 @@ const MetricsView: React.FC<MetricsViewProps> = ({ entitySchema, entityType, vie
     queryFn: async () => {
       const { data, error } = await supabase
         .schema('core').from('metrics')
-        .select('metrics_config:metrics->metrics_config')
+        .select('metrics_config:metrics->metrics_config')
         .eq('entity_type', fullEntityTableName)
         .single();
 
@@ -37,7 +37,7 @@ const MetricsView: React.FC<MetricsViewProps> = ({ entitySchema, entityType, vie
     },
     enabled: !!fullEntityTableName,
   });
-// console.log("hh",metricsConfigData);
+  // console.log("hh",metricsConfigData);
   const metricsViewConfig = metricsConfigData;
 
   const [selectedMetric, setSelectedMetric] = useState<string | null>(null);

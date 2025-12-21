@@ -1,7 +1,7 @@
 import React from 'react';
 import { Result, Button } from 'antd';
 import { useNavigate } from 'react-router-dom';
-import { Home } from 'lucide-react';
+import { Home, ArrowLeft } from 'lucide-react';
 import { useAuthStore } from '@/core/lib/store';
 
 export const NotFound: React.FC = () => {
@@ -22,15 +22,14 @@ export const NotFound: React.FC = () => {
         status="404"
         title="Page Not Found"
         subTitle="Sorry, the page you visited does not exist or you don't have permission to access it."
-        extra={
-          <Button
-            type="primary"
-            icon={<Home size={16} />}
-            onClick={handleNavigate}
-          >
-            {user ? 'Back to Dashboard' : 'Back to Home'}
-          </Button>
-        }
+        extra={[
+          <Button type="primary" size="large" onClick={() => navigate('/')} icon={<Home size={20} />}>
+            Go Home
+          </Button>,
+          <Button size="large" onClick={() => navigate(-1)} icon={<ArrowLeft size={20} />}>
+            Go Back
+          </Button>,
+        ]}
       />
     </div>
   );

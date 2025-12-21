@@ -1,10 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import { Gantt, ViewMode, Task } from 'gantt-task-react';
 import 'gantt-task-react/dist/index.css';
-import { Button, Dropdown, Menu, message } from 'antd';
-import { List } from 'antd-mobile';
+import { Button, Dropdown, Menu, message, List } from 'antd';
 import { motion } from 'framer-motion';
-import { FileDown, UserIcon } from 'lucide-react';
+import { DownloadOutlined, UserOutlined } from '@ant-design/icons';
 import { useAuthedLayoutConfig } from '../Layout/AuthedLayoutContext';
 import RowActions from './RowActions';
 import { supabase } from '../../lib/supabase';
@@ -90,39 +89,39 @@ const GanttChart: React.FC<GanttViewProps> = ({
   // }));
 
   const tasks: Task[] = data.map((event) => {
-  const name = getNestedField(event, ganttview.fields?.name || 'name') || 'Unnamed Task';
-  const startDateField = getNestedField(event, ganttview.fields?.start_date || 'start_date');
-  const dueDateField = getNestedField(event, ganttview.fields?.due_date || 'due_date');
+    const name = getNestedField(event, ganttview.fields?.name || 'name') || 'Unnamed Task';
+    const startDateField = getNestedField(event, ganttview.fields?.start_date || 'start_date');
+    const dueDateField = getNestedField(event, ganttview.fields?.due_date || 'due_date');
 
-  let start;
-  let end;
+    let start;
+    let end;
 
-  if (startDateField && !dueDateField) {
-    // If only a start time is available, assume end time is end of the day (11:59:59)
-    const startDay = dayjs(startDateField);
-    start = startDay.toDate();
-    end = startDay.endOf('day').toDate();
-  } else if (!startDateField && dueDateField) {
-    // If only a due/end date is available, assume the start is 24 hours before
-    const endDay = dayjs(dueDateField);
-    end = endDay.toDate();
-    start = endDay.subtract(1, 'day').toDate();
-  } else {
-    // Default case: use available dates or current date if both are missing
-    start = startDateField ? new Date(startDateField) : new Date();
-    end = dueDateField ? new Date(dueDateField) : new Date();
-  }
+    if (startDateField && !dueDateField) {
+      // If only a start time is available, assume end time is end of the day (11:59:59)
+      const startDay = dayjs(startDateField);
+      start = startDay.toDate();
+      end = startDay.endOf('day').toDate();
+    } else if (!startDateField && dueDateField) {
+      // If only a due/end date is available, assume the start is 24 hours before
+      const endDay = dayjs(dueDateField);
+      end = endDay.toDate();
+      start = endDay.subtract(1, 'day').toDate();
+    } else {
+      // Default case: use available dates or current date if both are missing
+      start = startDateField ? new Date(startDateField) : new Date();
+      end = dueDateField ? new Date(dueDateField) : new Date();
+    }
 
-  return {
-    id: event.id || `default-id-${Math.random()}`, // Use a unique ID if event.id is missing
-    name,
-    start,
-    end,
-    progress: Number(getNestedField(event, ganttview.fields?.progress || 'progress')) || 0,
-    type: 'task',
-    isDisabled: false,
-  };
-});
+    return {
+      id: event.id || `default-id-${Math.random()}`, // Use a unique ID if event.id is missing
+      name,
+      start,
+      end,
+      progress: Number(getNestedField(event, ganttview.fields?.progress || 'progress')) || 0,
+      type: 'task',
+      isDisabled: false,
+    };
+  });
 
   const handleZoomChange = (mode: ViewMode) => {
     setViewMode(mode);
@@ -235,7 +234,7 @@ const GanttChart: React.FC<GanttViewProps> = ({
                     }}
                     trigger={['click']}
                   >
-                    <Button icon={<FileDown />} style={{ marginLeft: 8 }} />
+                    <Button icon={<DownloadOutlined />} style={{ marginLeft: 8 }} />
                   </Dropdown>
                 )}
               </div>
@@ -264,7 +263,7 @@ const GanttChart: React.FC<GanttViewProps> = ({
               {data.map((record) => (
                 <List.Item
                   key={record.id}
-                  prefix={<UserIcon size={24} />}
+                  prefix={<UserOutlined style={{ fontSize: 24 }} />}
                   description={getNestedField(record, 'details.email') || '-'}
                   arrow={false}
                   extra={

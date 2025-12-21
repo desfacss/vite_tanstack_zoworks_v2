@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Layout, Menu } from 'antd';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useAuthStore } from '../@/core/lib/store';
+import { useAuthStore } from '@/core/lib/store';
 
 const { Sider: AntSider } = Layout;
 
@@ -15,12 +15,12 @@ export const Sider: React.FC<SiderProps> = ({ collapsed }) => {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   const { organization, navigationItems } = useAuthStore();
-  
+
   const [openKeys, setOpenKeys] = useState<string[]>([]);
 
   const onOpenChange = (keys: string[]) => {
     const latestOpenKey = keys.find(key => openKeys.indexOf(key) === -1);
-    
+
     if (latestOpenKey) {
       setOpenKeys([latestOpenKey]);
     } else {
@@ -32,15 +32,15 @@ export const Sider: React.FC<SiderProps> = ({ collapsed }) => {
   const handleMenuClick = ({ key, domEvent }: { key: string, domEvent: React.MouseEvent<HTMLElement> }) => {
     // Check if the key starts with a forward slash (to distinguish routes from submenu keys like 'support')
     if (key.startsWith('/')) {
-        
-        // Check for Ctrl (Windows/Linux) or Command (macOS) key press
-        if (domEvent.ctrlKey || domEvent.metaKey) {
-            // Open in a new tab
-            window.open(key, '_blank');
-        } else {
-            // Default navigation for a single click
-            navigate(key);
-        }
+
+      // Check for Ctrl (Windows/Linux) or Command (macOS) key press
+      if (domEvent.ctrlKey || domEvent.metaKey) {
+        // Open in a new tab
+        window.open(key, '_blank');
+      } else {
+        // Default navigation for a single click
+        navigate(key);
+      }
     }
   };
   // ----------------------------------
@@ -48,9 +48,9 @@ export const Sider: React.FC<SiderProps> = ({ collapsed }) => {
   // if (!i18n.isInitialized) {
   //   return null;
   // }
-//   if (!i18n.isInitialized || !navigationItems || navigationItems.length === 0) {
-//   return null; // or a loading skeleton
-// }
+  //   if (!i18n.isInitialized || !navigationItems || navigationItems.length === 0) {
+  //   return null; // or a loading skeleton
+  // }
   return (
     <AntSider
       trigger={null}
@@ -79,7 +79,7 @@ export const Sider: React.FC<SiderProps> = ({ collapsed }) => {
         selectedKeys={[location.pathname]}
         items={navigationItems}
         // --- USE THE NEW HANDLER HERE ---
-        onClick={handleMenuClick} 
+        onClick={handleMenuClick}
         // --------------------------------
         className="bg-transparent"
         openKeys={openKeys}

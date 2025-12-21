@@ -1,11 +1,13 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
-import { useAuthStore } from '../@/core/lib/store';
+import { useAuthStore } from '@/core/lib/store';
 
 interface FormConfig {
   form_name: string;
   organization_id: string;
-  schema?: Record<string, any> | null; // JSONB
+  data_schema?: any;
+  ui_schema?: any;
+  db_schema?: any; // Add db_schema to definition
   version?: number | null;
 }
 
@@ -17,9 +19,13 @@ export const useFormConfig = (formName: string) => {
     queryFn: async () => {
       // Step 1: Try loading from local file
       try {
-        const localConfig = await import(`../../../schemas/forms/${formName}.json`);
-        if (localConfig) {
-          return localConfig.default || localConfig; // Handle ES module default export
+        // Use Vite's glob import to find the file
+        const forms = import.meta.glob('../../../schemas/forms/*.json');
+        const path = `../../../schemas/forms/${formName}.json`;
+
+        if (forms[path]) {
+          const module = await forms[path]() as any;
+          return module.default || module;
         }
       } catch (error) {
         console.warn(`Local form config file for ${formName} not found, falling back to database.`, error);
@@ -45,7 +51,7 @@ export const useFormConfig = (formName: string) => {
     },
     enabled: !!formName && !!organization?.id, // Only run if formName and organization are available
     staleTime: 7 * 24,// * 60 * 60 * 1000, // Cache for 7 days
-    cacheTime: 30 * 24,// * 60 * 60 * 1000, // Keep in cache for 30 days
+    gcTime: 30 * 24,// * 60 * 60 * 1000, // Keep in cache for 30 days
     retry: 2, // Retry twice on failure
   });
 };

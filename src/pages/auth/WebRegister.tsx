@@ -2,8 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { notification, Row, Col, Spin, message } from 'antd';
 import { useLocation, Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
-import DynamicForm from '../../components/common/DynamicForm';
-// import DynamicForm from '../pages/DynamicForm';
+import DynamicForm from '../../core/components/DynamicForm';
 
 interface FormSchema {
   id: string;
@@ -53,7 +52,7 @@ const WebRegister: React.FC = () => {
 
   const getRoles = async () => {
     const { data, error } = await supabase.schema('identity').from('roles').select('*');
-    console.log("rol",data);
+    console.log("rol", data);
     if (error) {
       console.error('Error fetching roles:', error);
       return;
@@ -69,7 +68,7 @@ const WebRegister: React.FC = () => {
   }, []);
 
   const surveyLayout = location.pathname.startsWith('/survey');
-//   const PREFIX_PATH = surveyLayout ? SURVEY_PREFIX_PATH : APP_PREFIX_PATH;
+  //   const PREFIX_PATH = surveyLayout ? SURVEY_PREFIX_PATH : APP_PREFIX_PATH;
 
   const onFinish = async (values: FormValues) => {
     if (values?.password !== values?.retypePassword) {

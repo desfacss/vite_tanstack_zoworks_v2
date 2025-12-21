@@ -1,8 +1,8 @@
 import React, { useMemo } from 'react';
-import { message, Table, Tag } from 'antd';
+import { message, Table, Tag, List } from 'antd';
 import { motion } from 'framer-motion';
 import { UserIcon } from 'lucide-react';
-import { List } from 'antd-mobile';
+
 import { useAuthedLayoutConfig } from '../Layout/AuthedLayoutContext';
 import dayjs from 'dayjs';
 import RowActions from './RowActions';
@@ -99,58 +99,58 @@ const TableView: React.FC<TableViewProps> = ({
         sorter: viewConfig?.tableview?.showFeatures?.includes('sorting'),
         // Inside the columns useMemo hook, within the .map() and render:
         render: (value: any) => {
-    // Handle arrayCount renderType
-// console.log("vx",typeof value,value,field.renderType);
-    if (field.renderType === 'arrayCount' && Array.isArray(value)) {
-      return value.length || '-';
-    }
-  
-    // Handle arrays that are NOT arrayCount, rendering as tags
-    if (Array.isArray(value) && value.length > 0) {
-      // Check if the array contains objects, and if so, extract the 'name'
-            const tagsToRender = value.map(item => typeof item === 'object' && item !== null ? item.name : item);
-            return (
-              <>
-                {tagsToRender.map((tag, index) => (
-                  <Tag key={index} color="blue">
-                    {tag}
-                  </Tag>
-                ))}
-              </>
-            );
-    } else if (Array.isArray(value) && value.length === 0) {
-      return '-';
-    }
-  
-    // Define a simple regex to check for common date/time patterns (e.g., YYYY-MM-DD or ISO 8601)
-    const isLikelyDate = /^\d{4}-\d{2}-\d{2}/.test(value);
-  
-    // Handle date/time fields only if the string looks like a date and is a valid date object
-    if (typeof value === 'string' && isLikelyDate && dayjs(value).isValid()) {
-      // Check for the presence of a time component (e.g., 'T' in ISO 8601)
-      if (value.includes('T')) {
-        return dayjs(value).format('MMM D, YYYY, HH:mm:ss');
-      } else {
-        // If it's just a date, format without the time
-        return dayjs(value).format('MMM D, YYYY');
-      }
-    }
-  
-    // Handle boolean fields as Ant Design Tags
-    if (typeof value === 'boolean') {
-      return (
-        <Tag color={value ? 'green' : 'red'}>
-          {value ? 'Yes' : 'No'}
-        </Tag>
-      );
-    }
-  
-    // Default rendering for other values
-    const content = value !== null && value !== undefined && value !== '' ? value : '-';
-    return field.fieldPath === firstDisplayFieldPath && content !== '-'
-      ? <span style={{ color: lightTheme?.token?.colorPrimary, whiteSpace: 'nowrap' }}>{content}</span>
-      : content;
-  },
+          // Handle arrayCount renderType
+          // console.log("vx",typeof value,value,field.renderType);
+          if (field.renderType === 'arrayCount' && Array.isArray(value)) {
+            return value.length || '-';
+          }
+
+          // Handle arrays that are NOT arrayCount, rendering as tags
+          if (Array.isArray(value) && value.length > 0) {
+            // Check if the array contains objects, and if so, extract the 'name'
+            const tagsToRender = value.map(item => typeof item === 'object' && item !== null ? item.name : item);
+            return (
+              <>
+                {tagsToRender.map((tag, index) => (
+                  <Tag key={index} color="blue">
+                    {tag}
+                  </Tag>
+                ))}
+              </>
+            );
+          } else if (Array.isArray(value) && value.length === 0) {
+            return '-';
+          }
+
+          // Define a simple regex to check for common date/time patterns (e.g., YYYY-MM-DD or ISO 8601)
+          const isLikelyDate = /^\d{4}-\d{2}-\d{2}/.test(value);
+
+          // Handle date/time fields only if the string looks like a date and is a valid date object
+          if (typeof value === 'string' && isLikelyDate && dayjs(value).isValid()) {
+            // Check for the presence of a time component (e.g., 'T' in ISO 8601)
+            if (value.includes('T')) {
+              return dayjs(value).format('MMM D, YYYY, HH:mm:ss');
+            } else {
+              // If it's just a date, format without the time
+              return dayjs(value).format('MMM D, YYYY');
+            }
+          }
+
+          // Handle boolean fields as Ant Design Tags
+          if (typeof value === 'boolean') {
+            return (
+              <Tag color={value ? 'green' : 'red'}>
+                {value ? 'Yes' : 'No'}
+              </Tag>
+            );
+          }
+
+          // Default rendering for other values
+          const content = value !== null && value !== undefined && value !== '' ? value : '-';
+          return field.fieldPath === firstDisplayFieldPath && content !== '-'
+            ? <span style={{ color: lightTheme?.token?.colorPrimary, whiteSpace: 'nowrap' }}>{content}</span>
+            : content;
+        },
       }))
       .concat(...(viewConfig?.tableview?.actions?.row?.length > 0
         ? [{
@@ -208,13 +208,11 @@ const TableView: React.FC<TableViewProps> = ({
           isLoading ? (
             <div>Loading...</div>
           ) : (
-            <List>
-              {data.map((record) => (
+            <List
+              dataSource={data}
+              renderItem={(record) => (
                 <List.Item
                   key={record.id}
-                  prefix={<UserIcon size={24} />}
-                  description={record[descriptionField] || '-'}
-                  arrow={false}
                   extra={
                     <RowActions
                       entityType={entityType}
@@ -227,15 +225,21 @@ const TableView: React.FC<TableViewProps> = ({
                     />
                   }
                 >
-                  {/* For mobile, you might want a specific field to be the main title.
-                     Here, it tries 'name', or the first displayable field, then renders it normally. */}
-                  {record.name || (viewConfig?.tableview?.fields[0] ? record[viewConfig.tableview.fields[0].fieldPath] : '-')}
-                  <div className="text-xs text-gray-500">
-                    {record.created_at ? dayjs(record.created_at).format('MMM D, YYYY') : '-'}
-                  </div>
+                  <List.Item.Meta
+                    avatar={<UserIcon size={24} />}
+                    title={record.name || (viewConfig?.tableview?.fields[0] ? record[viewConfig.tableview.fields[0].fieldPath] : '-')}
+                    description={
+                      <div>
+                        <div>{record[descriptionField] || '-'}</div>
+                        <div className="text-xs text-gray-500">
+                          {record.created_at ? dayjs(record.created_at).format('MMM D, YYYY') : '-'}
+                        </div>
+                      </div>
+                    }
+                  />
                 </List.Item>
-              ))}
-            </List>
+              )}
+            />
           )
         ) : (
           <Table
@@ -243,7 +247,7 @@ const TableView: React.FC<TableViewProps> = ({
             dataSource={data}
             loading={isLoading}
             rowKey="id"
-            pagination={false} 
+            pagination={false}
             onChange={onTableChange}
             scroll={{ x: 'max-content' }}
           />

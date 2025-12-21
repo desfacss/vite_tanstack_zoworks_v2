@@ -11,7 +11,7 @@ const __dirname = typeof __dirname !== 'undefined'
 
 
 export default defineConfig({
-  
+
   resolve: {
     alias: {
       '@/views': path.resolve(__dirname, './src/views'),
@@ -22,27 +22,27 @@ export default defineConfig({
   },
   base: '/', // This is often the fix for Vercel if your app is at the root
   define: {
-  'process.env': {}, // Shim process.env to an empty object
-},
-// server: {
-//     proxy: {
-//       '/api/supabase': {
-//         target: 'https://gbhktobgplalpjmfoyte.supabase.co',
-//         changeOrigin: true,
-//         rewrite: (path) => path.replace(/^\/api\/supabase/, ''),
-//         secure: true,
-//       },
-//     },
-//   },
+    'process.env': {}, // Shim process.env to an empty object
+  },
+  // server: {
+  //     proxy: {
+  //       '/api/supabase': {
+  //         target: 'https://gbhktobgplalpjmfoyte.supabase.co',
+  //         changeOrigin: true,
+  //         rewrite: (path) => path.replace(/^\/api\/supabase/, ''),
+  //         secure: true,
+  //       },
+  //     },
+  //   },
   plugins: [
     react(),
     VitePWA({
       // registerType: 'autoUpdate',
       // strategies: 'generateSW',
       registerType: 'prompt', // 'prompt' is generally better for PWAs with notifications
-    strategies: 'injectManifest',
-    srcDir: 'src', // Your service worker file is in src
-    filename: 'sw.ts', // Specify your service worker filename
+      strategies: 'injectManifest',
+      srcDir: 'src', // Your service worker file is in src
+      filename: 'sw.ts', // Specify your service worker filename
       // registerType: 'prompt',
       // strategies: 'injectManifest',
       // srcDir: 'src',
@@ -191,7 +191,7 @@ export default defineConfig({
       output: {
         manualChunks: {
           vendor: ['react', 'react-dom', 'react-router-dom'],
-          ui: ['antd', 'antd-mobile', '@ant-design/icons'],
+          ui: ['antd', '@ant-design/icons'],
           form: ['@rjsf/antd', '@rjsf/core', '@rjsf/utils', '@rjsf/validator-ajv8'],
           state: ['@tanstack/react-query', 'zustand'],
           animation: ['framer-motion']

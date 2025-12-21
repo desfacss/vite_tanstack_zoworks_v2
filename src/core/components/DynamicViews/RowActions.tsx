@@ -1,7 +1,7 @@
 
 import React, { useState, lazy, Suspense, useCallback, useMemo } from 'react';
 import { Button, Drawer, Space, message, Modal, Dropdown, Menu, Spin } from 'antd';
-import { Edit2, Trash2, Eye, Copy, MoreHorizontal } from 'lucide-react';
+import { Edit2, Trash2, MoreHorizontal, Eye, Copy } from "lucide-react";
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/core/lib/store';
@@ -9,9 +9,7 @@ import DynamicForm from '../DynamicForm';
 import DetailsView from '../details/DetailsView';
 import { useFormConfig } from '../DynamicViews/hooks/useFormConfig';
 import { useNestedContext } from '@/core/lib/NestedContext';
-import { ActionSheet } from 'antd-mobile';
 import { useLocation } from 'react-router-dom';
-import { isLocationPartition } from '@/components/common/utils/partitionPermissions';
 import { registry } from '@/core/registry';
 
 // Legacy Component Map Removed - Use Registry or Dynamic Forms
@@ -86,7 +84,7 @@ const RowActions: React.FC<RowActionsProps> = ({
       for (const key in item) {
         if (key === 'details' && typeof item[key] === 'object' && item[key] !== null) {
           for (const nestedKey in item[key]) {
-            const flattenedKey = `details.${nestedKey}`;
+            const flattenedKey = 'details.' + nestedKey;
             if (flattenedFields.has(flattenedKey)) transformed[flattenedKey] = item[key][nestedKey];
           }
         } else if (flattenedFields.has(key)) {
@@ -125,12 +123,12 @@ const RowActions: React.FC<RowActionsProps> = ({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [entityType, organization?.id] });
-      message.success(`${entityType} updated successfully`);
+      message.success(entityType + ' updated successfully');
       setIsDrawerVisible(false);
       setFormName(null);
       setCurrentAction(null);
     },
-    onError: (error: any) => message.error(error.message || `Failed to update ${entityType}`),
+    onError: (error: any) => message.error(error.message || 'Failed to update ' + entityType),
   });
 
   const handleEdit = async (form: string) => {
@@ -179,8 +177,8 @@ const RowActions: React.FC<RowActionsProps> = ({
 
   const handleDeleteConfirm = () => {
     Modal.confirm({
-      title: `Confirm Deletion`,
-      content: `Are you sure you want to delete this ${entityType}?`,
+      title: 'Confirm Deletion',
+      content: 'Are you sure you want to delete this ' + entityType + '?',
       okText: 'Delete',
       okType: 'danger',
       onOk: async () => {
@@ -243,14 +241,13 @@ const RowActions: React.FC<RowActionsProps> = ({
   return (
     <>
       <Space>
-        {actionItems.map(item => (
-          <Button key={item.key} icon={item.icon} danger={item.danger} onClick={item.onClick} title={item.label} />
-        ))}
+        {actionItems.map(item => <Button key={item.key} type="text" icon={<MoreHorizontal size={16} />} danger={item.danger} onClick={item.onClick} title={item.label} />
+        )}
       </Space>
 
       {/* Edit/Legacy Drawer */}
       <Drawer
-        title={`${currentAction} ${record?.name || record?.id}`}
+        title={currentAction + ' ' + (record?.name || record?.id)}
         open={isDrawerVisible}
         onClose={() => setIsDrawerVisible(false)}
         width={window.innerWidth <= 768 ? '100%' : '50%'}

@@ -4,7 +4,7 @@ import { Card, Row, Col, Select, message, Button, Typography, Space, Spin, Modal
 import { ReloadOutlined, SaveOutlined } from '@ant-design/icons';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/core/lib/store';
-import { snakeToTitleCase } from '@/components/common/utils/casing';
+import { snakeToTitleCase } from '@/core/components/common/utils/casing';
 import dayjs from 'dayjs';
 
 import MetricChartWidget, { MetricWidgetConfig } from './MetricChartWidget';
@@ -169,8 +169,8 @@ const DashboardView: React.FC<DashboardViewProps> = ({ entitySchema, entityType,
       });
 
       if (error) {
-          console.error('Supabase RPC error:', error);
-          throw error;
+        console.error('Supabase RPC error:', error);
+        throw error;
       }
 
       message.destroy();
@@ -179,7 +179,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({ entitySchema, entityType,
       if (!dashboardId && data && data.length > 0) {
         setDashboardId(data[0].id);
       }
-      
+
     } catch (error: any) {
       message.destroy();
       message.error(`Failed to save dashboard: ${error.message}`);

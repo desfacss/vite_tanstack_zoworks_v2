@@ -5,12 +5,12 @@ import * as Icons from '@ant-design/icons';
 import { supabase } from '@/lib/supabase';
 import QRCard from './QRCard';
 import RowActions from '../DynamicViews/RowActions';
-import TaskReportPage from '@/components/common/doc/ServiceReportDrawer';
+import TaskReportPage from '@/core/components/common/doc/ServiceReportDrawer';
 import DocView from './DocView';
 import ApprovalActionButtons from './ApprovalActionButtons';
 import Expensesheet from './Expensesheet';
 import Timesheet from './Timesheet';
-import { useAuthStore } from '../@/core/lib/store';
+import { useAuthStore } from '@/core/lib/store';
 
 const { Text, Title } = Typography;
 
@@ -89,13 +89,13 @@ const getNestedValue = (obj: Record<string, any>, path: string): string | any[] 
     if (path === 'details.membership_type' && typeof value === 'object' && !Array.isArray(value)) {
       return Object.values(value).join(', ');
     }
-    
+
     if (value === undefined || value === null || value === '') return ' - - ';
-    
+
     if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-         return value;
+      return value;
     }
-    
+
     return String(value);
   }
 
@@ -112,7 +112,7 @@ const getNestedValue = (obj: Record<string, any>, path: string): string | any[] 
   if (typeof result === 'object' && result !== null && !Array.isArray(result)) {
     return result;
   }
-  
+
   return String(result);
 };
 
@@ -123,7 +123,7 @@ const getCardTitleText = (data: Record<string, any>): string => {
   for (const fieldKey of TITLE_FIELD_PRIORITY) {
     // Check if the key exists in the data and the value is a non-empty string
     const value = getNestedValue(data, fieldKey);
-    
+
     if (typeof value === 'string' && value !== ' - - ') {
       return value;
     }
@@ -133,7 +133,7 @@ const getCardTitleText = (data: Record<string, any>): string => {
   if (data.id) {
     return data.id;
   }
-  
+
   return ' - - ';
 };
 
@@ -243,7 +243,7 @@ const DetailOverview: React.FC<DetailOverviewProps> = ({
         setTemplateData(null);
         return;
       }
-      
+
       if (docTemplate && docTemplate.doc_common_template_id) {
         const commonTemplateId = docTemplate.doc_common_template_id;
 
@@ -309,7 +309,7 @@ const DetailOverview: React.FC<DetailOverviewProps> = ({
 
   const handleResendLoginLink = async () => {
     const currentData = fetchedData || data;
-    const emailValue = getNestedValue(currentData, 'details.email'); 
+    const emailValue = getNestedValue(currentData, 'details.email');
     const email = typeof emailValue === 'string' ? emailValue : ' - - ';
 
     if (email === ' - - ' || !email) {
@@ -335,15 +335,15 @@ const DetailOverview: React.FC<DetailOverviewProps> = ({
 
     const value = getNestedValue(currentData, field.fieldPath);
     const { icon, label, style, webLink, link, imagePath, displayKey } = field;
-    
+
     // Check if value is a complex object (JSONB column itself)
     const isComplexObject = typeof value === 'object' && value !== null && !Array.isArray(value);
-    
+
     // Check if the value is missing or a complex object
-    const isValueMissing = value === ' - - ' || isComplexObject; 
-    
+    const isValueMissing = value === ' - - ' || isComplexObject;
+
     if (isValueMissing && !Array.isArray(value)) {
-        return null;
+      return null;
     }
 
     // Handle array of objects
@@ -432,7 +432,7 @@ const DetailOverview: React.FC<DetailOverviewProps> = ({
     }
 
     const isNA = value === ' - - ';
-    
+
     // Content rendering (value must be a string here)
     const content = isNA ? (
       <Text>{value}</Text>
@@ -469,7 +469,7 @@ const DetailOverview: React.FC<DetailOverviewProps> = ({
     // However, since we now use a prioritized list (TITLE_FIELD_PRIORITY) separate from the group config, 
     // we don't need to skip anything here. 
     // I'll keep the skipFirstField argument for safety but ignore it since the field used for the title might not be the first field in the first group.
-    
+
     const fieldsToRender = sortedFields;
 
     return (
@@ -537,7 +537,7 @@ const DetailOverview: React.FC<DetailOverviewProps> = ({
   };
 
   const currentData = fetchedData || data;
-  
+
   // 💡 FIX: Use the new priority logic for the card title
   const cardTitleText = getCardTitleText(currentData);
 
@@ -548,7 +548,7 @@ const DetailOverview: React.FC<DetailOverviewProps> = ({
   const sortedGroups = viewConfig?.details_overview?.groups?.sort(
     (a: GroupConfig, b: GroupConfig) => (a.order || 0) - (b.order || 0),
   );
-  
+
   // Find the field path that matched the card title for optional exclusion later
   const titleFieldPath = TITLE_FIELD_PRIORITY.find(key => getNestedValue(currentData, key) === cardTitleText);
 

@@ -3,7 +3,7 @@
 // import { Layout, Menu } from 'antd';
 // import { useLocation, useNavigate } from 'react-router-dom';
 // import { useTranslation } from 'react-i18next';
-// import { useAuthStore } from '../@/core/lib/store';
+// import { useAuthStore } from '@/core/lib/store';
 
 // const { Sider: AntSider } = Layout;
 
@@ -47,7 +47,7 @@
 import React from 'react';
 import { Layout, Menu } from 'antd';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useAuthStore } from '../@/core/lib/store';
+import { useAuthStore } from '@/core/lib/store';
 import { getNavigationItems } from './navigation';
 
 const { Sider: AntSider } = Layout;

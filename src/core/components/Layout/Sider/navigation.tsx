@@ -1,79 +1,78 @@
 import React from 'react';
 import {
-  Home,
-  Users,
-  Building2,
-  CreditCard,
-  FileText,
-  Settings,
-  Briefcase,
-  Layers,
-  BarChart2,
-  ListTodo,
-  Truck,
-  Building,
-  ClipboardList,
-  Calendar,
-  Clock,
-  Users2,
-  FolderOpen,
-  ClipboardCheck,
-  Code,
-  MapPin,
-  Workflow,
-  Clipboard,
-  Package,
-  Headset, // For support
-  Shield, // For admin
-  Bell, // For notifications
-  BookOpen, // For catalog
-  ShoppingCart, // For shopping
-  ScrollText, // For reports
-  Receipt, // For invoices
-} from 'lucide-react';
+  HomeOutlined,
+  TeamOutlined,
+  BankOutlined,
+  CreditCardOutlined,
+  FileTextOutlined,
+  SettingOutlined,
+  BriefcaseOutlined,
+  AppstoreOutlined,
+  BarChartOutlined,
+  UnorderedListOutlined,
+  CarOutlined,
+  BuildOutlined,
+  SolutionOutlined,
+  CalendarOutlined,
+  ClockCircleOutlined,
+  UsergroupAddOutlined,
+  FolderOpenOutlined,
+  AuditOutlined,
+  CodeOutlined,
+  EnvironmentOutlined,
+  NodeIndexOutlined,
+  ContainerOutlined,
+  CustomerServiceOutlined,
+  SafetyCertificateOutlined,
+  BellOutlined,
+  ReadOutlined,
+  ShopOutlined,
+  FileDoneOutlined,
+  SafetyOutlined
+} from '@ant-design/icons';
 import type { MenuProps } from 'antd';
 import type { TFunction } from 'i18next';
 import menuConfig from '@/config/menuConfig.json';
 
-// Icon mapping based on logical association
+// Icon mapping based on logical association using Ant Design Icons
 const iconMap: Record<string, React.ReactNode> = {
-  dashboard: <Home size={20} />,
-  users: <Users size={20} />,
-  organizations: <Building2 size={20} />,
-  subscriptions: <CreditCard size={20} />,
-  businesses: <Briefcase size={20} />,
-  settings: <Settings size={20} />,
-  support: <ClipboardList size={20} />, // Support tickets
-  fsm: <Truck size={20} />, // Field service management
-  contracts: <ClipboardCheck size={20} />, // Contracts
-  workforce: <Users2 size={20} />, // Workforce
-  tickets: <ListTodo size={20} />, // Tickets
-  'service-reports': <FileText size={20} />, // Service reports
-  projects: <FolderOpen size={20} />, // Projects
-  process: <Workflow size={20} />, // Processes
-  analytics: <BarChart2 size={20} />, // Analytics/reports
-  tracking: <MapPin size={20} />, // GPS/Location tracking
-  'my-tickets': <ListTodo size={20} />, // My tickets
-  'service-types': <Layers size={20} />, // Replaced BriefcaseMedical
-  'service-offerings': <Package size={20} />, // Service offerings
-  'service-contracts': <ClipboardCheck size={20} />, // Service contracts
-  'service-categories': <Layers size={20} />, // Service categories
-  'service-assets': <Clipboard size={20} />, // Service assets
-  clients: <Building size={20} />, // Clients
-  'client-contacts': <Users size={20} />, // Client contacts
-  teams: <Users2 size={20} />, // Teams
-  leaves: <Calendar size={20} />, // Leaves/time-off
-  workflow: <Workflow size={20} />, // Workflow
-  config: <Code size={20} />, // Configuration
-  'user-settings': <Settings size={20} />,
-  'support-service': <Headset size={20} />,
-  admin: <Shield size={20} />,
-  notifications: <Bell size={20} />,
-  catalog: <BookOpen size={20} />,
-  shopping: <ShoppingCart size={20} />,
-  reports: <ScrollText size={20} />,
-  invoices: <Receipt size={20} />,
-  default: <FileText size={20} />, // Default fallback icon
+  dashboard: <HomeOutlined />,
+  users: <TeamOutlined />,
+  organizations: <BankOutlined />,
+  subscriptions: <CreditCardOutlined />,
+  businesses: <BriefcaseOutlined />,
+  settings: <SettingOutlined />,
+  support: <SolutionOutlined />, // Support tickets
+  fsm: <CarOutlined />, // Field service management (Truck -> Car/Vehicle)
+  contracts: <AuditOutlined />, // Contracts
+  workforce: <UsergroupAddOutlined />, // Workforce
+  tickets: <UnorderedListOutlined />, // Tickets
+  'service-reports': <FileTextOutlined />, // Service reports
+  projects: <FolderOpenOutlined />, // Projects
+  process: <NodeIndexOutlined />, // Processes (Workflow)
+  analytics: <BarChartOutlined />, // Analytics/reports
+  tracking: <EnvironmentOutlined />, // GPS/Location tracking
+  'my-tickets': <UnorderedListOutlined />, // My tickets
+  'service-types': <AppstoreOutlined />,
+  'service-offerings': <ContainerOutlined />, // Service offerings (Package)
+  'service-contracts': <AuditOutlined />, // Service contracts
+  'service-categories': <AppstoreOutlined />, // Service categories
+  'service-assets': <FileTextOutlined />, // Service assets
+  clients: <BuildOutlined />, // Clients
+  'client-contacts': <TeamOutlined />, // Client contacts
+  teams: <TeamOutlined />, // Teams
+  leaves: <CalendarOutlined />, // Leaves/time-off
+  workflow: <NodeIndexOutlined />, // Workflow
+  config: <CodeOutlined />, // Configuration
+  'user-settings': <SettingOutlined />,
+  'support-service': <CustomerServiceOutlined />,
+  admin: <SafetyCertificateOutlined />,
+  notifications: <BellOutlined />,
+  catalog: <ReadOutlined />,
+  shopping: <ShopOutlined />,
+  reports: <FileDoneOutlined />,
+  invoices: <FileTextOutlined />,
+  default: <FileTextOutlined />, // Default fallback icon
 };
 
 // export const getNavigationItems = (
@@ -90,7 +89,7 @@ const iconMap: Record<string, React.ReactNode> = {
 //       label: t(`common.${route.translationKey}`),
 //     });
 //   });
-  
+
 //   // Add module items with their children
 //   Object.entries(menuConfig.modules).forEach(([module, routes]) => {
 //     // Include "settings" module only if user is SassAdmin
@@ -145,7 +144,7 @@ export const getNavigationItems = (
       label: t(`common.${route.translationKey}`),
     });
   });
-  
+
   // Add module items with their children
   Object.entries(menuConfig.modules).forEach(([module, routes]) => {
     // // The SassAdmin check (commented out in your original) remains here if needed
@@ -160,9 +159,9 @@ export const getNavigationItems = (
     if (permissions?.[module]) {
       routes.forEach(route => {
         const feature = route.key.replace('-view', '');
-        
+
         // 🚩 FIX: Access the feature permissions directly under the module key.
-        const perms = permissions[module][feature]; 
+        const perms = permissions[module][feature];
 
         // Check for read ('r') permission
         if (Array.isArray(perms) && perms.includes('r')) {
@@ -223,7 +222,7 @@ export const getAllowedRoutes = (permissions: any, user: any): string[] => {
       moduleRoutes.forEach(route => {
         // 2. Derive the feature key (e.g., 'tickets' from 'tickets-view')
         const feature = route.key.replace('-view', '');
-        
+
         // 3. Directly access the permissions array using the new structure
         const perms = permissions[module][feature]; // <<< CHANGED LINE
 
@@ -234,6 +233,6 @@ export const getAllowedRoutes = (permissions: any, user: any): string[] => {
       });
     }
   });
-console.log("rz",routes);
+  console.log("rz", routes);
   return routes;
 };
