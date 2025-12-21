@@ -1,2 +1,2 @@
-export { default } from '@/core/components/details/Timesheet';
-export * from '@/core/components/details/Timesheet';
+export { default } from '@/modules/workforce/components/Timesheet';
+export * from '@/modules/workforce/components/Timesheet';

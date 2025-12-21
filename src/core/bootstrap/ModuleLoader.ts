@@ -2,7 +2,8 @@
 import { registry } from '@/core/registry';
 
 export interface TenantConfig {
-    enabledModules: string[];
+    enabled_modules: string[];
+    module_config?: Record<string, any>;
 }
 
 // Module manifest - maps module IDs to lazy imports
@@ -24,15 +25,19 @@ const MODULE_MANIFEST: Record<string, () => Promise<{ register: (config?: any) =
 };
 
 export async function loadModules(config: TenantConfig) {
-    console.log('[ModuleLoader] Loading modules:', config.enabledModules);
+    console.log('[ModuleLoader] Loading modules:', config.enabled_modules);
 
-    const loadPromises = config.enabledModules
+    const loadPromises = config.enabled_modules
         .filter(moduleId => MODULE_MANIFEST[moduleId])
         .map(async moduleId => {
             try {
                 const startTime = performance.now();
                 const module = await MODULE_MANIFEST[moduleId]();
-                module.register();
+
+                // Pass module-specific configuration if available
+                const moduleSpecificConfig = config.module_config?.[moduleId] || {};
+                module.register(moduleSpecificConfig);
+
                 const duration = Math.round(performance.now() - startTime);
                 console.log(`[ModuleLoader] ✓ ${moduleId} loaded in ${duration}ms`);
             } catch (error) {

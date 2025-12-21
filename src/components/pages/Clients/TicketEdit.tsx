@@ -1,12 +1,2 @@
-import TicketForm from "./TicketForm";
-
-
-const TicketEdit = ({editItem,rawData,viewConfig,onFinish}) => {
-  return (
-    <TicketForm ticket_id={editItem?.id} 
-    asset_id={editItem?.asset_id} onSuccess={onFinish}
-    />
-  );
-};
-
-export default TicketEdit;
+export { default } from '@/modules/tickets/components/TicketEdit';
+export * from '@/modules/tickets/components/TicketEdit';

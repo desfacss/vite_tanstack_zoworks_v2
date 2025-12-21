@@ -3,9 +3,9 @@ import { Drawer, Form, InputNumber, Space, Typography } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { ThemeToggle } from '../ThemeToggle';
 import { LanguageSelect } from '../LanguageSelect';
-import { useSettings } from '../../../hooks/useSettings';
-import env_def from '../../../utils/constants';
-import { useAuthStore } from '../../../lib/store';
+import { useSettings } from '@/core/hooks/useSettings';
+import env_def from '@/utils/constants';
+import { useAuthStore } from '@/core/lib/store';
 
 const { Title, Text } = Typography;
 
@@ -17,8 +17,8 @@ interface SettingsProps {
 export const Settings: React.FC<SettingsProps> = ({ open, onClose }) => {
   const { organization } = useAuthStore();
   const { t } = useTranslation();
-  const { 
-    fontSize, 
+  const {
+    fontSize,
     setFontSize,
     zoom,
     setZoom
@@ -33,14 +33,14 @@ export const Settings: React.FC<SettingsProps> = ({ open, onClose }) => {
       width={320}
     >
       <div className="space-y-8">
-        {(organization?.app_settings?.customization?.theme==="true"||organization?.app_settings?.customization?.language==="true") && <div>
+        {(organization?.app_settings?.customization?.theme === "true" || organization?.app_settings?.customization?.language === "true") && <div>
           <Title level={5}>{t('settings.appearance')}</Title>
           <Space direction="vertical" className="w-full">
-            {organization?.app_settings?.customization?.theme==="true" && <div className="flex justify-between items-center">
+            {organization?.app_settings?.customization?.theme === "true" && <div className="flex justify-between items-center">
               <Text>{t('settings.theme')}</Text>
               <ThemeToggle />
             </div>}
-            {organization?.app_settings?.customization?.language==="true" && <div className="flex justify-between items-center">
+            {organization?.app_settings?.customization?.language === "true" && <div className="flex justify-between items-center">
               <Text>{t('settings.language')}</Text>
               <LanguageSelect />
             </div>}

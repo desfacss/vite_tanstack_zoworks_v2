@@ -1,2 +1,2 @@
-export { default } from '@/core/components/details/Expensesheet';
-export * from '@/core/components/details/Expensesheet';
+export { default } from '@/modules/workforce/components/Expensesheet';
+export * from '@/modules/workforce/components/Expensesheet';

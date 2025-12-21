@@ -247,7 +247,7 @@
 //         console.log('>>> [LoginPage] Login API SUCCESSFUL. Session received.');
 //         console.log('>>> [LoginPage] User ID from session:', data.session.user?.id);
 //         message.success('Login successful! Loading your workspace...');
-        
+
 //         // ---------------------------------------------------------
 //         // 💡 💡 💡 THE FIX 💡 💡 💡
 //         // We REMOVE the navigation call from here.
@@ -421,52 +421,126 @@ import React, { useState, useEffect } from 'react';
 import { ArrowRightOutlined } from '@ant-design/icons';
 import { Button, Form, Input, Card, Space, App, Avatar, Spin } from 'antd';
 import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
-import { Mail, Lock, LogIn } from 'lucide-react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Mail, Lock, LogIn, Building2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../lib/store';
+import {
+  isDevelopment,
+  getTenantUrl
+} from '@/core/bootstrap/TenantResolver';
+
+interface UserOrganization {
+  id: string;
+  name: string;
+  subdomain: string;
+  logo_url?: string;
+}
 
 const Login = () => {
   const { message } = App.useApp();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [form] = Form.useForm();
-  
+
+  // Get redirect URL from query params (used when redirected from tenant subdomain)
+  const redirectTo = searchParams.get('redirect');
+
   // Get user from store to know when to redirect
-  const { user, reset } = useAuthStore(); 
-  
+  const { user, organization, setOrganization, reset } = useAuthStore();
+
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [isSyncing, setIsSyncing] = useState(true); // New state to track session check
+  const [isSyncing, setIsSyncing] = useState(true);
+
+  // Organization selection state
+  const [organizations, setOrganizations] = useState<UserOrganization[]>([]);
+  const [showOrgSelect, setShowOrgSelect] = useState(false);
+  const [selectingOrg, setSelectingOrg] = useState(false);
 
   // 1. REACTIVE REDIRECT: Watch the Store
-  // If SessionManager successfully hydrates the user, send them to dashboard automatically.
+  // If SessionManager successfully hydrates the user, handle redirect
   useEffect(() => {
-    if (user) {
-      console.log('>>> [LoginPage] User detected in store. Redirecting to dashboard.');
-      navigate('/dashboard', { replace: true });
+    if (user && organization && !showOrgSelect) {
+      console.log('>>> [LoginPage] User and org detected. Handling redirect...');
+      handlePostLoginRedirect(organization);
     }
-  }, [user, navigate]);
+  }, [user, organization, showOrgSelect]);
 
   // 2. INITIAL CHECK: Look for existing session
   useEffect(() => {
     const checkSession = async () => {
       console.log('>>> [LoginPage] Checking for existing session...');
       const { data: { session } } = await supabase.auth.getSession();
-      
+
       if (session) {
-        // Active session found in Supabase!
-        // DO NOT Redirect yet. Wait for SessionManager to sync data to the Store.
-        // logic above (Effect #1) will handle the redirect when 'user' appears.
         console.log('>>> [LoginPage] Found session token. Waiting for Store hydration...');
-        setIsSyncing(true); 
+        setIsSyncing(true);
       } else {
-        // No session, show login form.
         console.log('>>> [LoginPage] No session found. Ready for user input.');
         setIsSyncing(false);
       }
     };
     checkSession();
   }, []);
+
+  /**
+   * Handle redirect after login/org selection
+   */
+  const handlePostLoginRedirect = (selectedOrg: { subdomain?: string }) => {
+    // In development mode, just navigate to dashboard
+    if (isDevelopment()) {
+      console.log('[Login] Dev mode - navigating to dashboard');
+      navigate('/dashboard', { replace: true });
+      return;
+    }
+
+    // If we have a redirect URL, validate and use it
+    if (redirectTo) {
+      try {
+        const redirectUrl = new URL(redirectTo);
+        const targetSubdomain = redirectUrl.hostname.split('.')[0];
+
+        // Security: If redirect matches the selected org's subdomain, use it
+        if (targetSubdomain === selectedOrg.subdomain) {
+          console.log(`[Login] Redirecting to original URL: ${redirectTo}`);
+          window.location.href = redirectTo;
+          return;
+        }
+      } catch {
+        // Invalid URL, fall through to default redirect
+      }
+    }
+
+    // Default: Redirect to org's subdomain dashboard
+    if (selectedOrg.subdomain) {
+      const tenantUrl = getTenantUrl(selectedOrg.subdomain, '/dashboard');
+      console.log(`[Login] Redirecting to tenant: ${tenantUrl}`);
+      window.location.href = tenantUrl;
+    } else {
+      navigate('/dashboard', { replace: true });
+    }
+  };
+
+  /**
+   * Handle organization selection
+   */
+  const handleOrgSelect = async (org: UserOrganization) => {
+    setSelectingOrg(true);
+    console.log(`[Login] User selected org: ${org.name} (${org.subdomain})`);
+
+    // Update the store with selected org
+    setOrganization({
+      id: org.id,
+      name: org.name,
+      subdomain: org.subdomain,
+    });
+
+    // Small delay to let store update
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    handlePostLoginRedirect(org);
+  };
 
   const handleLogin = async (values: any) => {
     console.log('>>> [LoginPage] Attempting login...');
@@ -482,20 +556,46 @@ const Login = () => {
       if (data.session) {
         console.log('>>> [LoginPage] Login API Success.');
         message.success('Login successful!');
-        // We do NOT navigate here. 
-        // SessionManager will detect the new session, fetch data, update Store.
-        // Effect #1 will then trigger the navigation.
+
+        // Fetch user's organizations to determine next step
+        const { data: sessionData, error: sessionError } = await supabase
+          .schema('identity')
+          .rpc('jwt_get_user_session');
+
+        if (sessionError) {
+          console.error('[Login] Failed to fetch session data:', sessionError);
+          throw sessionError;
+        }
+
+        const userOrgs: UserOrganization[] = sessionData?.organizations || [];
+        console.log(`[Login] User has ${userOrgs.length} organizations`);
+
+        if (userOrgs.length === 0) {
+          message.warning('No organizations found for this account');
+          setLoading(false);
+          return;
+        }
+
+        if (userOrgs.length === 1) {
+          // Single org - redirect immediately
+          await handleOrgSelect(userOrgs[0]);
+        } else {
+          // Multiple orgs - show selection UI
+          setOrganizations(userOrgs);
+          setShowOrgSelect(true);
+          setLoading(false);
+        }
       }
     } catch (error: any) {
       console.error('>>> [LoginPage] Error:', error.message);
-      message.error('Login failed. Please check your credentials.');
+      message.error(error.message || 'Login failed. Please check your credentials.');
       reset();
       setLoading(false);
     }
   };
 
   const handleForgotPassword = async (values: any) => {
-    setLoading(true); 
+    setLoading(true);
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(values.email, {
         redirectTo: `${window.location.origin}/reset_password`,
@@ -505,22 +605,81 @@ const Login = () => {
     } catch (error: any) {
       message.error('Failed to send reset email.');
     } finally {
-      setLoading(false); 
+      setLoading(false);
     }
   };
 
   // 3. RENDER: Show Loading while checking/syncing
-  if (isSyncing && !user) {
+  if ((isSyncing && !user) || selectingOrg) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
         <Space direction="vertical" align="center">
           <Spin size="large" />
-          <span className="text-gray-500">Syncing workspace...</span>
+          <span className="text-gray-500">
+            {selectingOrg ? 'Connecting to workspace...' : 'Syncing workspace...'}
+          </span>
         </Space>
       </div>
     );
   }
 
+  // 4. RENDER: Organization Selection
+  if (showOrgSelect && organizations.length > 0) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4 sm:p-6">
+        <Space direction="vertical" size="large" className="w-full max-w-md">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+            <Card className="p-4 sm:p-6">
+              <div className="flex justify-center mb-4">
+                <Avatar size={48} icon={<Building2 size={24} />} className="bg-blue-500" />
+              </div>
+              <h1 className="text-2xl font-bold text-center mb-2">Select Workspace</h1>
+              <p className="text-center text-gray-500 mb-6">
+                You belong to multiple organizations. Choose one to continue.
+              </p>
+
+              <div className="space-y-3">
+                {organizations.map(org => (
+                  <Button
+                    key={org.id}
+                    size="large"
+                    block
+                    className="h-auto py-3 flex items-center justify-between"
+                    onClick={() => handleOrgSelect(org)}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Avatar
+                        size={32}
+                        src={org.logo_url}
+                        className="bg-gray-100"
+                      >
+                        {org.name.charAt(0).toUpperCase()}
+                      </Avatar>
+                      <div className="text-left">
+                        <div className="font-medium">{org.name}</div>
+                        <div className="text-xs text-gray-400">
+                          {org.subdomain}.zoworks.com
+                        </div>
+                      </div>
+                    </div>
+                    <ArrowRightOutlined />
+                  </Button>
+                ))}
+              </div>
+
+              {redirectTo && (
+                <p className="text-sm text-gray-400 mt-6 text-center">
+                  You'll be redirected after selection
+                </p>
+              )}
+            </Card>
+          </motion.div>
+        </Space>
+      </div>
+    );
+  }
+
+  // 5. RENDER: Login Form
   return (
     <div className="min-h-screen flex items-center justify-center p-4 sm:p-6">
       <Space direction="vertical" size="large" className="w-full max-w-md">
@@ -533,8 +692,15 @@ const Login = () => {
               <>
                 <h1 className="text-2xl font-bold text-center mb-2">Welcome back</h1>
                 <p className="text-center mb-6">Please enter your details to sign in.</p>
-                <Form form={form} layout="vertical" onFinish={handleLogin} requiredMark={false} initialValues={{ email: 'ravi@claritiz.com', password: 'Inno@1234' }}>
-                  <Form.Item label="Email" name="email"  rules={[{ required: true, message: 'Please enter your email' }, { type: 'email', message: 'Please enter a valid email' }]}>
+
+                {redirectTo && (
+                  <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 mb-4 text-sm text-blue-600 dark:text-blue-300">
+                    Sign in to continue to your workspace
+                  </div>
+                )}
+
+                <Form form={form} layout="vertical" onFinish={handleLogin} requiredMark={false}>
+                  <Form.Item label="Email" name="email" rules={[{ required: true, message: 'Please enter your email' }, { type: 'email', message: 'Please enter a valid email' }]}>
                     <Input prefix={<Mail className="text-gray-400" size={16} />} placeholder="Email" size="large" autoComplete="email" />
                   </Form.Item>
                   <Form.Item label="Password" name="password" rules={[{ required: true, message: 'Please enter your password' }]}>

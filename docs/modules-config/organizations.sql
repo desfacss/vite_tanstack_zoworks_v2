@@ -1,0 +1,20 @@
+create table identity.organizations (
+  id uuid not null default extensions.uuid_generate_v4 (),
+  name text not null,
+  subdomain text null,
+  module_features jsonb null default '["core", "contracts", "public", "auth", "crm", "fsm", "admin", "inventory", "settings", "support"]'::jsonb,
+  details jsonb null default '{}'::jsonb,
+  app_settings jsonb null default '{}'::jsonb,
+  created_at timestamp with time zone null default now(),
+  updated_at timestamp with time zone null default now(),
+  subscription_id uuid null default '550e8400-e29b-41d4-a716-446655440000'::uuid,
+  settings jsonb null default '{"holidays": [{"date": "2025-04-09", "name": "zz"}], "localization": {"currency": "INR", "time_zone": "GMT+5:30", "date_format": "DD/MM/YYYY", "time_format": "24-hour", "week_start_day": "Monday"}}'::jsonb,
+  auth_id uuid null,
+  created_by uuid null,
+  updated_by uuid null,
+  "X_app_settings_after_zo_ai_override" jsonb null,
+  constraint tenants_pkey primary key (id),
+  constraint tenants_subdomain_key unique (subdomain),
+  constraint organizations_created_by_fkey foreign KEY (created_by) references identity.users (id),
+  constraint organizations_updated_by_fkey foreign KEY (updated_by) references identity.users (id)
+) TABLESPACE pg_default;

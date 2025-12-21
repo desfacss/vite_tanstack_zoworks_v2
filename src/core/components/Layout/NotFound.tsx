@@ -23,7 +23,7 @@ export const NotFound: React.FC = () => {
         title="Page Not Found"
         subTitle="Sorry, the page you visited does not exist or you don't have permission to access it."
         extra={
-          <Button 
+          <Button
             type="primary"
             icon={<Home size={16} />}
             onClick={handleNavigate}
@@ -35,3 +35,5 @@ export const NotFound: React.FC = () => {
     </div>
   );
 };
+
+export default NotFound;

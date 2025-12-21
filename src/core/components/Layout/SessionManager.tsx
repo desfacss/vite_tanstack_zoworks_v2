@@ -1954,3 +1954,4 @@ export const SessionManager = () => {
 
   return null;
 };
+export default SessionManager;

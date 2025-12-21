@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { supabase } from '../../../lib/supabase'; // Updated import path
+import { supabase } from '@/lib/supabase'; // Updated import path
 import { Collapse, Spin, Alert, Typography, Card } from 'antd';
 import { MailOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';

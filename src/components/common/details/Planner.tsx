@@ -1,2 +1,2 @@
-export { default } from '@/core/components/details/Planner';
-export * from '@/core/components/details/Planner';
+export { default } from '@/modules/fsm/components/Planner';
+export * from '@/modules/fsm/components/Planner';

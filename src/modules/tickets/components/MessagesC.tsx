@@ -1,10 +1,10 @@
 // src/components/Ticket.tsx
 import React, { useEffect, useState } from 'react';
-import { supabase } from '../../../lib/supabase';
+import { supabase } from '@/lib/supabase';
 import { Collapse, Spin, Alert, Typography, Card, Input, Button, notification } from 'antd';
 import { MailOutlined, ClockCircleOutlined, SendOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
-import env_def from '../../../utils/constants';
+import env_def from '@/utils/constants';
 
 const { Title, Text } = Typography;
 const { Panel } = Collapse;

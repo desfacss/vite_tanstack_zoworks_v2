@@ -16,7 +16,7 @@ import type { Notification } from '../../lib/types';
 import { useTranslation } from 'react-i18next';
 import { useAuthedLayoutConfig } from './AuthedLayoutContext';
 import { LoadingFallback } from '../shared/LoadingFallback';
-import { useDeviceType } from '../../utils/deviceTypeStore';
+import { useDeviceType } from '@/utils/deviceTypeStore';
 import { GlobalLoader } from '../shared/GlobalLoader';
 import ContextDebug from '../shared/ContextDebug';
 

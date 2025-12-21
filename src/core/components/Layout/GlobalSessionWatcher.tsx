@@ -100,3 +100,4 @@ export const GlobalSessionWatcher = () => {
 
   return null; // This is a headless component.
 };
+export default GlobalSessionWatcher;

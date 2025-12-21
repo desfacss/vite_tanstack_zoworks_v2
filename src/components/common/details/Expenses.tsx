@@ -1,2 +1,2 @@
-export { default } from '@/core/components/details/Expenses';
-export * from '@/core/components/details/Expenses';
+export { default } from '@/modules/workforce/components/Expenses';
+export * from '@/modules/workforce/components/Expenses';

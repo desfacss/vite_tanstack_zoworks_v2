@@ -6,9 +6,9 @@ import { useAuthStore } from '@/lib/store';
 import './Services.css'; // Add a CSS file to style the cards grid
 import { serverErrorParsing } from "@/components/common/utils/serverErrorParsing";
 import { camelCaseToTitleCase } from "@/components/common/utils/casing";
-import DynamicForm from "../../common/DynamicForm";
+import DynamicForm from "@/core/components/shared/DynamicForm";
 import AgentActivityReport from "./AgentActivityReport"; // Import the AgentActivityReport component
-import env_def from "../../../utils/constants";
+import env_def from "@/utils/constants";
 
 export const getAllValues = (obj) => {
     let values = [];

@@ -291,3 +291,4 @@ export const ZeroStateContent: React.FC<ZeroStateContentProps> = ({
     </div>
   );
 };
+export default ZeroStateContent;

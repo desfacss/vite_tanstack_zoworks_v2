@@ -25,7 +25,7 @@ const WebRegister = lazy(() => import('../pages/auth/WebRegister'));
 const Dashboard = lazy(() => import('../pages/Dashboard'));
 const UserSettings = lazy(() => import('../pages/settings/_UserSettings'));
 const SamplePage = lazy(() => import('../pages/SamplePage'));
-const Contacts = lazy(() => import('../pages/crm/Contacts'));
+const Contacts = lazy(() => import('@/modules/crm/pages/Contacts'));
 const Profile = lazy(() => import('../pages/core/Profile'));
 const Settings = lazy(() => import('../pages/core/UserSetting'));
 

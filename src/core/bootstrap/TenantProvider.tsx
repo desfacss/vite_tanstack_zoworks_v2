@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { TenantConfig, resolveTenant } from './TenantResolver';
 import { loadModules } from './ModuleLoader';
+import { loadTheme } from '@/core/theme/ThemeRegistry';
 
 interface TenantContextType {
     config: TenantConfig | null;
@@ -18,11 +19,16 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     useEffect(() => {
         const initTenant = async () => {
-            const subdomain = window.location.hostname.split('.')[0];
-            const tenantConfig = await resolveTenant(subdomain);
+            const hostname = window.location.hostname;
+            console.log(`[TenantProvider] Initializing for host: ${hostname}`);
+            const tenantConfig = await resolveTenant(hostname);
+            console.log(`[TenantProvider] Received config:`, tenantConfig);
 
             // Load modules
-            await loadModules({ enabledModules: tenantConfig.enabled_modules });
+            await loadModules(tenantConfig);
+
+            // Apply Theme/Branding
+            loadTheme(tenantConfig.theme_config);
 
             setConfig(tenantConfig);
             setLoading(false);

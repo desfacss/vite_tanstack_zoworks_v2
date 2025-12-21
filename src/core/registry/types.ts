@@ -30,6 +30,7 @@ export interface ActionDefinition {
     position: 'row' | 'global' | 'both';
     label: string | ((t: TFunction) => string);
     component: () => Promise<any>;  // Dynamic import
+    group?: string;                 // e.g., 'primary', 'danger', 'secondary'
     condition?: (context: any) => boolean;
 }
 
@@ -38,6 +39,7 @@ export interface TabDefinition {
     entityTypes: string[];         // Which entities show this tab
     label: string | ((t: TFunction) => string);
     component: () => Promise<any>;  // Dynamic import
+    group?: string;                 // e.g., 'details', 'relations', 'admin'
     order?: number;
     condition?: (context: any) => boolean;
 }
