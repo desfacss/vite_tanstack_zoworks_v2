@@ -112,13 +112,13 @@
 // // //         // NOTE: In a regular browser, this code is now completely skipped.
 // // //         try {
 // // //           const message = JSON.parse(event.data);
-          
+
 // // //           if (message.type === 'SESSION_DATA' && message.session) {
 // // //             console.log('Received session data from React Native:', message.session);
 
 // // //             // Use the received session to authenticate the user in the web app
 // // //             const { error } = await supabase.auth.setSession(message.session);
-            
+
 // // //             if (error) {
 // // //               console.error('Error setting session in Supabase:', error);
 // // //             } else {
@@ -145,7 +145,7 @@
 // // //         window.removeEventListener('message', handleWebViewMessage);
 // // //       };
 // // //     }
-    
+
 // // //     // If not in a WebView, the useEffect returns an empty cleanup function (default),
 // // //     // and no event listener is ever added.
 
@@ -516,13 +516,13 @@
 // //         // NOTE: In a regular browser, this code is now completely skipped.
 // //         try {
 // //           const message = JSON.parse(event.data);
-          
+
 // //           if (message.type === 'SESSION_DATA' && message.session) {
 // //             console.log('Received session data from React Native:', message.session);
 
 // //             // Use the received session to authenticate the user in the web app
 // //             const { error } = await supabase.auth.setSession(message.session);
-            
+
 // //             if (error) {
 // //               console.error('Error setting session in Supabase:', error);
 // //             } else {
@@ -549,7 +549,7 @@
 // //         window.removeEventListener('message', handleWebViewMessage);
 // //       };
 // //     }
-    
+
 // //     // If not in a WebView, the useEffect returns an empty cleanup function (default),
 // //     // and no event listener is ever added.
 
@@ -753,6 +753,9 @@ if (!isDev) {
   });
 }
 
+import { TenantProvider } from '@/core/bootstrap/TenantProvider';
+import { ThemeProvider as CoreThemeProvider } from '@/core/theme/ThemeProvider';
+
 function App() {
 
   useEffect(() => {
@@ -761,19 +764,19 @@ function App() {
       const handleWebViewMessage = async (event: MessageEvent) => {
         try {
           if (typeof event.data === 'string') {
-              const message = JSON.parse(event.data);
-              if (message.type === 'SESSION_DATA' && message.session) {
-                console.log('Received session data from React Native:', message.session);
-                const { error } = await supabase.auth.setSession(message.session);
-                if (error) {
-                  console.error('Error setting session in Supabase:', error);
-                } else {
-                  console.log('Session successfully set in web app.');
-                }
+            const message = JSON.parse(event.data);
+            if (message.type === 'SESSION_DATA' && message.session) {
+              console.log('Received session data from React Native:', message.session);
+              const { error } = await supabase.auth.setSession(message.session);
+              if (error) {
+                console.error('Error setting session in Supabase:', error);
+              } else {
+                console.log('Session successfully set in web app.');
               }
+            }
           }
         } catch (error) {
-           console.warn('Error processing message from RN WebView:', error);
+          console.warn('Error processing message from RN WebView:', error);
         }
       };
       window.addEventListener('message', handleWebViewMessage);
@@ -788,22 +791,19 @@ function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
-        <AntApp>
-          <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-            {/* 
-              SessionManager and GlobalSessionWatcher are placed here to ensure they
-              are within the router's context but outside the routes that will be re-rendered.
-              This prevents them from remounting on every navigation change.
-            */}
-            <SessionManager />
-            <GlobalSessionWatcher />
-            <NestedProvider>
-              <AppRoutes />
-            </NestedProvider>
-          </BrowserRouter>
-        </AntApp>
-      </ThemeProvider>
+      <TenantProvider>
+        <CoreThemeProvider>
+          <AntApp>
+            <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+              <SessionManager />
+              <GlobalSessionWatcher />
+              <NestedProvider>
+                <AppRoutes />
+              </NestedProvider>
+            </BrowserRouter>
+          </AntApp>
+        </CoreThemeProvider>
+      </TenantProvider>
     </QueryClientProvider>
   );
 }

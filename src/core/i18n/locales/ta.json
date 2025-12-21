@@ -1,0 +1,62 @@
+{
+  "translation": {
+    "auth": {
+      "login": "உள்நுழைவு"
+    },
+    "subscriptions": {
+      "list": "சந்தாக்கள்",
+      "limits": "வரம்புகள்",
+      "moduleFeatures": "அம்சங்கள்",
+      "add": "சேர்"
+    },
+    "teams": {
+      "add": "சேர்"
+    },
+    "common": {
+      "_crud-page": "_CRUD பக்கம்",
+      "_service-reports": "சேவை அறிக்கைகள்",
+      "_users-dyn": "பயனர்கள் டின்",
+      "actions": "நடவடிக்கைகள்",
+      "active": "செயலில்",
+      "add": "சேர்",
+      "admin": "நிர்வாகி",
+      "analytics": "பகுப்பாய்வு",
+      "businesses": "வணிகங்கள்",
+      "client-contacts": "வாடிக்கையாளர் தொடர்புகள்",
+      "clients": "வாடிக்கையாளர்கள்",
+      "config": "கான்ஃபிக்",
+      "contracts": "ஒப்பந்தங்கள்",
+      "createdAt": "உருவாக்கப்பட்டது",
+      "dashboard": "டாஷ்போர்டு",
+      "fsm": "FSM",
+      "invoices": "விலைப்பட்டியல்கள்",
+      "leaves": "விடுப்புகள்",
+      "my-tickets": "எனது டிக்கெட்டுகள்",
+      "name": "பெயர்",
+      "organizations": "நிறுவனங்கள்",
+      "organizations copy": "நிறுவனங்கள் நகல்",
+      "process": "செயல்முறை",
+      "projects": "திட்டங்கள்",
+      "service-assets": "சேவை சொத்துக்கள்",
+      "service-categories": "சேவை வகைகள்",
+      "service-contracts": "சேவை ஒப்பந்தங்கள்",
+      "service-offerings": "சேவை சலுகைகள்",
+      "service-reports": "சேவை அறிக்கைகள்",
+      "service-types": "சேவை வகைகள்",
+      "settings": "அமைப்புகள்",
+      "subscriptions": "சந்தாக்கள்",
+      "support": "ஆதரவு",
+      "teams": "அணிகள்",
+      "teams-users": "அணிகள் பயனர்கள்",
+      "tickets": "டிக்கெட்டுகள்",
+      "tracking": "கண்காணிப்பு",
+      "user-settings": "பயனர் அமைப்புகள்",
+      "users": "பயனர்கள்",
+      "users copy": "பயனர்கள் நகல்",
+      "users copy copy": "பயனர்கள் நகல் நகல்",
+      "users-view": "பயனர்கள் காட்சி",
+      "workflow": "பணிப்பாய்வு",
+      "workforce": "பணியாளர்கள்"
+    }
+  }
+}

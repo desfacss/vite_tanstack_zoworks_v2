@@ -1,0 +1,3 @@
+# core Module
+
+Status: 🔴 Placeholder

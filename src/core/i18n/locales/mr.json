@@ -1,0 +1,62 @@
+{
+  "translation": {
+    "auth": {
+      "login": "लॉगिन"
+    },
+    "subscriptions": {
+      "list": "सदस्यता",
+      "limits": "मर्यादा",
+      "moduleFeatures": "वैशिष्ट्ये",
+      "add": "जोडा"
+    },
+    "teams": {
+      "add": "जोडा"
+    },
+    "common": {
+      "_crud-page": "_CRUD पेज",
+      "_service-reports": "सेवा अहवाल",
+      "_users-dyn": "वापरकर्ते डायन",
+      "actions": "कृती",
+      "active": "सक्रिय",
+      "add": "जोडा",
+      "admin": "प्रशासक",
+      "analytics": "विश्लेषण",
+      "businesses": "व्यवसाय",
+      "client-contacts": "ग्राहक संपर्क",
+      "clients": "ग्राहक",
+      "config": "कॉन्फिग",
+      "contracts": "करार",
+      "createdAt": "तयार केले",
+      "dashboard": "डॅशबोर्ड",
+      "fsm": "एफएसएम",
+      "invoices": "देयके",
+      "leaves": "रजा",
+      "my-tickets": "माझी तिकिटे",
+      "name": "नाव",
+      "organizations": "संस्था",
+      "organizations copy": "संस्था कॉपी",
+      "process": "प्रक्रिया",
+      "projects": "प्रकल्प",
+      "service-assets": "सेवा मालमत्ता",
+      "service-categories": "सेवा श्रेणी",
+      "service-contracts": "सेवा करार",
+      "service-offerings": "सेवा ऑफरिंग्ज",
+      "service-reports": "सेवा अहवाल",
+      "service-types": "सेवा प्रकार",
+      "settings": "सेटिंग्ज",
+      "subscriptions": "सदस्यता",
+      "support": "समर्थन",
+      "teams": "संघ",
+      "teams-users": "संघ वापरकर्ते",
+      "tickets": "तिकिटे",
+      "tracking": "ट्रॅकिंग",
+      "user-settings": "वापरकर्ता सेटिंग्ज",
+      "users": "वापरकर्ते",
+      "users copy": "वापरकर्ते कॉपी",
+      "users copy copy": "वापरकर्ते कॉपी कॉपी",
+      "users-view": "वापरकर्ते दृश्य",
+      "workflow": "कार्यप्रवाह",
+      "workforce": "कार्यबल"
+    }
+  }
+}
