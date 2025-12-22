@@ -120,31 +120,70 @@ const GlobalActions: React.FC<GlobalActionsProps> = ({
     }
   }, [registeredActions]);
 
+  // Handler for component-type actions (custom components from relative paths)
+  const handleComponentActionClick = useCallback(async (formPath: string) => {
+    trackAndSaveLocation("New", user?.id);
+    try {
+      // Use Vite's dynamic import with glob patterns to load component from path
+      const pageModules = import.meta.glob('@/pages/**/*.tsx');
+      const moduleComponents = import.meta.glob('@/modules/**/components/*.tsx');
+      const allModules = { ...pageModules, ...moduleComponents };
+      
+      // Extract component name from path (e.g., "TicketNew" from "../pages/Clients/TicketNew")
+      const componentName = formPath.split('/').pop()?.replace('.tsx', '') || '';
+      
+      const modulePath = Object.keys(allModules).find(key => 
+        key.endsWith(`/${componentName}.tsx`)
+      );
+      
+      if (modulePath && allModules[modulePath]) {
+        const Component = await allModules[modulePath]() as any;
+        setLoadedActionComponent(() => Component.default || Component);
+        setActiveActionId(`component-${formPath}`);
+      } else {
+        console.error('Component not found:', formPath, 'Looking for:', componentName);
+        message.error(`Component "${componentName}" not found`);
+      }
+    } catch (error) {
+      console.error('Error loading component:', error);
+      message.error('Failed to load component');
+    }
+  }, [user?.id]);
+
   // Merge and prioritize actions
   const allActions = useMemo(() => {
     const list: any[] = [];
 
     // 1. Config actions (Add, New, etc)
     globalActionsFromConfig.forEach((a, idx) => {
-      if (a.form.startsWith('.')) return;
+      // Check if this is a component path (starts with .. or ./) OR a component name (pascal case, no extension)
+      const isComponentPath = a.form.startsWith('../') || a.form.startsWith('./');
+      // Simple component name like "TicketForm" - no slashes, no dots (not a file path or form schema)
+      const isComponentName = !a.form.includes('/') && !a.form.includes('.') && /^[A-Z]/.test(a.form);
+      const isComponent = isComponentPath || isComponentName;
+      
       list.push({
-        type: 'config',
+        type: isComponent ? 'component' : 'config',
         id: `config-${idx}`,
         label: a.label === "add_user" ? "Add User" : a.label,
         form: a.form,
+        isComponentPath: isComponent,
         isPrimary: a.label.toLowerCase().includes('add') || a.label.toLowerCase().includes('new') || idx === 0
       });
     });
 
-    // 2. Registry actions
-    registeredActions.forEach(a => {
-      list.push({
-        type: 'registry',
-        id: a.id,
-        label: typeof a.label === 'function' ? a.label((s: any) => s) : a.label,
-        isPrimary: list.length === 0 // If no config actions, first registry is primary
+    // 2. Registry actions - SKIP if config already has global actions to avoid duplicates
+    // Config actions take precedence over registry actions
+    if (globalActionsFromConfig.length === 0) {
+      registeredActions.forEach(a => {
+        list.push({
+          type: 'registry',
+          id: a.id,
+          label: typeof a.label === 'function' ? a.label((s: any) => s) : a.label,
+          isPrimary: list.length === 0 // If no config actions, first registry is primary
+        });
       });
-    });
+    }
 
     return list;
   }, [globalActionsFromConfig, registeredActions]);
@@ -163,13 +202,15 @@ const GlobalActions: React.FC<GlobalActionsProps> = ({
       key: a.id,
       label: a.label,
       icon: <MoreHorizontal size={16} />,
-      onClick: a.type === 'config'
-        ? () => handleFormActionClick(a.form)
-        : () => handleRegisteredActionClick(a.id)
+      onClick: a.type === 'component'
+        ? () => handleComponentActionClick(a.form)
+        : a.type === 'config'
+          ? () => handleFormActionClick(a.form)
+          : () => handleRegisteredActionClick(a.id)
     }));
 
     return [...items, ...extraActions];
-  }, [secondaryActions, extraActions, handleRegisteredActionClick]);
+  }, [secondaryActions, extraActions, handleRegisteredActionClick, handleComponentActionClick]);
 
   if (allActions.length === 0 && extraActions.length === 0) return null;
 
@@ -180,17 +221,22 @@ const GlobalActions: React.FC<GlobalActionsProps> = ({
         <PrimaryAction
           label={mainAction.label}
           icon={<Plus size={18} />}
-          onClick={mainAction.type === 'config'
-            ? () => handleFormActionClick(mainAction.form)
-            : () => handleRegisteredActionClick(mainAction.id)
+          onClick={
+            mainAction.type === 'component'
+              ? () => handleComponentActionClick(mainAction.form)
+              : mainAction.type === 'config'
+                ? () => handleFormActionClick(mainAction.form)
+                : () => handleRegisteredActionClick(mainAction.id)
           }
           dropdownItems={dropdownActions.map(a => ({
             key: a.id,
             label: a.label,
             icon: <Plus size={16} />,
-            onClick: a.type === 'config'
-              ? () => handleFormActionClick(a.form)
-              : () => handleRegisteredActionClick(a.id)
+            onClick: a.type === 'component'
+              ? () => handleComponentActionClick(a.form)
+              : a.type === 'config'
+                ? () => handleFormActionClick(a.form)
+                : () => handleRegisteredActionClick(a.id)
           }))}
         />
       )}
@@ -200,19 +246,36 @@ const GlobalActions: React.FC<GlobalActionsProps> = ({
         <MoreMenu items={overflowItems} />
       )}
 
-      {/* Registry Action Component (Dynamic) */}
-      {activeActionId && LoadedActionComponent && (
-        <Suspense fallback={<Spin />}>
-          <LoadedActionComponent
-            entityType={parent?.viewConfig?.entity_type}
-            parentEditItem={parent?.editItem}
-            onClose={() => {
-              setActiveActionId(null);
-              setLoadedActionComponent(null);
-            }}
-          />
-        </Suspense>
-      )}
+
+      {/* Drawer for Custom Component Actions (from config paths like ../pages/...) */}
+      <Drawer
+        title="New"
+        open={!!activeActionId && !!LoadedActionComponent}
+        onClose={() => {
+          setActiveActionId(null);
+          setLoadedActionComponent(null);
+        }}
+        width={window.innerWidth <= 768 ? "100%" : "50%"}
+        destroyOnClose
+      >
+        {LoadedActionComponent && (
+          <Suspense fallback={<Spin />}>
+            <LoadedActionComponent
+              entityType={entityType}
+              parentEditItem={parentEditItem}
+              onSuccess={() => {
+                setActiveActionId(null);
+                setLoadedActionComponent(null);
+                queryClient.invalidateQueries({ queryKey: [entityType, organization?.id] });
+              }}
+              onClose={() => {
+                setActiveActionId(null);
+                setLoadedActionComponent(null);
+              }}
+            />
+          </Suspense>
+        )}
+      </Drawer>
 
       {/* Drawer for Form-based Actions */}
       <Drawer

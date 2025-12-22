@@ -132,6 +132,36 @@ const RowActions: React.FC<RowActionsProps> = ({
   const handleEdit = async (form: string) => {
     setFormName(form);
     setCurrentAction('Edit');
+    
+    // Check if this is a component path (starts with ../ or ./)
+    const isComponentPath = form.startsWith('../') || form.startsWith('./');
+    
+    if (isComponentPath) {
+      // Load custom component dynamically
+      try {
+        const pageModules = import.meta.glob('@/pages/**/*.tsx');
+        const moduleComponents = import.meta.glob('@/modules/**/components/*.tsx');
+        const allModules = { ...pageModules, ...moduleComponents };
+        
+        // Extract component name from path (e.g., "TicketEdit" from "../pages/Clients/TicketEdit")
+        const componentName = form.split('/').pop()?.replace('.tsx', '') || '';
+        
+        const modulePath = Object.keys(allModules).find(key => 
+          key.endsWith(`/${componentName}.tsx`)
+        );
+        
+        if (modulePath && allModules[modulePath]) {
+          const Component = await allModules[modulePath]() as any;
+          setLoadedActionComponent(() => Component.default || Component);
+          setActiveRegistryActionId(`component-${form}`);
+          setEnhancedRecord(record);
+          return;
+        }
+      } catch (error) {
+        console.error('Error loading component:', error);
+      }
+    }
+    
     const isLegacyPath = !!legacyComponentMap[form];
     if (isLegacyPath) {
       setIsDrawerVisible(true);
