@@ -7,7 +7,9 @@
   "tabs": {
     "summary": "Summary",
     "history": "History",
-    "attachments": "Attachments"
+    "attachments": "Attachments",
+    "myTickets": "My Tickets",
+    "allTickets": "All Tickets"
   },
   "status": {
     "open": "Open",

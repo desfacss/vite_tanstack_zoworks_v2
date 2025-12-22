@@ -26,6 +26,7 @@ const Dashboard = lazy(() => import('../pages/Dashboard'));
 const WelcomeHub = lazy(() => import('../core/components/Layout/WelcomeHub'));
 const SamplePage = lazy(() => import('../pages/SamplePage'));
 const Contacts = lazy(() => import('@/modules/crm/pages/Contacts'));
+const Tickets = lazy(() => import('@/modules/tickets/pages/Tickets'));
 const Profile = lazy(() => import('../pages/core/Profile'));
 const Settings = lazy(() => import('../pages/core/UserSetting'));
 
@@ -109,6 +110,9 @@ export const AppRoutes: FC = () => {
 
                         {/* CRM - Contacts (DynamicViews demo) */}
                         <Route path="/crm/contacts" element={<Contacts />} />
+
+                        {/* Support - Tickets */}
+                        <Route path="/support/tickets" element={<Tickets />} />
 
                         {/* Profile & Settings */}
                         <Route path="/profile" element={<Profile />} />

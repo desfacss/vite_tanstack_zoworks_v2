@@ -153,35 +153,37 @@ export const getNavigationItems = (
     // }
 
     const moduleItems: MenuProps['items'] = [];
-    // console.log("zz1",permissions); // Permissions object should be the 'new' structure
 
-    // 🚩 FIX: Check for the module key directly in the permissions object.
-    if (permissions?.[module]) {
-      routes.forEach(route => {
-        const feature = route.key.replace('-view', '');
+    // Check if module has permissions defined
+    const modulePerms = permissions?.[module];
 
-        // 🚩 FIX: Access the feature permissions directly under the module key.
-        const perms = permissions[module][feature];
+    routes.forEach(route => {
+      const feature = route.key.replace('-view', '');
+      const perms = modulePerms?.[feature];
 
-        // Check for read ('r') permission
-        if (Array.isArray(perms) && perms.includes('r')) {
-          moduleItems.push({
-            key: route.routePath,
-            icon: iconMap[route.key.replace('-view', '')] || iconMap.default,
-            label: t(`common.${route.translationKey}`),
-          });
-        }
-      });
+      // Show item if:
+      // 1. Has explicit read permission ['r', ...], OR
+      // 2. No permission check exists for this module (fallback to show)
+      const hasReadPermission = Array.isArray(perms) && perms.includes('r');
+      const noPermissionDefined = !modulePerms;
 
-      // Only add module if it has visible items
-      if (moduleItems.length > 0) {
-        items.push({
-          key: module,
-          icon: iconMap[module] || iconMap.default,
-          label: t(`common.${module}`),
-          children: moduleItems,
+      if (hasReadPermission || noPermissionDefined) {
+        moduleItems.push({
+          key: route.routePath,
+          icon: iconMap[route.key.replace('-view', '')] || iconMap.default,
+          label: t(`common.${route.translationKey}`),
         });
       }
+    });
+
+    // Only add module if it has visible items
+    if (moduleItems.length > 0) {
+      items.push({
+        key: module,
+        icon: iconMap[module] || iconMap.default,
+        label: t(`common.${module}`),
+        children: moduleItems,
+      });
     }
   });
 
@@ -213,25 +215,24 @@ export const getNavigationItems = (
 // };
 
 
-export const getAllowedRoutes = (permissions: any, user: any): string[] => {
+export const getAllowedRoutes = (permissions: any, _user: any): string[] => {
   const routes = [...menuConfig.root.map((route) => route.routePath)];
 
   Object.entries(menuConfig.modules).forEach(([module, moduleRoutes]) => {
-    // 1. Check if the module exists in the new permissions structure
-    if (permissions?.[module]) {
-      moduleRoutes.forEach(route => {
-        // 2. Derive the feature key (e.g., 'tickets' from 'tickets-view')
-        const feature = route.key.replace('-view', '');
+    const modulePerms = permissions?.[module];
 
-        // 3. Directly access the permissions array using the new structure
-        const perms = permissions[module][feature]; // <<< CHANGED LINE
+    moduleRoutes.forEach(route => {
+      const feature = route.key.replace('-view', '');
+      const perms = modulePerms?.[feature];
 
-        // 4. Check for read ('r') permission
-        if (Array.isArray(perms) && perms.includes('r')) {
-          routes.push(route.routePath);
-        }
-      });
-    }
+      // Allow route if has read permission OR no permissions defined
+      const hasReadPermission = Array.isArray(perms) && perms.includes('r');
+      const noPermissionDefined = !modulePerms;
+
+      if (hasReadPermission || noPermissionDefined) {
+        routes.push(route.routePath);
+      }
+    });
   });
   console.log("rz", routes);
   return routes;

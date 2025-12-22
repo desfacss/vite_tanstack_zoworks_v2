@@ -8,6 +8,15 @@
         "key": "crm-contacts",
         "submoduleKey": "crm-contacts"
       }
+    ],
+    "support": [
+      {
+        "filePath": "src/modules/tickets/pages/Tickets.tsx",
+        "routePath": "/support/tickets",
+        "translationKey": "tickets",
+        "key": "tickets",
+        "submoduleKey": "support-tickets"
+      }
     ]
   },
   "root": [
