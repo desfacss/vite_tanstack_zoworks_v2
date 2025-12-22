@@ -1,5 +1,5 @@
 import React from 'react';
-import { Dropdown, Avatar, Button } from 'antd';
+import { Dropdown, Button } from 'antd';
 import {
   User,
   Settings,
@@ -15,11 +15,12 @@ import { useAuthStore } from '@/core/lib/store';
 import { supabase } from '../../../lib/supabase';
 import { useTranslation } from 'react-i18next';
 import { useAuthedLayoutConfig } from '../AuthedLayoutContext';
+import { ProfileIdentity, ProfileAvatar } from '../Profile/index';
 
 export const ProfileMenu: React.FC<{ isMobile?: boolean }> = ({ isMobile }) => {
   const navigate = useNavigate();
   // Get setIsLoggingOut from store
-  const { user, clearUserSession, setIsLoggingOut } = useAuthStore();
+  const { clearUserSession, setIsLoggingOut } = useAuthStore();
   const queryClient = useQueryClient();
   const { setShowSettings } = useAuthedLayoutConfig();
 
@@ -66,14 +67,18 @@ export const ProfileMenu: React.FC<{ isMobile?: boolean }> = ({ isMobile }) => {
 
   return (
     <Dropdown menu={menuItems as any} placement="bottomRight" trigger={['click']}>
-      {isMobile ? (
-        <Button type="text" className="p-0"><Avatar icon={<User size={20} />} /></Button>
-      ) : (
-        <Button type="text" className="flex items-center">
-          <Avatar icon={<User size={20} />} />
-          <span className={`ml-2 ${isMobile ? 'hidden' : 'hidden md:inline'}`}>{user?.name}</span>
-        </Button>
-      )}
+      <Button
+        type="text"
+        className="flex items-center gap-0 p-0 hover:bg-transparent"
+        style={{ height: 'var(--header-height)', padding: '0 8px' }}
+      >
+        <div className="hidden md:flex">
+          <ProfileIdentity showName={true} size={32} />
+        </div>
+        <div className="flex md:hidden items-center justify-center">
+          <ProfileAvatar size={32} />
+        </div>
+      </Button>
     </Dropdown>
   );
 };

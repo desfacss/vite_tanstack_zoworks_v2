@@ -110,10 +110,6 @@ export const AuthedLayout: FC = () => {
     return collapsed ? COLLAPSED_SIDER_WIDTH : SIDER_WIDTH;
   }, [collapsed, isMobile]);
 
-  // Calculate the dynamic left margin for the header
-  const headerMarginLeft = useMemo(() => {
-    return isMobile ? 0 : contentMarginLeft;
-  }, [contentMarginLeft, isMobile]);
 
   return (
     <Layout className="min-h-screen" style={{ background: 'var(--tenant-layout-bg)' }}>
@@ -126,43 +122,55 @@ export const AuthedLayout: FC = () => {
         />
       )}
 
-      <Layout className="bg-transparent">
-        <div
+      <Layout
+        className="bg-transparent"
+        style={{
+          marginLeft: isMobile ? 0 : contentMarginLeft,
+          transition: 'margin-left 0.2s cubic-bezier(0.2, 0, 0, 1)',
+          minHeight: '100vh',
+          display: 'flex',
+          flexDirection: 'column'
+        }}
+      >
+
+        {/* Header - now positioned after sider on desktop */}
+        <Header
+          collapsed={collapsed}
+          setCollapsed={setCollapsed}
+          isMobile={isMobile}
+          unreadCount={unreadCount}
+          setShowNotifications={setShowNotifications}
+          setShowMobileMenu={setShowMobileMenu}
+          showSearch={showSearch}
+          setShowSearch={setShowSearch}
+          pageTitle={getPageTitle()}
+        />
+
+        {/* Main content area - now scrollable container */}
+        <Content
+          className="m-0 p-0 bg-transparent"
           style={{
-            position: 'fixed',
-            top: 0,
-            left: headerMarginLeft,
-            right: 0,
-            zIndex: 11,
-            transition: 'left 0.2s',
+            flex: 1,
+            overflowY: 'auto',
+            overflowX: 'hidden',
+            position: 'relative'
           }}
         >
-          <Header
-            collapsed={collapsed}
-            setCollapsed={setCollapsed}
-            isMobile={isMobile}
-            unreadCount={unreadCount}
-            setShowNotifications={setShowNotifications}
-            setShowMobileMenu={setShowMobileMenu}
-            showSearch={showSearch}
-            setShowSearch={setShowSearch}
-            pageTitle={getPageTitle()}
-          />
-        </div>
-
-        {/* Add a top padding/margin to the content to prevent it from going under the fixed header */}
-        <Content className="m-0 p-0 bg-transparent rounded-lg" style={{ marginTop: 64, marginLeft: contentMarginLeft, transition: 'margin-left 0.2s' }}>
           <motion.div
             key={location.pathname}
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
+            transition={{ duration: 0.3 }}
+            className="page-content"
+            style={{ minHeight: '100%', display: 'flex', flexDirection: 'column' }}
           >
             <Suspense fallback={<LoadingFallback />}>
               <Outlet />
             </Suspense>
           </motion.div>
         </Content>
+
+
 
         {isMobile && (
           <>

@@ -1,11 +1,16 @@
 // Settings page
 import { Card, Switch, Form, message } from 'antd';
-import { motion } from 'framer-motion';
+
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '@/core/lib/store';
 
 import { useTranslation } from 'react-i18next';
+import {
+  PageActionBar,
+  ActionBarLeft,
+  PageTitle,
+} from '@/core/components/ActionBar';
 
 const Settings = () => {
   const { t } = useTranslation();
@@ -81,45 +86,54 @@ const Settings = () => {
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="max-w-2xl mx-auto p-4"
-    >
-      <Card title={t('common.label.notification_settings')}>
-        <Form
-          form={form}
-          layout="vertical"
-          initialValues={settings}
-          onValuesChange={(_, values) => updateMutation.mutate(values)}
-        >
-          <Form.Item
-            name="onlineVisibility"
-            label={t('common.label.online_visibility')}
-            valuePropName="checked"
-          >
-            <Switch />
-          </Form.Item>
+    <>
+      {/* Page Header */}
+      <PageActionBar>
+        <ActionBarLeft>
+          <PageTitle title={t('common.label.notification_settings')} />
+        </ActionBarLeft>
+      </PageActionBar>
 
-          <Form.Item
-            name="emailSubscription"
-            label={t('common.label.email_notifications')}
-            valuePropName="checked"
-          >
-            <Switch />
-          </Form.Item>
+      {/* Main Content */}
+      <div className="main-content">
+        <div className="content-body">
+          <Card>
+            <Form
+              form={form}
+              layout="vertical"
+              initialValues={settings}
+              onValuesChange={(_, values) => updateMutation.mutate(values)}
+            >
+              <Form.Item
+                name="onlineVisibility"
+                label={t('common.label.online_visibility')}
+                valuePropName="checked"
+              >
+                <Switch />
+              </Form.Item>
 
-          <Form.Item
-            name="pushNotifications"
-            label={t('common.label.push_notifications')}
-            valuePropName="checked"
-          >
-            <Switch onChange={handlePushNotifications} />
-          </Form.Item>
-        </Form>
-      </Card>
-    </motion.div>
+              <Form.Item
+                name="emailSubscription"
+                label={t('common.label.email_notifications')}
+                valuePropName="checked"
+              >
+                <Switch />
+              </Form.Item>
+
+              <Form.Item
+                name="pushNotifications"
+                label={t('common.label.push_notifications')}
+                valuePropName="checked"
+              >
+                <Switch onChange={handlePushNotifications} />
+              </Form.Item>
+            </Form>
+          </Card>
+        </div>
+      </div>
+    </>
   );
 };
+
 
 export default Settings;

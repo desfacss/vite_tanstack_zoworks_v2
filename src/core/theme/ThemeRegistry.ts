@@ -58,7 +58,8 @@ export interface TenantThemeConfig {
     // Feature Flags
     allowUserDarkMode?: boolean; // Default true
     defaultMode?: 'light' | 'dark'; // Tenant's default, user can override
-    preset?: string;             // NEW: ID of a base preset (e.g., 'glassmorphism')
+    preset?: string;             // ID of a base preset (e.g., 'glassmorphism')
+    heroHeader?: boolean;        // NEW: Enable branded hero-style header
 }
 
 // ============================================================================
@@ -160,47 +161,64 @@ function applyStaticBranding(config: TenantThemeConfig): void {
     }
 
     // Dynamic UI Variables for components
+    const lightPrimary = config.light?.primaryColor || config.primaryColor;
+    const darkPrimary = config.dark?.primaryColor || config.primaryColor;
+    const lightSecondary = config.light?.secondaryColor || config.secondaryColor || lightPrimary;
+    const darkSecondary = config.dark?.secondaryColor || config.secondaryColor || darkPrimary;
+
     const lightCard = config.light?.cardBg || '#ffffff';
     const darkCard = config.dark?.cardBg || '#1f1f1f';
     const lightLayout = config.light?.layoutBg || '#f0f2f5';
     const darkLayout = config.dark?.layoutBg || '#141414';
 
+    root.setAttribute('data-light-primary', lightPrimary);
+    root.setAttribute('data-dark-primary', darkPrimary);
+    root.setAttribute('data-light-secondary', lightSecondary);
+    root.setAttribute('data-dark-secondary', darkSecondary);
     root.setAttribute('data-light-card', lightCard);
     root.setAttribute('data-dark-card', darkCard);
     root.setAttribute('data-light-layout', lightLayout);
     root.setAttribute('data-dark-layout', darkLayout);
 
-    // Set initial values (assuming light mode default if not specified)
+    // Initial variable set
     const isDark = document.documentElement.classList.contains('dark');
+    root.style.setProperty('--tenant-primary', isDark ? darkPrimary : lightPrimary);
+    root.style.setProperty('--tenant-secondary', isDark ? darkSecondary : lightSecondary);
     root.style.setProperty('--tenant-card-bg', isDark ? darkCard : lightCard);
     root.style.setProperty('--tenant-layout-bg', isDark ? darkLayout : lightLayout);
 
     root.style.setProperty('--tenant-card-bg-light', lightCard);
-    root.style.setProperty('--tenant-card-bg-dark', config.dark?.cardBg || '#1f1f1f');
-    root.style.setProperty('--tenant-layout-bg-light', config.light?.layoutBg || '#f0f2f5');
-    root.style.setProperty('--tenant-layout-bg-dark', config.dark?.layoutBg || '#141414');
+    root.style.setProperty('--tenant-card-bg-dark', darkCard);
+    root.style.setProperty('--tenant-layout-bg-light', lightLayout);
+    root.style.setProperty('--tenant-layout-bg-dark', darkLayout);
     root.style.setProperty('--tenant-header-bg-light', config.light?.headerBg || '#ffffff');
     root.style.setProperty('--tenant-header-bg-dark', config.dark?.headerBg || '#141414');
     root.style.setProperty('--tenant-sider-bg-light', config.light?.siderBg || '#ffffff');
     root.style.setProperty('--tenant-sider-bg-dark', config.dark?.siderBg || '#141414');
 
-    // Store raw values for mode-aware switching
-    // Cleaned up attribute setting - already handled above in the refactored applyStaticBranding
-
     // Glassmorphism effects
-    console.log('[Theme] Checking preset for glass effect:', config.preset);
     if (config.preset === 'glassmorphism' || config.preset === 'ultra_glass') {
-        console.log('[Theme] ACTIVATING GLASS EFFECTS');
         root.style.setProperty('--tenant-backdrop-blur', '15px');
         root.style.setProperty('--tenant-card-border', '1px solid rgba(255, 255, 255, 0.3)');
         root.setAttribute('data-glass-effect', 'true');
+        root.removeAttribute('data-theme-layout');
+        root.removeAttribute('data-hero-header');
     } else {
-        console.log('[Theme] DEACTIVATING GLASS EFFECTS');
         root.style.setProperty('--tenant-backdrop-blur', '0px');
         root.style.setProperty('--tenant-card-border', 'none');
         root.removeAttribute('data-glass-effect');
     }
+
+    // Gradient Card Layout
+    if (config.preset === 'gradient_card' || config.preset === 'branded_header' || config.heroHeader) {
+        root.setAttribute('data-theme-layout', 'gradient-card');
+        root.setAttribute('data-hero-header', 'true');
+    } else {
+        root.removeAttribute('data-theme-layout');
+        root.removeAttribute('data-hero-header');
+    }
 }
+
 
 /**
  * Update favicon dynamically
@@ -230,10 +248,11 @@ export function getAntdTheme(isDarkMode: boolean = false): ThemeConfig {
     // Pick mode-specific config or fall back to global
     const modeConfig = isDarkMode ? tenantConfig?.dark : tenantConfig?.light;
     const primaryColor = modeConfig?.primaryColor || tenantConfig?.primaryColor || '#1890ff';
+    const secondaryColor = modeConfig?.secondaryColor || tenantConfig?.secondaryColor || primaryColor;
     const borderRadius = tenantConfig?.borderRadius ?? 8;
 
     // Use the comprehensive theme settings from settings.ts
-    const baseTheme = getBaseTheme(isDarkMode, primaryColor);
+    const baseTheme = getBaseTheme(isDarkMode, primaryColor, secondaryColor);
 
     // Merge in tenant-specific overrides
     return {
@@ -269,19 +288,23 @@ export function applyThemeMode(isDarkMode: boolean): void {
     console.log('[Theme] Switched to', isDarkMode ? 'Dark' : 'Light', 'mode');
 
     // Update meta theme-color for mobile browsers
-    // Update meta theme-color for mobile browsers
     const metaTheme = document.querySelector('meta[name="theme-color"]');
     if (metaTheme) {
         metaTheme.setAttribute('content', isDarkMode ? '#141414' : '#ffffff');
     }
 
     // Update mode-aware variables
+    const primary = root.getAttribute(isDarkMode ? 'data-dark-primary' : 'data-light-primary');
+    const secondary = root.getAttribute(isDarkMode ? 'data-dark-secondary' : 'data-light-secondary');
     const cardBg = root.getAttribute(isDarkMode ? 'data-dark-card' : 'data-light-card');
     const layoutBg = root.getAttribute(isDarkMode ? 'data-dark-layout' : 'data-light-layout');
 
+    if (primary) root.style.setProperty('--tenant-primary', primary);
+    if (secondary) root.style.setProperty('--tenant-secondary', secondary);
     if (cardBg) root.style.setProperty('--tenant-card-bg', cardBg);
     if (layoutBg) root.style.setProperty('--tenant-layout-bg', layoutBg);
 }
+
 
 // ============================================================================
 // GETTERS

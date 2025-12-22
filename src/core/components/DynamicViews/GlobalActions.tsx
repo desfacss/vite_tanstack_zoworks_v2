@@ -1,19 +1,17 @@
-
-import React, { lazy, Suspense, useState, useCallback, useMemo } from "react";
-import { Button, Drawer, Tooltip, message, Spin } from "antd";
-import { Plus } from "lucide-react";
+import React, { Suspense, useState, useCallback, useMemo } from "react";
+import { Drawer, message, Spin } from "antd";
+import { Plus, MoreHorizontal } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/core/lib/supabase";
 import { useAuthStore } from "@/core/lib/store";
-import { useViewConfigEnhanced } from "./hooks/useEntityConfig";
 import { useFormConfig } from "./hooks/useFormConfig";
 import DynamicForm from "../DynamicForm";
 import { isLocationPartition } from "@/core/components/common/utils/partitionPermissions";
 import { useLocation } from "react-router-dom";
 import { useNestedContext } from "../../lib/NestedContext";
-import { useDeviceType } from "@/utils/deviceTypeStore";
 import { trackAndSaveLocation } from "@/core/components/utils/locationTracker";
 import { registry } from "@/core/registry";
+import { PrimaryAction, MoreMenu } from "@/core/components/ActionBar";
 
 interface GlobalAction {
   form: string;
@@ -25,18 +23,21 @@ interface GlobalActionsProps {
   entitySchema?: string;
   config?: {
     global_actions?: GlobalAction[];
-    details?: { related_table?: { name: string; key: string; unique_keys?: string[] } };
+    details?: { related_table?: { name: string; key: string; unique_keys?: string[]; fk_column?: string } };
   };
   viewConfig?: { metadata?: { key: string }[] };
   parentEditItem?: any;
+  extraActions?: any[]; // For injecting Import/Export actions
 }
+
 
 const GlobalActions: React.FC<GlobalActionsProps> = ({
   entityType,
   entitySchema,
   config,
   viewConfig,
-  parentEditItem
+  parentEditItem,
+  extraActions = []
 }) => {
   const { contextStack } = useNestedContext();
   const [isDrawerVisible, setIsDrawerVisible] = useState(false);
@@ -51,13 +52,8 @@ const GlobalActions: React.FC<GlobalActionsProps> = ({
   const metadata = viewConfig?.metadata;
   const relatedTable = config?.details?.related_table;
 
-  const deviceType = useDeviceType();
-  const isDesktop = deviceType === 'desktop';
-
-  // Get registered actions from the new registry
-  const registeredActions = useMemo(() =>
-    registry.getActionsForEntity(entityType, 'global'),
-    [entityType]);
+  // Actions from both Config and Registry
+  const registeredActions = useMemo(() => registry.getActionsForEntity(entityType, 'global'), [entityType]);
 
   const { data: formConfig } = useFormConfig(selectedForm || "");
 
@@ -65,9 +61,10 @@ const GlobalActions: React.FC<GlobalActionsProps> = ({
     mutationFn: async (values: any) => {
       if (!organization?.id || !user?.id) throw new Error("Authentication required");
       const prefillData: any = {};
-      if (formConfig?.prefill && parentEditItem) {
-        for (const parentKey in formConfig.prefill) {
-          const payloadKey = formConfig.prefill[parentKey];
+      if (formConfig && (formConfig as any).prefill && parentEditItem) {
+        const prefill = (formConfig as any).prefill;
+        for (const parentKey in prefill) {
+          const payloadKey = prefill[parentKey];
           if (parentEditItem[parentKey] !== undefined) {
             prefillData[payloadKey] = parentEditItem[parentKey];
           }
@@ -80,7 +77,7 @@ const GlobalActions: React.FC<GlobalActionsProps> = ({
         ...(metadata?.some((field: any) => field.key === "created_by") && user?.id ? { created_by: user?.id } : {}),
         ...(metadata?.some((field: any) => field.key === "user_id") && user?.id ? { user_id: user?.id } : {}),
         ...(metadata?.some((field: any) => field.key === "updated_by") && user?.id ? { updated_by: user?.id } : {}),
-        ...(metadata?.some((field: any) => field.key === "team_id") && user?.team_id && user?.team_id[0] ? { team_id: user?.team_id[0] } : {}),
+        ...(metadata?.some((field: any) => field.key === "team_id") && (user as any)?.team_id && (user as any)?.team_id[0] ? { team_id: (user as any)?.team_id[0] } : {}),
         ...(metadata?.some((field: any) => field.key === "location_id") && location?.id && isLocationPartition(permissions, path?.pathname) ? { location_id: location?.id } : {}),
       };
 
@@ -106,20 +103,11 @@ const GlobalActions: React.FC<GlobalActionsProps> = ({
     onError: (error: any) => {
       message.error(error.message || `Failed to create ${entityType}`);
     },
-    retry: false,
   });
 
-  const handleSubmit = async (formData: any) => {
-    try {
-      await createMutation.mutateAsync(formData);
-    } catch (error: any) {
-      message.error(error.message || `Failed to save ${entityType}`);
-    }
-  };
-
-  const handleFormActionClick = async (form: string) => {
+  const handleFormActionClick = (form: string) => {
     setSelectedForm(form);
-    await trackAndSaveLocation("New", user?.id);
+    trackAndSaveLocation("New", user?.id);
     setIsDrawerVisible(true);
   };
 
@@ -132,41 +120,85 @@ const GlobalActions: React.FC<GlobalActionsProps> = ({
     }
   }, [registeredActions]);
 
+  // Merge and prioritize actions
+  const allActions = useMemo(() => {
+    const list: any[] = [];
+
+    // 1. Config actions (Add, New, etc)
+    globalActionsFromConfig.forEach((a, idx) => {
+      if (a.form.startsWith('.')) return;
+      list.push({
+        type: 'config',
+        id: `config-${idx}`,
+        label: a.label === "add_user" ? "Add User" : a.label,
+        form: a.form,
+        isPrimary: a.label.toLowerCase().includes('add') || a.label.toLowerCase().includes('new') || idx === 0
+      });
+    });
+
+    // 2. Registry actions
+    registeredActions.forEach(a => {
+      list.push({
+        type: 'registry',
+        id: a.id,
+        label: typeof a.label === 'function' ? a.label((s: any) => s) : a.label,
+        isPrimary: list.length === 0 // If no config actions, first registry is primary
+      });
+    });
+
+    return list;
+  }, [globalActionsFromConfig, registeredActions]);
+
+  const primaryActions = allActions.filter(a => a.isPrimary);
+  const secondaryActions = allActions.filter(a => !a.isPrimary);
+
+  const mainAction = primaryActions[0];
+  const dropdownActions = primaryActions.slice(1);
+
   const parent = contextStack[contextStack.length - 1];
 
+  // Combine menu items for overflow
+  const overflowItems = useMemo(() => {
+    const items = secondaryActions.map(a => ({
+      key: a.id,
+      label: a.label,
+      icon: <MoreHorizontal size={16} />,
+      onClick: a.type === 'config'
+        ? () => handleFormActionClick(a.form)
+        : () => handleRegisteredActionClick(a.id)
+    }));
+
+    return [...items, ...extraActions];
+  }, [secondaryActions, extraActions, handleRegisteredActionClick]);
+
+  if (allActions.length === 0 && extraActions.length === 0) return null;
+
   return (
-    <div className="flex gap-2">
-      {/* 1. Legacy Config-based Actions */}
-      {globalActionsFromConfig.map((action, index) => {
-        const { form, label } = action;
-        // Skip dots (legacy component paths which are now handled by registry)
-        if (form.startsWith(".")) return null;
+    <div className="flex items-center gap-2">
+      {/* Primary + Dropdown (Split Button) */}
+      {mainAction && (
+        <PrimaryAction
+          label={mainAction.label}
+          icon={<Plus size={18} />}
+          onClick={mainAction.type === 'config'
+            ? () => handleFormActionClick(mainAction.form)
+            : () => handleRegisteredActionClick(mainAction.id)
+          }
+          dropdownItems={dropdownActions.map(a => ({
+            key: a.id,
+            label: a.label,
+            icon: <Plus size={16} />,
+            onClick: a.type === 'config'
+              ? () => handleFormActionClick(a.form)
+              : () => handleRegisteredActionClick(a.id)
+          }))}
+        />
+      )}
 
-        return (
-          <Button
-            key={`config-${index}`}
-            type="primary"
-            onClick={() => handleFormActionClick(form)}
-            className="bg-[var(--color-primary)] text-white border-none hover:bg-[var(--color-primary-dark)]"
-            icon={isDesktop ? undefined : <Plus size={16} />}
-          >
-            {isDesktop ? (label === "add_user" ? "Add User" : label) : undefined}
-          </Button>
-        );
-      })}
-
-      {/* 2. New Registry-based Actions */}
-      {registeredActions.map((action) => (
-        <Button
-          key={`registry-${action.id}`}
-          type="primary"
-          onClick={() => handleRegisteredActionClick(action.id)}
-          className="bg-[var(--color-primary)] text-white border-none hover:bg-[var(--color-primary-dark)]"
-          icon={isDesktop ? undefined : <Plus size={16} />}
-        >
-          {isDesktop ? (typeof action.label === 'function' ? action.label((s) => s) : action.label) : undefined}
-        </Button>
-      ))}
+      {/* Overflow for truly additional actions + injected extraActions */}
+      {overflowItems.length > 0 && (
+        <MoreMenu items={overflowItems} />
+      )}
 
       {/* Registry Action Component (Dynamic) */}
       {activeActionId && LoadedActionComponent && (
@@ -184,7 +216,7 @@ const GlobalActions: React.FC<GlobalActionsProps> = ({
 
       {/* Drawer for Form-based Actions */}
       <Drawer
-        title="Add"
+        title="Form Action"
         open={isDrawerVisible}
         onClose={() => {
           setIsDrawerVisible(false);
@@ -199,10 +231,10 @@ const GlobalActions: React.FC<GlobalActionsProps> = ({
               ui_schema: formConfig.ui_schema || {},
               db_schema: formConfig.db_schema || {},
             }}
-            onFinish={handleSubmit}
+            onFinish={(vals) => createMutation.mutate(vals)}
           />
         ) : (
-          <div>Loading form configuration...</div>
+          <Spin />
         )}
       </Drawer>
     </div>

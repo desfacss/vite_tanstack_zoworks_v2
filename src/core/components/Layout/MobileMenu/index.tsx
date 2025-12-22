@@ -1,13 +1,11 @@
 import React, { useState } from 'react';
-import { Drawer, Menu, Typography } from 'antd';
+import { Drawer, Menu } from 'antd';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 import type { MenuProps } from 'antd';
 import type { ItemType } from 'antd/es/menu/interface';
-import { useAuthStore, useThemeStore } from '@/core/lib/store';
+import { useThemeStore } from '@/core/lib/store';
 import { getTenantLogoUrl, getTenantBrandName } from '@/core/theme/ThemeRegistry';
-
-const { Text } = Typography;
+import { ProfileWelcomeCard } from '../Profile';
 
 interface MobileMenuProps {
   open: boolean;
@@ -22,8 +20,6 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
 }) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { t } = useTranslation();
-  const { user, organization } = useAuthStore();
   const { isDarkMode } = useThemeStore();
 
   // Get branding
@@ -61,9 +57,6 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
     return item;
   }) as ItemType[];
 
-  // Get user's display name from store
-  const userName = user?.name || t('common.label.user');
-
   return (
     <Drawer
       placement="left"
@@ -74,10 +67,10 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
         header: { display: 'none' }
       }}
     >
-      {/* Custom Header with Logo and Welcome Message */}
-      <div className="p-4 border-b border-[var(--color-border)]">
+      {/* Custom Header with Logo and Welcome Card */}
+      <div className="border-b border-[var(--color-border)]" style={{ padding: '24px 24px 20px 24px' }}>
         {/* Logo */}
-        <div className="flex items-center gap-3 mb-3">
+        <div className="flex items-center gap-3 mb-6">
           {logoUrl ? (
             <img
               src={logoUrl}
@@ -91,20 +84,11 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
           )}
         </div>
 
-        {/* Welcome Message */}
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-[var(--color-primary)] flex items-center justify-center text-white text-sm font-medium">
-            {userName.charAt(0).toUpperCase()}
-          </div>
-          <div>
-            <Text className="block text-xs text-gray-500">{t('common.label.welcome')}</Text>
-            <Text strong className="block text-sm">{userName}</Text>
-            {organization?.name && (
-              <Text className="block text-xs text-gray-400">{organization.name}</Text>
-            )}
-          </div>
-        </div>
+        {/* Profile Welcome Card (Level 3) */}
+        <ProfileWelcomeCard />
       </div>
+
+
 
       {/* Navigation Menu */}
       <Menu

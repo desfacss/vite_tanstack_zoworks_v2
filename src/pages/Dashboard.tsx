@@ -1,14 +1,21 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Layout, Select, Button, Space, message, Drawer, Empty, Spin, Card } from 'antd';
+import { Select, Button, message, Drawer, Empty, Spin, Card } from 'antd';
 import { Save, Plus, Pencil, Eye, RefreshCw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@/core/lib/store';
 import { supabase } from '../lib/supabase';
 import DashboardCanvas from './DashboardCanvas';
 import _ from 'lodash';
+import {
+  PageActionBar,
+  ActionBarLeft,
+  ActionBarRight,
+  PrimaryAction,
+} from '@/core/components/ActionBar';
 
-const { Header, Content } = Layout;
 const { Option } = Select;
+
+
 
 const DashboardPage: React.FC = () => {
   const { t } = useTranslation();
@@ -187,12 +194,13 @@ const DashboardPage: React.FC = () => {
   if (loading && !currentDashboard) return <div className="flex h-screen items-center justify-center bg-[var(--color-bg-primary)]"><Spin size="large" /></div>;
 
   return (
-    <Layout className="min-h-screen bg-[var(--color-bg-primary)]">
-      <Header className="border-b px-4 sm:px-6 flex justify-between items-center h-16 sticky top-0 z-20 shadow-sm bg-[var(--color-bg-primary)] border-[var(--color-border)]">
-        <div className="flex items-center gap-4">
+    <>
+      {/* Page Header - Action Bar */}
+      <PageActionBar>
+        <ActionBarLeft>
           <Select
             value={currentDashboard?.id}
-            style={{ width: 240 }}
+            style={{ width: 200 }}
             onChange={(id) => {
               const d = dashboards.find(x => x.id === id);
               if (d) setCurrentDashboard(d);
@@ -202,13 +210,17 @@ const DashboardPage: React.FC = () => {
             {dashboards.map(d => <Option key={d.id} value={d.id}>{d.name}</Option>)}
           </Select>
           {isDirty && <span className="hidden sm:inline-block text-amber-600 text-xs font-bold">● {t('common.message.unsaved_changes')}</span>}
-        </div>
+        </ActionBarLeft>
 
-        <Space>
+        <ActionBarRight>
           {!isEditMode ? (
             <>
               <Button icon={<RefreshCw size={16} />} onClick={() => fetchMetricData(currentDashboard?.widgets || [], true)}>{t('common.action.refresh')}</Button>
-              <Button type="primary" icon={<Pencil size={16} />} onClick={() => { setIsEditMode(true); setIsLibraryOpen(true); }}>{t('common.action.design')}</Button>
+              <PrimaryAction
+                label={t('common.action.design')}
+                icon={<Pencil size={16} />}
+                onClick={() => { setIsEditMode(true); setIsLibraryOpen(true); }}
+              />
             </>
           ) : (
             <>
@@ -219,27 +231,36 @@ const DashboardPage: React.FC = () => {
                 setIsDirty(false);
               }}>{t('common.action.cancel')}</Button>
               <Button icon={<Plus size={16} />} onClick={() => setIsLibraryOpen(true)}>{t('common.action.add_widget')}</Button>
-              <Button type="primary" icon={<Save size={16} />} loading={saving} onClick={handleSave}>{t('common.action.save')}</Button>
+              <PrimaryAction
+                label={t('common.action.save')}
+                icon={<Save size={16} />}
+                onClick={handleSave}
+                loading={saving}
+              />
             </>
           )}
-        </Space>
-      </Header>
+        </ActionBarRight>
+      </PageActionBar>
 
-      <Content className="p-2 sm:p-6 overflow-y-auto h-[calc(100vh-64px)]">
-        {currentDashboard ? (
-          <DashboardCanvas
-            widgets={currentDashboard.widgets || []}
-            widgetData={widgetData}
-            widgetDefinitions={widgetDefinitions}
-            isEditMode={isEditMode}
-            onLayoutChange={handleLayoutChange}
-            onRemoveWidget={removeWidget}
-            onEditWidget={(w) => console.log(w)}
-          />
-        ) : (
-          <Empty description={t('common.message.no_dashboard_selected')} className="mt-20" />
-        )}
-      </Content>
+
+      {/* Main Content - White Card */}
+      <div className="main-content">
+        <div className="content-body">
+          {currentDashboard ? (
+            <DashboardCanvas
+              widgets={currentDashboard.widgets || []}
+              widgetData={widgetData}
+              widgetDefinitions={widgetDefinitions}
+              isEditMode={isEditMode}
+              onLayoutChange={handleLayoutChange}
+              onRemoveWidget={removeWidget}
+              onEditWidget={(w) => console.log(w)}
+            />
+          ) : (
+            <Empty description={t('common.message.no_dashboard_selected')} className="mt-20" />
+          )}
+        </div>
+      </div>
 
       <Drawer
         title={t('common.action.add_widget')}
@@ -269,8 +290,9 @@ const DashboardPage: React.FC = () => {
           ))}
         </div>
       </Drawer>
-    </Layout>
+    </>
   );
+
 };
 
 export default DashboardPage;

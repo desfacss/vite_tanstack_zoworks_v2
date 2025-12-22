@@ -70,17 +70,25 @@ export const Sider: React.FC<SiderProps> = ({ collapsed, navigationItems: propNa
         left: 0,
         top: 0,
         bottom: 0,
-        zIndex: 10, // Ensure it's above other content if needed
+        zIndex: 1000, // Ensure it's above the header if they ever overlap
       }}
       className="border-r border-[var(--color-border)]"
       width={256}
     >
-      <div className="p-4 flex items-center gap-3 overflow-hidden min-h-[64px]">
+      {/* Sider header - aligned with app header */}
+      <div
+        className="flex items-center gap-3 overflow-hidden border-b border-[var(--color-border)]"
+        style={{
+          minHeight: 'var(--header-height, 56px)',
+          padding: '0 24px', // Standard Ant Design Menu padding for icons
+        }}
+      >
         {logoUrl ? (
           <img
             src={logoUrl}
             alt={brandName}
             className={`h-8 w-auto max-w-full object-contain transition-all duration-300 ${collapsed ? 'mx-auto' : ''}`}
+            style={{ marginLeft: collapsed ? -4 : 0 }}
           />
         ) : (
           <div className="flex items-center gap-2 overflow-hidden">
@@ -96,6 +104,7 @@ export const Sider: React.FC<SiderProps> = ({ collapsed, navigationItems: propNa
           </div>
         )}
       </div>
+
       <Menu
         mode="inline"
         selectedKeys={[location.pathname]}

@@ -257,7 +257,7 @@
       "sample": {
         "label": {
           "title": "Sample Module Page",
-          "description": "Starting point for developing new modules.",
+          "description": "Starting point for developing new modules",
           "context": "Current Session Context",
           "dev_notes": "Development Notes",
           "available_features": "Available Features",

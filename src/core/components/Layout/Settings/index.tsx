@@ -138,20 +138,59 @@ export const Settings: React.FC<SettingsProps> = ({ open, onClose }) => {
     })) || [];
   }, [organization?.id, userOrgLocations]);
 
+  const [showAdvanced, setShowAdvanced] = useState(false);
+
+  const themePresetsOptions = useMemo(() => [
+    { value: 'glassmorphism', label: 'Glassmorphism (Modern)' },
+    { value: 'gradient_card', label: 'Gradient Card (Premium)' },
+    { value: 'branded_header', label: 'Branded Header (Red/Amber)' },
+    { value: 'corporate', label: 'Corporate (Enterprise)' },
+    { value: 'ultra_glass', label: 'Ultra Glass (Experimental)' },
+  ], []);
+
+  // Handle preset change
+  const handlePresetChange = (presetId: string) => {
+    const preset = (THEME_PRESETS as any)[presetId];
+    if (!preset) return;
+
+    const newValues = {
+      preset: presetId,
+      borderRadius: preset.borderRadius || 8,
+      light_primaryColor: preset.light?.primaryColor || preset.primaryColor || '#1890ff',
+      light_secondaryColor: preset.light?.secondaryColor || preset.secondaryColor || '#1890ff',
+      light_cardBg: preset.light?.cardBg || '#ffffff',
+      light_layoutBg: preset.light?.layoutBg || '#f0f2f5',
+      light_headerBg: preset.light?.headerBg || '#ffffff',
+      light_siderBg: preset.light?.siderBg || '#ffffff',
+      dark_primaryColor: preset.dark?.primaryColor || preset.primaryColor || '#1890ff',
+      dark_secondaryColor: preset.dark?.secondaryColor || preset.secondaryColor || '#1890ff',
+      dark_cardBg: preset.dark?.cardBg || '#1f1f1f',
+      dark_layoutBg: preset.dark?.layoutBg || '#141414',
+      dark_headerBg: preset.dark?.headerBg || '#141414',
+      dark_siderBg: preset.dark?.siderBg || '#141414',
+    };
+
+    form.setFieldsValue(newValues);
+    handleValuesChange(null, form.getFieldsValue());
+  };
+
   // --- Branding Logic ---
   useEffect(() => {
     if (open && themeConfig) {
       form.setFieldsValue({
+        preset: themeConfig.preset,
         brandName: themeConfig.brandName,
         faviconUrl: themeConfig.faviconUrl,
         borderRadius: themeConfig.borderRadius || 8,
         light_primaryColor: themeConfig.light?.primaryColor || themeConfig.primaryColor,
+        light_secondaryColor: themeConfig.light?.secondaryColor || themeConfig.secondaryColor,
         light_logoUrl: themeConfig.light?.logoUrl || themeConfig.logoUrl,
         light_cardBg: themeConfig.light?.cardBg || '#ffffff',
         light_layoutBg: themeConfig.light?.layoutBg || '#f0f2f5',
         light_headerBg: themeConfig.light?.headerBg || '#ffffff',
         light_siderBg: themeConfig.light?.siderBg || '#ffffff',
         dark_primaryColor: themeConfig.dark?.primaryColor || themeConfig.primaryColor,
+        dark_secondaryColor: themeConfig.dark?.secondaryColor || themeConfig.secondaryColor,
         dark_logoUrl: themeConfig.dark?.logoUrl || themeConfig.logoUrl,
         dark_cardBg: themeConfig.dark?.cardBg || '#1f1f1f',
         dark_layoutBg: themeConfig.dark?.layoutBg || '#141414',
@@ -160,21 +199,18 @@ export const Settings: React.FC<SettingsProps> = ({ open, onClose }) => {
       });
     }
   }, [open, themeConfig, form]);
-  const getColorString = (color: any) => {
-    if (!color) return undefined;
-    if (typeof color === 'string') return color;
-    return color.toHexString?.() || color.hex || String(color);
-  };
 
   const handleValuesChange = (_: any, allValues: any) => {
-    // Optimistically update theme registry for immediate feedback
     const updatedConfig: Partial<TenantThemeConfig> = {
+      preset: allValues.preset,
       brandName: allValues.brandName,
       faviconUrl: allValues.faviconUrl,
       borderRadius: allValues.borderRadius,
       primaryColor: getColorString(allValues.light_primaryColor),
+      secondaryColor: getColorString(allValues.light_secondaryColor),
       light: {
         primaryColor: getColorString(allValues.light_primaryColor),
+        secondaryColor: getColorString(allValues.light_secondaryColor),
         logoUrl: allValues.light_logoUrl,
         cardBg: getColorString(allValues.light_cardBg),
         layoutBg: getColorString(allValues.light_layoutBg),
@@ -183,6 +219,7 @@ export const Settings: React.FC<SettingsProps> = ({ open, onClose }) => {
       },
       dark: {
         primaryColor: getColorString(allValues.dark_primaryColor),
+        secondaryColor: getColorString(allValues.dark_secondaryColor),
         logoUrl: allValues.dark_logoUrl,
         cardBg: getColorString(allValues.dark_cardBg),
         layoutBg: getColorString(allValues.dark_layoutBg),
@@ -200,12 +237,15 @@ export const Settings: React.FC<SettingsProps> = ({ open, onClose }) => {
       const values = form.getFieldsValue();
       const payload: Partial<TenantThemeConfig> = {
         ...themeConfig,
+        preset: values.preset,
         brandName: values.brandName,
         faviconUrl: values.faviconUrl,
         borderRadius: values.borderRadius,
         primaryColor: getColorString(values.light_primaryColor),
+        secondaryColor: getColorString(values.light_secondaryColor),
         light: {
           primaryColor: getColorString(values.light_primaryColor),
+          secondaryColor: getColorString(values.light_secondaryColor),
           logoUrl: values.light_logoUrl,
           cardBg: getColorString(values.light_cardBg),
           layoutBg: getColorString(values.light_layoutBg),
@@ -214,6 +254,7 @@ export const Settings: React.FC<SettingsProps> = ({ open, onClose }) => {
         },
         dark: {
           primaryColor: getColorString(values.dark_primaryColor),
+          secondaryColor: getColorString(values.dark_secondaryColor),
           logoUrl: values.dark_logoUrl,
           cardBg: getColorString(values.dark_cardBg),
           layoutBg: getColorString(values.dark_layoutBg),
@@ -240,27 +281,22 @@ export const Settings: React.FC<SettingsProps> = ({ open, onClose }) => {
     }
   };
 
-  // Always show branding options for now as per user request
-  const canEditBranding = true; // permissions?.organizations?.includes('update') || organization?.app_settings?.customization?.theme === "true";
-
+  // --- Logo Upload ---
   const handleLogoUpload = async (file: File, mode: 'light' | 'dark') => {
     setUploading(mode);
     setSelectedFiles(prev => ({ ...prev, [mode]: file.name }));
     try {
       const result = await publitio.uploadFile(file, 'file', { title: `logo-${mode}-${organization?.id}` });
       if (result.success === false) throw new Error(result.error?.message || 'Upload failed');
-
       const logoUrl = result.url_preview;
       form.setFieldValue(`${mode}_logoUrl`, logoUrl);
-
-      // Trigger theme update
       handleValuesChange(null, form.getFieldsValue());
       message.success(`${mode} logo uploaded successfully!`);
-      setSelectedFiles(prev => ({ ...prev, [mode]: undefined })); // Clear after success
+      setSelectedFiles(prev => ({ ...prev, [mode]: undefined }));
     } catch (err: any) {
       console.error('Logo upload error:', err);
       message.error(`Failed to upload ${mode} logo: ${err.message}`);
-      setSelectedFiles(prev => ({ ...prev, [mode]: undefined })); // Clear on error
+      setSelectedFiles(prev => ({ ...prev, [mode]: undefined }));
     } finally {
       setUploading(null);
     }
@@ -268,37 +304,34 @@ export const Settings: React.FC<SettingsProps> = ({ open, onClose }) => {
 
   return (
     <Drawer
-      title={t('common.label.settings')}
+      title={<div className="flex items-center gap-2"><Globe size={20} className="text-primary" /> {t('common.label.settings')}</div>}
       placement="right"
       onClose={onClose}
       open={open}
-      width={350}
+      width={380}
+      className="settings-drawer"
     >
       <div className="space-y-8">
-        {/* Context Switching Section (Critical for Mobile) */}
-        <div>
-          <Title level={5}>{t('core.settings.label.context')}</Title>
-          <Form layout="vertical">
-            <Form.Item label={t('common.label.organization')}>
+        {/* Context Switching Section */}
+        <div className="bg-gray-50/50 p-4 rounded-xl space-y-4">
+          <Title level={5} className="m-0 text-slate-700">{t('core.settings.label.context')}</Title>
+          <Form layout="vertical" size="middle">
+            <Form.Item label={t('common.label.organization')} className="mb-3">
               <Select
-                placeholder={t('common.label.organization')}
                 value={organization?.id}
                 onChange={handleOrganizationChange}
                 loading={loadingOrgLocs}
                 options={organizationOptions}
-                disabled={loadingOrgLocs}
                 className="w-full"
               />
             </Form.Item>
             {currentLocations.length > 0 && (
-              <Form.Item label={t('common.label.location')}>
+              <Form.Item label={t('common.label.location')} className="mb-0">
                 <Select
-                  placeholder={t('common.label.location')}
                   value={location?.id}
                   onChange={handleLocationChange}
                   loading={loadingOrgLocs}
                   options={currentLocations}
-                  disabled={loadingOrgLocs}
                   className="w-full"
                 />
               </Form.Item>
@@ -307,197 +340,216 @@ export const Settings: React.FC<SettingsProps> = ({ open, onClose }) => {
         </div>
 
         {/* Appearance Section */}
-        <div>
-          <Title level={5}>{t('core.settings.label.appearance')}</Title>
+        <div className="px-1">
+          <div className="flex justify-between items-center mb-4">
+            <Title level={5} className="m-0">{t('core.settings.label.appearance')}</Title>
+            <ThemeToggle />
+          </div>
           <Space direction="vertical" className="w-full" size="middle">
-            <div className="flex justify-between items-center">
-              <Text>{t('core.settings.label.theme_mode')}</Text>
-              <ThemeToggle />
-            </div>
-            <div className="flex justify-between items-center">
-              <Text>{t('core.settings.label.language')}</Text>
+            <div className="flex justify-between items-center bg-white p-3 rounded-lg border border-gray-100 shadow-sm">
+              <div className="flex items-center gap-2">
+                <Globe size={16} className="text-slate-500" />
+                <Text>{t('core.settings.label.language')}</Text>
+              </div>
               <LanguageSelect />
             </div>
           </Space>
         </div>
 
-        {/* Theme Editing (Branding) Section */}
-        {canEditBranding && (
-          <div className="border-t border-b border-gray-100 py-6">
-            <Title level={5} className="flex items-center gap-2 mb-4">
+        {/* Theme Editing Section */}
+        <div className="border-t border-gray-100 pt-6">
+          <div className="flex items-center justify-between mb-4 px-1">
+            <Title level={5} className="flex items-center gap-2 m-0">
               <Sparkles size={18} className="text-amber-500" />
               {t('core.settings.label.theme_editing')}
             </Title>
-
-            <Form
-              layout="vertical"
-              form={form}
-              onValuesChange={handleValuesChange}
-              size="small"
-              className="px-1"
-            >
-              <Tabs
-                activeKey={activeTab}
-                onChange={setActiveTab}
-                type="card"
-                className="theme-settings-tabs"
-                items={[
-                  {
-                    key: 'general',
-                    label: <span className="flex items-center gap-1"><Globe size={14} /> {t('core.settings.label.general')}</span>,
-                    children: (
-                      <div className="pt-4 space-y-4">
-                        <Form.Item name="brandName" label={t('core.settings.label.brand_name')}>
-                          <Input placeholder="e.g. Zoworks" prefix={<Type size={14} />} />
-                        </Form.Item>
-                        <Form.Item name="faviconUrl" label="Favicon URL">
-                          <Input placeholder="https://..." prefix={< Globe size={14} />} />
-                        </Form.Item>
-                        <Form.Item name="borderRadius" label="Border Radius">
-                          <InputNumber min={0} max={24} className="w-full" />
-                        </Form.Item>
-                      </div>
-                    )
-                  },
-                  {
-                    key: 'light',
-                    label: <span className="flex items-center gap-1"><Palette size={14} /> {t('core.settings.label.light')}</span>,
-                    children: (
-                      <div className="pt-4 space-y-4">
-                        <Form.Item name="light_primaryColor" label={t('core.settings.label.primary_color')}>
-                          <ColorPicker showText className="w-full" />
-                        </Form.Item>
-                        <Form.Item name="light_cardBg" label={t('core.settings.label.card_bg')}>
-                          <ColorPicker showText className="w-full" />
-                        </Form.Item>
-                        <Form.Item name="light_layoutBg" label={t('core.settings.label.layout_bg')}>
-                          <ColorPicker showText className="w-full" />
-                        </Form.Item>
-                        <Form.Item name="light_headerBg" label={t('core.settings.label.header_bg')}>
-                          <ColorPicker showText className="w-full" />
-                        </Form.Item>
-                        <Form.Item name="light_siderBg" label={t('core.settings.label.sider_bg')}>
-                          <ColorPicker showText className="w-full" />
-                        </Form.Item>
-                        <Form.Item name="light_logoUrl" label={t('core.settings.label.logo')}>
-                          <div className="space-y-2">
-                            <Space.Compact className="w-full">
-                              <Input placeholder="https://..." prefix={<ImageIcon size={14} />} className="flex-1" />
-                              <input
-                                type="file"
-                                id="light-logo-upload"
-                                hidden
-                                accept="image/*"
-                                onChange={(e) => e.target.files?.[0] && handleLogoUpload(e.target.files[0], 'light')}
-                              />
-                              <Button
-                                icon={<UploadIcon size={14} />}
-                                loading={uploading === 'light'}
-                                onClick={() => document.getElementById('light-logo-upload')?.click()}
-                              >
-                                {t('common.action.upload')}
-                              </Button>
-                            </Space.Compact>
-                            {selectedFiles.light && (
-                              <Text type="secondary" className="text-xs block">
-                                📎 {t('core.settings.message.uploading')} {selectedFiles.light}
-                              </Text>
-                            )}
-                          </div>
-                        </Form.Item>
-                      </div>
-                    )
-                  },
-                  {
-                    key: 'dark',
-                    label: <span className="flex items-center gap-1"><Palette size={14} /> {t('core.settings.label.dark')}</span>,
-                    children: (
-                      <div className="pt-4 space-y-4">
-                        <Form.Item name="dark_primaryColor" label={t('core.settings.label.primary_color')}>
-                          <ColorPicker showText className="w-full" />
-                        </Form.Item>
-                        <Form.Item name="dark_cardBg" label={t('core.settings.label.card_bg')}>
-                          <ColorPicker showText className="w-full" />
-                        </Form.Item>
-                        <Form.Item name="dark_layoutBg" label={t('core.settings.label.layout_bg')}>
-                          <ColorPicker showText className="w-full" />
-                        </Form.Item>
-                        <Form.Item name="dark_headerBg" label={t('core.settings.label.header_bg')}>
-                          <ColorPicker showText className="w-full" />
-                        </Form.Item>
-                        <Form.Item name="dark_siderBg" label={t('core.settings.label.sider_bg')}>
-                          <ColorPicker showText className="w-full" />
-                        </Form.Item>
-                        <Form.Item name="dark_logoUrl" label={t('core.settings.label.logo')}>
-                          <div className="space-y-2">
-                            <Space.Compact className="w-full">
-                              <Input placeholder="https://..." prefix={<ImageIcon size={14} />} className="flex-1" />
-                              <input
-                                type="file"
-                                id="dark-logo-upload"
-                                hidden
-                                accept="image/*"
-                                onChange={(e) => e.target.files?.[0] && handleLogoUpload(e.target.files[0], 'dark')}
-                              />
-                              <Button
-                                icon={<UploadIcon size={14} />}
-                                loading={uploading === 'dark'}
-                                onClick={() => document.getElementById('dark-logo-upload')?.click()}
-                              >
-                                {t('common.action.upload')}
-                              </Button>
-                            </Space.Compact>
-                            {selectedFiles.dark && (
-                              <Text type="secondary" className="text-xs block">
-                                📎 {t('core.settings.message.uploading')} {selectedFiles.dark}
-                              </Text>
-                            )}
-                          </div>
-                        </Form.Item>
-                      </div>
-                    )
-                  }
-                ]}
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Advanced</span>
+              <ThemeToggle
+              // Using ThemeToggle is not right, let's use a simple checkbox or switch
+              // Wait, I'll just use a small button for now or Switch if I knew it's imported
               />
-
-              <Button
-                type="primary"
-                onClick={handleSaveBranding}
-                loading={saving}
-                block
-                className="mt-6 h-10 shadow-sm"
-              >
-                {t('core.settings.action.save_branding')}
-              </Button>
-            </Form>
+              <input
+                type="checkbox"
+                checked={showAdvanced}
+                onChange={e => setShowAdvanced(e.target.checked)}
+                className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
+              />
+            </div>
           </div>
-        )}
+
+          <Form
+            layout="vertical"
+            form={form}
+            onValuesChange={handleValuesChange}
+            size="small"
+            className="px-1"
+          >
+            <Form.Item name="preset" label="Theme Style Preset">
+              <Select
+                options={themePresetsOptions}
+                onChange={handlePresetChange}
+                placeholder="Select a style..."
+                className="w-full h-9"
+              />
+            </Form.Item>
+
+            <Tabs
+              activeKey={activeTab}
+              onChange={setActiveTab}
+              type="line"
+              className="theme-settings-tabs"
+              items={[
+                {
+                  key: 'general',
+                  label: <span className="flex items-center gap-1"><Type size={14} /> Brand</span>,
+                  children: (
+                    <div className="pt-4 space-y-4">
+                      <Form.Item name="brandName" label={t('core.settings.label.brand_name')}>
+                        <Input placeholder="e.g. Zoworks" prefix={<Type size={14} className="text-slate-400" />} />
+                      </Form.Item>
+                      <Form.Item name="borderRadius" label="Corner Roundness (px)">
+                        <InputNumber min={0} max={24} className="w-full" />
+                      </Form.Item>
+                      <div className="grid grid-cols-2 gap-4">
+                        <Form.Item name="light_primaryColor" label="Primary (Light)">
+                          <ColorPicker showText size="small" />
+                        </Form.Item>
+                        <Form.Item name="dark_primaryColor" label="Primary (Dark)">
+                          <ColorPicker showText size="small" />
+                        </Form.Item>
+                      </div>
+                    </div>
+                  )
+                },
+                {
+                  key: 'light',
+                  label: <span className="flex items-center gap-1"><Palette size={14} /> Light Mode</span>,
+                  children: (
+                    <div className="pt-4 space-y-4">
+                      <Form.Item name="light_logoUrl" label="Logo URL">
+                        <div className="space-y-2">
+                          <Space.Compact className="w-full">
+                            <Input placeholder="https://..." prefix={<ImageIcon size={14} />} className="flex-1" />
+                            <input
+                              type="file"
+                              id="light-logo-upload"
+                              hidden
+                              accept="image/*"
+                              onChange={(e) => e.target.files?.[0] && handleLogoUpload(e.target.files[0], 'light')}
+                            />
+                            <Button
+                              icon={<UploadIcon size={14} />}
+                              onClick={() => document.getElementById('light-logo-upload')?.click()}
+                            />
+                          </Space.Compact>
+                        </div>
+                      </Form.Item>
+
+                      {showAdvanced && (
+                        <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                          <Form.Item name="light_secondaryColor" label="Secondary Color">
+                            <ColorPicker showText size="small" />
+                          </Form.Item>
+                          <Form.Item name="light_cardBg" label="Card Background">
+                            <ColorPicker showText size="small" />
+                          </Form.Item>
+                          <Form.Item name="light_layoutBg" label="Page Background">
+                            <ColorPicker showText size="small" />
+                          </Form.Item>
+                          <Form.Item name="light_headerBg" label="Header Background">
+                            <ColorPicker showText size="small" />
+                          </Form.Item>
+                        </div>
+                      )}
+                    </div>
+                  )
+                },
+                {
+                  key: 'dark',
+                  label: <span className="flex items-center gap-1"><Palette size={14} /> Dark Mode</span>,
+                  children: (
+                    <div className="pt-4 space-y-4">
+                      <Form.Item name="dark_logoUrl" label="Logo URL">
+                        <div className="space-y-2">
+                          <Space.Compact className="w-full">
+                            <Input placeholder="https://..." prefix={<ImageIcon size={14} />} className="flex-1" />
+                            <input
+                              type="file"
+                              id="dark-logo-upload"
+                              hidden
+                              accept="image/*"
+                              onChange={(e) => e.target.files?.[0] && handleLogoUpload(e.target.files[0], 'dark')}
+                            />
+                            <Button
+                              icon={<UploadIcon size={14} />}
+                              onClick={() => document.getElementById('dark-logo-upload')?.click()}
+                            />
+                          </Space.Compact>
+                        </div>
+                      </Form.Item>
+
+                      {showAdvanced && (
+                        <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                          <Form.Item name="dark_secondaryColor" label="Secondary Color">
+                            <ColorPicker showText size="small" />
+                          </Form.Item>
+                          <Form.Item name="dark_cardBg" label="Card Background">
+                            <ColorPicker showText size="small" />
+                          </Form.Item>
+                          <Form.Item name="dark_layoutBg" label="Page Background">
+                            <ColorPicker showText size="small" />
+                          </Form.Item>
+                          <Form.Item name="dark_headerBg" label="Header Background">
+                            <ColorPicker showText size="small" />
+                          </Form.Item>
+                        </div>
+                      )}
+                    </div>
+                  )
+                }
+              ]}
+            />
+
+            <Button
+              type="primary"
+              onClick={handleSaveBranding}
+              loading={saving}
+              block
+              className="mt-6 h-10 shadow-sm font-semibold"
+            >
+              Update Brand Identity
+            </Button>
+          </Form>
+        </div>
 
         {/* Accessibility Section */}
-        <Form layout="vertical">
-          <Title level={5}>{t('core.settings.label.accessibility')}</Title>
-          <Form.Item label={t('core.settings.label.font_size')}>
-            <InputNumber
-              min={12}
-              max={24}
-              value={fontSize}
-              onChange={(value) => setFontSize(value || 16)}
-              formatter={(value) => `${value}px`}
-              className="w-full"
-            />
-          </Form.Item>
-
-          <Form.Item label={t('core.settings.label.zoom')}>
-            <InputNumber
-              min={50}
-              max={200}
-              value={zoom}
-              onChange={(value) => setZoom(value || 100)}
-              formatter={(value) => `${value}%`}
-              className="w-full"
-            />
-          </Form.Item>
-        </Form>
+        <div className="border-t border-gray-100 pt-6 pb-12">
+          <Title level={5} className="mb-4">{t('core.settings.label.accessibility')}</Title>
+          <Form layout="horizontal" size="small" labelCol={{ span: 12 }}>
+            <Form.Item label="Global Font Size" className="mb-3">
+              <InputNumber
+                min={12}
+                max={20}
+                value={fontSize}
+                onChange={(value) => setFontSize(value || 16)}
+                formatter={(value) => `${value}px`}
+                className="w-full"
+              />
+            </Form.Item>
+            <Form.Item label="UI Zoom Factor" className="mb-0">
+              <InputNumber
+                min={80}
+                max={120}
+                step={5}
+                value={zoom}
+                onChange={(value) => setZoom(value || 100)}
+                formatter={(value) => `${value}%`}
+                className="w-full"
+              />
+            </Form.Item>
+          </Form>
+        </div>
       </div>
     </Drawer>
   );

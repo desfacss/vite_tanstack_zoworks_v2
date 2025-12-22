@@ -2,6 +2,7 @@ import React, { useState, useRef, useMemo } from 'react';
 import Papa from 'papaparse';
 import { message, Button, Typography, Space, Tooltip, Dropdown, MenuProps, Drawer, Modal, Form, Select, InputNumber } from 'antd';
 import { Upload as LucideUpload, MoreHorizontal, QrCode, Download, FileDown } from 'lucide-react';
+import { MenuItem } from '@/core/components/ActionBar/types';
 import { useAuthStore } from '@/core/lib/store';
 import { useReactToPrint } from 'react-to-print';
 import QRCard from '@/core/components/details/QRCard';
@@ -47,7 +48,9 @@ interface ImportExportProps {
     data: any[];
     printRef: React.RefObject<HTMLDivElement>;
     visibleColumns: string[];
+    children?: (actions: MenuItem[]) => React.ReactNode;
 }
+
 
 interface PrintSettings {
     pageSize: 'A4' | 'Letter';
@@ -115,7 +118,14 @@ const setNestedValue = (obj: any, path: string, value: any): void => {
     }
 };
 
-const ImportExportComponent: React.FC<ImportExportProps> = ({ entityType, viewConfig, config, data, printRef }) => {
+const ImportExportComponent: React.FC<ImportExportProps> = ({
+    entityType,
+    viewConfig,
+    config,
+    data,
+    printRef,
+    children
+}) => {
     const [importFile, setImportFile] = useState<File | null>(null);
     const [isImporting, setIsImporting] = useState(false);
     const [isExporting, setIsExporting] = useState(false);
@@ -185,9 +195,9 @@ const ImportExportComponent: React.FC<ImportExportProps> = ({ entityType, viewCo
                         .filter((row) => Object.keys(row).length > 0 && Object.values(row).some(v => v !== ''))
                         .map(async (row) => {
                             const processedRow: Record<string, any> = {
-                                organization_id: organization?.id || 'a41b2216-736c-4c00-99ca-30a0cd8ca0d2',
-                                created_by: user?.id || '6ba504d2-65b7-4018-b8a1-323dd686996c',
-                                updated_by: user?.id || '6ba504d2-65b7-4018-b8a1-323dd686996c',
+                                organization_id: organization?.id || '',
+                                created_by: user?.id || '',
+                                updated_by: user?.id || '',
                                 details: {},
                             };
 
@@ -257,74 +267,53 @@ const ImportExportComponent: React.FC<ImportExportProps> = ({ entityType, viewCo
 
     const toggleQrDrawer = () => setQrDrawerVisible(!qrDrawerVisible);
 
-    const menu: MenuProps = {
-        items: [
-            ...(features.import ? [{
-                key: 'import',
-                label: importFile ? 'Import CSV' : 'Select CSV File',
-                icon: <LucideUpload size={16} />,
-                onClick: () => { importFile ? handleImport() : document.getElementById('import-upload')?.click() },
-            }] : []),
-            ...(data.length > 0 && features.export ? [{
-                key: 'export',
-                label: 'Export CSV',
-                icon: <Download size={16} />,
-                onClick: () => handleExport(),
-                disabled: isExporting,
-            }] : []),
-            ...(data.length > 0 && features.export_pdf ? [{
-                key: 'export_pdf',
-                label: 'Download PDF',
-                icon: <FileDown size={16} />,
-                onClick: () => handlePrint(),
-                disabled: isPrinting || !printRef.current,
-            }] : []),
-            ...(data.length > 0 && features.print_qr && qrForm ? [{
-                key: 'print_qr',
-                label: 'Show QR Codes',
-                icon: <QrCode size={16} />,
-                onClick: () => toggleQrDrawer(),
-            }] : []),
-        ],
-    };
+    const actions: MenuItem[] = [
+        ...(features.import ? [{
+            key: 'import',
+            label: importFile ? 'Import CSV' : 'Select CSV File',
+            icon: <LucideUpload size={16} />,
+            onClick: () => { importFile ? handleImport() : document.getElementById('import-upload')?.click() },
+        }] : []),
+        ...(data.length > 0 && features.export ? [{
+            key: 'export',
+            label: 'Export CSV',
+            icon: <Download size={16} />,
+            onClick: () => handleExport(),
+            disabled: isExporting,
+        }] : []),
+        ...(data.length > 0 && features.export_pdf ? [{
+            key: 'export_pdf',
+            label: 'Download PDF',
+            icon: <FileDown size={16} />,
+            onClick: () => handlePrint(),
+            disabled: isPrinting || !printRef.current,
+        }] : []),
+        ...(data.length > 0 && features.print_qr && qrForm ? [{
+            key: 'print_qr',
+            label: 'Show QR Codes',
+            icon: <QrCode size={16} />,
+            onClick: () => toggleQrDrawer(),
+        }] : []),
+    ];
 
-    const menuItems = (menu.items || []) as any[];
+    const menuItems = actions as any[];
     const singleAction = menuItems.length === 1 ? menuItems[0] : null;
 
     return (
-        <div>
-            <Space direction="horizontal" size="middle">
-                {!singleAction && menuItems.length > 0 && (
-                    <Dropdown menu={menu} trigger={['click']}>
-                        <Tooltip title="More Actions">
-                            <Button type="primary" icon={<MoreHorizontal size={18} />} />
-                        </Tooltip>
-                    </Dropdown>
-                )}
-                {singleAction && (
-                    <Tooltip title={singleAction.label}>
-                        <Button
-                            type="primary"
-                            icon={singleAction.icon}
-                            onClick={singleAction.onClick}
-                            disabled={singleAction.disabled}
-                            loading={isImporting || isExporting || isPrinting}
-                        />
-                    </Tooltip>
-                )}
+        <>
+            <div style={{ display: 'none' }}>
                 {features.import && (
                     <input
                         id="import-upload"
                         type="file"
                         accept=".csv"
-                        style={{ display: 'none' }}
                         onChange={(e) => {
                             const file = e.target.files?.[0];
                             if (file) handleFileSelect(file);
                         }}
                     />
                 )}
-            </Space>
+            </div>
 
             <Drawer
                 title="QR Codes"
@@ -340,13 +329,13 @@ const ImportExportComponent: React.FC<ImportExportProps> = ({ entityType, viewCo
             >
                 {data.length === 0 ? <Text>No data available.</Text> : (
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px' }}>
-                        {data.map((item) => item.id && (
+                        {data.map((item: any) => item.id && (
                             <div key={item.id}><QRCard f={qrForm!} i={item.id} /></div>
                         ))}
                     </div>
                 )}
                 <div style={{ display: 'none' }}><div ref={qrPrintRef} className="qr-card-print-container">
-                    {data.map((item) => item.id && (
+                    {data.map((item: any) => item.id && (
                         <div key={`print-${item.id}`} className="qr-card-item"><QRCard f={qrForm!} i={item.id} /></div>
                     ))}
                 </div></div>
@@ -359,8 +348,34 @@ const ImportExportComponent: React.FC<ImportExportProps> = ({ entityType, viewCo
                     <Form.Item name="scale" label="Scale (%)"><InputNumber min={10} max={200} step={5} style={{ width: '100%' }} /></Form.Item>
                 </Form>
             </Modal>
-        </div>
+
+            {children ? (
+                children(actions)
+            ) : (
+                <Space direction="horizontal" size="middle">
+                    {!singleAction && menuItems.length > 0 && (
+                        <Dropdown menu={{ items: menuItems }} trigger={['click']}>
+                            <Tooltip title="More Actions">
+                                <Button type="primary" icon={<MoreHorizontal size={18} />} />
+                            </Tooltip>
+                        </Dropdown>
+                    )}
+                    {singleAction && (
+                        <Tooltip title={singleAction.label}>
+                            <Button
+                                type="primary"
+                                icon={singleAction.icon}
+                                onClick={singleAction.onClick}
+                                disabled={singleAction.disabled}
+                                loading={isImporting || isExporting || isPrinting}
+                            />
+                        </Tooltip>
+                    )}
+                </Space>
+            )}
+        </>
     );
 };
+
 
 export default ImportExportComponent;

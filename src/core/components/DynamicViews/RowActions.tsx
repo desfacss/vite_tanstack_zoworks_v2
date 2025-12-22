@@ -1,7 +1,6 @@
-
 import React, { useState, lazy, Suspense, useCallback, useMemo } from 'react';
-import { Button, Drawer, Space, message, Modal, Dropdown, Menu, Spin } from 'antd';
-import { Edit2, Trash2, MoreHorizontal, Eye, Copy } from "lucide-react";
+import { Drawer, message, Modal, Spin } from 'antd';
+import { Edit2, Trash2, Eye, Copy } from "lucide-react";
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/core/lib/store';
@@ -11,10 +10,10 @@ import { useFormConfig } from '../DynamicViews/hooks/useFormConfig';
 import { useNestedContext } from '@/core/lib/NestedContext';
 import { useLocation } from 'react-router-dom';
 import { registry } from '@/core/registry';
+import { RowActions as RowActionsStandard } from '@/core/components/ActionBar';
 
 // Legacy Component Map Removed - Use Registry or Dynamic Forms
 const legacyComponentMap: Record<string, React.ComponentType<any>> = {};
-
 
 interface RowActionsProps {
   entityType: string;
@@ -37,7 +36,7 @@ const RowActions: React.FC<RowActionsProps> = ({
 }) => {
   const [contextId, setContextId] = useState<string | null>(null);
   const { openContext, closeContext, contextStack } = useNestedContext();
-  const { organization, user, location, permissions } = useAuthStore();
+  const { organization, user } = useAuthStore();
   const queryClient = useQueryClient();
   const [isDrawerVisible, setIsDrawerVisible] = useState(false);
   const [isDetailsDrawerVisible, setIsDetailsDrawerVisible] = useState(false);
@@ -47,7 +46,6 @@ const RowActions: React.FC<RowActionsProps> = ({
   const [activeRegistryActionId, setActiveRegistryActionId] = useState<string | null>(null);
   const [LoadedActionComponent, setLoadedActionComponent] = useState<React.ComponentType<any> | null>(null);
   const [enhancedRecord, setEnhancedRecord] = useState(record);
-  const path = useLocation();
 
   const { data: formConfig } = useFormConfig(formName || '');
 
@@ -212,9 +210,9 @@ const RowActions: React.FC<RowActionsProps> = ({
   }, [actions, entityType, hasAccess, contextStack.length, viewConfig]);
 
   const actionItems = useMemo(() => {
-    const items = [];
+    const items: any[] = [];
 
-    // Built-in actions
+    // 1. Built-in actions
     filteredActions.builtIn.forEach(a => {
       if (a.name === 'Edit') items.push({ key: 'edit', label: 'Edit', icon: <Edit2 size={16} />, onClick: () => a.form && handleEdit(a.form) });
       if (a.name === 'Delete') items.push({ key: 'delete', label: 'Delete', icon: <Trash2 size={16} />, danger: true, onClick: () => setDeleteRecord(record) });
@@ -222,12 +220,12 @@ const RowActions: React.FC<RowActionsProps> = ({
       if (a.name === 'Clone') items.push({ key: 'clone', label: 'Clone', icon: <Copy size={16} />, onClick: () => a.form && handleClone(a.form) });
     });
 
-    // Registered actions
+    // 2. Registered actions
     filteredActions.registered.forEach(a => {
       items.push({
         key: a.id,
-        label: typeof a.label === 'function' ? a.label((s: string) => s) : a.label,
-        icon: <Edit2 size={16} />, // Default icon for registry actions
+        label: typeof a.label === 'function' ? a.label((s: any) => s) : a.label,
+        icon: a.icon || <Edit2 size={16} />,
         onClick: () => handleRegistryActionClick(a.id)
       });
     });
@@ -240,14 +238,16 @@ const RowActions: React.FC<RowActionsProps> = ({
 
   return (
     <>
-      <Space>
-        {actionItems.map(item => <Button key={item.key} type="text" icon={<MoreHorizontal size={16} />} danger={item.danger} onClick={item.onClick} title={item.label} />
-        )}
-      </Space>
+      <div className="flex items-center justify-end">
+        <RowActionsStandard
+          items={actionItems}
+          maxInline={3} // Shows 2 + More
+        />
+      </div>
 
       {/* Edit/Legacy Drawer */}
       <Drawer
-        title={currentAction + ' ' + (record?.name || record?.id)}
+        title={(currentAction || 'Action') + ' ' + (record?.name || record?.id || '')}
         open={isDrawerVisible}
         onClose={() => setIsDrawerVisible(false)}
         width={window.innerWidth <= 768 ? '100%' : '50%'}
@@ -302,7 +302,7 @@ const RowActions: React.FC<RowActionsProps> = ({
         />
       </Drawer>
 
-      {!window.isMobile() && deleteRecord && handleDeleteConfirm()}
+      {deleteRecord && handleDeleteConfirm()}
     </>
   );
 };

@@ -704,7 +704,7 @@
 
 
 import React, { useState, useEffect, Suspense, useRef, useMemo } from 'react';
-import { Space, Radio, Card, message, Tooltip, Typography, Dropdown, Button, Pagination } from 'antd';
+import { Space, Radio, Card, message, Tooltip, Typography, Dropdown, Button } from 'antd';
 import {
   Table,
   LayoutGrid,
@@ -735,6 +735,15 @@ import { useNestedContext } from '../../lib/NestedContext';
 import { useDeviceType } from '@/utils/deviceTypeStore';
 import { ZeroStateContent } from './ZeroStateContent';
 import { useLocation } from 'react-router-dom';
+import {
+  PageActionBar,
+  ActionBarLeft,
+  ActionBarRight,
+  Pagination,
+} from '@/core/components/ActionBar';
+
+
+
 
 /**
  * @interface DynamicViewsProps
@@ -852,7 +861,8 @@ const DynamicViews: React.FC<DynamicViewsProps> = ({
 
   // --- State Management ---
   const [currentTab, setCurrentTab] = useState(() => {
-    const preferredTab = viewPreferences[entityType]?.currentTab;
+    const userId = user?.id || 'anonymous';
+    const preferredTab = viewPreferences[userId]?.[entityType]?.currentTab;
     return tabOptions.some((tab) => tab.key === preferredTab) ? preferredTab : tabOptions[0]?.key || '1';
   });
 
@@ -875,9 +885,11 @@ const DynamicViews: React.FC<DynamicViewsProps> = ({
       }
       return acc;
     }, {});
+    const userId = user?.id || 'anonymous';
+    const persistedFilters = viewPreferences[userId]?.[entityType]?.filters || {};
     return {
       ...filtersFromProps,
-      ...viewPreferences[entityType]?.filters,
+      ...persistedFilters,
       ...filtersFromConfig,
     };
   });
@@ -891,7 +903,10 @@ const DynamicViews: React.FC<DynamicViewsProps> = ({
    */
   const [cursorStack, setCursorStack] = useState<(string | null)[]>([null]);
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
-  const [pageSize, setPageSize] = useState(viewPreferences[entityType]?.pageSize || 10);
+  const [pageSize, setPageSize] = useState(() => {
+    const userId = user?.id || 'anonymous';
+    return viewPreferences[userId]?.[entityType]?.pageSize || 10;
+  });
   // We track hasMore to cheat the UI into showing the "Next" arrow
   const [hasMore, setHasMore] = useState(false);
 
@@ -1243,13 +1258,26 @@ const DynamicViews: React.FC<DynamicViewsProps> = ({
   }
 
   const globalActionsElement = (
-    <GlobalActions
+    <ImportExportComponent
       entityType={entityType}
-      entitySchema={entitySchema}
-      config={config}
-      viewConfig={viewConfig}
-      parentEditItem={parentEditItem}
-    />
+      entitySchema={entitySchema || ''}
+      viewConfig={viewConfig as any}
+      data={entities}
+      printRef={printRef}
+      config={config as any}
+      visibleColumns={visibleColumns}
+    >
+      {(importExportActions) => (
+        <GlobalActions
+          entityType={entityType}
+          entitySchema={entitySchema}
+          config={config as any}
+          viewConfig={viewConfig as any}
+          parentEditItem={parentEditItem}
+          extraActions={importExportActions}
+        />
+      )}
+    </ImportExportComponent>
   );
 
   if (detailView) {
@@ -1348,30 +1376,91 @@ const DynamicViews: React.FC<DynamicViewsProps> = ({
   // If we have more data OR we are past page 1, show pagination
   const showPagination = hasMore || currentPageIndex > 0;
 
-  return (
-    <div className={!detailView ? 'space-y-4' : ''}>
-      <Card variant={parentEditItem ? 'outlined' : 'borderless'} className={detailView ? 'p-0' : ''} styles={{ body: { padding: isMobile ? 10 : '' } }}>
-        {!detailView && (
-          <div className="flex justify-between items-center mb-2">
-            {renderTabs()}
-            {(
-              <Space>
-                {globalActionsElement}
-                {renderViewSelector()}
-                <ImportExportComponent
+  // For detail views (nested), keep the simple card layout
+  if (detailView) {
+    return (
+      <Card variant="outlined" className="p-0" styles={{ body: { padding: isMobile ? 10 : '' } }}>
+        <Suspense
+          fallback={
+            <div className="flex justify-center items-center h-64">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--color-primary)]"></div>
+            </div>
+          }
+        >
+          <div ref={printRef}>
+            {entities.length === 0 && !isDataLoading && currentPageIndex === 0 ? (
+              <ZeroStateContent
+                entityName={config?.details?.name}
+                globalFiltersElement={null}
+                globalActionsElement={globalActionsElement}
+                searchConfig={searchConfig}
+                hasActiveFilters={Object.keys(filterValues).some(
+                  (key) =>
+                    filterValues[key] !== undefined &&
+                    filterValues[key] !== null &&
+                    (Array.isArray(filterValues[key])
+                      ? filterValues[key].length > 0
+                      : true)
+                )}
+                clearFilters={handleClearFilters}
+              />
+            ) : (
+              <>
+                <ViewComponent
                   entityType={entityType}
                   entitySchema={entitySchema}
                   viewConfig={viewConfig}
-                  data={entities}
-                  printRef={printRef}
                   config={config}
+                  formConfig={schema}
+                  data={entities}
+                  filterValues={filterValues}
+                  pagination={{
+                    current: currentPageIndex + 1,
+                    pageSize: pageSize,
+                    total: hasMore ? ((currentPageIndex + 1) * pageSize) + 1 : (currentPageIndex + 1) * pageSize
+                  }}
+                  onTableChange={handleTableChange}
+                  isLoading={isDataLoading}
+                  currentTab={currentTab}
+                  tabOptions={tabOptions}
+                  allDisplayableColumns={allDisplayableColumns}
                   visibleColumns={visibleColumns}
                 />
-              </Space>
+                {showPagination && (
+                  <div className="sticky-pagination-bar">
+                    <Pagination
+                      current={currentPageIndex + 1}
+                      pageSize={pageSize}
+                      total={hasMore ? ((currentPageIndex + 1) * pageSize) + 1 : (currentPageIndex + 1) * pageSize}
+                      onChange={handlePaginationChange}
+                    />
+                  </div>
+                )}
+              </>
             )}
           </div>
-        )}
+        </Suspense>
+      </Card>
+    );
+  }
 
+  // Top-level views use consistent page layout
+  return (
+    <>
+      {/* Page Header - tabs on left, actions on right */}
+      <PageActionBar>
+        <ActionBarLeft>
+          {renderTabs()}
+        </ActionBarLeft>
+        <ActionBarRight>
+          {globalActionsElement}
+          {renderViewSelector()}
+        </ActionBarRight>
+      </PageActionBar>
+
+
+      {/* Main Content - white card */}
+      <div className="main-content">
         <Suspense
           fallback={
             <div className="flex justify-center items-center h-64">
@@ -1397,7 +1486,7 @@ const DynamicViews: React.FC<DynamicViewsProps> = ({
                 clearFilters={handleClearFilters}
               />
             ) : (
-              <>
+              <div className="content-body">
                 {!!isTopLevel && isDesktop && globalFiltersElement}
                 <ViewComponent
                   entityType={entityType}
@@ -1407,7 +1496,6 @@ const DynamicViews: React.FC<DynamicViewsProps> = ({
                   formConfig={schema}
                   data={entities}
                   filterValues={filterValues}
-                  // Pass simplified pagination prop to child views
                   pagination={{
                     current: currentPageIndex + 1,
                     pageSize: pageSize,
@@ -1421,26 +1509,23 @@ const DynamicViews: React.FC<DynamicViewsProps> = ({
                   visibleColumns={visibleColumns}
                 />
                 {showPagination && (
-                  <div className="mt-4 flex justify-end">
+                  <div className="sticky-pagination-bar">
                     <Pagination
-                      simple // 🚀 SIMPLE MODE for Cursor Support
                       current={currentPageIndex + 1}
                       pageSize={pageSize}
-                      // 🚀 FAKE TOTAL to enable "Next" button if hasMore is true
                       total={hasMore ? ((currentPageIndex + 1) * pageSize) + 1 : (currentPageIndex + 1) * pageSize}
-                      showSizeChanger
                       onChange={handlePaginationChange}
-                      onShowSizeChange={handlePaginationChange}
                     />
                   </div>
                 )}
-              </>
+              </div>
             )}
           </div>
         </Suspense>
-      </Card>
-    </div>
+      </div>
+    </>
   );
 };
+
 
 export default DynamicViews;

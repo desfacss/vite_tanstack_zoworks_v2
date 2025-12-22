@@ -9,159 +9,116 @@ import { ThemeConfig, theme } from 'antd';
  * - Detailed Dark Mode optimization
  * - Centralized design tokens
  */
-export const getAntdTheme = (isDark: boolean, primaryColor: string = '#1890ff'): ThemeConfig => ({
-    // Use dark algorithm for dark mode
-    algorithm: isDark ? theme.darkAlgorithm : theme.defaultAlgorithm,
+export const getAntdTheme = (
+    isDark: boolean,
+    primaryColor: string = '#1890ff',
+    secondaryColor: string = '#4F46E5'
+): ThemeConfig => {
+    // Generate derived colors from primary for hover states etc.
+    // In a real app we might use tinycolor2 or similar, but for now we rely on internal algorithm
 
-    // Design tokens - these apply globally
-    token: {
-        // ===== Colors =====
-        colorPrimary: primaryColor,
-        colorSuccess: '#52c41a',
-        colorWarning: '#faad14',
-        colorError: '#ff4d4f',
-        colorInfo: '#1890ff',
+    return {
+        // Use dark algorithm for dark mode
+        algorithm: isDark ? theme.darkAlgorithm : theme.defaultAlgorithm,
 
-        // Backgrounds (Adaptive based on mode)
-        colorBgContainer: 'var(--tenant-card-bg)',
-        colorBgElevated: 'var(--tenant-card-bg)',
-        colorBgLayout: 'var(--tenant-layout-bg)',
-        colorBgSpotlight: isDark ? '#2a2a2a' : '#fafafa',
+        // Design tokens - these apply globally
+        token: {
+            // ===== Colors =====
+            colorPrimary: primaryColor,
+            colorInfo: primaryColor,
+            colorLink: secondaryColor,
+            colorSuccess: '#10b981', // Emerald 500
+            colorWarning: '#f59e0b', // Amber 500
+            colorError: '#ef4444',   // Red 500
 
-        // Text
-        colorText: isDark ? '#e9edef' : 'rgba(0, 0, 0, 0.88)',
-        colorTextSecondary: isDark ? '#8696a0' : 'rgba(0, 0, 0, 0.65)',
-        colorTextTertiary: isDark ? '#667781' : 'rgba(0, 0, 0, 0.45)',
-        colorTextQuaternary: isDark ? '#515c64' : 'rgba(0, 0, 0, 0.25)',
+            // Secondary color usage
+            // We use colorPrimaryContainer or similar for secondary effects
 
-        // Borders
-        colorBorder: isDark ? '#303030' : '#d9d9d9',
-        colorBorderSecondary: isDark ? '#404040' : '#f0f0f0',
+            // Backgrounds (Adaptive based on mode)
+            colorBgContainer: 'var(--color-bg-primary)',
+            colorBgElevated: isDark ? '#1e293b' : '#ffffff',
+            colorBgLayout: 'var(--color-bg-primary)',
+            colorBgSpotlight: isDark ? '#334155' : '#0f172a',
 
-        // ===== Border Radius =====
-        borderRadius: 8,
-        borderRadiusLG: 12,
-        borderRadiusSM: 6,
-        borderRadiusXS: 4,
+            // Text
+            colorText: isDark ? '#f8fafc' : '#0f172a',
+            colorTextSecondary: isDark ? '#94a3b8' : '#64748b',
+            colorTextTertiary: isDark ? '#64748b' : '#94a3b8',
 
-        // ===== Spacing =====
-        padding: 16,
-        paddingLG: 24,
-        paddingMD: 16,
-        paddingSM: 12,
-        paddingXS: 8,
-        paddingXXS: 4,
+            // Borders
+            colorBorder: 'var(--color-border)',
+            colorBorderSecondary: 'var(--color-border)',
 
-        margin: 16,
-        marginLG: 24,
-        marginMD: 16,
-        marginSM: 12,
-        marginXS: 8,
-        marginXXS: 4,
+            // ===== Border Radius =====
+            borderRadius: 10,
+            borderRadiusLG: 14,
+            borderRadiusSM: 8,
 
-        // ===== Control Heights (Touch-friendly 44px) =====
-        controlHeight: 44,
-        controlHeightLG: 48,
-        controlHeightSM: 36,
-        controlHeightXS: 28,
-
-        // ===== Typography =====
-        fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
-        fontSize: 14,
-        fontSizeLG: 16,
-        fontSizeSM: 12,
-        fontSizeXL: 20,
-        fontSizeHeading1: 38,
-        fontSizeHeading2: 30,
-        fontSizeHeading3: 24,
-        fontSizeHeading4: 20,
-        fontSizeHeading5: 16,
-
-        lineHeight: 1.5715,
-        lineHeightLG: 1.5,
-        lineHeightSM: 1.66,
-
-        // ===== Shadows =====
-        boxShadow: isDark
-            ? '0 2px 8px rgba(0, 0, 0, 0.45)'
-            : '0 2px 8px rgba(0, 0, 0, 0.15)',
-    },
-
-    // ===== Component-specific overrides =====
-    components: {
-        Layout: {
-            siderBg: 'var(--tenant-card-bg)',
-            bodyBg: 'var(--tenant-layout-bg)',
-            headerBg: 'var(--tenant-card-bg)',
-            headerHeight: 64,
-            headerPadding: '0 16px',
-            footerBg: 'var(--tenant-card-bg)',
-            footerPadding: '24px 16px',
-        },
-        Card: {
-            borderRadiusLG: 12,
-            paddingLG: 24,
-            headerBg: 'transparent',
-            headerFontSize: 16,
-            headerFontSizeSM: 14,
-            headerHeight: 48,
-            headerHeightSM: 36,
-            actionsBg: isDark ? '#1f1f1f' : '#fafafa',
-        },
-        Button: {
-            // Remove primaryColor override to allow tenant color to take effect via token.colorPrimary
-            borderRadius: 8,
-            borderRadiusLG: 10,
-            borderRadiusSM: 6,
+            // ===== Typography =====
+            fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+            fontSize: 14,
             controlHeight: 44,
-            controlHeightLG: 48,
-            controlHeightSM: 36,
-            fontWeight: 500,
-            paddingContentHorizontal: 16,
+            boxShadow: isDark
+                ? '0 10px 15px -3px rgba(0, 0, 0, 0.4)'
+                : '0 10px 15px -3px rgba(0, 0, 0, 0.05)',
         },
-        Input: {
-            controlHeight: 44,
-            controlHeightLG: 48,
-            controlHeightSM: 36,
-            borderRadius: 8,
-            paddingBlock: 10,
-            paddingInline: 12,
+
+        // ===== Component-specific overrides =====
+        components: {
+            Layout: {
+                bodyBg: 'var(--color-bg-primary)',
+                headerBg: 'var(--color-bg-primary)',
+                siderBg: 'var(--color-bg-primary)',
+                headerHeight: 64,
+            },
+            Card: {
+                borderRadiusLG: 16,
+                paddingLG: 24,
+                boxShadowTertiary: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
+            },
+            Button: {
+                controlHeight: 44,
+                controlHeightLG: 52,
+                borderRadius: 10,
+                fontWeight: 600,
+                // Primary button has subtle gradient
+                colorPrimary: primaryColor,
+                colorPrimaryHover: primaryColor, // Ant computes hover automatically if not specified
+            },
+            Input: {
+                controlHeight: 46,
+                borderRadius: 10,
+                // Clean look: filled background, no border by default via variant
+                // (Variant is set at component level or via ConfigProvider)
+                colorBgContainer: 'var(--color-bg-secondary)',
+            },
+            Select: {
+                controlHeight: 46,
+                borderRadius: 10,
+                colorBgContainer: 'var(--color-bg-secondary)',
+            },
+            InputNumber: {
+                controlHeight: 46,
+                borderRadius: 10,
+                colorBgContainer: 'var(--color-bg-secondary)',
+            },
+            DatePicker: {
+                controlHeight: 46,
+                borderRadius: 10,
+                colorBgContainer: 'var(--color-bg-secondary)',
+            },
+            Menu: {
+                itemHeight: 44,
+                itemBorderRadius: 8,
+                itemSelectedBg: 'rgba(var(--color-primary-rgb), 0.1)',
+                itemSelectedColor: primaryColor,
+            },
+            Table: {
+                headerBg: 'var(--color-bg-secondary)',
+                headerColor: 'var(--color-text-secondary)',
+                headerBorderRadius: 10,
+                cellPaddingBlock: 16,
+            }
         },
-        Select: {
-            controlHeight: 44,
-            controlHeightLG: 48,
-            controlHeightSM: 36,
-            borderRadius: 8,
-            optionSelectedBg: isDark ? '#1a3a1a' : '#e6f7e6', // Should probably derive from primary, but keeping simple
-            optionActiveBg: isDark ? '#2a2a2a' : '#f5f5f5',
-        },
-        Menu: {
-            itemBg: 'transparent',
-            itemHoverBg: isDark ? '#2a2a2a' : '#f0f0f0',
-            itemSelectedBg: isDark ? 'rgba(0, 122, 255, 0.2)' : 'rgba(0, 122, 255, 0.1)',
-            itemSelectedColor: primaryColor,
-            itemActiveBg: isDark ? '#2a2a2a' : '#f0f0f0',
-            itemHeight: 48,
-            itemBorderRadius: 6,
-            itemMarginBlock: 4,
-            itemMarginInline: 8,
-            popupBg: 'var(--tenant-card-bg)',
-        },
-        Table: {
-            headerBg: 'var(--tenant-card-bg)',
-            headerColor: isDark ? '#e9edef' : 'rgba(0, 0, 0, 0.88)',
-            rowHoverBg: 'rgba(0, 0, 0, 0.02)',
-            headerSplitColor: isDark ? '#303030' : '#f0f0f0',
-            borderColor: isDark ? '#303030' : '#f0f0f0',
-            cellPaddingBlock: 16,
-            cellPaddingInline: 16,
-        },
-        Tabs: {
-            itemColor: isDark ? '#8696a0' : 'rgba(0, 0, 0, 0.65)',
-            itemSelectedColor: primaryColor,
-            itemHoverColor: primaryColor,
-            itemActiveColor: primaryColor,
-            inkBarColor: primaryColor,
-        },
-    },
-});
+    };
+};
