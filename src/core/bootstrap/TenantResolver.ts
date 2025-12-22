@@ -39,6 +39,7 @@ export interface TenantConfig {
             inputBg?: string;
             textColor?: string;
         };
+        preset?: string;
     };
     enabled_languages: string[];
     default_language: string;
@@ -82,8 +83,12 @@ export function isDevelopment(): boolean {
 export function getSubdomain(): string {
     const hostname = window.location.hostname;
 
-    // Development mode - treat as hub
+    // Development mode - allow override via ?tenant=XXX for testing
+    // http://localhost:5174/welcome?tenant=vkbs&preset=glassmorphism
     if (isDevelopment()) {
+        const params = new URLSearchParams(window.location.search);
+        const tenant = params.get('tenant');
+        if (tenant) return tenant;
         return 'hub';
     }
 
@@ -225,6 +230,9 @@ export async function resolveTenant(hostname: string): Promise<TenantConfig> {
                 is_login_portal: false,
                 is_hub: false,
             };
+
+            // Theme is now fully driven by database - no code overrides
+
             console.log(`[Tenant] Resolved config for ${subdomain}:`, config);
             tenantCache.set(subdomain, {
                 config,
@@ -287,6 +295,7 @@ function getEmergencyDefaults(subdomain: string): TenantConfig {
             mode: 'light',
             primaryColor: '#1890ff',
             brandName: 'Zoworks',
+            // No preset - theme is fully driven by database
         },
         enabled_languages: ['en', 'kn'],
         default_language: 'en',
@@ -301,4 +310,5 @@ function getEmergencyDefaults(subdomain: string): TenantConfig {
         }
     };
 }
+
 

@@ -1937,8 +1937,10 @@ export const SessionManager = () => {
   }, [isSuccess, isError, data, setSession, clearUserSession, error, organization?.id, isLoggingOut, setAuthError, isStale]);
 
   // --- Effect 3: Watch and Apply Theme Configuration ---
+  // Theme is fully driven by database - apply organization's theme_config directly
   useEffect(() => {
     if (data?.organization?.theme_config) {
+      console.log('[SessionManager] Applying org theme_config from database:', data.organization.theme_config);
       loadTenantTheme(data.organization.theme_config as any);
     }
   }, [data?.organization?.theme_config]);

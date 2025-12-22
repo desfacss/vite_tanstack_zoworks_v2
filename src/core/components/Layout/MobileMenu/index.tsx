@@ -116,7 +116,7 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
           onClose();
         }}
         className="custom-mobile-menu border-none"
-        style={{ backgroundColor: 'var(--color-background)' }}
+        style={{ backgroundColor: 'var(--color-bg-primary)' }}
         openKeys={openKeys}
         onOpenChange={onOpenChange}
       />

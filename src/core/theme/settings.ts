@@ -23,9 +23,9 @@ export const getAntdTheme = (isDark: boolean, primaryColor: string = '#1890ff'):
         colorInfo: '#1890ff',
 
         // Backgrounds (Adaptive based on mode)
-        colorBgContainer: isDark ? '#141414' : '#ffffff',
-        colorBgElevated: isDark ? '#1f1f1f' : '#ffffff',
-        colorBgLayout: isDark ? '#000000' : '#f0f2f5',
+        colorBgContainer: 'var(--tenant-card-bg)',
+        colorBgElevated: 'var(--tenant-card-bg)',
+        colorBgLayout: 'var(--tenant-layout-bg)',
         colorBgSpotlight: isDark ? '#2a2a2a' : '#fafafa',
 
         // Text
@@ -90,12 +90,12 @@ export const getAntdTheme = (isDark: boolean, primaryColor: string = '#1890ff'):
     // ===== Component-specific overrides =====
     components: {
         Layout: {
-            siderBg: isDark ? '#141414' : '#ffffff',
-            bodyBg: isDark ? '#1f1f1f' : '#f0f2f5',
-            headerBg: isDark ? '#141414' : '#ffffff',
+            siderBg: 'var(--tenant-card-bg)',
+            bodyBg: 'var(--tenant-layout-bg)',
+            headerBg: 'var(--tenant-card-bg)',
             headerHeight: 64,
             headerPadding: '0 16px',
-            footerBg: isDark ? '#141414' : '#fafafa',
+            footerBg: 'var(--tenant-card-bg)',
             footerPadding: '24px 16px',
         },
         Card: {
@@ -138,18 +138,19 @@ export const getAntdTheme = (isDark: boolean, primaryColor: string = '#1890ff'):
         Menu: {
             itemBg: 'transparent',
             itemHoverBg: isDark ? '#2a2a2a' : '#f0f0f0',
-            itemSelectedBg: isDark ? '#1a3a1a' : '#e6f7e6',
+            itemSelectedBg: isDark ? 'rgba(0, 122, 255, 0.2)' : 'rgba(0, 122, 255, 0.1)',
             itemSelectedColor: primaryColor,
             itemActiveBg: isDark ? '#2a2a2a' : '#f0f0f0',
             itemHeight: 48,
             itemBorderRadius: 6,
             itemMarginBlock: 4,
             itemMarginInline: 8,
+            popupBg: 'var(--tenant-card-bg)',
         },
         Table: {
-            headerBg: isDark ? '#1f1f1f' : '#fafafa',
+            headerBg: 'var(--tenant-card-bg)',
             headerColor: isDark ? '#e9edef' : 'rgba(0, 0, 0, 0.88)',
-            rowHoverBg: isDark ? '#2a2a2a' : '#fafafa',
+            rowHoverBg: 'rgba(0, 0, 0, 0.02)',
             headerSplitColor: isDark ? '#303030' : '#f0f0f0',
             borderColor: isDark ? '#303030' : '#f0f0f0',
             cellPaddingBlock: 16,

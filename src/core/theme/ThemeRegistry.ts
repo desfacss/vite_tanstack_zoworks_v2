@@ -9,6 +9,7 @@
 
 import { ThemeConfig } from 'antd';
 import { getAntdTheme as getBaseTheme } from './settings';
+import { THEME_PRESETS } from './presets';
 
 // ============================================================================
 // TYPES
@@ -57,6 +58,7 @@ export interface TenantThemeConfig {
     // Feature Flags
     allowUserDarkMode?: boolean; // Default true
     defaultMode?: 'light' | 'dark'; // Tenant's default, user can override
+    preset?: string;             // NEW: ID of a base preset (e.g., 'glassmorphism')
 }
 
 // ============================================================================
@@ -75,26 +77,38 @@ function notifyListeners() {
 // INITIALIZATION
 // ============================================================================
 
-/**
- * Load tenant theme configuration.
- * Called once during app bootstrap with data from identity.v_organizations.
- */
 export function loadTenantTheme(config: TenantThemeConfig): void {
-    tenantConfig = {
-        allowUserDarkMode: true, // Default to allowing user toggle
-        defaultMode: 'light',
+    let mergedConfig: TenantThemeConfig = {
+        allowUserDarkMode: true,
+        defaultMode: 'light' as 'light' | 'dark',
         borderRadius: 8,
         ...config,
     };
 
-    console.log('[Theme] Loaded tenant config:', {
-        brandName: config.brandName,
-        primaryColor: config.primaryColor,
-        allowUserDarkMode: tenantConfig.allowUserDarkMode,
-    });
+    // Apply preset if specified
+    if (config.preset && THEME_PRESETS[config.preset]) {
+        const presetData = THEME_PRESETS[config.preset];
+        mergedConfig = {
+            ...presetData,
+            ...mergedConfig,
+            // Deep merge for light/dark objects
+            light: { ...presetData.light, ...mergedConfig.light },
+            dark: { ...presetData.dark, ...mergedConfig.dark },
+        } as TenantThemeConfig;
+    }
+
+    tenantConfig = mergedConfig;
+    console.log('[Theme] Merged Config Preset:', mergedConfig.preset);
 
     // Apply static branding (doesn't change with mode)
-    applyStaticBranding(tenantConfig);
+    applyStaticBranding(mergedConfig);
+
+    console.log('[Theme] Loaded tenant config:', {
+        brandName: mergedConfig.brandName,
+        primaryColor: mergedConfig.primaryColor,
+        allowUserDarkMode: mergedConfig.allowUserDarkMode,
+    });
+
     notifyListeners();
 }
 
@@ -146,7 +160,22 @@ function applyStaticBranding(config: TenantThemeConfig): void {
     }
 
     // Dynamic UI Variables for components
-    root.style.setProperty('--tenant-card-bg-light', config.light?.cardBg || '#ffffff');
+    const lightCard = config.light?.cardBg || '#ffffff';
+    const darkCard = config.dark?.cardBg || '#1f1f1f';
+    const lightLayout = config.light?.layoutBg || '#f0f2f5';
+    const darkLayout = config.dark?.layoutBg || '#141414';
+
+    root.setAttribute('data-light-card', lightCard);
+    root.setAttribute('data-dark-card', darkCard);
+    root.setAttribute('data-light-layout', lightLayout);
+    root.setAttribute('data-dark-layout', darkLayout);
+
+    // Set initial values (assuming light mode default if not specified)
+    const isDark = document.documentElement.classList.contains('dark');
+    root.style.setProperty('--tenant-card-bg', isDark ? darkCard : lightCard);
+    root.style.setProperty('--tenant-layout-bg', isDark ? darkLayout : lightLayout);
+
+    root.style.setProperty('--tenant-card-bg-light', lightCard);
     root.style.setProperty('--tenant-card-bg-dark', config.dark?.cardBg || '#1f1f1f');
     root.style.setProperty('--tenant-layout-bg-light', config.light?.layoutBg || '#f0f2f5');
     root.style.setProperty('--tenant-layout-bg-dark', config.dark?.layoutBg || '#141414');
@@ -154,6 +183,23 @@ function applyStaticBranding(config: TenantThemeConfig): void {
     root.style.setProperty('--tenant-header-bg-dark', config.dark?.headerBg || '#141414');
     root.style.setProperty('--tenant-sider-bg-light', config.light?.siderBg || '#ffffff');
     root.style.setProperty('--tenant-sider-bg-dark', config.dark?.siderBg || '#141414');
+
+    // Store raw values for mode-aware switching
+    // Cleaned up attribute setting - already handled above in the refactored applyStaticBranding
+
+    // Glassmorphism effects
+    console.log('[Theme] Checking preset for glass effect:', config.preset);
+    if (config.preset === 'glassmorphism' || config.preset === 'ultra_glass') {
+        console.log('[Theme] ACTIVATING GLASS EFFECTS');
+        root.style.setProperty('--tenant-backdrop-blur', '15px');
+        root.style.setProperty('--tenant-card-border', '1px solid rgba(255, 255, 255, 0.3)');
+        root.setAttribute('data-glass-effect', 'true');
+    } else {
+        console.log('[Theme] DEACTIVATING GLASS EFFECTS');
+        root.style.setProperty('--tenant-backdrop-blur', '0px');
+        root.style.setProperty('--tenant-card-border', 'none');
+        root.removeAttribute('data-glass-effect');
+    }
 }
 
 /**
@@ -195,16 +241,16 @@ export function getAntdTheme(isDarkMode: boolean = false): ThemeConfig {
         token: {
             ...baseTheme.token,
             borderRadius,
-            colorBgContainer: modeConfig?.cardBg || (isDarkMode ? '#1f1f1f' : '#ffffff'),
-            colorBgLayout: modeConfig?.layoutBg || (isDarkMode ? '#141414' : '#f0f2f5'),
+            colorBgContainer: 'var(--tenant-card-bg)',
+            colorBgLayout: 'var(--tenant-layout-bg)',
             colorText: modeConfig?.textColor || (isDarkMode ? '#e9edef' : 'rgba(0, 0, 0, 0.88)'),
         },
         components: {
             ...baseTheme.components,
             Layout: {
                 ...baseTheme.components?.Layout,
-                headerBg: modeConfig?.headerBg || (isDarkMode ? '#141414' : '#ffffff'),
-                siderBg: modeConfig?.siderBg || (isDarkMode ? '#141414' : '#ffffff'),
+                headerBg: 'var(--tenant-card-bg)',
+                siderBg: 'var(--tenant-card-bg)',
             },
             Input: {
                 ...baseTheme.components?.Input,
@@ -220,12 +266,21 @@ export function getAntdTheme(isDarkMode: boolean = false): ThemeConfig {
 export function applyThemeMode(isDarkMode: boolean): void {
     const root = document.documentElement;
     root.classList.toggle('dark', isDarkMode);
+    console.log('[Theme] Switched to', isDarkMode ? 'Dark' : 'Light', 'mode');
 
+    // Update meta theme-color for mobile browsers
     // Update meta theme-color for mobile browsers
     const metaTheme = document.querySelector('meta[name="theme-color"]');
     if (metaTheme) {
         metaTheme.setAttribute('content', isDarkMode ? '#141414' : '#ffffff');
     }
+
+    // Update mode-aware variables
+    const cardBg = root.getAttribute(isDarkMode ? 'data-dark-card' : 'data-light-card');
+    const layoutBg = root.getAttribute(isDarkMode ? 'data-dark-layout' : 'data-light-layout');
+
+    if (cardBg) root.style.setProperty('--tenant-card-bg', cardBg);
+    if (layoutBg) root.style.setProperty('--tenant-layout-bg', layoutBg);
 }
 
 // ============================================================================

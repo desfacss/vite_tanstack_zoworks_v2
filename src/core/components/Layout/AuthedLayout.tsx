@@ -116,7 +116,7 @@ export const AuthedLayout: FC = () => {
   }, [contentMarginLeft, isMobile]);
 
   return (
-    <Layout className="min-h-screen bg-[var(--color-background)]">
+    <Layout className="min-h-screen" style={{ background: 'var(--tenant-layout-bg)' }}>
       <GlobalLoader />
       {/* <ContextDebug /> */}
       {!isMobile && (
@@ -151,7 +151,7 @@ export const AuthedLayout: FC = () => {
         </div>
 
         {/* Add a top padding/margin to the content to prevent it from going under the fixed header */}
-        <Content className="m-0 p-0 bg-[var(--color-background)] rounded-lg shadow-sm" style={{ marginTop: 64, marginLeft: contentMarginLeft, transition: 'margin-left 0.2s' }}>
+        <Content className="m-0 p-0 bg-transparent rounded-lg" style={{ marginTop: 64, marginLeft: contentMarginLeft, transition: 'margin-left 0.2s' }}>
           <motion.div
             key={location.pathname}
             initial={{ opacity: 0, y: 20 }}
@@ -198,7 +198,7 @@ export const AuthedLayout: FC = () => {
                 placement="right"
                 open={showSearch}
                 onClose={() => setShowSearch(false)}
-                className="bg-[var(--color-background)]"
+                className="bg-[var(--color-bg-primary)]"
               >
                 {config.searchFilters}
               </Drawer>

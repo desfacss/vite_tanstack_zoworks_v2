@@ -489,3 +489,49 @@ body {
     transform: scale(1);
   }
 }
+
+/* Glassmorphism Classes */
+.glass-card {
+  backdrop-filter: blur(var(--tenant-backdrop-blur, 0px));
+  -webkit-backdrop-filter: blur(var(--tenant-backdrop-blur, 0px));
+  border: var(--tenant-card-border, none) !important;
+  background: var(--tenant-card-bg, rgba(255, 255, 255, 0.7)) !important;
+}
+
+.glass-layout-blur {
+  backdrop-filter: blur(var(--tenant-backdrop-blur, 0px));
+  -webkit-backdrop-filter: blur(var(--tenant-backdrop-blur, 0px));
+}
+
+/* Automatic Glassmorphism Overrides */
+[data-glass-effect="true"] .ant-layout-sider,
+[data-glass-effect="true"] .ant-layout-header,
+[data-glass-effect="true"] .ant-card,
+[data-glass-effect="true"] .ant-drawer-content,
+[data-glass-effect="true"] .ant-modal-content,
+[data-glass-effect="true"] .glass-card {
+  backdrop-filter: blur(var(--tenant-backdrop-blur, 15px)) !important;
+  -webkit-backdrop-filter: blur(var(--tenant-backdrop-blur, 15px)) !important;
+  background: var(--tenant-card-bg) !important;
+  border: var(--tenant-card-border) !important;
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+}
+
+[data-glass-effect="true"] .ant-layout,
+[data-glass-effect="true"] .ant-layout-body,
+[data-glass-effect="true"] .glass-layout-blur {
+  background: var(--tenant-layout-bg) !important;
+}
+
+[data-glass-effect="true"] .ant-layout-content {
+  background: transparent !important;
+}
+
+[data-glass-effect="true"] .ant-menu {
+  background: transparent !important;
+}
+
+[data-glass-effect="true"] .ant-menu-item-selected {
+  background: rgba(0, 122, 255, 0.15) !important;
+  backdrop-filter: blur(4px);
+}

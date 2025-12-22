@@ -75,7 +75,7 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         };
 
         initTenant();
-    }, []);
+    }, [window.location.search]);
 
     // Error state
     if (error) {

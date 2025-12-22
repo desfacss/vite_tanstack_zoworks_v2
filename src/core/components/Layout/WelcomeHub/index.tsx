@@ -122,7 +122,7 @@ export const WelcomeHub: React.FC = () => {
     };
 
     return (
-        <div className={`min-h-screen relative overflow-hidden ${isDarkMode ? 'bg-gray-900' : 'bg-gradient-to-br from-slate-50 via-white to-blue-50'}`}>
+        <div className={`min-h-screen relative overflow-hidden glass-layout-blur ${isDarkMode ? 'bg-[var(--tenant-layout-bg)]' : 'bg-[var(--tenant-layout-bg)]'}`} style={{ background: 'var(--tenant-layout-bg)' }}>
             {/* Abstract Background Design */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
                 {/* Gradient Orbs */}
@@ -251,9 +251,10 @@ export const WelcomeHub: React.FC = () => {
                             <motion.button
                                 key={action.path}
                                 onClick={() => navigate(action.path)}
-                                className={`group relative p-6 rounded-2xl text-left transition-all duration-300 ${isDarkMode
-                                    ? 'bg-gray-800/50 hover:bg-gray-800 border border-gray-700/50'
-                                    : 'bg-white/80 hover:bg-white border border-gray-200/50 shadow-sm hover:shadow-lg'
+                                className={`group relative p-6 rounded-2xl text-left transition-all duration-300 glass-card
+                                    ${isDarkMode
+                                        ? 'bg-[var(--tenant-card-bg)] hover:bg-[var(--color-bg-tertiary)] border-[var(--color-border)]'
+                                        : 'bg-[var(--tenant-card-bg)] hover:bg-[var(--color-bg-secondary)] border-[var(--color-border)] shadow-sm hover:shadow-lg'
                                     }`}
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
@@ -282,7 +283,7 @@ export const WelcomeHub: React.FC = () => {
 
                 {/* Stats Preview */}
                 <motion.section
-                    className={`p-6 rounded-2xl ${isDarkMode ? 'bg-gray-800/30 border border-gray-700/30' : 'bg-white/60 border border-gray-200/50'}`}
+                    className={`p-6 rounded-2xl glass-card ${isDarkMode ? 'bg-[var(--color-bg-secondary)]/30 border-[var(--color-border)]' : 'bg-[var(--color-bg-primary)]/60 border-[var(--color-border)]'}`}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6, delay: 0.8 }}
