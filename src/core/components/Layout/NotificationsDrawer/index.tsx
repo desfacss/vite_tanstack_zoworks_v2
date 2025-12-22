@@ -17,8 +17,8 @@ export const NotificationsDrawer: React.FC<NotificationsDrawerProps> = ({
   const { t } = useTranslation();
 
   const renderNotification = (notification: Notification) => {
-    const isActive = 
-      (!notification.expiry || new Date(notification.expiry) > new Date()) && 
+    const isActive =
+      (!notification.expiry || new Date(notification.expiry) > new Date()) &&
       (!notification.start || new Date(notification.start) <= new Date());
 
     return (
@@ -30,8 +30,8 @@ export const NotificationsDrawer: React.FC<NotificationsDrawerProps> = ({
               {notification.type && (
                 <Tag color={
                   notification.type === 'success' ? 'success' :
-                  notification.type === 'warning' ? 'warning' :
-                  notification.type === 'error' ? 'error' : 'default'
+                    notification.type === 'warning' ? 'warning' :
+                      notification.type === 'error' ? 'error' : 'default'
                 }>
                   {notification.type}
                 </Tag>
@@ -49,7 +49,7 @@ export const NotificationsDrawer: React.FC<NotificationsDrawerProps> = ({
 
   return (
     <Drawer
-      title={t('common.notifications')}
+      title={t('common.label.notifications')}
       placement="right"
       onClose={onClose}
       open={open}
@@ -58,7 +58,7 @@ export const NotificationsDrawer: React.FC<NotificationsDrawerProps> = ({
       <List
         dataSource={notifications}
         renderItem={renderNotification}
-        locale={{ emptyText: t('common.noNotifications') }}
+        locale={{ emptyText: t('common.message.no_notifications') }}
       />
     </Drawer>
   );

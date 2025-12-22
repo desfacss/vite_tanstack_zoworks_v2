@@ -1873,6 +1873,8 @@ import { useAuthStore } from '@/core/lib/store';
 import { useUserSession } from '@/core/hooks/useUserSession';
 import { supabase } from '@/lib/supabase';
 import { loadTenantTheme } from '@/core/theme/ThemeRegistry';
+import { useTranslation } from 'react-i18next';
+import { changeLanguage } from '@/core/i18n';
 
 export const SessionManager = () => {
   const [enabled, setEnabled] = useState(false);
@@ -1940,6 +1942,21 @@ export const SessionManager = () => {
       loadTenantTheme(data.organization.theme_config as any);
     }
   }, [data?.organization?.theme_config]);
+
+  // --- Effect 4: Watch and Apply Language Configuration ---
+  const { i18n } = useTranslation();
+  useEffect(() => {
+    if (data?.organization) {
+      const enabledLangs = data.organization.enabled_languages || ['en'];
+      const defaultLang = data.organization.default_language || 'en';
+
+      // If current language is not enabled for this org, switch to default
+      if (!enabledLangs.includes(i18n.language)) {
+        console.log(`[SessionManager] Language ${i18n.language} not enabled for org. Switching to ${defaultLang}.`);
+        changeLanguage(defaultLang);
+      }
+    }
+  }, [data?.organization, i18n]);
 
   return null;
 };

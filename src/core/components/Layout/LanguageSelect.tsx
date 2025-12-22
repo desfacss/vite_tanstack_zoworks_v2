@@ -1,26 +1,40 @@
 import { Select } from 'antd';
 import { useTranslation } from 'react-i18next';
+import { useAuthStore } from '@/core/lib/store';
+import { changeLanguage } from '@/core/i18n';
+
 const { Option } = Select;
+
+const ALL_LANGUAGES = [
+  { value: 'en', label: 'English' },
+  { value: 'kn', label: 'ಕನ್ನಡ (Kannada)' },
+  { value: 'hi', label: 'हिन्दी (Hindi)' },
+  { value: 'mr', label: 'मराठी (Marathi)' },
+  { value: 'te', label: 'తెలుగు (Telugu)' },
+  { value: 'ta', label: 'தமிழ் (Tamil)' },
+  { value: 'fr', label: 'Français' },
+];
 
 export const LanguageSelect = () => {
   const { i18n } = useTranslation();
-  // Always allow language selection
-  // if (organization?.app_settings?.customization?.language !== "true") return null;
+  const { organization } = useAuthStore();
+
+  const enabledLanguages = organization?.enabled_languages || ['en'];
+  const filteredLanguages = ALL_LANGUAGES.filter(lang =>
+    enabledLanguages.includes(lang.value)
+  );
 
   return (
     <Select
-      defaultValue={i18n.language}
-      style={{ width: 100 }}
-      onChange={(value) => i18n.changeLanguage(value)}
+      value={i18n.language}
+      style={{ width: 150 }}
+      onChange={(value) => changeLanguage(value)}
     >
-      <Option value="en">English</Option>
-      <Option value="fr">Français</Option>
-      <Option value="hi">Hindi</Option>
-      <Option value="mr">Marathi</Option>
-      <Option value="kn">Kannada</Option>
-      <Option value="te">Telugu</Option>
-      <Option value="ta">Tamil</Option>
+      {filteredLanguages.map(lang => (
+        <Option key={lang.value} value={lang.value}>{lang.label}</Option>
+      ))}
     </Select>
   );
 };
+
 export default LanguageSelect;

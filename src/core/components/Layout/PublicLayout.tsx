@@ -72,14 +72,14 @@
 
 
 
-import React from 'react';
 import { Layout, Menu, Space } from 'antd';
 import { motion } from 'framer-motion';
 // 🔥 Added useLocation to determine the active menu item
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { LanguageSelect } from './LanguageSelect';
-import { InstallPWA } from '../shared/InstallPWA'; // Ensure path is correct
-import { ThemeToggle } from './ThemeToggle'; // Ensure path is correct
+import { InstallPWA } from '../shared/InstallPWA';
+import { ThemeToggle } from './ThemeToggle';
+import { useTranslation } from 'react-i18next';
 
 const { Header, Content } = Layout;
 
@@ -94,6 +94,7 @@ const pathToKey = (path: string): string => {
 };
 
 const PublicLayout = () => {
+  const { t } = useTranslation();
   // 🔥 Get the current location
   const location = useLocation();
   // 🔥 Determine the active menu key based on the current path
@@ -118,27 +119,13 @@ const PublicLayout = () => {
             selectedKeys={[currentKey]}
             className="bg-transparent border-0 text-[var(--color-text)]" // Ensure menu text color respects theme
             items={[
-              // Example items (uncomment/add as needed)
-              // {
-              //   key: 'home',
-              //   label: <Link to="/">Home</Link>,
-              // },
-              // {
-              //   key: 'pricing',
-              //   label: <Link to="/pricing">Pricing</Link>,
-              // },
-              // {
-              //   key: 'subscription',
-              //   label: <Link to="/subscription">Subscription</Link>,
-              // },
               {
                 key: 'about',
-                label: <Link to="/about">About</Link>,
+                label: <Link to="/about">{t('core.navigation.about')}</Link>,
               },
-              // Add login/signup buttons for public layout if desired
               {
                 key: 'login',
-                label: <Link to="/login">Login</Link>,
+                label: <Link to="/login">{t('core.auth.action.sign_in')}</Link>,
               },
             ]}
           // Style overrides for menu items if needed (example)

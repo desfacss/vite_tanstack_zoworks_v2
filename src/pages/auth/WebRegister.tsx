@@ -1,12 +1,20 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { notification, Row, Col, Spin, message } from 'antd';
-import { useLocation, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
 import DynamicForm from '../../core/components/DynamicForm';
 
 interface FormSchema {
   id: string;
   name: string;
+  data_schema: any;
+  ui_schema?: any;
+  db_schema?: {
+    table: string;
+    column: string;
+    multiple_rows?: boolean;
+  };
   [key: string]: any;
 }
 
@@ -28,7 +36,7 @@ interface FormValues {
 }
 
 const WebRegister: React.FC = () => {
-  const location = useLocation();
+  const { t } = useTranslation();
   const [signIn, setSignIn] = useState<boolean>(false);
   const [schema, setSchema] = useState<FormSchema | null>(null);
   const [roles, setRoles] = useState<Role[] | null>(null);
@@ -67,12 +75,11 @@ const WebRegister: React.FC = () => {
     getRoles();
   }, []);
 
-  const surveyLayout = location.pathname.startsWith('/survey');
   //   const PREFIX_PATH = surveyLayout ? SURVEY_PREFIX_PATH : APP_PREFIX_PATH;
 
   const onFinish = async (values: FormValues) => {
     if (values?.password !== values?.retypePassword) {
-      message.error("Password doesn't match");
+      message.error(t('core.auth.message.password_mismatch'));
       return;
     }
     setLoading(true);
@@ -80,7 +87,7 @@ const WebRegister: React.FC = () => {
     let user_id: string | null = null;
     let org_id: string | null = null;
     const orgName = values?.orgName;
-    const userName = orgName ? `${orgName} ${values?.role}` : 'User';
+    const userName = orgName ? `${orgName} ${values?.role}` : t('common.label.user');
 
     try {
       // Step 1: Sign up the user
@@ -148,7 +155,7 @@ const WebRegister: React.FC = () => {
           }
         }
 
-        message.success('Successfully registered!');
+        message.success(t('core.auth.message.registration_success'));
       }
     } catch (error: any) {
       // Rollback logic
@@ -189,10 +196,10 @@ const WebRegister: React.FC = () => {
         </Row>
       ) : (
         <>
-          <h2 className="mb-4">User Registration</h2>
+          <h2 className="mb-4">{t('core.auth.label.registration')}</h2>
           <p>
-            Already Registered?{' '}
-            <Link to={'/login'}>Login here...</Link>
+            {t('core.auth.label.already_registered')}{' '}
+            <Link to={'/login'}>{t('core.auth.action.login_here')}</Link>
           </p>
           {schema ? (
             <DynamicForm schemas={schema} onFinish={onFinish} />
@@ -205,8 +212,8 @@ const WebRegister: React.FC = () => {
           )}
           {signIn && (
             <>
-              User email already added! Please{' '}
-              <Link to={'/login'}>Login and Continue</Link>
+              {t('core.auth.label.email_already_added')}{' '}
+              <Link to={'/login'}>{t('core.auth.action.login_continue')}</Link>
               <br />
               <br />
             </>

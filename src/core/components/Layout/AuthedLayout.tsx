@@ -1,4 +1,4 @@
-import React, { useState, useMemo, Suspense } from 'react';
+import { useState, useMemo, Suspense, memo, FC } from 'react';
 import { Layout, Drawer } from 'antd';
 // import { TabBar } from 'antd-mobile';
 import { Outlet, useLocation } from 'react-router-dom';
@@ -26,7 +26,7 @@ const { Content } = Layout;
 const SIDER_WIDTH = 256;
 const COLLAPSED_SIDER_WIDTH = 80; // Ant Design's default collapsed width
 
-export const AuthedLayout: React.FC = () => {
+export const AuthedLayout: FC = () => {
   const [collapsed, setCollapsed] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
@@ -84,14 +84,20 @@ export const AuthedLayout: React.FC = () => {
 
   const getPageTitle = () => {
     const path = location.pathname;
-    if (path === '/dashboard') return 'Dashboard';
+    if (path === '/welcome') return t('core.navigation.home');
+    if (path === '/dashboard') return t('core.navigation.dashboard');
+    if (path === '/profile') return t('common.label.profile');
+    if (path === '/settings') return t('common.label.settings');
+    if (path === '/crm/contacts') return t('core.navigation.contacts');
+    if (path === '/sample') return t('core.navigation.sample');
+
     if (path.startsWith('/admin')) {
       const section = path.split('/')[2];
-      return section.charAt(0).toUpperCase() + section.slice(1);
+      return section ? t(`core.navigation.${section}`, { defaultValue: section.charAt(0).toUpperCase() + section.slice(1) }) : t('common.label.admin');
     }
     if (path.startsWith('/core')) {
       const section = path.split('/')[2];
-      return section.charAt(0).toUpperCase() + section.slice(1);
+      return section ? t(`core.navigation.${section}`, { defaultValue: section.charAt(0).toUpperCase() + section.slice(1) }) : t('common.label.config');
     }
     return '';
   };
@@ -188,7 +194,7 @@ export const AuthedLayout: React.FC = () => {
 
             {config.searchFilters && (
               <Drawer
-                title={t('common.search')}
+                title={t('common.label.search')}
                 placement="right"
                 open={showSearch}
                 onClose={() => setShowSearch(false)}
@@ -215,4 +221,4 @@ export const AuthedLayout: React.FC = () => {
   );
 };
 
-export default React.memo(AuthedLayout);
+export default memo(AuthedLayout);

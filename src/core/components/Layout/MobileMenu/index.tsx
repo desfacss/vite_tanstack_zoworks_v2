@@ -62,7 +62,7 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
   }) as ItemType[];
 
   // Get user's display name from store
-  const userName = user?.name || 'User';
+  const userName = user?.name || t('common.label.user');
 
   return (
     <Drawer
@@ -97,7 +97,7 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
             {userName.charAt(0).toUpperCase()}
           </div>
           <div>
-            <Text className="block text-xs text-gray-500">{t('common.welcome')}</Text>
+            <Text className="block text-xs text-gray-500">{t('common.label.welcome')}</Text>
             <Text strong className="block text-sm">{userName}</Text>
             {organization?.name && (
               <Text className="block text-xs text-gray-400">{organization.name}</Text>

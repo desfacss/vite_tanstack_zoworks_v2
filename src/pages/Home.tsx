@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { Button, message } from "antd";
 import {
   LogIn,
@@ -94,17 +94,17 @@ const Home = () => {
       >
         <div className="bg-[var(--color-background)] rounded-lg shadow-md p-8">
           <h1 className="text-4xl font-bold text-[var(--color-text)] mb-6">
-            Welcome to Enterprise
+            {t('core.home.label.welcome_title')}
           </h1>
           <p className="text-[var(--color-text-secondary)] mb-8">
-            Experience the power of our application with advanced features and intuitive design.
+            {t('core.home.label.welcome_subtitle')}
           </p>
           <div className="space-y-4">
             <Button type="primary" size="large" block onClick={() => navigate('/login')} icon={<LogIn size={20} />}>
-              Login to Dashboard
+              {t('core.home.action.login')}
             </Button>
             <Button size="large" block onClick={() => navigate('/subscription')} icon={<CreditCard size={20} />} className="bg-[var(--color-background-secondary)]">
-              Manage Subscription
+              {t('core.home.action.manage_subscription')}
             </Button>
           </div>
         </div>

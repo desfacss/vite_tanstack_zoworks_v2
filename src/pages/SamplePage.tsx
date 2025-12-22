@@ -23,70 +23,69 @@ const SamplePage: React.FC = () => {
         >
             {/* Page Header */}
             <div className="mb-6">
-                <Title level={2}>Sample Module Page</Title>
+                <Title level={2}>{t('modules.sample.label.title')}</Title>
                 <Text type="secondary">
-                    This is your starting point for developing a new module.
-                    The full auth flow, org/location switching, themes, and i18n are already working.
+                    {t('modules.sample.label.description')}
                 </Text>
             </div>
 
             {/* Context Info Card */}
-            <Card className="mb-6" title="Current Session Context">
+            <Card className="mb-6" title={t('modules.sample.label.context')}>
                 <Space direction="vertical" className="w-full">
                     <div>
-                        <Text strong>User: </Text>
+                        <Text strong>{t('common.label.users')}: </Text>
                         <Text>{user?.name || 'N/A'}</Text>
                     </div>
                     <div>
-                        <Text strong>Organization: </Text>
+                        <Text strong>{t('common.label.organization')}: </Text>
                         <Text>{organization?.name || 'N/A'}</Text>
                     </div>
                     <div>
-                        <Text strong>Location: </Text>
-                        <Text>{location?.name || 'All Locations'}</Text>
+                        <Text strong>{t('common.label.location')}: </Text>
+                        <Text>{location?.name || t('common.label.all_locations')}</Text>
                     </div>
                 </Space>
             </Card>
 
             {/* Action Buttons */}
-            <Card className="mb-6" title="Quick Actions">
+            <Card className="mb-6" title={t('core.welcome_hub.label.quick_actions')}>
                 <Space wrap>
                     <Button type="primary" icon={<Plus size={16} />}>
-                        Create New Item
+                        {t('modules.sample.action.create_item')}
                     </Button>
                     <Button icon={<Settings size={16} />}>
-                        Configure Module
+                        {t('modules.sample.action.configure')}
                     </Button>
                 </Space>
             </Card>
 
             {/* Development Notes */}
-            <Card title="Development Notes">
+            <Card title={t('modules.sample.label.dev_notes')}>
                 <Paragraph>
-                    <Text strong>Available Features:</Text>
+                    <Text strong>{t('modules.sample.label.available_features')}:</Text>
                 </Paragraph>
                 <ul className="list-disc pl-6 space-y-2">
-                    <li>✅ Authentication (Login, Logout, Session Management)</li>
-                    <li>✅ Organization & Location Switching</li>
-                    <li>✅ Theme Toggle (Light/Dark mode)</li>
-                    <li>✅ Language Switching (i18n)</li>
-                    <li>✅ DynamicViews (Table, Grid, Kanban, Calendar)</li>
-                    <li>✅ DynamicForms (RJSF-based forms)</li>
-                    <li>✅ Dashboard with widgets</li>
-                    <li>✅ User Settings/Profile page</li>
+                    <li>{t('modules.sample.feature.auth')}</li>
+                    <li>{t('modules.sample.feature.switching')}</li>
+                    <li>{t('modules.sample.feature.themes')}</li>
+                    <li>{t('modules.sample.feature.i18n')}</li>
+                    <li>{t('modules.sample.feature.views')}</li>
+                    <li>{t('modules.sample.feature.forms')}</li>
+                    <li>{t('modules.sample.feature.dashboard')}</li>
+                    <li>{t('modules.sample.feature.settings')}</li>
                 </ul>
 
                 <Divider />
 
                 <Paragraph>
-                    <Text strong>Next Steps:</Text>
+                    <Text strong>{t('modules.sample.label.next_steps')}:</Text>
                 </Paragraph>
                 <ol className="list-decimal pl-6 space-y-2">
-                    <li>Add your new route to <code>src/routes/index.tsx</code></li>
-                    <li>Create your page components in <code>src/pages/</code></li>
-                    <li>Use DynamicViews for list pages</li>
-                    <li>Use DynamicForm for create/edit forms</li>
-                    <li>Connect to Supabase tables for data</li>
+                    <li>{t('modules.sample.label.step_route')}</li>
+                    <li>{t('modules.sample.label.step_components')}</li>
+                    <li>{t('modules.sample.label.step_views')}</li>
+                    <li>{t('modules.sample.label.step_forms')}</li>
+                    <li>{t('modules.sample.label.step_supabase')}</li>
                 </ol>
             </Card>
         </motion.div>

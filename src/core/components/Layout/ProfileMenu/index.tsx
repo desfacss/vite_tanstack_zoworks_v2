@@ -13,6 +13,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@/core/lib/store';
 import { supabase } from '../../../lib/supabase';
+import { useTranslation } from 'react-i18next';
 import { useAuthedLayoutConfig } from '../AuthedLayoutContext';
 
 export const ProfileMenu: React.FC<{ isMobile?: boolean }> = ({ isMobile }) => {
@@ -21,6 +22,8 @@ export const ProfileMenu: React.FC<{ isMobile?: boolean }> = ({ isMobile }) => {
   const { user, clearUserSession, setIsLoggingOut } = useAuthStore();
   const queryClient = useQueryClient();
   const { setShowSettings } = useAuthedLayoutConfig();
+
+  const { t } = useTranslation();
 
   const handleLogout = async () => {
     // 1. Set Guard: Prevents SessionManager from accepting new data
@@ -47,17 +50,17 @@ export const ProfileMenu: React.FC<{ isMobile?: boolean }> = ({ isMobile }) => {
 
   const menuItems = {
     items: [
-      { key: 'profile', label: 'My Profile', icon: <User size={16} />, onClick: () => navigate('/profile') },
-      { key: 'settings', label: 'Settings', icon: <Settings size={16} />, onClick: () => setShowSettings(true) },
-      { key: 'billing', label: 'Billing & Plans', icon: <CreditCard size={16} />, onClick: () => navigate('/billing') },
+      { key: 'profile', label: t('common.label.profile'), icon: <User size={16} />, onClick: () => navigate('/profile') },
+      { key: 'settings', label: t('common.label.settings'), icon: <Settings size={16} />, onClick: () => setShowSettings(true) },
+      { key: 'billing', label: t('common.label.billing'), icon: <CreditCard size={16} />, onClick: () => navigate('/billing') },
       { type: 'divider' },
-      { key: 'organization', label: 'Organization Settings', icon: <Building size={16} />, onClick: () => navigate('/settings?tab=organization') },
-      { key: 'team', label: 'Team Management', icon: <User size={16} />, onClick: () => navigate('/settings?tab=team') },
+      { key: 'organization', label: t('common.label.organization_settings'), icon: <Building size={16} />, onClick: () => navigate('/settings?tab=organization') },
+      { key: 'team', label: t('common.label.management'), icon: <User size={16} />, onClick: () => navigate('/settings?tab=team') },
       { type: 'divider' },
-      { key: 'help', label: 'Help & Support', icon: <HelpCircle size={16} />, onClick: () => window.open('https://help.zoworks.com', '_blank') },
-      { key: 'docs', label: 'Documentation', icon: <FileText size={16} />, onClick: () => window.open('https://docs.zoworks.com', '_blank') },
+      { key: 'help', label: t('common.label.help_support'), icon: <HelpCircle size={16} />, onClick: () => window.open('https://help.zoworks.com', '_blank') },
+      { key: 'docs', label: t('common.label.documentation'), icon: <FileText size={16} />, onClick: () => window.open('https://docs.zoworks.com', '_blank') },
       { type: 'divider' },
-      { key: 'logout', label: 'Sign Out', icon: <LogOut size={16} />, danger: true, onClick: handleLogout },
+      { key: 'logout', label: t('core.auth.action.sign_out'), icon: <LogOut size={16} />, danger: true, onClick: handleLogout },
     ],
   };
 

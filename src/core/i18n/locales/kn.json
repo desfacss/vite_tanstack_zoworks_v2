@@ -1,75 +1,288 @@
 {
   "translation": {
-    "auth": {
-      "login": "ಲಾಗಿನ್"
-    },
-    "subscriptions": {
-      "list": "ಚಂದಾದಾರಿಕೆಗಳು",
-      "limits": "ಮಿತಿಗಳು",
-      "moduleFeatures": "ವೈಶಿಷ್ಟ್ಯಗಳು",
-      "add": "ಸೇರಿಸಿ"
-    },
-    "teams": {
-      "add": "ಸೇರಿಸಿ"
-    },
     "common": {
-      "_businesses": "_businesses",
-      "_client-contacts": "_client Contacts",
-      "_crud-page": "_ಕ್ರಡ್ ಪುಟ",
-      "_organizations": "_organizations",
-      "_service-contracts": "_service Contracts",
-      "_service-offerings": "_service Offerings",
-      "_service-reports": "ಸೇವಾ ವರದಿಗಳು",
-      "_service-types": "_service Types",
-      "_user-settings": "_user Settings",
-      "_users-dyn": "ಬಳಕೆದಾರರು ಡೈನ್",
-      "_users-view": "_users View",
-      "actions": "ಕ್ರಮಗಳು",
-      "active": "ಸಕ್ರಿಯ",
-      "add": "ಸೇರಿಸಿ",
-      "admin": "ನಿರ್ವಾಹಕರು",
-      "analytics": "ಅನಾಲಿಟಿಕ್ಸ್",
-      "businesses": "ವ್ಯವಹಾರಗಳು",
-      "client-contacts": "ಕ್ಲೈಂಟ್ ಸಂಪರ್ಕಗಳು",
-      "clients": "ಗ್ರಾಹಕರು",
-      "clients copy": "Clients copy",
-      "config": "ಸಂರಚನೆ",
-      "contracts": "ಒಪ್ಪಂದಗಳು",
-      "createdAt": "ರಚಿಸಿದ ದಿನಾಂಕ",
-      "dashboard": "ಡ್ಯಾಶ್‌ಬೋರ್ಡ್",
-      "fsm": "ಎಫ್‌ಎಸ್‌ಎಂ",
-      "invoices": "ಇನ್‌ವಾಯ್ಸ್‌ಗಳು",
-      "leaves": "ರಜೆಗಳು",
-      "my-tickets": "ನನ್ನ ಟಿಕೆಟ್‌ಗಳು",
-      "name": "ಹೆಸರು",
-      "onboarding": "Onboarding",
-      "organizations": "ಸಂಸ್ಥೆಗಳು",
-      "organizations copy": "ಸಂಸ್ಥೆಗಳ ನಕಲು",
-      "process": "ಪ್ರಕ್ರಿಯೆ",
-      "projects": "ಯೋಜನೆಗಳು",
-      "service-assets": "ಸೇವಾ ಆಸ್ತಿಗಳು",
-      "service-assets copy": "Service Assets copy",
-      "service-categories": "ಸೇವಾ ವರ್ಗಗಳು",
-      "service-contracts": "ಸೇವಾ ಒಪ್ಪಂದಗಳು",
-      "service-invoices": "Service Invoices",
-      "service-offerings": "ಸೇವಾ ಕೊಡುಗೆಗಳು",
-      "service-reports": "ಸೇವಾ ವರದಿಗಳು",
-      "service-types": "ಸೇವಾ ವಿಧಗಳು",
-      "settings": "ಸೆಟ್ಟಿಂಗ್‌ಗಳು",
-      "subscriptions": "ಚಂದಾದಾರಿಕೆಗಳು",
-      "support": "ಬೆಂಬಲ",
-      "tasks": "Tasks",
-      "teams": "ತಂಡಗಳು",
-      "teams-users": "ತಂಡದ ಬಳಕೆದಾರರು",
-      "tickets": "ಟಿಕೆಟ್‌ಗಳು",
-      "tracking": "ಟ್ರ್ಯಾಕಿಂಗ್",
-      "user-settings": "ಬಳಕೆದಾರರ ಸೆಟ್ಟಿಂಗ್‌ಗಳು",
-      "users": "ಬಳಕೆದಾರರು",
-      "users copy": "ಬಳಕೆದಾರರ ನಕಲು",
-      "users copy copy": "ಬಳಕೆದಾರರ ನಕಲು ನಕಲು",
-      "users-view": "ಬಳಕೆದಾರರ ನೋಟ",
-      "workflow": "ಕಾರ್ಯಪ್ರವಾಹ",
-      "workforce": "ಕಾರ್ಯಪಡೆ"
+      "label": {
+        "name": "ಹೆಸರು",
+        "email": "ಇಮೇಲ್",
+        "password": "ಪಾಸ್‌ವರ್ಡ್",
+        "date": "ದಿನಾಂಕ",
+        "created_at": "ರಚಿಸಲಾಗಿದೆ",
+        "updated_at": "ನವೀಕರಿಸಲಾಗಿದೆ",
+        "status": "ಸ್ಥಿತಿ",
+        "actions": "ಕ್ರಮಗಳು",
+        "organization": "ಸಂಸ್ಥೆ",
+        "location": "ಸ್ಥಳ",
+        "all_locations": "ಎಲ್ಲಾ ಸ್ಥಳಗಳು",
+        "users": "ಬಳಕೆದಾರರು",
+        "settings": "ಸೆಟ್ಟಿಂಗ್‌ಗಳು",
+        "profile": "ಪ್ರೊಫೈಲ್",
+        "user": "ಬಳಕೆದಾರ",
+        "welcome": "ಸುಸ್ವಾಗತ",
+        "user_settings": "ಬಳಕೆದಾರರ ಸೆಟ್ಟಿಂಗ್‌ಗಳು",
+        "default": "ಡೀಫಾಲ್ಟ್",
+        "home": "ಮುಖಪುಟ",
+        "dashboard": "ಡ್ಯಾಶ್‌ಬೋರ್ಡ್",
+        "active": "ಸಕ್ರಿಯ",
+        "admin": "ನಿರ್ವಾಹಕ",
+        "search": "ಹುಡುಕಿ",
+        "menu": "ಮೆನು",
+        "notification": "ಅಧಿಸೂಚನೆ",
+        "notifications": "ಅಧಿಸೂಚನೆಗಳು",
+        "analytics": "ವಿಶ್ಲೇಷಣೆ",
+        "crm": "CRM",
+        "tasks": "ಕಾರ್ಯಗಳು",
+        "tracking": "ಟ್ರ್ಯಾಕಿಂಗ್",
+        "billing": "ಬಿಲ್ಲಿಂಗ್ ಮತ್ತು ಯೋಜನೆಗಳು",
+        "help_support": "ಸಹಾಯ ಮತ್ತು ಬೆಂಬಲ",
+        "documentation": "ದಾಖಲಾತಿ",
+        "support": "ಬೆಂಬಲ",
+        "error": "ದೋಷ",
+        "yes": "ಹೌದು",
+        "no": "ಇಲ್ಲ",
+        "user_placeholder": "ಸ್ನೇಹಿತರೇ",
+        "workspace_placeholder": "ನಿಮ್ಮ ಕಾರ್ಯಕ್ಷೇತ್ರ",
+        "loading": "ಲೋಡ್ ಆಗುತ್ತಿದೆ...",
+        "no_data": "ಯಾವುದೇ ಡೇಟಾ ಲಭ್ಯವಿಲ್ಲ",
+        "management": "ನಿರ್ವಹಣೆ",
+        "organization_settings": "ಸಂಸ್ಥೆಯ ಸೆಟ್ಟಿಂಗ್‌ಗಳು",
+        "notification_settings": "ಅಧಿಸೂಚನೆ ಸೆಟ್ಟಿಂಗ್‌ಗಳು",
+        "online_visibility": "ಆನ್‌ಲೈನ್ ಗೋಚರತೆ",
+        "email_notifications": "ಇಮೇಲ್ ಅಧಿಸೂಚನೆಗಳು",
+        "push_notifications": "ಪುಶ್ ಅಧಿಸೂಚನೆಗಳು",
+        "page_not_found": "ಪುಟ ಕಂಡುಬಂದಿಲ್ಲ",
+        "coming_soon": "ಶೀಘ್ರದಲ್ಲೇ ಬರಲಿದೆ",
+        "data_error": "ಡೇಟಾ ದೋಷ",
+        "vs_last_period": "ಹಿಂದಿನ ಅವಧಿಗೆ ಹೋಲಿಸಿದರೆ"
+      },
+      "action": {
+        "save": "ಉಳಿಸಿ",
+        "cancel": "ರದ್ದುಮಾಡಿ",
+        "add": "ಸೇರಿಸಿ",
+        "edit": "ಸಂಪಾದಿಸಿ",
+        "delete": "ಅಳಿಸಿ",
+        "update": "ನವೀಕರಿಸಿ",
+        "refresh": "ರಿಫ್ರೆಶ್",
+        "retry": "ಪುನಃ ಪ್ರಯತ್ನಿಸಿ",
+        "design": "ವಿನ್ಯಾಸ",
+        "add_widget": "ವಿಜೆಟ್ ಸೇರಿಸಿ",
+        "login": "ಲಾಗಿನ್",
+        "logout": "ಲಾಗ್ ಔಟ್",
+        "send": "ಕಳುಹಿಸಿ",
+        "upload": "ಅಪ್‌ಲೋಡ್",
+        "close": "ಮುಚ್ಚಿ",
+        "back": "ಹಿಂದಕ್ಕೆ",
+        "go_home": "ಮುಖಪುಟಕ್ಕೆ ಹೋಗಿ",
+        "go_back": "ಹಿಂದಕ್ಕೆ ಹೋಗಿ",
+        "next": "ಮುಂದೆ",
+        "confirm": "ದೃಢೀಕರಿಸಿ",
+        "yes": "ಹೌದು",
+        "no": "ಇಲ್ಲ"
+      },
+      "message": {
+        "save_success": "ಯಶಸ್ವಿಯಾಗಿ ಉಳಿಸಲಾಗಿದೆ",
+        "save_failed": "ಉಳಿಸಲು ವಿಫಲವಾಗಿದೆ",
+        "update_success": "ಯಶಸ್ವಿಯಾಗಿ ನವೀಕರಿಸಲಾಗಿದೆ",
+        "update_failed": "ನವೀಕರಿಸಲು ವಿಫಲವಾಗಿದೆ",
+        "delete_success": "ಯಶಸ್ವಿಯಾಗಿ ಅಳಿಸಲಾಗಿದೆ",
+        "delete_failed": "ಅಳಿಸಲು ವಿಫಲವಾಗಿದೆ",
+        "auth_error": "ದೃಢೀಕರಿಸಲು ವಿಫಲವಾಗಿದೆ. ದಯವಿಟ್ಟು ಪುನಃ ಪ್ರಯತ್ನಿಸಿ ಅಥವಾ ಲಾಗಿನ್ ಮಾಡಿ.",
+        "session_expired": "ನಿಮ್ಮ ಸೆಷನ್ ಅವಧಿ ಮುಗಿದಿದೆ. ದಯವಿಟ್ಟು ಮತ್ತೆ ಲಾಗಿನ್ ಮಾಡಿ.",
+        "offline": "ನೀವು ಆಫ್‌ಲೈನ್‌ನಲ್ಲಿದ್ದೀರಿ. ದಯವಿಟ್ಟು ನಿಮ್ಮ ಇಂಟರ್ನೆಟ್ ಸಂಪರ್ಕವನ್ನು ಪರಿಶೀಲಿಸಿ.",
+        "permission_denied": "ಅನುಮತಿ ನಿರಾಕರಿಸಲಾಗಿದೆ",
+        "coming_soon": "ಶೀಘ್ರದಲ್ಲೇ ಬರಲಿದೆ...",
+        "unsaved_changes": "ನೀವು ಉಳಿಸದ ಬದಲಾವಣೆಗಳನ್ನು ಹೊಂದಿದ್ದೀರಿ.",
+        "switching_to": "{{name}} ಗೆ ಬದಲಾಯಿಸಲಾಗುತ್ತಿದೆ...",
+        "switched_to": "{{name}} ಗೆ ಬದಲಾಯಿಸಲಾಗಿದೆ",
+        "failed_to_switch": "ಸಂಸ್ಥೆಯನ್ನು ಬದಲಾಯಿಸಲು ವಿಫಲವಾಗಿದೆ",
+        "delete_confirm": "ಇದನ್ನು ಅಳಿಸಲು ನೀವು ಖಚಿತವಾಗಿ ಬಯಸುವಿರಾ?",
+        "definition_missing": "ಕಾನ್ಫಿಗರೇಶನ್ ಡೆಫಿನಿಷನ್ ಇಲ್ಲ",
+        "not_supported": "ನಿಮ್ಮ ಬ್ರೌಸರ್ ಈ ವೈಶಿಷ್ಟ್ಯವನ್ನು ಬೆಂಬಲಿಸುವುದಿಲ್ಲ",
+        "page_not_found_desc": "ಕ್ಷಮಿಸಿ, ನೀವು ಭೇಟಿ ನೀಡಿದ ಪುಟ ಅಸ್ತಿತ್ವದಲ್ಲಿಲ್ಲ.",
+        "no_notifications": "ಯಾವುದೇ ಅಧಿಸೂಚನೆಗಳು ಕಂಡುಬಂದಿಲ್ಲ",
+        "widget_added": "ವಿಜೆಟ್ ಯಶಸ್ವಿಯಾಗಿ ಸೇರಿಸಲಾಗಿದೆ",
+        "no_dashboard_selected": "ಯಾವುದೇ ಡ್ಯಾಶ್‌ಬೋರ್ಡ್ ಆಯ್ಕೆ ಮಾಡಲಾಗಿಲ್ಲ"
+      },
+      "status": {
+        "active": "ಸಕ್ರಿಯ",
+        "inactive": "ನಿಷ್ಕ್ರಿಯ",
+        "pending": "ಬಾಕಿ ಇದೆ",
+        "completed": "ಪೂರ್ಣಗೊಂಡಿದೆ",
+        "failed": "ವಿಫಲವಾಗಿದೆ",
+        "online": "ಆನ್‌ಲೈನ್",
+        "offline": "ಆಫ್‌ಲೈನ್"
+      }
+    },
+    "core": {
+      "auth": {
+        "label": {
+          "title": "ಮರಳಿ ಸುಸ್ವಾಗತ",
+          "subtitle": "ಸೈನ್ ಇನ್ ಮಾಡಲು ದಯವಿಟ್ಟು ನಿಮ್ಮ ವಿವರಗಳನ್ನು ನಮೂದಿಸಿ.",
+          "workspace_title": "ನಿಮ್ಮ ಕಾರ್ಯಕ್ಷೇತ್ರಕ್ಕೆ ಸೈನ್ ಇನ್ ಮಾಡಿ",
+          "email": "ಇಮೇಲ್ ವಿಳಾಸ",
+          "password": "ಪಾಸ್‌ವರ್ಡ್",
+          "forgot_password": "ಪಾಸ್‌ವರ್ಡ್ ಮರೆತಿರುವಿರಾ?",
+          "select_workspace": "ಕಾರ್ಯಕ್ಷೇತ್ರವನ್ನು ಆಯ್ಕೆಮಾಡಿ",
+          "multiple_orgs": "ನೀವು ಅನೇಕ ಸಂಸ್ಥೆಗಳಿಗೆ ಸೇರಿದ್ದೀರಿ.",
+          "create_account": "ಖಾತೆಯನ್ನು ರಚಿಸಿ",
+          "signup_desc": "ಪ್ರಾರಂಭಿಸಲು ನಿಮ್ಮ ಖಾತೆಯನ್ನು ರಚಿಸಿ.",
+          "reset_password": "ಪಾಸ್‌ವರ್ಡ್ ಮರುಹೊಂದಿಸಿ",
+          "reset_password_desc": "ಕೆಳಗೆ ನಿಮ್ಮ ಹೊಸ ಪಾಸ್‌ವರ್ಡ್ ನಮೂದಿಸಿ.",
+          "new_password": "ಹೊಸ ಪಾಸ್‌ವರ್ಡ್",
+          "already_have_account": "ಈಗಾಗಲೇ ಖಾತೆ ಹೊಂದಿದ್ದೀರಾ?",
+          "registration": "ಬಳಕೆದಾರರ ನೋಂದಣಿ",
+          "already_registered": "ಈಗಾಗಲೇ ನೋಂದಾಯಿಸಲಾಗಿದೆಯೇ?",
+          "email_already_added": "ಬಳಕೆದಾರರ ಇಮೇಲ್ ಈಗಾಗಲೇ ಸೇರಿಸಲಾಗಿದೆ! ದಯವಿಟ್ಟು"
+        },
+        "action": {
+          "sign_in": "ಸೈನ್ ಇನ್",
+          "sign_out": "ಸೈನ್ ಔಟ್",
+          "reset_password": "ಪಾಸ್‌ವರ್ಡ್ ನವೀಕರಿಸಿ",
+          "send_link": "ಮರುಹೊಂದಿಸುವ ಲಿಂಕ್ ಕಳುಹಿಸಿ",
+          "signup": "ಸೈನ್ ಅಪ್",
+          "google_signup": "ಗೂಗಲ್ ಮೂಲಕ ಮುಂದುವರಿಸಿ",
+          "login_here": "ಇಲ್ಲಿ ಲಾಗಿನ್ ಮಾಡಿ...",
+          "login_continue": "ಲಾಗಿನ್ ಮಾಡಿ ಮತ್ತು ಮುಂದುವರಿಸಿ"
+        },
+        "message": {
+          "login_success": "ಲಾಗಿನ್ ಯಶಸ್ವಿಯಾಗಿದೆ!",
+          "login_failed": "ಲಾಗಿನ್ ವಿಫಲವಾಗಿದೆ. ದಯವಿಟ್ಟು ನಿಮ್ಮ ವಿವರಗಳನ್ನು ಪರಿಶೀಲಿಸಿ.",
+          "no_orgs": "ಈ ಖಾತೆಗೆ ಯಾವುದೇ ಸಂಸ್ಥೆಗಳು ಕಂಡುಬಂದಿಲ್ಲ.",
+          "reset_email_sent": "ಪಾಸ್‌ವರ್ಡ್ ಮರುಹೊಂದಿಸುವ ಇಮೇಲ್ ಕಳುಹಿಸಲಾಗಿದೆ.",
+          "email_required": "ದಯವಿಟ್ಟು ನಿಮ್ಮ ಇಮೇಲ್ ನಮೂದಿಸಿ",
+          "email_invalid": "ದಯವಿಟ್ಟು ಮಾನ್ಯವಾದ ಇಮೇಲ್ ನಮೂದಿಸಿ",
+          "password_required": "ದಯವಿಟ್ಟು ನಿಮ್ಮ ಪಾಸ್‌ವರ್ಡ್ ನಮೂದಿಸಿ",
+          "name_required": "ದಯವಿಟ್ಟು ನಿಮ್ಮ ಹೆಸರನ್ನು ನಮೂದಿಸಿ!",
+          "signup_success": "ಯಶಸ್ವಿಯಾಗಿ ಸೈನ್ ಅಪ್ ಮಾಡಲಾಗಿದೆ! ದಯವಿಟ್ಟು ನಿಮ್ಮ ಇಮೇಲ್ ಪರಿಶೀಲಿಸಿ.",
+          "signup_failed": "ಸೈನ್ ಅಪ್ ವಿಫಲವಾಗಿದೆ",
+          "reset_success": "ಪಾಸ್‌ವರ್ಡ್ ಯಶಸ್ವಿಯಾಗಿ ನವೀಕರಿಸಲಾಗಿದೆ!",
+          "reset_failed": "ಪಾಸ್‌ವರ್ಡ್ ನವೀಕರಿಸಲು ವಿಫಲವಾಗಿದೆ. ದಯವಿಟ್ಟು ಪುನಃ ಪ್ರಯತ್ನಿಸಿ.",
+          "invalid_link": "ಅಮಾನ್ಯವಾದ ಅಥವಾ ಅವಧಿ ಮೀರಿದ ಲಿಂಕ್.",
+          "password_mismatch": "ಪಾಸ್‌ವರ್ಡ್ ಹೊಂದಿಕೆಯಾಗುತ್ತಿಲ್ಲ",
+          "registration_success": "ಯಶಸ್ವಿಯಾಗಿ ನೋಂದಾಯಿಸಲಾಗಿದೆ!"
+        }
+      },
+      "home": {
+        "label": {
+          "welcome_title": "Zoworks ಗೆ ಸುಸ್ವಾಗತ",
+          "welcome_subtitle": "ನಿಮ್ಮ ಬುದ್ಧಿವಂತ ಕೆಲಸದ ಹರಿವಿನ ಆಟೊಮೇಷನ್ ವೇದಿಕೆ."
+        },
+        "action": {
+          "login": "ನಿಮ್ಮ ಖಾತೆಗೆ ಲಾಗಿನ್ ಮಾಡಿ",
+          "manage_subscription": "ಚಂದಾದಾರಿಕೆಯನ್ನು ನಿರ್ವಹಿಸಿ"
+        }
+      },
+      "navigation": {
+        "home": "ಮುಖಪುಟ",
+        "dashboard": "ಡ್ಯಾಶ್‌ಬೋರ್ಡ್",
+        "contacts": "ಸಂಪರ್ಕಗಳು",
+        "sample": "ಮಾದರಿ ಮಾಡ್ಯೂಲ್",
+        "admin": "ನಿರ್ವಾಹಕ",
+        "core": "ಕೋರ್",
+        "about": "ಬಗ್ಗೆ"
+      },
+      "settings": {
+        "label": {
+          "title": "ಜಾಗತಿಕ ಸೆಟ್ಟಿಂಗ್‌ಗಳು",
+          "context": "ಸಂದರ್ಭ",
+          "appearance": "ಗೋಚರತೆ",
+          "theme_mode": "ಥೀಮ್ ಮೋಡ್",
+          "language": "ಭಾಷೆ",
+          "theme_editing": "ಥೀಮ್ ಸಂಪಾದನೆ",
+          "brand_name": "ಬ್ರ್ಯಾಂಡ್ ಹೆಸರು",
+          "primary_color": "ಪ್ರಾಥಮಿಕ ಬಣ್ಣ",
+          "card_bg": "ಕಾರ್ಡ್ ಹಿನ್ನೆಲೆ",
+          "layout_bg": "ಲೇಔಟ್ ಹಿನ್ನೆಲೆ",
+          "header_bg": "ಹೆಡರ್ ಹಿನ್ನೆಲೆ",
+          "sider_bg": "ಸೈಡ್‌ಬಾರ್ ಹಿನ್ನೆಲೆ",
+          "logo": "ಲೋಗೋ",
+          "brand_logo": "ಬ್ರಾಂಡ್ ಲೋಗೋ",
+          "accessibility": "ಪ್ರವೇಶಸಾಧ್ಯತೆ",
+          "font_size": "ಅಕ್ಷರದ ಗಾತ್ರ",
+          "zoom": "ಜೂಮ್",
+          "general": "ಸಾಮಾನ್ಯ",
+          "light": "ಲೈಟ್",
+          "dark": "ಡಾರ್ಕ್"
+        },
+        "action": {
+          "save_branding": "ಬ್ರ್ಯಾಂಡಿಂಗ್ ಉಳಿಸಿ",
+          "upload_logo": "ಲೋಗೋ ಅಪ್‌ಲೋಡ್ ಮಾಡಿ"
+        },
+        "message": {
+          "branding_saved": "ಬ್ರ್ಯಾಂಡಿಂಗ್ ಯಶಸ್ವಿಯಾಗಿ ಉಳಿಸಲಾಗಿದೆ!",
+          "uploading": "ಅಪ್‌ಲೋಡ್ ಮಾಡಲಾಗುತ್ತಿದೆ..."
+        }
+      },
+      "welcome_hub": {
+        "label": {
+          "greeting_morning": "ಶುಭೋದಯ",
+          "greeting_afternoon": "ಶುಭ ಮಧ್ಯಾಹ್ನ",
+          "greeting_evening": "ಶುಭ ಸಂಜೆ",
+          "description": "ನಿಮ್ಮ ಕಾರ್ಯಕ್ಷೇತ್ರಕ್ಕೆ ಮರಳಿ ಸುಸ್ವಾಗತ. ಇಂದು ನೀವು ಏನನ್ನು ಸಾಧಿಸಲು ಬಯಸುತ್ತೀರಿ?",
+          "quick_actions": "ತ್ವರಿತ ಕ್ರಮಗಳು",
+          "today_overview": "ಇಂದಿನ ಅವಲೋಕನ",
+          "activity_glance": "ನಿಮ್ಮ ಚಟುವಟಿಕೆಯ ಒಂದು ನೋಟ",
+          "stat_open_tickets": "ತೆರೆದ ಟಿಕೆಟ್‌ಗಳು",
+          "stat_pending_tasks": "ಬಾಕಿ ಉಳಿದಿರುವ ಕಾರ್ಯಗಳು",
+          "stat_due_today": "ಇಂದು ಬಾಕಿ ಇರುವುದು",
+          "stat_completed": "ಪೂರ್ಣಗೊಂಡಿದೆ",
+          "need_help": "ಪ್ರಾರಂಭಿಸಲು ಸಹಾಯ ಬೇಕೇ?"
+        },
+        "action": {
+          "dashboard": "ಡ್ಯಾಶ್‌ಬೋರ್ಡ್",
+          "dashboard_desc": "ನಿಮ್ಮ ವಿಶ್ಲೇಷಣೆ ಮತ್ತು KPIಗಳನ್ನು ವೀಕ್ಷಿಸಿ",
+          "tickets": "ಟಿಕೆಟ್‌ಗಳು",
+          "tickets_desc": "ಬೆಂಬಲ ವಿನಂತಿಗಳನ್ನು ನಿರ್ವಹಿಸಿ",
+          "tasks": "ಕಾರ್ಯಗಳು",
+          "tasks_desc": "ನಿಮ್ಮ ಕಾರ್ಯನಿರ್ವಹಣೆಯನ್ನು ಟ್ರ್ಯಾಕ್ ಮಾಡಿ",
+          "clients": "ಗ್ರಾಹಕರು",
+          "clients_desc": "ನಿಮ್ಮ ಖಾತೆಗಳನ್ನು ನಿರ್ವಹಿಸಿ",
+          "messages": "ಸಂದೇಶಗಳು",
+          "messages_desc": "ಸಂಭಾಷಣೆಗಳನ್ನು ಪರಿಶೀಲಿಸಿ",
+          "settings": "ಸೆಟ್ಟಿಂಗ್‌ಗಳು",
+          "settings_desc": "ಆದ್ಯತೆಗಳನ್ನು ಕಾನ್ಫಿಗರ್ ಮಾಡಿ"
+        }
+      },
+      "error": {
+        "label": {
+          "not_found": "ಪುಟ ಕಂಡುಬಂದಿಲ್ಲ",
+          "not_found_desc": "ಕ್ಷಮಿಸಿ, ನೀವು ಹುಡುಕುತ್ತಿರುವ ಪುಟ ಅಸ್ತಿತ್ವದಲ್ಲಿಲ್ಲ."
+        },
+        "action": {
+          "go_home": "ಮುಖಪುಟಕ್ಕೆ ಹೋಗಿ",
+          "go_back": "ಹಿಂದಕ್ಕೆ ಹೋಗಿ"
+        }
+      }
+    },
+    "modules": {
+      "sample": {
+        "label": {
+          "title": "ಮಾದರಿ ಮಾಡ್ಯೂಲ್ ಪುಟ",
+          "description": "ಹೊಸ ಮಾಡ್ಯೂಲ್ ಅಭಿವೃದ್ಧಿಪಡಿಸಲು ಪ್ರಾರಂಭದ ಹಂತ.",
+          "context": "ಪ್ರಸ್ತುತ ಸೆಷನ್ ಸಂದರ್ಭ",
+          "dev_notes": "ಅಭಿವೃದ್ಧಿ ಟಿಪ್ಪಣಿಗಳು",
+          "available_features": "ಲಭ್ಯವಿರುವ ವೈಶಿಷ್ಟ್ಯಗಳು",
+          "next_steps": "ಮುಂದಿನ ಹಂತಗಳು",
+          "step_route": "src/routes/index.tsx ಗೆ ನಿಮ್ಮ ಹೊಸ ಮಾರ್ಗವನ್ನು ಸೇರಿಸಿ",
+          "step_components": "src/pages/ ನಲ್ಲಿ ನಿಮ್ಮ ಪುಟ ಘಟಕಗಳನ್ನು ರಚಿಸಿ",
+          "step_views": "ಪಟ್ಟಿ ಪುಟಗಳಿಗಾಗಿ ಡೈನಾಮಿಕ್ ವ್ಯೂಗಳನ್ನು ಬಳಸಿ",
+          "step_forms": "ರಚಿಸಲು/ಸಂಪಾದಿಸಲು ಡೈನಾಮಿಕ್ ಫಾರ್ಮ್‌ಗಳನ್ನು ಬಳಸಿ",
+          "step_supabase": "ಡೇಟಾಕ್ಕಾಗಿ ಸುಪರ್ಬೇಸ್ ಕೋಷ್ಟಕಗಳಿಗೆ ಸಂಪರ್ಕಿಸಿ"
+        },
+        "action": {
+          "create_item": "ಹೊಸ ಐಟಂ ರಚಿಸಿ",
+          "configure": "ಮಾಡ್ಯೂಲ್ ಸಂರಚಿಸಿ"
+        },
+        "feature": {
+          "auth": "✅ ದೃಢೀಕರಣ",
+          "switching": "✅ ಸಂದರ್ಭ ಬದಲಾವಣೆ",
+          "themes": "✅ ಮಲ್ಟಿ-ಥೀಮಿಂಗ್",
+          "i18n": "✅ ಅಂತರಾಷ್ಟ್ರೀಯೀಕರಣ",
+          "views": "✅ ಡೈನಾಮಿಕ್ ವ್ಯೂಗಳು",
+          "forms": "✅ ಡೈನಾಮಿಕ್ ಫಾರ್ಮ್‌ಗಳು",
+          "dashboard": "✅ ಸಂವಾದಾತ್ಮಕ ಡ್ಯಾಶ್‌ಬೋರ್ಡ್",
+          "settings": "✅ ಬಳಕೆದಾರರ ಆದ್ಯತೆಗಳು"
+        }
+      }
     }
   }
 }

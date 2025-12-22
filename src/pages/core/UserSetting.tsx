@@ -1,20 +1,16 @@
-import React, { useEffect, useState } from 'react';
+// Settings page
 import { Card, Switch, Form, message } from 'antd';
 import { motion } from 'framer-motion';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '@/core/lib/store';
 
+import { useTranslation } from 'react-i18next';
+
 const Settings = () => {
+  const { t } = useTranslation();
   const { user } = useAuthStore();
   const [form] = Form.useForm();
-  const [pushPermission, setPushPermission] = useState<NotificationPermission>('default');
-
-  useEffect(() => {
-    if ('Notification' in window) {
-      setPushPermission(Notification.permission);
-    }
-  }, []);
 
   const { data: settings } = useQuery({
     queryKey: ['user-settings', user?.id],
@@ -49,10 +45,10 @@ const Settings = () => {
       if (error) throw error;
     },
     onSuccess: () => {
-      message.success('Settings updated successfully');
+      message.success(t('common.message.update_success'));
     },
     onError: () => {
-      message.error('Failed to update settings');
+      message.error(t('common.message.update_failed'));
     }
   });
 
@@ -66,21 +62,20 @@ const Settings = () => {
     if ('Notification' in window) {
       try {
         const permission = await Notification.requestPermission();
-        setPushPermission(permission);
-        
+
         if (permission === 'granted') {
           form.setFieldValue('pushNotifications', true);
           updateMutation.mutate({ ...form.getFieldsValue(), pushNotifications: true });
         } else {
-          message.warning('Push notifications permission denied');
+          message.warning(t('common.message.permission_denied'));
           form.setFieldValue('pushNotifications', false);
         }
       } catch (error) {
-        message.error('Error requesting notification permission');
+        message.error(t('common.message.error'));
         form.setFieldValue('pushNotifications', false);
       }
     } else {
-      message.warning('Push notifications not supported in this browser');
+      message.warning(t('common.message.not_supported'));
       form.setFieldValue('pushNotifications', false);
     }
   };
@@ -91,7 +86,7 @@ const Settings = () => {
       animate={{ opacity: 1 }}
       className="max-w-2xl mx-auto p-4"
     >
-      <Card title="Notification Settings">
+      <Card title={t('common.label.notification_settings')}>
         <Form
           form={form}
           layout="vertical"
@@ -100,7 +95,7 @@ const Settings = () => {
         >
           <Form.Item
             name="onlineVisibility"
-            label="Online Visibility"
+            label={t('common.label.online_visibility')}
             valuePropName="checked"
           >
             <Switch />
@@ -108,7 +103,7 @@ const Settings = () => {
 
           <Form.Item
             name="emailSubscription"
-            label="Email Notifications"
+            label={t('common.label.email_notifications')}
             valuePropName="checked"
           >
             <Switch />
@@ -116,7 +111,7 @@ const Settings = () => {
 
           <Form.Item
             name="pushNotifications"
-            label="Push Notifications"
+            label={t('common.label.push_notifications')}
             valuePropName="checked"
           >
             <Switch onChange={handlePushNotifications} />

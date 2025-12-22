@@ -1,11 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { Form, Input, Button, Card, Space, message, Avatar } from 'antd';
-import { Mail, ArrowLeft, Loader2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Form, Input, Button, Card, Space, message } from 'antd';
+import { ArrowLeft, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useNavigate, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '../../lib/supabase';
 
 const ResetPassword = () => {
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const [form] = Form.useForm();
     const [loading, setLoading] = useState(false);
@@ -14,7 +16,7 @@ const ResetPassword = () => {
         const checkSession = async () => {
             const { data: { session } } = await supabase.auth.getSession();
             if (!session) {
-                message.error('Invalid or expired password reset link.');
+                message.error(t('core.auth.message.invalid_link'));
                 navigate('/login');
             }
         };
@@ -29,11 +31,11 @@ const ResetPassword = () => {
             });
 
             if (error) throw error;
-            message.success('Password updated successfully!');
+            message.success(t('core.auth.message.reset_success'));
             navigate('/dashboard');
         } catch (error: any) {
             console.error('Password update error:', error.message);
-            message.error('Failed to update password. Please try again.');
+            message.error(t('core.auth.message.reset_failed'));
         } finally {
             setLoading(false);
         }
@@ -51,11 +53,11 @@ const ResetPassword = () => {
                         <div className="flex justify-between items-center mb-8">
                             <Link to="/auth/login" className="flex items-center text-sm text-gray-600 hover:text-gray-900 transition-colors">
                                 <ArrowLeft size={16} className="mr-2" />
-                                Back to log in
+                                {t('common.action.back')}
                             </Link>
                         </div>
-                        <h1 className="text-2xl font-bold text-center mb-2">Reset Password</h1>
-                        <p className="text-center mb-6">Enter your new password below.</p>
+                        <h1 className="text-2xl font-bold text-center mb-2">{t('core.auth.label.reset_password')}</h1>
+                        <p className="text-center mb-6">{t('core.auth.label.reset_password_desc')}</p>
                         <Form
                             form={form}
                             layout="vertical"
@@ -63,9 +65,9 @@ const ResetPassword = () => {
                             requiredMark={false}
                         >
                             <Form.Item
-                                label="New Password"
+                                label={t('core.auth.label.new_password')}
                                 name="password"
-                                rules={[{ required: true, message: 'Please enter your new password' }]}
+                                rules={[{ required: true, message: t('core.auth.message.password_required') }]}
                             >
                                 <Input.Password />
                             </Form.Item>
@@ -79,7 +81,7 @@ const ResetPassword = () => {
                                     icon={loading ? <Loader2 className="animate-spin" size={20} /> : undefined}
                                     className="h-12 bg-blue-600 hover:bg-blue-700 font-semibold text-lg"
                                 >
-                                    Update Password
+                                    {t('core.auth.action.reset_password')}
                                 </Button>
                             </Form.Item>
                         </Form>

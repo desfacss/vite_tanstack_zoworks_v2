@@ -79,7 +79,7 @@ export const Settings: React.FC<SettingsProps> = ({ open, onClose }) => {
     if (selectedOrgData && user?.id) {
       console.group(`%c[Settings] Switch to ${selectedOrgData.organization_name}`, 'color: #1890ff');
       setIsSwitchingOrg(true);
-      message.loading({ content: `Switching to ${selectedOrgData.organization_name}...`, key: 'orgSwitch' });
+      message.loading({ content: t('common.message.switching_to', { name: selectedOrgData.organization_name }), key: 'orgSwitch' });
 
       try {
         setOrganization({ id: selectedOrgData.organization_id, name: selectedOrgData.organization_name } as Organization);
@@ -100,10 +100,10 @@ export const Settings: React.FC<SettingsProps> = ({ open, onClose }) => {
         await supabase.auth.updateUser({ data: { org_id: orgId } });
         await queryClient.invalidateQueries({ queryKey: ['user-session'] });
 
-        message.success({ content: `Switched to ${selectedOrgData.organization_name}`, key: 'orgSwitch', duration: 2 });
+        message.success({ content: t('common.message.switched_to', { name: selectedOrgData.organization_name }), key: 'orgSwitch', duration: 2 });
       } catch (err) {
         console.error("[Settings] Org switch error:", err);
-        message.error({ content: 'Failed to switch organization.', key: 'orgSwitch', duration: 2 });
+        message.error({ content: t('common.message.failed_to_switch'), key: 'orgSwitch', duration: 2 });
       } finally {
         setIsSwitchingOrg(false);
         console.groupEnd();
@@ -121,7 +121,7 @@ export const Settings: React.FC<SettingsProps> = ({ open, onClose }) => {
       setViewPreferences(user.id, 'global', {
         lastLocationByOrg: { ...(viewPreferences[user.id]?.['global']?.lastLocationByOrg || {}), [organization.id]: locId },
       });
-      message.success(`Switched to location: ${selectedLoc.location_name}`);
+      message.success(t('common.message.switched_to', { name: selectedLoc.location_name }));
     }
   };
 
@@ -231,7 +231,7 @@ export const Settings: React.FC<SettingsProps> = ({ open, onClose }) => {
         .eq('id', organization.id);
 
       if (error) throw error;
-      message.success(t('settings.branding_saved'));
+      message.success(t('core.settings.message.branding_saved'));
     } catch (error: any) {
       console.error('[Settings] Save error:', error);
       message.error(error.message || 'Failed to save branding');
@@ -268,7 +268,7 @@ export const Settings: React.FC<SettingsProps> = ({ open, onClose }) => {
 
   return (
     <Drawer
-      title={t('common.settings')}
+      title={t('common.label.settings')}
       placement="right"
       onClose={onClose}
       open={open}
@@ -277,11 +277,11 @@ export const Settings: React.FC<SettingsProps> = ({ open, onClose }) => {
       <div className="space-y-8">
         {/* Context Switching Section (Critical for Mobile) */}
         <div>
-          <Title level={5}>{t('settings.context')}</Title>
+          <Title level={5}>{t('core.settings.label.context')}</Title>
           <Form layout="vertical">
-            <Form.Item label={t('common.organization')}>
+            <Form.Item label={t('common.label.organization')}>
               <Select
-                placeholder={t('common.select_organization')}
+                placeholder={t('common.label.organization')}
                 value={organization?.id}
                 onChange={handleOrganizationChange}
                 loading={loadingOrgLocs}
@@ -291,9 +291,9 @@ export const Settings: React.FC<SettingsProps> = ({ open, onClose }) => {
               />
             </Form.Item>
             {currentLocations.length > 0 && (
-              <Form.Item label={t('common.location')}>
+              <Form.Item label={t('common.label.location')}>
                 <Select
-                  placeholder={t('common.select_location')}
+                  placeholder={t('common.label.location')}
                   value={location?.id}
                   onChange={handleLocationChange}
                   loading={loadingOrgLocs}
@@ -308,14 +308,14 @@ export const Settings: React.FC<SettingsProps> = ({ open, onClose }) => {
 
         {/* Appearance Section */}
         <div>
-          <Title level={5}>{t('settings.appearance')}</Title>
+          <Title level={5}>{t('core.settings.label.appearance')}</Title>
           <Space direction="vertical" className="w-full" size="middle">
             <div className="flex justify-between items-center">
-              <Text>{t('settings.theme_mode')}</Text>
+              <Text>{t('core.settings.label.theme_mode')}</Text>
               <ThemeToggle />
             </div>
             <div className="flex justify-between items-center">
-              <Text>{t('settings.language')}</Text>
+              <Text>{t('core.settings.label.language')}</Text>
               <LanguageSelect />
             </div>
           </Space>
@@ -326,7 +326,7 @@ export const Settings: React.FC<SettingsProps> = ({ open, onClose }) => {
           <div className="border-t border-b border-gray-100 py-6">
             <Title level={5} className="flex items-center gap-2 mb-4">
               <Sparkles size={18} className="text-amber-500" />
-              {t('settings.theme_editing')}
+              {t('core.settings.label.theme_editing')}
             </Title>
 
             <Form
@@ -344,10 +344,10 @@ export const Settings: React.FC<SettingsProps> = ({ open, onClose }) => {
                 items={[
                   {
                     key: 'general',
-                    label: <span className="flex items-center gap-1"><Globe size={14} /> General</span>,
+                    label: <span className="flex items-center gap-1"><Globe size={14} /> {t('core.settings.label.general')}</span>,
                     children: (
                       <div className="pt-4 space-y-4">
-                        <Form.Item name="brandName" label={t('settings.brand_name')}>
+                        <Form.Item name="brandName" label={t('core.settings.label.brand_name')}>
                           <Input placeholder="e.g. Zoworks" prefix={<Type size={14} />} />
                         </Form.Item>
                         <Form.Item name="faviconUrl" label="Favicon URL">
@@ -361,25 +361,25 @@ export const Settings: React.FC<SettingsProps> = ({ open, onClose }) => {
                   },
                   {
                     key: 'light',
-                    label: <span className="flex items-center gap-1"><Palette size={14} /> Light</span>,
+                    label: <span className="flex items-center gap-1"><Palette size={14} /> {t('core.settings.label.light')}</span>,
                     children: (
                       <div className="pt-4 space-y-4">
-                        <Form.Item name="light_primaryColor" label={t('settings.primary_color')}>
+                        <Form.Item name="light_primaryColor" label={t('core.settings.label.primary_color')}>
                           <ColorPicker showText className="w-full" />
                         </Form.Item>
-                        <Form.Item name="light_cardBg" label={t('settings.card_bg')}>
+                        <Form.Item name="light_cardBg" label={t('core.settings.label.card_bg')}>
                           <ColorPicker showText className="w-full" />
                         </Form.Item>
-                        <Form.Item name="light_layoutBg" label={t('settings.layout_bg')}>
+                        <Form.Item name="light_layoutBg" label={t('core.settings.label.layout_bg')}>
                           <ColorPicker showText className="w-full" />
                         </Form.Item>
-                        <Form.Item name="light_headerBg" label={t('settings.header_bg')}>
+                        <Form.Item name="light_headerBg" label={t('core.settings.label.header_bg')}>
                           <ColorPicker showText className="w-full" />
                         </Form.Item>
-                        <Form.Item name="light_siderBg" label={t('settings.sider_bg')}>
+                        <Form.Item name="light_siderBg" label={t('core.settings.label.sider_bg')}>
                           <ColorPicker showText className="w-full" />
                         </Form.Item>
-                        <Form.Item name="light_logoUrl" label={t('settings.logo')}>
+                        <Form.Item name="light_logoUrl" label={t('core.settings.label.logo')}>
                           <div className="space-y-2">
                             <Space.Compact className="w-full">
                               <Input placeholder="https://..." prefix={<ImageIcon size={14} />} className="flex-1" />
@@ -395,12 +395,12 @@ export const Settings: React.FC<SettingsProps> = ({ open, onClose }) => {
                                 loading={uploading === 'light'}
                                 onClick={() => document.getElementById('light-logo-upload')?.click()}
                               >
-                                Upload
+                                {t('common.action.upload')}
                               </Button>
                             </Space.Compact>
                             {selectedFiles.light && (
                               <Text type="secondary" className="text-xs block">
-                                📎 Uploading: {selectedFiles.light}
+                                📎 {t('core.settings.message.uploading')} {selectedFiles.light}
                               </Text>
                             )}
                           </div>
@@ -410,25 +410,25 @@ export const Settings: React.FC<SettingsProps> = ({ open, onClose }) => {
                   },
                   {
                     key: 'dark',
-                    label: <span className="flex items-center gap-1"><Palette size={14} /> Dark</span>,
+                    label: <span className="flex items-center gap-1"><Palette size={14} /> {t('core.settings.label.dark')}</span>,
                     children: (
                       <div className="pt-4 space-y-4">
-                        <Form.Item name="dark_primaryColor" label={t('settings.primary_color')}>
+                        <Form.Item name="dark_primaryColor" label={t('core.settings.label.primary_color')}>
                           <ColorPicker showText className="w-full" />
                         </Form.Item>
-                        <Form.Item name="dark_cardBg" label={t('settings.card_bg')}>
+                        <Form.Item name="dark_cardBg" label={t('core.settings.label.card_bg')}>
                           <ColorPicker showText className="w-full" />
                         </Form.Item>
-                        <Form.Item name="dark_layoutBg" label={t('settings.layout_bg')}>
+                        <Form.Item name="dark_layoutBg" label={t('core.settings.label.layout_bg')}>
                           <ColorPicker showText className="w-full" />
                         </Form.Item>
-                        <Form.Item name="dark_headerBg" label={t('settings.header_bg')}>
+                        <Form.Item name="dark_headerBg" label={t('core.settings.label.header_bg')}>
                           <ColorPicker showText className="w-full" />
                         </Form.Item>
-                        <Form.Item name="dark_siderBg" label={t('settings.sider_bg')}>
+                        <Form.Item name="dark_siderBg" label={t('core.settings.label.sider_bg')}>
                           <ColorPicker showText className="w-full" />
                         </Form.Item>
-                        <Form.Item name="dark_logoUrl" label={t('settings.logo')}>
+                        <Form.Item name="dark_logoUrl" label={t('core.settings.label.logo')}>
                           <div className="space-y-2">
                             <Space.Compact className="w-full">
                               <Input placeholder="https://..." prefix={<ImageIcon size={14} />} className="flex-1" />
@@ -444,12 +444,12 @@ export const Settings: React.FC<SettingsProps> = ({ open, onClose }) => {
                                 loading={uploading === 'dark'}
                                 onClick={() => document.getElementById('dark-logo-upload')?.click()}
                               >
-                                Upload
+                                {t('common.action.upload')}
                               </Button>
                             </Space.Compact>
                             {selectedFiles.dark && (
                               <Text type="secondary" className="text-xs block">
-                                📎 Uploading: {selectedFiles.dark}
+                                📎 {t('core.settings.message.uploading')} {selectedFiles.dark}
                               </Text>
                             )}
                           </div>
@@ -467,7 +467,7 @@ export const Settings: React.FC<SettingsProps> = ({ open, onClose }) => {
                 block
                 className="mt-6 h-10 shadow-sm"
               >
-                {t('settings.save_branding')}
+                {t('core.settings.action.save_branding')}
               </Button>
             </Form>
           </div>
@@ -475,8 +475,8 @@ export const Settings: React.FC<SettingsProps> = ({ open, onClose }) => {
 
         {/* Accessibility Section */}
         <Form layout="vertical">
-          <Title level={5}>{t('settings.accessibility')}</Title>
-          <Form.Item label={t('settings.fontSize')}>
+          <Title level={5}>{t('core.settings.label.accessibility')}</Title>
+          <Form.Item label={t('core.settings.label.font_size')}>
             <InputNumber
               min={12}
               max={24}
@@ -487,7 +487,7 @@ export const Settings: React.FC<SettingsProps> = ({ open, onClose }) => {
             />
           </Form.Item>
 
-          <Form.Item label={t('settings.zoom')}>
+          <Form.Item label={t('core.settings.label.zoom')}>
             <InputNumber
               min={50}
               max={200}

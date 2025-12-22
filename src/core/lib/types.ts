@@ -38,6 +38,8 @@ export interface Organization {
   updated_at: string;
   notes: string | null;
   subscription_id: string | null;
+  enabled_languages?: string[] | null;
+  default_language?: string | null;
 }
 
 export interface User {

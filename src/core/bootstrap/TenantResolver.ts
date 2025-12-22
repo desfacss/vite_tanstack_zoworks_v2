@@ -288,7 +288,7 @@ function getEmergencyDefaults(subdomain: string): TenantConfig {
             primaryColor: '#1890ff',
             brandName: 'Zoworks',
         },
-        enabled_languages: ['en'],
+        enabled_languages: ['en', 'kn'],
         default_language: 'en',
         is_demo: false,
         is_login_portal: false,

@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import { useAuthStore, useThemeStore } from '@/core/lib/store';
 import { getTenantBrandName, getTenantLogoUrl } from '@/core/theme/ThemeRegistry';
-// Note: i18n integration can be added later for translated labels
+import { useTranslation } from 'react-i18next';
 
 interface QuickAction {
     icon: React.ReactNode;
@@ -41,6 +41,7 @@ export const WelcomeHub: React.FC = () => {
     const navigate = useNavigate();
     const { user, organization } = useAuthStore();
     const { isDarkMode } = useThemeStore();
+    const { t, i18n } = useTranslation();
     const [currentTime, setCurrentTime] = useState(new Date());
 
     // Get branding
@@ -56,55 +57,55 @@ export const WelcomeHub: React.FC = () => {
     // Get appropriate greeting based on time
     const getGreeting = () => {
         const hour = currentTime.getHours();
-        if (hour < 12) return 'Good morning';
-        if (hour < 17) return 'Good afternoon';
-        return 'Good evening';
+        if (hour < 12) return t('core.welcome_hub.label.greeting_morning');
+        if (hour < 17) return t('core.welcome_hub.label.greeting_afternoon');
+        return t('core.welcome_hub.label.greeting_evening');
     };
 
     // Get user's first name
-    const firstName = user?.name?.split(' ')[0] || 'there';
+    const firstName = user?.name?.split(' ')[0] || t('common.label.user_placeholder');
 
     // Quick actions with beautiful gradients
     const quickActions: QuickAction[] = [
         {
             icon: <LayoutDashboard size={24} />,
-            label: 'Dashboard',
-            description: 'View your analytics & KPIs',
+            label: t('core.welcome_hub.action.dashboard'),
+            description: t('core.welcome_hub.action.dashboard_desc'),
             path: '/dashboard',
             gradient: 'from-blue-500 to-cyan-400',
         },
         {
             icon: <Ticket size={24} />,
-            label: 'Tickets',
-            description: 'Manage support requests',
+            label: t('core.welcome_hub.action.tickets'),
+            description: t('core.welcome_hub.action.tickets_desc'),
             path: '/tickets',
             gradient: 'from-purple-500 to-pink-400',
         },
         {
             icon: <Calendar size={24} />,
-            label: 'Tasks',
-            description: 'Track your assignments',
+            label: t('core.welcome_hub.action.tasks'),
+            description: t('core.welcome_hub.action.tasks_desc'),
             path: '/tasks',
             gradient: 'from-orange-500 to-amber-400',
         },
         {
             icon: <Users size={24} />,
-            label: 'Clients',
-            description: 'Manage your accounts',
+            label: t('core.welcome_hub.action.clients'),
+            description: t('core.welcome_hub.action.clients_desc'),
             path: '/clients',
             gradient: 'from-green-500 to-emerald-400',
         },
         {
             icon: <MessageSquare size={24} />,
-            label: 'Messages',
-            description: 'Check conversations',
+            label: t('core.welcome_hub.action.messages'),
+            description: t('core.welcome_hub.action.messages_desc'),
             path: '/inbox',
             gradient: 'from-indigo-500 to-blue-400',
         },
         {
             icon: <Settings size={24} />,
-            label: 'Settings',
-            description: 'Configure preferences',
+            label: t('core.welcome_hub.action.settings'),
+            description: t('core.welcome_hub.action.settings_desc'),
             path: '/settings',
             gradient: 'from-slate-500 to-zinc-400',
         },
@@ -112,7 +113,7 @@ export const WelcomeHub: React.FC = () => {
 
     // Format date
     const formatDate = () => {
-        return currentTime.toLocaleDateString('en-US', {
+        return currentTime.toLocaleDateString(i18n.language === 'kn' ? 'kn-IN' : 'en-US', {
             weekday: 'long',
             year: 'numeric',
             month: 'long',
@@ -222,7 +223,7 @@ export const WelcomeHub: React.FC = () => {
                     >
                         <Sparkles className="w-4 h-4 text-blue-500" />
                         <span className={`text-sm ${isDarkMode ? 'text-blue-300' : 'text-blue-600'}`}>
-                            {organization?.name || 'Your Workspace'}
+                            {organization?.name || t('common.label.workspace_placeholder')}
                         </span>
                     </motion.div>
 
@@ -231,7 +232,7 @@ export const WelcomeHub: React.FC = () => {
                     </h1>
 
                     <p className={`text-xl max-w-2xl mx-auto ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                        Welcome back to your workspace. What would you like to accomplish today?
+                        {t('core.welcome_hub.label.description')}
                     </p>
                 </motion.section>
 
@@ -243,7 +244,7 @@ export const WelcomeHub: React.FC = () => {
                     transition={{ duration: 0.6, delay: 0.4 }}
                 >
                     <h2 className={`text-lg font-semibold mb-6 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                        Quick Actions
+                        {t('core.welcome_hub.label.quick_actions')}
                     </h2>
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                         {quickActions.map((action, index) => (
@@ -292,20 +293,20 @@ export const WelcomeHub: React.FC = () => {
                         </div>
                         <div>
                             <h3 className={`font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                                Today's Overview
+                                {t('core.welcome_hub.label.today_overview')}
                             </h3>
                             <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                                Your activity at a glance
+                                {t('core.welcome_hub.label.activity_glance')}
                             </p>
                         </div>
                     </div>
 
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         {[
-                            { label: 'Open Tickets', value: '—', color: 'text-blue-500' },
-                            { label: 'Pending Tasks', value: '—', color: 'text-purple-500' },
-                            { label: 'Due Today', value: '—', color: 'text-orange-500' },
-                            { label: 'Completed', value: '—', color: 'text-green-500' },
+                            { label: t('core.welcome_hub.label.stat_open_tickets'), value: '—', color: 'text-blue-500' },
+                            { label: t('core.welcome_hub.label.stat_pending_tasks'), value: '—', color: 'text-purple-500' },
+                            { label: t('core.welcome_hub.label.stat_due_today'), value: '—', color: 'text-orange-500' },
+                            { label: t('core.welcome_hub.label.stat_completed'), value: '—', color: 'text-green-500' },
                         ].map((stat) => (
                             <div key={stat.label} className="text-center">
                                 <div className={`text-3xl font-bold ${stat.color}`}>{stat.value}</div>
@@ -329,7 +330,7 @@ export const WelcomeHub: React.FC = () => {
                             }`}
                     >
                         <HelpCircle size={18} />
-                        <span>Need help getting started?</span>
+                        <span>{t('core.welcome_hub.label.need_help')}</span>
                     </button>
                 </motion.footer>
             </div>

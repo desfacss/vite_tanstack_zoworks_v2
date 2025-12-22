@@ -106,16 +106,21 @@ export async function initI18n(
  * Load core translation bundles for enabled languages
  */
 async function loadCoreLanguages(enabledLanguages: string[]): Promise<void> {
-  const loadPromises = enabledLanguages
+  // Always ensure 'en' is in the list as it's our fallback
+  const languagesToLoad = Array.from(new Set(['en', ...enabledLanguages]));
+
+  const loadPromises = languagesToLoad
     .filter(lang => CORE_LANGUAGE_MANIFEST[lang] && !loadedNamespaces.has(`core:${lang}`))
     .map(async (lang) => {
       try {
         const startTime = performance.now();
         const module = await CORE_LANGUAGE_MANIFEST[lang]();
-        const translations = 'default' in module ? module.default : module;
+        const rawTranslations = 'default' in module ? module.default : module;
 
-        // Handle nested translation structure
-        const resources = (translations as any).translation || translations;
+        // Ensure we handle both wrapped and unwrapped JSON
+        const resources = (rawTranslations as any).translation || rawTranslations;
+
+        // Add resources to the 'translation' namespace
         i18next.addResourceBundle(lang, 'translation', resources, true, true);
 
         loadedNamespaces.add(`core:${lang}`);

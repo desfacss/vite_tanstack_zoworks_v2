@@ -1,20 +1,23 @@
-import React from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Form, Input, Button, Divider, message, Space, Card, Avatar } from 'antd';
-import { Chrome } from 'lucide-react'; // Using Chrome as Google icon placeholder
-import { Mail, Lock, User, Loader2, UserPlus } from 'lucide-react';
+import { Chrome, Mail, Lock, User, UserPlus } from 'lucide-react'; // Removed Chrome duplicate and Loader2
 import { useNavigate, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '../../lib/supabase';
 import { useThemeStore } from '@/core/lib/store';
 // import { ThemeToggle } from '../../components/Layout/ThemeToggle';
 // import { ThemeProvider } from '../../components/shared/ThemeProvider';
 
 const Signup = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [form] = Form.useForm();
-  const { isDarkMode, toggleTheme } = useThemeStore();
+  const { isDarkMode } = useThemeStore();
+  const [loading, setLoading] = useState(false);
 
   const handleSignup = async (values: { email: string; password: string; name: string }) => {
+    setLoading(true);
     try {
       const { error } = await supabase.auth.signUp({
         email: values.email,
@@ -28,10 +31,12 @@ const Signup = () => {
 
       if (error) throw error;
 
-      message.success('Successfully signed up! Please check your email.');
+      message.success(t('core.auth.message.signup_success'));
       navigate('/login');
     } catch (error: any) {
-      message.error(error.message || 'Failed to sign up');
+      message.error(error.message || t('core.auth.message.signup_failed'));
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -43,7 +48,7 @@ const Signup = () => {
 
       if (error) throw error;
     } catch (error: any) {
-      message.error(error.message || 'Failed to sign up with Google');
+      message.error(error.message || t('core.auth.message.signup_failed'));
     }
   };
 
@@ -78,8 +83,8 @@ const Signup = () => {
               />
             </div>
 
-            <h1 className="text-2xl font-bold text-center mb-2">Create Account</h1>
-            <p className="text-center mb-6">Create your account to get started.</p>
+            <h1 className="text-2xl font-bold text-center mb-2">{t('core.auth.label.create_account')}</h1>
+            <p className="text-center mb-6">{t('core.auth.label.signup_desc')}</p>
 
             <Form
               form={form}
@@ -88,9 +93,9 @@ const Signup = () => {
               requiredMark={false}
             >
               <Form.Item
-                label="Full Name"
+                label={t('common.label.name')}
                 name="name"
-                rules={[{ required: true, message: 'Please input your name!' }]}
+                rules={[{ required: true, message: t('core.auth.message.name_required') }]}
               >
                 <Input
                   prefix={<User className="text-gray-400" size={20} />}
@@ -100,11 +105,11 @@ const Signup = () => {
               </Form.Item>
 
               <Form.Item
-                label="Email"
+                label={t('common.label.email')}
                 name="email"
                 rules={[
-                  { required: true, message: 'Please input your email!' },
-                  { type: 'email', message: 'Please enter a valid email!' },
+                  { required: true, message: t('core.auth.message.email_required') },
+                  { type: 'email', message: t('core.auth.message.email_invalid') },
                 ]}
               >
                 <Input
@@ -116,17 +121,17 @@ const Signup = () => {
               </Form.Item>
 
               <Form.Item
-                label="Password"
+                label={t('common.label.password')}
                 name="password"
                 rules={[
-                  { required: true, message: 'Please input your password!' },
-                  { min: 6, message: 'Password must be at least 6 characters!' },
+                  { required: true, message: t('core.auth.message.password_required') },
+                  { min: 6, message: t('core.auth.message.password_too_short') },
                 ]}
               >
                 <Input.Password
                   prefix={<Lock size={20} className="text-gray-400" />}
                   type="password"
-                  placeholder="Password"
+                  placeholder={t('common.label.password')}
                   size="large"
                 />
               </Form.Item>
@@ -141,7 +146,7 @@ const Signup = () => {
                   className="max-w-[300px] mx-auto"
                   loading={loading}
                 >
-                  Sign Up
+                  {t('core.auth.action.signup')}
                 </Button>
               </Form.Item>
 
@@ -154,12 +159,12 @@ const Signup = () => {
                 icon={<Chrome size={20} />}
                 className="max-w-[300px] mx-auto mb-4"
               >
-                Continue with Google
+                {t('core.auth.action.google_signup')}
               </Button>
 
               <p className="text-center">
-                Already have an account?{' '}
-                <Link to="/login">Sign in</Link>
+                {t('core.auth.label.already_have_account')}{' '}
+                <Link to="/login">{t('core.auth.action.sign_in')}</Link>
               </p>
             </Form>
           </Card>

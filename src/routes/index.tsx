@@ -1,7 +1,7 @@
 // src/routes/index.tsx
 // Mini-project routes: auth + dashboard + contacts (dynamic views) + profile + settings
 
-import React, { Suspense, lazy, useEffect } from 'react';
+import { Suspense, lazy, useEffect, FC } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from '@/core/lib/store';
 import { useTranslation } from 'react-i18next';
@@ -29,36 +29,35 @@ const Contacts = lazy(() => import('@/modules/crm/pages/Contacts'));
 const Profile = lazy(() => import('../pages/core/Profile'));
 const Settings = lazy(() => import('../pages/core/UserSetting'));
 
-// Navigation items generator for mini project
 const generateNavItems = (t: (key: string) => string) => {
     // For mini-project, we return a static set of nav items
     // In the full app, this would be dynamically generated based on permissions
     const items = [
         {
             key: '/welcome',
-            label: 'Home',
+            label: t('core.navigation.home'),
             path: '/welcome',
         },
         {
             key: '/dashboard',
-            label: t('nav.dashboard') || 'Dashboard',
+            label: t('core.navigation.dashboard'),
             path: '/dashboard',
         },
         {
             key: '/crm/contacts',
-            label: t('nav.contacts') || 'Contacts',
+            label: t('core.navigation.contacts'),
             path: '/crm/contacts',
         },
         {
             key: '/sample',
-            label: 'Sample Module',
+            label: t('core.navigation.sample'),
             path: '/sample',
         },
     ];
     return items;
 };
 
-export const AppRoutes: React.FC = () => {
+export const AppRoutes: FC = () => {
     const { user, permissions, setNavigationItems } = useAuthStore(state => ({
         user: state.user,
         permissions: state.permissions,
@@ -78,7 +77,7 @@ export const AppRoutes: React.FC = () => {
             console.log('>>> [AppRoutes] Permissions or User missing. Clearing nav items.');
             setNavigationItems([]);
         }
-    }, [permissions, user, setNavigationItems, t, i18n.isInitialized]);
+    }, [permissions, user, setNavigationItems, t, i18n.language, i18n.isInitialized]);
 
     return (
         <Suspense fallback={<LoadingFallback />}>
