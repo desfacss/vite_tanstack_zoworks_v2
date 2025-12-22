@@ -36,6 +36,7 @@ import menuConfig from '@/config/menuConfig.json';
 
 // Icon mapping based on logical association using Lucide Icons
 const iconMap: Record<string, React.ReactNode> = {
+  home: <Home size={18} />,
   dashboard: <Home size={18} />,
   users: <Users size={18} />,
   organizations: <Building2 size={18} />,
@@ -86,7 +87,7 @@ const iconMap: Record<string, React.ReactNode> = {
 //     items.push({
 //       key: route.routePath,
 //       icon: iconMap[route.key] || iconMap.default,
-//       label: t(`common.${route.translationKey}`),
+//       label: t(`common.label.${route.translationKey}`),
 //     });
 //   });
 
@@ -109,7 +110,7 @@ const iconMap: Record<string, React.ReactNode> = {
 //           moduleItems.push({
 //             key: route.routePath,
 //             icon: iconMap[route.key.replace('-view', '')] || iconMap.default,
-//             label: t(`common.${route.translationKey}`), // Use common.<key>
+//             label: t(`common.label.${route.translationKey}`), // Use common.<key>
 //           });
 //         }
 //       });
@@ -141,7 +142,7 @@ export const getNavigationItems = (
     items.push({
       key: route.routePath,
       icon: iconMap[route.key] || iconMap.default,
-      label: t(`common.${route.translationKey}`),
+      label: t(`common.label.${route.translationKey}`),
     });
   });
 
@@ -171,7 +172,7 @@ export const getNavigationItems = (
         moduleItems.push({
           key: route.routePath,
           icon: iconMap[route.key.replace('-view', '')] || iconMap.default,
-          label: t(`common.${route.translationKey}`),
+          label: t(`common.label.${route.translationKey}`),
         });
       }
     });
@@ -181,7 +182,7 @@ export const getNavigationItems = (
       items.push({
         key: module,
         icon: iconMap[module] || iconMap.default,
-        label: t(`common.${module}`),
+        label: t(`common.label.${module}`),
         children: moduleItems,
       });
     }

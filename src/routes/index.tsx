@@ -5,6 +5,7 @@ import { Suspense, lazy, useEffect, FC } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from '@/core/lib/store';
 import { useTranslation } from 'react-i18next';
+import { getNavigationItems } from '@/core/components/Layout/Sider/navigation';
 
 // Direct imports for critical components
 import PublicLayout from '../core/components/Layout/PublicLayout';
@@ -72,8 +73,8 @@ export const AppRoutes: FC = () => {
     useEffect(() => {
         if (permissions && user) {
             console.log('>>> [AppRoutes] Permissions and User exist. Setting Nav Items.');
-            const navItems = generateNavItems(t);
-            setNavigationItems(navItems);
+            const navItems = getNavigationItems(t, permissions, user) || [];
+            setNavigationItems(navItems as any);
         } else {
             console.log('>>> [AppRoutes] Permissions or User missing. Clearing nav items.');
             setNavigationItems([]);

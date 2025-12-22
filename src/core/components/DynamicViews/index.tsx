@@ -1451,6 +1451,7 @@ const DynamicViews: React.FC<DynamicViewsProps> = ({
       <PageActionBar>
         <ActionBarLeft>
           {renderTabs()}
+          {isTopLevel && isDesktop && globalFiltersElement}
         </ActionBarLeft>
         <ActionBarRight>
           {globalActionsElement}
@@ -1487,7 +1488,6 @@ const DynamicViews: React.FC<DynamicViewsProps> = ({
               />
             ) : (
               <div className="content-body">
-                {!!isTopLevel && isDesktop && globalFiltersElement}
                 <ViewComponent
                   entityType={entityType}
                   entitySchema={entitySchema}

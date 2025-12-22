@@ -21,6 +21,12 @@
   },
   "root": [
     {
+      "filePath": "src/core/components/Layout/WelcomeHub/index.tsx",
+      "routePath": "/welcome",
+      "translationKey": "home",
+      "key": "home"
+    },
+    {
       "filePath": "src/pages/Dashboard.tsx",
       "routePath": "/dashboard",
       "translationKey": "dashboard",
