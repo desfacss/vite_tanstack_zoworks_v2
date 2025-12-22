@@ -5,7 +5,7 @@ import Publitio from 'publitio_js_sdk';
 // import ReactCrop from 'react-image-crop';
 // import 'react-image-crop/dist/ReactCrop.css';
 import moment from 'moment';
-import { useAuthStore } from '@/core/lib/store';
+import { useAuthStore } from '@/lib/store';
 
 // Publitio configuration
 const publitio = new Publitio(import.meta.env.VITE_PUBLITIO_API_KEY, import.meta.env.VITE_PUBLITIO_API_SECRET);
@@ -28,18 +28,18 @@ interface FileObject {
     location?: { lat: number; lng: number };
 }
 
-export interface ImageUploaderProps {
+interface FileUploaderProps {
     onUploadComplete: (files: FileObject[]) => void;
     maxFiles?: number;
     allowedTypes?: string[];
     autoUpload?: boolean;
 }
 
-interface ImageUploaderRef {
+interface FileUploaderRef {
     triggerUpload: () => Promise<FileObject[]>;
 }
 
-const ImageUploader = forwardRef<ImageUploaderRef, ImageUploaderProps>(
+const FileUploader = forwardRef<FileUploaderRef, FileUploaderProps>(
     ({ onUploadComplete, maxFiles = uploadConfig.maxFiles, allowedTypes = uploadConfig.allowedTypes, autoUpload = false }, ref) => {
         const { user } = useAuthStore();
         const [loading, setLoading] = useState(false);
@@ -219,7 +219,7 @@ const ImageUploader = forwardRef<ImageUploaderRef, ImageUploaderProps>(
     //   }
     // }, [getCroppedImage]);
 
-        const handleGoogleDocChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+        const handleGoogleDocChange = useCallback((e) => {
             const newLink = e.target.value;
             setGoogleDocLink(newLink);
             if (newLink) {
@@ -459,6 +459,4 @@ const ImageUploader = forwardRef<ImageUploaderRef, ImageUploaderProps>(
     }
 );
 
-ImageUploader.displayName = 'ImageUploader';
-
-export default ImageUploader;
+export default FileUploader;

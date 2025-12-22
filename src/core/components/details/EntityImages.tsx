@@ -34,7 +34,6 @@ const EntityImages: React.FC<EntityImagesProps> = ({ entity_type, entity_id }) =
   const [gallery, setGallery] = useState<GallerySet[]>([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [fileToDelete, setFileToDelete] = useState<{ id: string; name: string } | null>(null);
-
   // Fetch existing files
   useEffect(() => {
     const fetchFiles = async () => {

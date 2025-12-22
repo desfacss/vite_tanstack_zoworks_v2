@@ -484,7 +484,9 @@ interface Message {
 }
 
 interface TicketProps {
-  editItem: { id: string } | null;
+  data?: { id: string } | null;  // Changed from 'editItem' to match DetailsView prop passing
+  entityId?: string;              // Also passed by DetailsView
+  entityType?: string;            // Also passed by DetailsView
 }
 
 interface TicketDetails {
@@ -497,19 +499,18 @@ interface TicketDetails {
 // ===================================================================================
 // COMPONENT DEFINITION
 // ===================================================================================
-const Ticket: React.FC<TicketProps> = ({ editItem }) => {
+const Ticket: React.FC<TicketProps> = ({ data, entityId }) => {
   const { notification } = App.useApp(); // Use context-aware notifications
-  const { user,appSettings } = useAuthStore();
-  const ticketId = editItem?.id;
-
+  const { user, organization } = useAuthStore();
+  const ticketId = data?.id || entityId;  // Use data.id or entityId fallback
+  const appSettings =organization?.app_settings;
   const [messages, setMessages] = useState<Message[]>([]);
   const [ticketDetails, setTicketDetails] = useState<TicketDetails | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [replyContent, setReplyContent] = useState<string>('');
   const [sending, setSending] = useState<boolean>(false);
-  const supportEmail=appSettings?.emailOverrides?.email ||appSettings?.email?.[0];
-console.log("azz",supportEmail,appSettings);
+  const supportEmail = appSettings?.emailOverrides?.email || appSettings?.email?.[0];
   useEffect(() => {
     if (!ticketId) {
       setError('No ticket ID provided.');
@@ -580,7 +581,7 @@ console.log("azz",supportEmail,appSettings);
       // Fetch the latest message to get recipient details
       const { data: latestMessage, error: messageError } = await supabase.schema('external').from('messages').select('content').eq('conversation_id', ticketDetails.conversation_id).order('timestamp', { ascending: false }).limit(1).single();
       if (messageError) throw new Error(`Failed to fetch latest message: ${messageError.message}`);
-      
+
       const messageContent = latestMessage?.content ? (typeof latestMessage.content === 'string' ? JSON.parse(latestMessage.content) : latestMessage.content) : null;
       if (!messageContent) throw new Error('No content found in the latest message.');
 
@@ -589,9 +590,9 @@ console.log("azz",supportEmail,appSettings);
       const fromEmails = Array.isArray(messageContent.from) ? messageContent.from : [messageContent.from];
       const toEmails = Array.isArray(messageContent.to) ? messageContent.to : [messageContent.to];
       const ccEmails = Array.isArray(messageContent.cc) ? messageContent.cc : [];
-      
+
       const allEmails = [...fromEmails, ...toEmails, ...ccEmails];
-      
+
       const uniqueEmails = Array.from(new Set(allEmails))
         .filter(Boolean) // Remove any null/undefined entries
         .filter(email => email.toLowerCase() !== agentEmail.toLowerCase()) // [FIXED] Filter out the agent sending the reply
@@ -608,7 +609,7 @@ console.log("azz",supportEmail,appSettings);
 
       // 1. Send the email
       await sendEmail([{ ...emailData, text: emailData.body_text, messageId: emailMessageId, inReplyTo: inReplyTo }]);
-      
+
       // 2. Save the reply to the database
       const { error: rpcError } = await supabase.rpc('tkt_add_reply_to_conversation', {
         p_conversation_id: ticketDetails.conversation_id,
@@ -661,7 +662,7 @@ console.log("azz",supportEmail,appSettings);
       <Card style={{ marginBottom: '16px' }}>
         <Text strong>Reply to Ticket</Text>
         <TextArea rows={4} value={replyContent} onChange={(e) => setReplyContent(e.target.value)} placeholder="Type your reply here..." style={{ marginTop: '8px', marginBottom: '8px' }} />
-        <Button type="primary" icon={<SendOutlined />} onClick={handleSendReply} loading={sending} disabled={!replyContent.trim()}>Send Reply</Button>
+        <Button type="primary" icon={<Send />} onClick={handleSendReply} loading={sending} disabled={!replyContent.trim()}>Send Reply</Button>
       </Card>
       {messages.length > 0 ? <Collapse bordered style={{ background: '#fff' }} accordion items={items} /> : <Alert message="No messages found for this ticket." type="info" showIcon />}
     </div>
