@@ -28,6 +28,7 @@ const WelcomeHub = lazy(() => import('../core/components/Layout/WelcomeHub'));
 const SamplePage = lazy(() => import('../pages/SamplePage'));
 const Contacts = lazy(() => import('@/modules/crm/pages/Contacts'));
 const Tickets = lazy(() => import('@/modules/tickets/pages/Tickets'));
+const ServiceAssets = lazy(() => import('@/modules/external/pages/ServiceAssets'));
 const Profile = lazy(() => import('../pages/core/Profile'));
 const Settings = lazy(() => import('../pages/core/UserSetting'));
 
@@ -114,6 +115,9 @@ export const AppRoutes: FC = () => {
 
                         {/* Support - Tickets */}
                         <Route path="/support/tickets" element={<Tickets />} />
+
+                        {/* External - Service Assets */}
+                        <Route path="/external/service-assets" element={<ServiceAssets />} />
 
                         {/* Profile & Settings */}
                         <Route path="/profile" element={<Profile />} />

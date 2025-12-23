@@ -270,7 +270,7 @@ export async function getOrganizationLocations(organizationId: string): Promise<
   }
   try {
     const { data: locations, error } = await supabase
-      .schema('organization') // Ensure schema is correct
+      .schema('identity') // Ensure schema is correct
       .from('locations')
       .select('*')
       .eq('organization_id', organizationId)

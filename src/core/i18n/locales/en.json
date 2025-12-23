@@ -37,6 +37,8 @@
         "documentation": "Documentation",
         "support": "Support",
         "tickets": "Tickets",
+        "external": "External",
+        "service-assets": "Service Assets",
         "error": "Error",
         "yes": "Yes",
         "no": "No",

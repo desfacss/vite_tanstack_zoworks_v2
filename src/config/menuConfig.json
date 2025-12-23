@@ -17,6 +17,15 @@
         "key": "tickets",
         "submoduleKey": "support-tickets"
       }
+    ],
+    "external": [
+      {
+        "filePath": "src/modules/external/pages/ServiceAssets.tsx",
+        "routePath": "/external/service-assets",
+        "translationKey": "service-assets",
+        "key": "service-assets",
+        "submoduleKey": "external-service-assets"
+      }
     ]
   },
   "root": [
