@@ -37,9 +37,6 @@
         "documentation": "Documentation",
         "support": "Support",
         "tickets": "Tickets",
-        "sample": "Sample Module",
-        "crm-contacts": "Contacts",
-        "contacts": "Contacts",
         "error": "Error",
         "yes": "Yes",
         "no": "No",
@@ -229,7 +226,8 @@
           "stat_pending_tasks": "Pending Tasks",
           "stat_due_today": "Due Today",
           "stat_completed": "Completed",
-          "need_help": "Need help getting started?"
+          "need_help": "Need help getting started?",
+          "whats_included": "What's included in your workspace:"
         },
         "action": {
           "dashboard": "Dashboard",
@@ -243,7 +241,17 @@
           "messages": "Messages",
           "messages_desc": "Check conversations",
           "settings": "Settings",
-          "settings_desc": "Configure preferences"
+          "settings_desc": "Configure preferences",
+          "get_started": "Get Started",
+          "view_tickets": "View Tickets"
+        },
+        "feature": {
+          "analytics_title": "Real-time Analytics",
+          "analytics_desc": "Track your key performance indicators and business growth in real-time.",
+          "support_title": "Advanced Support",
+          "support_desc": "Manage your tickets and customer support requests with ease.",
+          "workflow_title": "Smart Workflows",
+          "workflow_desc": "Automate your daily tasks and focus on what matters most for your business."
         }
       },
       "error": {

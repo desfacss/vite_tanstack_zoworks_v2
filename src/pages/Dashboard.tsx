@@ -200,22 +200,30 @@ const DashboardPage: React.FC = () => {
         <ActionBarLeft>
           <Select
             value={currentDashboard?.id}
-            style={{ width: 200 }}
+            style={{ width: 220 }}
             onChange={(id) => {
               const d = dashboards.find(x => x.id === id);
               if (d) setCurrentDashboard(d);
             }}
             disabled={isEditMode}
+            className="rounded-lg shadow-sm"
           >
             {dashboards.map(d => <Option key={d.id} value={d.id}>{d.name}</Option>)}
           </Select>
-          {isDirty && <span className="hidden sm:inline-block text-amber-600 text-xs font-bold">● {t('common.message.unsaved_changes')}</span>}
+          {isDirty && <span className="hidden lg:inline-block text-amber-500 text-xs font-bold animate-pulse whitespace-nowrap">● {t('common.message.unsaved_changes')}</span>}
         </ActionBarLeft>
 
         <ActionBarRight>
           {!isEditMode ? (
             <>
-              <Button icon={<RefreshCw size={16} />} onClick={() => fetchMetricData(currentDashboard?.widgets || [], true)}>{t('common.action.refresh')}</Button>
+              <Button
+                variant="outlined"
+                icon={<RefreshCw size={16} />}
+                onClick={() => fetchMetricData(currentDashboard?.widgets || [], true)}
+                className="hover:scale-105 transition-transform"
+              >
+                {t('common.action.refresh')}
+              </Button>
               <PrimaryAction
                 label={t('common.action.design')}
                 icon={<Pencil size={16} />}
@@ -224,13 +232,25 @@ const DashboardPage: React.FC = () => {
             </>
           ) : (
             <>
-              <Button icon={<Eye size={16} />} onClick={() => {
-                const original = dashboards.find(d => d.id === currentDashboard.id);
-                setCurrentDashboard(original);
-                setIsEditMode(false);
-                setIsDirty(false);
-              }}>{t('common.action.cancel')}</Button>
-              <Button icon={<Plus size={16} />} onClick={() => setIsLibraryOpen(true)}>{t('common.action.add_widget')}</Button>
+              <Button
+                variant="outlined"
+                icon={<Eye size={16} />}
+                onClick={() => {
+                  const original = dashboards.find(d => d.id === currentDashboard.id);
+                  setCurrentDashboard(original);
+                  setIsEditMode(false);
+                  setIsDirty(false);
+                }}
+              >
+                {t('common.action.cancel')}
+              </Button>
+              <Button
+                variant="outlined"
+                icon={<Plus size={16} />}
+                onClick={() => setIsLibraryOpen(true)}
+              >
+                {t('common.action.add_widget')}
+              </Button>
               <PrimaryAction
                 label={t('common.action.save')}
                 icon={<Save size={16} />}

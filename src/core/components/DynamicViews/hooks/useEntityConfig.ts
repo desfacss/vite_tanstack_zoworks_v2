@@ -27,6 +27,7 @@ interface ViewConfig {
   metricsview?: Record<string, any> | null;
   dashboardview?: Record<string, any> | null;
   metadata?: any[] | null;
+  v_metadata?: any[] | null;
 }
 
 export const useViewConfigEnhanced = (entityType: string, entitySchema: string, testing: boolean) => {
@@ -41,11 +42,11 @@ export const useViewConfigEnhanced = (entityType: string, entitySchema: string, 
       try {
         const localConfig = (entityConfigs as any)[entityType];
         const localViewConfig = (viewConfigs as any)[entityType];
-        
+
         if (localConfig && localViewConfig) {
           return { config: localConfig, viewConfig: localViewConfig };
         }
-        
+
         console.warn(`Local config file for ${entityType} not found, falling back to database.`);
       } catch (error) {
         console.warn(`Error loading local config for ${entityType}, falling back to database.`, error);
@@ -76,7 +77,7 @@ export const useViewConfigEnhanced = (entityType: string, entitySchema: string, 
         console.warn(`No view config found in core.view_configs for entity_id: ${entityData.id}`);
         return { config: null, viewConfig: null };
       }
-      
+
       const mergedConfig = {
         ...viewConfigData.general,
         details: {
@@ -84,8 +85,8 @@ export const useViewConfigEnhanced = (entityType: string, entitySchema: string, 
           ...(viewConfigData.details || {}),
         },
       };
-      
-      return { config: mergedConfig, viewConfig: {...viewConfigData,metadata:entityData?.metadata,v_metadata:entityData?.v_metadata} };
+
+      return { config: mergedConfig, viewConfig: { ...viewConfigData, metadata: entityData?.metadata, v_metadata: entityData?.v_metadata } };
     },
     enabled: !!entityType && !!organization?.id && !!entitySchema,
     staleTime: 24 * (testing ? 1 : (60 * 60 * 1000)),

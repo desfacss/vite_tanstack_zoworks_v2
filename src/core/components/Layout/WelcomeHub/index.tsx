@@ -17,13 +17,6 @@ import {
     ActionBarRight,
 } from '@/core/components/ActionBar';
 
-interface QuickAction {
-    icon: React.ReactNode;
-    label: string;
-    description: string;
-    path: string;
-    gradient: string;
-}
 
 /**
  * WelcomeHub - Landing page for authenticated users
@@ -57,30 +50,6 @@ export const WelcomeHub: React.FC = () => {
     // Get user's first name
     const firstName = user?.name?.split(' ')[0] || t('common.label.user_placeholder');
 
-    // Quick actions with gradients
-    const quickActions: QuickAction[] = [
-        {
-            icon: <LayoutDashboard size={24} />,
-            label: t('core.welcome_hub.action.dashboard'),
-            description: t('core.welcome_hub.action.dashboard_desc'),
-            path: '/dashboard',
-            gradient: 'from-blue-500 to-cyan-400',
-        },
-        {
-            icon: <Ticket size={24} />,
-            label: t('core.welcome_hub.action.tickets'),
-            description: t('core.welcome_hub.action.tickets_desc'),
-            path: '/tickets',
-            gradient: 'from-purple-500 to-pink-400',
-        },
-        {
-            icon: <Calendar size={24} />,
-            label: t('core.welcome_hub.action.tasks'),
-            description: t('core.welcome_hub.action.tasks_desc'),
-            path: '/tasks',
-            gradient: 'from-orange-500 to-amber-400',
-        },
-    ];
 
     // Format date
     const formatDate = () => {
@@ -114,61 +83,148 @@ export const WelcomeHub: React.FC = () => {
             </PageActionBar>
 
 
-            {/* Main Content - White Card */}
+            {/* Main Content Area */}
             <div className="main-content">
                 <div className="content-body">
-                    {/* Welcome Section */}
                     <motion.div
-                        className="mb-8"
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.4 }}
+                        initial="hidden"
+                        animate="visible"
+                        variants={{
+                            hidden: { opacity: 0 },
+                            visible: {
+                                opacity: 1,
+                                transition: {
+                                    staggerChildren: 0.15,
+                                    delayChildren: 0.1
+                                }
+                            }
+                        }}
+                        className="max-w-7xl mx-auto py-8 md:py-12"
                     >
-                        <h1 className={`text-3xl md:text-4xl font-bold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                            {getGreeting()}, <span className="bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">{firstName}</span>!
-                        </h1>
-                        <p className={`text-lg ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                            {t('core.welcome_hub.label.description')}
-                        </p>
-                    </motion.div>
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
 
-                    {/* Quick Actions */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.4, delay: 0.1 }}
-                    >
-                        <h2 className={`text-lg font-semibold mb-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                            {t('core.welcome_hub.label.quick_actions')}
-                        </h2>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {quickActions.map((action, index) => (
-                                <motion.button
-                                    key={action.path}
-                                    onClick={() => navigate(action.path)}
-                                    className={`group relative p-5 rounded-xl text-left transition-all duration-200
-                                        ${isDarkMode
-                                            ? 'bg-gray-800/50 hover:bg-gray-700/50 border border-gray-700'
-                                            : 'bg-gray-50 hover:bg-gray-100 border border-gray-200'
-                                        }`}
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ duration: 0.3, delay: 0.15 + index * 0.05 }}
-                                    whileHover={{ y: -2 }}
-                                    whileTap={{ scale: 0.98 }}
-                                >
-                                    <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${action.gradient} flex items-center justify-center text-white mb-3`}>
-                                        {action.icon}
-                                    </div>
-                                    <h3 className={`font-semibold mb-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                                        {action.label}
-                                    </h3>
-                                    <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                                        {action.description}
+                            {/* Left Section: Value Proposition */}
+                            <motion.div
+                                variants={{
+                                    hidden: { opacity: 0, x: -30 },
+                                    visible: { opacity: 1, x: 0, transition: { duration: 0.6, ease: "easeOut" } }
+                                }}
+                                className="space-y-8"
+                            >
+                                <div className="space-y-4">
+                                    <h1 className={`text-5xl md:text-7xl font-bold leading-tight ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                                        {getGreeting()}, <br />
+                                        <span className="bg-gradient-to-r from-[var(--color-primary)] to-purple-500 bg-clip-text text-transparent">
+                                            {firstName}
+                                        </span>
+                                    </h1>
+                                    <p className={`text-xl md:text-2xl max-w-lg leading-relaxed ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                                        {t('core.welcome_hub.label.description')}
                                     </p>
-                                    <ArrowRight className={`absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 opacity-0 group-hover:opacity-100 transition-all duration-200 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
-                                </motion.button>
-                            ))}
+                                </div>
+
+                                <div className="flex flex-wrap gap-4">
+                                    <motion.button
+                                        whileHover={{ scale: 1.05, boxShadow: "0 10px 25px -5px rgba(var(--color-primary-rgb), 0.4)" }}
+                                        whileTap={{ scale: 0.95 }}
+                                        onClick={() => navigate('/dashboard')}
+                                        className="px-8 py-4 bg-[var(--color-primary)] text-white rounded-2xl font-semibold shadow-xl shadow-[var(--color-primary)]/20 flex items-center gap-2 transition-all hover:brightness-110"
+                                    >
+                                        {t('core.welcome_hub.action.get_started')}
+                                        <ArrowRight size={22} />
+                                    </motion.button>
+
+                                    <motion.button
+                                        whileHover={{ scale: 1.05 }}
+                                        whileTap={{ scale: 0.95 }}
+                                        onClick={() => navigate('/support/tickets')}
+                                        className={`px-8 py-4 rounded-2xl font-semibold border transition-all backdrop-blur-sm
+                                            ${isDarkMode
+                                                ? 'bg-gray-800/40 border-gray-700 text-gray-300 hover:bg-gray-700'
+                                                : 'bg-white/40 border-gray-200 text-gray-700 hover:bg-gray-50'
+                                            }`}
+                                    >
+                                        {t('core.welcome_hub.action.view_tickets')}
+                                    </motion.button>
+                                </div>
+
+                                <motion.p
+                                    variants={{ hidden: { opacity: 0 }, visible: { opacity: 1 } }}
+                                    className={`text-sm font-medium ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}
+                                >
+                                    {organization?.name} • {brandName} Platform
+                                </motion.p>
+                            </motion.div>
+
+                            {/* Right Section: Glassmorphism Feature Card */}
+                            <motion.div
+                                variants={{
+                                    hidden: { opacity: 0, scale: 0.9, y: 30 },
+                                    visible: { opacity: 1, scale: 1, y: 0, transition: { duration: 0.7, ease: "circOut" } }
+                                }}
+                                className="relative"
+                            >
+                                {/* Background ambient glow */}
+                                <div className="absolute -inset-10 bg-[var(--color-primary)]/10 rounded-full blur-[100px] pointer-events-none" />
+
+                                <div className={`relative p-8 md:p-12 rounded-[2.5rem] border backdrop-blur-2xl transition-all duration-500
+                                    ${isDarkMode
+                                        ? 'bg-gray-900/60 border-white/10 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.6)]'
+                                        : 'bg-white/70 border-gray-100 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)]'
+                                    }`}
+                                >
+                                    <h2 className={`text-3xl font-bold mb-10 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                                        {t('core.welcome_hub.label.whats_included')}
+                                    </h2>
+
+                                    <div className="space-y-10">
+                                        {[
+                                            {
+                                                icon: <LayoutDashboard className="text-blue-400" size={24} />,
+                                                title: t('core.welcome_hub.feature.analytics_title'),
+                                                desc: t('core.welcome_hub.feature.analytics_desc'),
+                                                bgColor: 'bg-blue-500/10'
+                                            },
+                                            {
+                                                icon: <Ticket className="text-purple-400" size={24} />,
+                                                title: t('core.welcome_hub.feature.support_title'),
+                                                desc: t('core.welcome_hub.feature.support_desc'),
+                                                bgColor: 'bg-purple-500/10'
+                                            },
+                                            {
+                                                icon: <Calendar className="text-orange-400" size={24} />,
+                                                title: t('core.welcome_hub.feature.workflow_title'),
+                                                desc: t('core.welcome_hub.feature.workflow_desc'),
+                                                bgColor: 'bg-orange-500/10'
+                                            }
+                                        ].map((feature, i) => (
+                                            <motion.div
+                                                key={i}
+                                                variants={{
+                                                    hidden: { opacity: 0, x: 20 },
+                                                    visible: { opacity: 1, x: 0 }
+                                                }}
+                                                className="flex gap-6 group cursor-default"
+                                            >
+                                                <div className={`flex-shrink-0 w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:rotate-3 shadow-sm
+                                                    ${isDarkMode ? 'bg-white/5 border border-white/5' : 'bg-gray-50 border border-gray-100'}`}
+                                                >
+                                                    {feature.icon}
+                                                </div>
+                                                <div className="space-y-1.5 py-1">
+                                                    <h3 className={`text-lg font-bold ${isDarkMode ? 'text-gray-100' : 'text-gray-900'}`}>
+                                                        {feature.title}
+                                                    </h3>
+                                                    <p className={`text-base leading-relaxed ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                                                        {feature.desc}
+                                                    </p>
+                                                </div>
+                                            </motion.div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </motion.div>
+
                         </div>
                     </motion.div>
                 </div>

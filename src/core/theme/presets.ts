@@ -104,5 +104,27 @@ export const THEME_PRESETS: Record<string, Partial<TenantThemeConfig>> = {
             layoutBg: 'linear-gradient(135deg, #0f172a 0%, #312e81 50%, #581c87 100%)',
             textColor: '#f8fafc',
         }
+    },
+
+    // Neon Tech Theme - Inspired by Neon.com
+    neon: {
+        borderRadius: 8,
+        preset: 'neon',
+        light: {
+            primaryColor: '#00E599', // Neon Green/Cyan
+            secondaryColor: '#00A3FF', // Neon Blue
+            cardBg: '#ffffff',
+            layoutBg: '#f9fbfd',
+            textColor: '#0a0a0a',
+        },
+        dark: {
+            primaryColor: '#00E599',
+            secondaryColor: '#00A3FF',
+            cardBg: '#0f0f0f', // Near black card
+            layoutBg: '#020202', // Pitch black layout
+            headerBg: '#000000',
+            siderBg: '#000000',
+            textColor: '#ffffff',
+        }
     }
 };

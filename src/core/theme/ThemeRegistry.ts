@@ -148,6 +148,7 @@ function applyStaticBranding(config: TenantThemeConfig): void {
 
     // CSS Variables for custom styles
     const root = document.documentElement;
+    root.setAttribute('data-theme-preset', config.preset || 'default');
     root.style.setProperty('--tenant-primary', config.primaryColor);
     root.style.setProperty('--tenant-secondary', config.secondaryColor || config.primaryColor);
     root.style.setProperty('--tenant-brand-name', config.brandName);

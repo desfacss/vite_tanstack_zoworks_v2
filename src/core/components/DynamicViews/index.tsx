@@ -120,7 +120,7 @@
 
 //   const handleClearFilters = () => {
 //     // 1. Reset the persistent state first (clears the filters in the store)
-//     resetViewPreferences(entityType);
+//     if (user?.id) resetViewPreferences(user.id, entityType);
 
 //     // 2. Compute the new initial filters (which will now correctly exclude the old saved filters)
 //     // We only want the *propDefaultFilters* and *config* defaults to remain.
@@ -768,6 +768,7 @@ interface DynamicViewsProps {
       join_table?: string;
     };
     hiddenFields?: string[];
+    queryConfig?: Record<string, any>;
   }>;
   defaultFilters?: Record<string, any>;
   searchConfig?: {
@@ -912,7 +913,7 @@ const DynamicViews: React.FC<DynamicViewsProps> = ({
 
   const handleClearFilters = () => {
     // 1. Reset persistent state
-    resetViewPreferences(entityType);
+    if (user?.id) resetViewPreferences(user.id, entityType);
 
     // 2. Compute new defaults
     const newInitialFilters = {
@@ -1157,8 +1158,9 @@ const DynamicViews: React.FC<DynamicViewsProps> = ({
       allDisplayableColumns={allDisplayableColumns}
       visibleColumns={visibleColumns}
       setVisibleColumns={setVisibleColumns}
+      layout="inline"
     />
-  ), [tableData, entityType, JSON.stringify(propDefaultFilters), searchConfig, JSON.stringify(initialFilters), allDisplayableColumns, visibleColumns, filterValues]);
+  ), [entities, entityType, JSON.stringify(propDefaultFilters), searchConfig, JSON.stringify(initialFilters), allDisplayableColumns, visibleColumns, filterValues]);
 
   useEffect(() => {
     if (detailView) return;
@@ -1173,12 +1175,12 @@ const DynamicViews: React.FC<DynamicViewsProps> = ({
       filters: filterValues,
       pageSize: pageSize,
       tabs: {
-        ...(viewPreferences[viewContextKey]?.tabs || {}),
+        ...(user?.id ? (viewPreferences as any)[user.id]?.[viewContextKey]?.tabs : {}),
         [currentTab]: { currentPage: currentPageIndex + 1 }, // Store as human readable 1-based
       },
     };
-    setViewPreferences(viewContextKey, preferencesToSave);
-  }, [viewType, currentTab, filterValues, pageSize, currentPageIndex]);
+    if (user?.id) setViewPreferences(user.id, viewContextKey, preferencesToSave);
+  }, [user?.id, viewType, currentTab, JSON.stringify(filterValues), pageSize, currentPageIndex]);
 
   // --- Handlers ---
 
@@ -1451,9 +1453,9 @@ const DynamicViews: React.FC<DynamicViewsProps> = ({
       <PageActionBar>
         <ActionBarLeft>
           {renderTabs()}
-          {isTopLevel && isDesktop && globalFiltersElement}
         </ActionBarLeft>
         <ActionBarRight>
+          {!!isTopLevel && isDesktop && globalFiltersElement}
           {globalActionsElement}
           {renderViewSelector()}
         </ActionBarRight>
@@ -1473,7 +1475,7 @@ const DynamicViews: React.FC<DynamicViewsProps> = ({
             {entities.length === 0 && !isDataLoading && currentPageIndex === 0 ? (
               <ZeroStateContent
                 entityName={config?.details?.name}
-                globalFiltersElement={isTopLevel && isDesktop ? globalFiltersElement : null}
+                globalFiltersElement={null}
                 globalActionsElement={globalActionsElement}
                 searchConfig={searchConfig}
                 hasActiveFilters={Object.keys(filterValues).some(

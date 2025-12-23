@@ -1045,11 +1045,39 @@ body {
   background: rgba(255, 255, 255, 0.15) !important;
 }
 
-/* ===== SIDEBAR ===== */
 [data-theme-layout="gradient-card"] .ant-layout-sider {
   background: #ffffff !important;
+  color: #1a1a1a !important;
   box-shadow: 2px 0 8px rgba(0, 0, 0, 0.05);
   z-index: 10;
+}
+
+[data-theme-layout="gradient-card"] .ant-menu-item,
+[data-theme-layout="gradient-card"] .ant-menu-submenu-title {
+  color: #1a1a1a !important;
+}
+
+[data-theme-layout="gradient-card"] .ant-menu-item .ant-menu-item-icon,
+[data-theme-layout="gradient-card"] .ant-menu-submenu-title .ant-menu-item-icon {
+  color: #1a1a1a !important;
+}
+
+[data-theme-layout="gradient-card"] .ant-menu-item-selected {
+  color: var(--tenant-primary) !important;
+}
+
+[data-theme-layout="gradient-card"] .ant-menu-item-selected .ant-menu-item-icon {
+  color: var(--tenant-primary) !important;
+}
+
+[data-theme-layout="gradient-card"] .ant-menu-item:hover,
+[data-theme-layout="gradient-card"] .ant-menu-submenu-title:hover {
+  color: var(--tenant-primary) !important;
+}
+
+[data-theme-layout="gradient-card"] .ant-menu-item:hover .ant-menu-item-icon,
+[data-theme-layout="gradient-card"] .ant-menu-submenu-title:hover .ant-menu-item-icon {
+  color: var(--tenant-primary) !important;
 }
 
 [data-theme-layout="gradient-card"] .ant-menu {
@@ -1225,6 +1253,35 @@ body {
 .dark[data-theme-layout="gradient-card"] .ant-layout-sider,
 .dark[data-theme-layout="gradient-card"] .ant-menu {
   background: #1a1a1a !important;
+  color: #ffffff !important;
+}
+
+.dark[data-theme-layout="gradient-card"] .ant-menu-item,
+.dark[data-theme-layout="gradient-card"] .ant-menu-submenu-title {
+  color: #ffffff !important;
+}
+
+.dark[data-theme-layout="gradient-card"] .ant-menu-item .ant-menu-item-icon,
+.dark[data-theme-layout="gradient-card"] .ant-menu-submenu-title .ant-menu-item-icon {
+  color: #ffffff !important;
+}
+
+.dark[data-theme-layout="gradient-card"] .ant-menu-item-selected {
+  color: var(--tenant-primary) !important;
+}
+
+.dark[data-theme-layout="gradient-card"] .ant-menu-item-selected .ant-menu-item-icon {
+  color: var(--tenant-primary) !important;
+}
+
+.dark[data-theme-layout="gradient-card"] .ant-menu-item:hover,
+.dark[data-theme-layout="gradient-card"] .ant-menu-submenu-title:hover {
+  color: var(--tenant-primary) !important;
+}
+
+.dark[data-theme-layout="gradient-card"] .ant-menu-item:hover .ant-menu-item-icon,
+.dark[data-theme-layout="gradient-card"] .ant-menu-submenu-title:hover .ant-menu-item-icon {
+  color: var(--tenant-primary) !important;
 }
 
 .dark[data-theme-layout="gradient-card"] .ant-drawer-content {
@@ -1465,4 +1522,300 @@ legend {
   flex: 1;
   overflow-y: auto;
   min-height: 0;
+}
+
+/* ============================================
+   NEON THEME PRESET
+   - Inspired by Neon.com
+   - Deep black backgrounds, vibrant neon glows
+   - Smooth animated transitions
+   ============================================ */
+
+[data-theme-preset="neon"] {
+  --neon-primary: #00E599;
+  --neon-secondary: #00A3FF;
+  --neon-bg-glow: rgba(0, 229, 153, 0.12);
+  --neon-border: rgba(0, 229, 153, 0.15);
+  --neon-card-bg: rgba(13, 13, 13, 0.9);
+  /* Distinct Square Pixel Texture */
+  --neon-pixel-grid:
+    linear-gradient(rgba(0, 229, 153, 0.08) 2px, transparent 2px),
+    linear-gradient(90deg, rgba(0, 229, 153, 0.08) 2px, transparent 2px);
+  --neon-pixel-size: 14px 14px;
+}
+
+/* Base Layout Overrides - Immersive Startup Pattern */
+[data-theme-preset="neon"].dark .ant-layout {
+  background: #000000 !important;
+  position: relative;
+  overflow: hidden;
+  background-image:
+    radial-gradient(circle at 20% -10%, rgba(0, 229, 153, 0.15) 0%, transparent 40%),
+    radial-gradient(circle at 80% 10%, rgba(0, 163, 255, 0.1) 0%, transparent 50%),
+    linear-gradient(180deg, #000000 0%, #050505 100%) !important;
+  background-size: 100% 100% !important;
+  background-attachment: fixed !important;
+}
+
+/* [BACKUP] One-time Startup Shimmer for Pixel Highlighting (Cluster Version)
+[data-theme-preset="neon"].dark .ant-layout::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-image: var(--neon-pixel-grid);
+  background-size: var(--neon-pixel-size);
+  background-color: var(--neon-primary);
+  mask-image: 
+    radial-gradient(circle at 20% 30%, black 0%, transparent 15%),
+    radial-gradient(circle at 80% 70%, black 0%, transparent 20%),
+    radial-gradient(circle at 50% 10%, black 0%, transparent 25%),
+    radial-gradient(circle at 10% 90%, black 0%, transparent 20%);
+  mask-repeat: no-repeat;
+  mask-size: 100% 100%;
+  opacity: 0;
+  z-index: 1;
+  pointer-events: none;
+  animation: neon-pixel-startup-clusters 6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+*/
+
+[data-theme-preset="neon"].dark .ant-layout-sider {
+  background: rgba(0, 0, 0, 0.6) !important;
+  backdrop-filter: blur(30px);
+  border-right: 1px solid var(--neon-border) !important;
+}
+
+[data-theme-preset="neon"].dark .ant-layout-header {
+  background: transparent !important;
+  border-bottom: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+}
+
+/* Jazzy Card & Content Styling */
+[data-theme-preset="neon"].dark .main-content,
+[data-theme-preset="neon"].dark .ant-card {
+  background: linear-gradient(135deg, rgba(8, 8, 8, 0.98) 0%, rgba(15, 15, 15, 0.95) 100%) !important;
+  background-image:
+    linear-gradient(90deg, rgba(0, 229, 153, 0.05) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(0, 229, 153, 0.05) 1px, transparent 1px),
+    linear-gradient(135deg, rgba(8, 8, 8, 0.98) 0%, rgba(15, 15, 15, 0.95) 100%) !important;
+  background-size: 16px 16px, 16px 16px, 100% 100% !important;
+  backdrop-filter: blur(25px);
+  border: 1px solid rgba(0, 229, 153, 0.1) !important;
+  box-shadow:
+    0 10px 40px rgba(0, 0, 0, 0.8),
+    inset 0 0 50px rgba(0, 229, 153, 0.02) !important;
+  transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Enhanced Inner Glow on hover */
+/* Electric Border Path Animation: Traces Top -> Corner -> Right */
+/* High-Impact Electric Thunderbolt: Top-Right -> Bottom-Right -> Diagonal Vanish */
+[data-theme-preset="neon"].dark .main-content::before,
+[data-theme-preset="neon"].dark .ant-card::before {
+  content: '';
+  position: absolute;
+  width: 140px;
+  /* Long, sharp bolt */
+  height: 2.5px;
+  background: linear-gradient(90deg,
+      transparent 0%,
+      var(--neon-primary) 30%,
+      #ffffff 50%,
+      var(--neon-primary) 70%,
+      transparent 100%);
+  filter: blur(0.5px);
+  box-shadow:
+    0 0 15px var(--neon-primary),
+    0 0 30px rgba(0, 229, 153, 0.4) !important;
+  z-index: 20;
+  pointer-events: none;
+  border-radius: 100px;
+
+  /* Advanced Path: Top-Right -> Bottom-Right -> Top-Left (Diagonal) */
+  offset-path: polygon(100% 0%, 100% 100%, 0% 0%);
+  offset-rotate: auto;
+  animation: neon-thunderbolt-cinematic 8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  opacity: 0;
+}
+
+@keyframes neon-thunderbolt-cinematic {
+  0% {
+    offset-distance: 0%;
+    opacity: 0;
+  }
+
+  5% {
+    opacity: 1;
+  }
+
+  65% {
+    offset-distance: 41.4%;
+    opacity: 1;
+  }
+
+  /* Slow descent down the right edge */
+  100% {
+    offset-distance: 100%;
+    opacity: 0;
+  }
+
+  /* Fast diagonal sweep + Vanish */
+}
+
+/* 
+   Subtle Micro-Shimmer & Hover Glow 
+   Starts as shimmer, then allows hover glow 
+*/
+[data-theme-preset="neon"].dark .main-content::after,
+[data-theme-preset="neon"].dark .ant-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 5;
+
+  /* Initial Shimmer Background (Pixel Matrix) */
+  background-image: var(--neon-pixel-grid);
+  background-size: var(--neon-pixel-size);
+  background-color: var(--neon-primary);
+  mask-image: radial-gradient(circle at 30% 30%, black 0%, transparent 25%);
+  mask-repeat: no-repeat;
+  mask-size: 150% 150%;
+
+  opacity: 0;
+  animation: neon-micro-shimmer 5s ease-out forwards;
+}
+
+/* Hover state overrides Initial Shimmer logic */
+[data-theme-preset="neon"].dark .main-content:hover::after,
+[data-theme-preset="neon"].dark .ant-card:hover::after {
+  animation: none;
+  /* Stop shimmer if hovering */
+  opacity: 1;
+  background: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(0, 229, 153, 0.15) 0%, transparent 50%);
+  mask-image: none;
+  transition: opacity 0.4s ease;
+}
+
+@keyframes neon-micro-shimmer {
+  0% {
+    opacity: 0;
+    mask-position: 0% 0%;
+  }
+
+  20% {
+    opacity: 0.12;
+  }
+
+  50% {
+    opacity: 0.2;
+    mask-position: 100% 100%;
+  }
+
+  100% {
+    opacity: 0;
+    mask-position: 150% 150%;
+  }
+}
+
+/* Neon Text Glows */
+[data-theme-preset="neon"].dark .page-title,
+[data-theme-preset="neon"].dark h1 {
+  color: #ffffff !important;
+  text-shadow: 0 0 15px rgba(0, 229, 153, 0.3);
+  letter-spacing: -0.01em;
+}
+
+/* More Electric Primary Button */
+[data-theme-preset="neon"].dark .ant-btn-primary {
+  background: linear-gradient(135deg, var(--neon-primary) 0%, #00ffca 100%) !important;
+  color: #000000 !important;
+  border: none !important;
+  font-weight: 800 !important;
+  box-shadow:
+    0 0 15px rgba(0, 229, 153, 0.4),
+    0 0 30px rgba(0, 229, 153, 0.2) !important;
+  height: 48px !important;
+  padding: 0 32px !important;
+  border-radius: 14px !important;
+  transition: all 0.3s ease !important;
+}
+
+[data-theme-preset="neon"].dark .ant-btn-primary:hover {
+  box-shadow: 0 0 25px rgba(0, 229, 153, 0.6), 0 0 50px rgba(0, 229, 153, 0.3) !important;
+  transform: translateY(-2px);
+  filter: brightness(1.05);
+}
+
+/* Fancy Scrollbar for Neon */
+[data-theme-preset="neon"].dark ::-webkit-scrollbar-thumb {
+  background: var(--neon-border) !important;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+[data-theme-preset="neon"].dark ::-webkit-scrollbar-thumb:hover {
+  background: var(--neon-primary) !important;
+}
+
+/* Navigation - Modern Dark */
+[data-theme-preset="neon"].dark .ant-menu {
+  background: transparent !important;
+  border: none !important;
+}
+
+[data-theme-preset="neon"].dark .ant-menu-item-selected {
+  background: rgba(0, 229, 153, 0.1) !important;
+  color: var(--neon-primary) !important;
+}
+
+[data-theme-preset="neon"].dark .ant-menu-item-selected .ant-menu-item-icon {
+  color: var(--neon-primary) !important;
+}
+
+[data-theme-preset="neon"].dark .ant-menu-item:hover {
+  color: var(--neon-primary) !important;
+}
+
+/* Input Fields - High Contrast */
+[data-theme-preset="neon"].dark .ant-input,
+[data-theme-preset="neon"].dark .ant-select-selector,
+[data-theme-preset="neon"].dark .ant-input-number {
+  background: #111111 !important;
+  border: 1px solid #222 !important;
+  color: #ffffff !important;
+}
+
+[data-theme-preset="neon"].dark .ant-input:focus,
+[data-theme-preset="neon"].dark .ant-select-focused .ant-select-selector {
+  border-color: var(--neon-primary) !important;
+  box-shadow: 0 0 0 2px rgba(0, 229, 153, 0.15) !important;
+}
+
+/* Status dots - Glow effect */
+[data-theme-preset="neon"].dark .status-online {
+  background-color: var(--neon-primary);
+  box-shadow: 0 0 8px var(--neon-primary);
+}
+
+/* Light Mode Support - Base copy with neon accents */
+[data-theme-preset="neon"]:not(.dark) {
+  --neon-border: rgba(0, 229, 153, 0.15);
+}
+
+[data-theme-preset="neon"]:not(.dark) .ant-btn-primary {
+  background: var(--neon-primary) !important;
+  border: none !important;
+  color: #000000 !important;
+}
+
+[data-theme-preset="neon"]:not(.dark) .ant-menu-item-selected {
+  background: rgba(0, 229, 153, 0.08) !important;
+  color: var(--neon-primary) !important;
 }
