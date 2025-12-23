@@ -26,6 +26,15 @@
         "key": "service-assets",
         "submoduleKey": "external-service-assets"
       }
+    ],
+    "admin": [
+      {
+        "filePath": "src/modules/admin/pages/Settings/index.tsx",
+        "routePath": "/admin/settings",
+        "translationKey": "settings",
+        "key": "settings",
+        "submoduleKey": "admin-settings"
+      }
     ]
   },
   "root": [

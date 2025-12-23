@@ -29,6 +29,7 @@ const SamplePage = lazy(() => import('../pages/SamplePage'));
 const Contacts = lazy(() => import('@/modules/crm/pages/Contacts'));
 const Tickets = lazy(() => import('@/modules/tickets/pages/Tickets'));
 const ServiceAssets = lazy(() => import('@/modules/external/pages/ServiceAssets'));
+const AdminSettings = lazy(() => import('@/modules/admin/pages/Settings'));
 const Profile = lazy(() => import('../pages/core/Profile'));
 const Settings = lazy(() => import('../pages/core/UserSetting'));
 
@@ -118,6 +119,9 @@ export const AppRoutes: FC = () => {
 
                         {/* External - Service Assets */}
                         <Route path="/external/service-assets" element={<ServiceAssets />} />
+
+                        {/* Admin - Settings */}
+                        <Route path="/admin/settings" element={<AdminSettings />} />
 
                         {/* Profile & Settings */}
                         <Route path="/profile" element={<Profile />} />

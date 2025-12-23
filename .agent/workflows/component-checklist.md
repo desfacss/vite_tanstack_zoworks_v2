@@ -1,41 +1,303 @@
 ---
-description: Checklist for verifying a new component or page for AI-native standardization
+description: Agentic checklist for adding a new component or page to a module with all follow-through steps
 ---
 
-# Component & Page Verification Checklist
+# Component & Page Creation Checklist
 
-Use this checklist whenever creating or refactoring a component/page to ensure it meets the project's high standards.
+// turbo-all
 
-## 1. Internationalization (i18n)
-- [ ] **No Hardcoded Strings**: Every user-facing string must use the `t()` function.
-- [ ] **Standardized Keys**: Keys follow `[namespace].[module].[context].[element]` (e.g., `common.action.save`).
-- [ ] **Cross-Language Sync**: Ensure keys added to `en.json` are also implemented in `kn.json`.
-- [ ] **Context-Aware Props**: Use `common.label.loading`, `common.label.no_data`, and `common.message.error` for generic states.
-- [ ] **Interpolation**: Use `t('key', { variable })` for dynamic content.
+Complete agentic workflow for creating a new component or page in a module, including all integration steps.
 
-## 2. Design & Aesthetics
-- [ ] **Theme Tokens**: Use CSS variables for colors (e.g., `var(--color-primary)`, `var(--color-bg-secondary)`).
-- [ ] **Lucide Icons Only**: Avoid Ant Design icons; use `lucide-react` equivalents.
-- [ ] **Visual Impact**: Ensure appropriate use of gradients, spacing, and modern typography.
-- [ ] **Dark Mode**: Verify the component looks premium in both light and dark modes.
-- [ ] **Micro-animations**: Use `framer-motion` or CSS transitions for hover effects and state changes.
+## Quick Reference
 
-## 3. Architecture & Code Quality
-- [ ] **Functional Components**: Use `React.FC` (or just functions in modern Vite setups) consistently.
-- [ ] **Modern JSX**: No `import React from 'react'` unless using Legacy features.
-- [ ] **Clean Imports**: Use `@/core/...` and `@/lib/...` aliases correctly.
-- [ ] **State Management**: Use `useAuthStore` for session/tenant data and `useThemeStore` for styling logic.
-- [ ] **Lazy Loading**: Ensure module-specific pages are lazily loaded in `AppRoutes`.
-
-## 4. Multi-Tenant & SaaS Readiness
-- [ ] **Org/Location Awareness**: Component respects `organization.id` and `location.id`.
-- [ ] **Permission Handling**: Content is conditionally rendered based on user roles/permissions.
-- [ ] **Subdomain Resilience**: UI adapts to branding defined in `ThemeRegistry`.
-
-## 5. Performance & UX
-- [ ] **Memoization**: Use `useMemo` and `useCallback` for expensive calculations or callback props.
-- [ ] **Loading Skeletors**: Provide a smooth loading experience (e.g., `Spin` or custom skeleton).
-- [ ] **Error Boundaries**: Component handles API failures gracefully with user feedback.
+| Step | File(s) to Update |
+|------|-------------------|
+| Component | `src/modules/{module}/pages/{PageName}.tsx` |
+| Route | `src/routes/index.tsx` |
+| Menu | `src/config/menuConfig.json` |
+| Icon | `src/core/components/Layout/Sider/navigation.tsx` |
+| i18n (module) | `src/modules/{module}/i18n/en.json` |
+| i18n (core) | `src/core/i18n/locales/en.json` |
+| Permissions | Database: `identity.role_permissions` |
 
 ---
-// standard-verify
+
+## Phase 1: Component Creation
+
+- [ ] **1.1 Create Page Component**
+  - File: `src/modules/{module}/pages/{PageName}.tsx`
+  - Use `DynamicViews` for entity-based pages
+  - Import `useAuthStore` from `@/core/lib/store`
+  - Import `supabase` from `@/core/lib/supabase`
+  - Use proper namespace: `useTranslation('{module}')`
+
+- [ ] **1.2 Create Supporting Components (if needed)**
+  - Custom forms: `src/modules/{module}/components/{ComponentName}Form.tsx`
+  - Custom views: `src/modules/{module}/components/{ComponentName}View.tsx`
+  - Modals/Drawers: `src/modules/{module}/components/{ComponentName}Modal.tsx`
+  - Shared utils: `src/modules/{module}/utils.ts`
+
+---
+
+## Phase 2: Routing Setup
+
+- [ ] **2.1 Add Lazy Import**
+  - File: `src/routes/index.tsx`
+  - Pattern: `const PageName = lazy(() => import('@/modules/{module}/pages/{PageName}'));`
+
+- [ ] **2.2 Add Route Definition**
+  - File: `src/routes/index.tsx`
+  - Pattern: `<Route path="/{module}/{page-path}" element={<PageName />} />`
+  - Place inside protected routes section
+
+---
+
+## Phase 3: Menu Configuration
+
+- [ ] **3.1 Add Menu Entry**
+  - File: `src/config/menuConfig.json`
+  - Add to module's array:
+  ```json
+  {
+    "filePath": "src/modules/{module}/pages/{PageName}.tsx",
+    "routePath": "/{module}/{page-path}",
+    "translationKey": "{page-key}",
+    "key": "{page-key}",
+    "submoduleKey": "{module}-{page-key}"
+  }
+  ```
+
+- [ ] **3.2 Add Icon Mapping**
+  - File: `src/core/components/Layout/Sider/navigation.tsx`
+  - Add to `iconMap`:
+  ```tsx
+  '{page-key}': <IconName size={18} />,
+  ```
+  - **IMPORTANT**: Use `lucide-react` icons ONLY (NOT Ant Design icons)
+  - Common icons: `Settings`, `Users`, `FileText`, `Home`, `List`, etc.
+
+---
+
+## Phase 4: Internationalization (i18n)
+
+- [ ] **4.1 Module Translations**
+  - File: `src/modules/{module}/i18n/en.json`
+  - Add page-specific labels, tabs, messages
+
+- [ ] **4.2 Core Translations**
+  - File: `src/core/i18n/locales/en.json`
+  - Add under `common.label`:
+  ```json
+  "{page-key}": "{Page Display Name}"
+  ```
+
+- [ ] **4.3 Kannada Translations (if applicable)**
+  - File: `src/modules/{module}/i18n/kn.json`
+  - Mirror all keys from en.json
+
+---
+
+## Phase 5: Permissions Setup
+
+- [ ] **5.1 Verify Permission Key**
+  - Pattern: `{module}.{page-key}`
+  - Required: At least `'r'` (read) permission
+
+- [ ] **5.2 Update Role Permissions (if new)**
+  - Database: `identity.role_permissions`
+  - Add permission for relevant user roles
+
+- [ ] **5.3 Add Permission Check (if custom)**
+  - File: `src/utils/permissions.ts` (if needed)
+  - Add to permission definitions
+
+---
+
+## Phase 6: Entity Configuration (if entity-based page)
+
+- [ ] **6.1 Add View Config**
+  - Database: `core.view_configs`
+  - Define columns, filters, actions for the entity
+
+- [ ] **6.2 Add Form Config**
+  - Database: `core.view_configs` (form type)
+  - Define form fields, validation rules
+
+- [ ] **6.3 Register Custom Component (if needed)**
+  - File: Module's view registry
+  - Pattern: Export component in module index
+
+---
+
+## Phase 7: Verification
+
+- [ ] **7.1 Build Check**
+  - Run: `yarn build` or `yarn dev`
+  - Ensure no TypeScript/compilation errors
+
+- [ ] **7.2 Route Navigation**
+  - Navigate to `/{module}/{page-path}`
+  - Verify page loads without errors
+
+- [ ] **7.3 Menu Visibility**
+  - Check sidebar shows menu item under correct module
+  - Verify icon displays correctly
+
+- [ ] **7.4 i18n Labels**
+  - Check all labels render (no raw keys visible)
+  - Toggle language if multi-language enabled
+
+- [ ] **7.5 Permission-Based Access**
+  - Test with user having permission (should see page)
+  - Test with user without permission (should be hidden/blocked)
+
+- [ ] **7.6 Theme Compatibility**
+  - Verify component looks good in light mode
+  - Verify component looks good in dark mode
+
+---
+
+## Best Practices (from real migrations)
+
+### Import Paths
+- Always use `@/core/lib/` for core imports:
+  - `import { supabase } from '@/core/lib/supabase'`
+  - `import { useAuthStore } from '@/core/lib/store'`
+- Use `@/core/components/` for shared components:
+  - `import DynamicViews from '@/core/components/DynamicViews'`
+  - `import DynamicForm from '@/core/components/DynamicForm'`
+
+### Icon Library
+- **NEVER** use Ant Design icons (`@ant-design/icons`)
+- **ALWAYS** use Lucide icons with size prop:
+  ```tsx
+  import { Plus, Pencil, Trash2, AlertCircle, Settings } from 'lucide-react';
+  
+  <Button icon={<Plus size={14} />}>Add</Button>
+  <Button icon={<Trash2 size={14} />} danger />
+  ```
+- Common replacements:
+  | Ant Design | Lucide |
+  |------------|--------|
+  | `PlusOutlined` | `Plus` |
+  | `EditOutlined`/`EditFilled` | `Pencil` |
+  | `DeleteOutlined` | `Trash2` |
+  | `ExclamationCircleFilled` | `AlertCircle` |
+  | `SettingOutlined` | `Settings` |
+  | `SearchOutlined` | `Search` |
+  | `SaveOutlined` | `Save` |
+  | `HomeOutlined` | `Home` |
+
+### TypeScript Patterns
+- Make optional fields explicit in interfaces:
+  ```tsx
+  interface Entity {
+    id: string;
+    name: string;
+    organization_id?: string;  // Optional for DB fetches
+  }
+  ```
+- Use nullish coalescing for booleans:
+  ```tsx
+  isConfigured: hasCustomSettings ?? false,
+  ```
+- Properly escape regex forward slashes:
+  ```tsx
+  // ❌ Wrong - causes parse error
+  link.replace(/(/edit|/preview)?$/, '/embed');
+  
+  // ✅ Correct
+  link.replace(/(\/edit|\/preview)?$/, '/embed');
+  ```
+
+### Conditional Rendering
+- Check component props exist before rendering:
+  ```tsx
+  {schema && <DynamicForm schemas={schema} onFinish={handleSubmit} />}
+  ```
+- Handle undefined strings safely:
+  ```tsx
+  message.success(`${selectedType ? formatTitle(selectedType) : 'item'} added`);
+  ```
+
+---
+
+## Common Patterns
+
+### Standard Page with DynamicViews
+```tsx
+import DynamicViews from '@/core/components/DynamicViews';
+import { useAuthStore } from '@/lib/store';
+import { useTranslation } from 'react-i18next';
+
+const PageName: React.FC = () => {
+  const { t } = useTranslation('{module}');
+  const { user } = useAuthStore();
+
+  const tabOptions = [
+    { key: '1', label: t('tabs.myItems'), condition: { field: 'assignee_id', value: user?.id, filter_type: 'eq' } },
+    { key: '2', label: t('tabs.allItems') },
+  ];
+
+  return (
+    <DynamicViews
+      entityType="{entity}"
+      entitySchema="{schema}"
+      tabOptions={tabOptions}
+    />
+  );
+};
+
+export default PageName;
+```
+
+### Custom Page Component
+```tsx
+import { useTranslation } from 'react-i18next';
+import { useAuthStore } from '@/lib/store';
+import PageActionBar from '@/core/components/ActionBar/PageActionBar';
+
+const CustomPage: React.FC = () => {
+  const { t } = useTranslation('{module}');
+  
+  return (
+    <div className="page-container">
+      <PageActionBar title={t('page.title')} />
+      {/* Page content */}
+    </div>
+  );
+};
+
+export default CustomPage;
+```
+
+---
+
+## Placeholder Reference
+
+| Placeholder | Description | Example |
+|-------------|-------------|---------|
+| `{module}` | Module folder name | `support`, `hr`, `settings` |
+| `{PageName}` | Component name (PascalCase) | `Tickets`, `LeaveRequests` |
+| `{page-path}` | URL path segment | `tickets`, `leave-requests` |
+| `{page-key}` | Menu/permission key | `tickets`, `leave_requests` |
+| `{entity}` | Entity type | `tickets`, `leave_applications` |
+| `{schema}` | Database schema | `blueprint`, `support` |
+
+---
+
+## Troubleshooting
+
+| Issue | Solution |
+|-------|----------|
+| Page not showing in menu | Check `menuConfig.json` entry and translation key |
+| 404 on navigation | Verify route in `index.tsx` and lazy import |
+| Missing icon | Add mapping in `navigation.tsx` iconMap |
+| Raw translation keys showing | Add translations in both module and core i18n |
+| Permission denied | Verify role has permission in database |
+| Invalid regex flag error | Escape forward slashes: `/\/edit/` not `//edit/` |
+| `Module has no exported member` | Define interface locally or check export |
+| `Property does not exist on type` | Check component props interface, remove unsupported props |
+| `undefined is not assignable` | Use optional chaining or nullish coalescing |
+| Ant Design icons showing blank | Replace with Lucide icons |
+| i18n duplicate key warnings | Check for duplicate keys in JSON files |
