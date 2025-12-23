@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useImperativeHandle, forwardRef } from 'react';
 import { Upload, message, Spin, Button, Input, List, Row, Col, Tabs, Tooltip } from 'antd';
-import { CameraOutlined, UploadOutlined, DeleteOutlined, FileOutlined, LinkOutlined } from '@ant-design/icons';
+import { Camera, Upload as UploadIcon, Trash2, FileText, Link } from 'lucide-react';
 import Publitio from 'publitio_js_sdk';
 // import ReactCrop from 'react-image-crop';
 // import 'react-image-crop/dist/ReactCrop.css';
@@ -308,7 +308,7 @@ const ImageUploader = forwardRef<ImageUploaderRef, ImageUploaderProps>(
                         avatar={
                             <div style={{ width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                 <a href={file.url} target="_blank" rel="noopener noreferrer">
-                                    <LinkOutlined style={{ fontSize: 24, color: '#1890ff' }} />
+                                    <Link size={24} color="#1890ff" />
                                 </a>
                             </div>
                         }
@@ -327,7 +327,7 @@ const ImageUploader = forwardRef<ImageUploaderRef, ImageUploaderProps>(
                                     <img src={previewUrl} alt={file.name} style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 4 }} />
                                 ) : (
                                     <a href={file.url} target="_blank" rel="noopener noreferrer">
-                                        <FileOutlined style={{ fontSize: 24, color: '#1890ff' }} />
+                                        <FileText size={24} color="#1890ff" />
                                     </a>
                                 )}
                             </div>
@@ -346,7 +346,7 @@ const ImageUploader = forwardRef<ImageUploaderRef, ImageUploaderProps>(
                 children: (
                     <Row gutter={[12, 12]} align="middle">
                         <Col>
-                            <Button icon={<CameraOutlined />} onClick={captureImage}>
+                            <Button icon={<Camera size={16} />} onClick={captureImage}>
                                 Capture Image
                             </Button>
                         </Col>
@@ -359,7 +359,7 @@ const ImageUploader = forwardRef<ImageUploaderRef, ImageUploaderProps>(
                                 multiple
                                 showUploadList={false}
                             >
-                                <Button icon={<UploadOutlined />}>Select Files</Button>
+                                <Button icon={<UploadIcon size={16} />}>Select Files</Button>
                             </Upload>
                         </Col>
                     </Row>
@@ -373,7 +373,7 @@ const ImageUploader = forwardRef<ImageUploaderRef, ImageUploaderProps>(
                         <Col flex="auto">
                             <Tooltip title="Google Doc Link">
                                 <Input style={{ width: '50%' }}
-                                    prefix={<LinkOutlined />}
+                                    prefix={<Link size={14} />}
                                     value={googleDocLink}
                                     onChange={handleGoogleDocChange}
                                     placeholder="Paste Google Doc link here"
@@ -407,7 +407,7 @@ const ImageUploader = forwardRef<ImageUploaderRef, ImageUploaderProps>(
                                 dataSource={combinedFileList}
                                 renderItem={(file) => (
                                     <List.Item
-                                        actions={[<Button type="link" icon={<DeleteOutlined />} onClick={() => handleRemove(file)} />]}
+                                        actions={[<Button type="link" icon={<Trash2 size={16} />} onClick={() => handleRemove(file)} />]}
                                         style={{ background: '#fff', boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)', borderRadius: 6, marginBottom: 8 }}
                                     >
                                         {renderFileContent(file)}
