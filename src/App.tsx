@@ -7,8 +7,8 @@ import './i18n';
 import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persister';
 import { persistQueryClient } from '@tanstack/react-query-persist-client';
 import './App.css';
-import { NestedProvider } from './lib/NestedContext';
-import { supabase } from './lib/supabase';
+import { NestedProvider } from '@/core/lib/NestedContext';
+import { supabase } from '@/core/lib/supabase';
 import { SessionManager } from './core/components/Layout/SessionManager';
 import { GlobalSessionWatcher } from './core/components/Layout/GlobalSessionWatcher';
 import { TenantProvider } from '@/core/bootstrap/TenantProvider';
@@ -151,4 +151,4 @@ function App() {
   );
 }
 
-export default App;
+export default App
