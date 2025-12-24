@@ -191,6 +191,11 @@ export default defineConfig({
   },
   build: {
     sourcemap: true,
+    commonjsOptions: {
+      // Force styled-components and other CJS modules to use the same React
+      include: [/node_modules/],
+      transformMixedEsModules: true,
+    },
     rollupOptions: {
       output: {
         manualChunks: (id) => {
