@@ -135,6 +135,23 @@ export function subscribeToTheme(listener: () => void): () => void {
 }
 
 /**
+ * Convert hex color to RGB values (e.g., "#00E599" -> "0, 229, 153")
+ * Used for CSS rgba() variables
+ */
+function hexToRgb(hex: string): string {
+    // Remove # if present
+    const cleanHex = hex.replace('#', '');
+
+    // Parse hex values
+    const r = parseInt(cleanHex.substring(0, 2), 16);
+    const g = parseInt(cleanHex.substring(2, 4), 16);
+    const b = parseInt(cleanHex.substring(4, 6), 16);
+
+    // Return as comma-separated string for CSS
+    return `${r}, ${g}, ${b}`;
+}
+
+/**
  * Apply branding that doesn't change with light/dark mode
  */
 function applyStaticBranding(config: TenantThemeConfig): void {
@@ -183,10 +200,17 @@ function applyStaticBranding(config: TenantThemeConfig): void {
 
     // Initial variable set
     const isDark = document.documentElement.classList.contains('dark');
-    root.style.setProperty('--tenant-primary', isDark ? darkPrimary : lightPrimary);
-    root.style.setProperty('--tenant-secondary', isDark ? darkSecondary : lightSecondary);
+    const currentPrimary = isDark ? darkPrimary : lightPrimary;
+    const currentSecondary = isDark ? darkSecondary : lightSecondary;
+
+    root.style.setProperty('--tenant-primary', currentPrimary);
+    root.style.setProperty('--tenant-secondary', currentSecondary);
     root.style.setProperty('--tenant-card-bg', isDark ? darkCard : lightCard);
     root.style.setProperty('--tenant-layout-bg', isDark ? darkLayout : lightLayout);
+
+    // RGB values for rgba() support in CSS (enables dynamic glow effects)
+    root.style.setProperty('--color-primary-rgb', hexToRgb(currentPrimary));
+    root.style.setProperty('--color-secondary-rgb', hexToRgb(currentSecondary));
 
     root.style.setProperty('--tenant-card-bg-light', lightCard);
     root.style.setProperty('--tenant-card-bg-dark', darkCard);

@@ -1532,15 +1532,19 @@ legend {
    ============================================ */
 
 [data-theme-preset="neon"] {
-  --neon-primary: #00E599;
-  --neon-secondary: #00A3FF;
-  --neon-bg-glow: rgba(0, 229, 153, 0.12);
-  --neon-border: rgba(0, 229, 153, 0.15);
+  /* Neon effects inherit from tenant's primary color (from database) */
+  --neon-primary: var(--color-primary, #00E599);
+  --neon-secondary: var(--color-secondary, #00A3FF);
+
+  /* Dynamic RGB values for rgba() usage - will be set by ThemeRegistry */
+  --neon-bg-glow: rgba(var(--color-primary-rgb, 0, 229, 153), 0.12);
+  --neon-border: rgba(var(--color-primary-rgb, 0, 229, 153), 0.15);
   --neon-card-bg: rgba(13, 13, 13, 0.9);
-  /* Distinct Square Pixel Texture */
+
+  /* Distinct Square Pixel Texture - using primary color */
   --neon-pixel-grid:
-    linear-gradient(rgba(0, 229, 153, 0.08) 2px, transparent 2px),
-    linear-gradient(90deg, rgba(0, 229, 153, 0.08) 2px, transparent 2px);
+    linear-gradient(rgba(var(--color-primary-rgb, 0, 229, 153), 0.08) 2px, transparent 2px),
+    linear-gradient(90deg, rgba(var(--color-primary-rgb, 0, 229, 153), 0.08) 2px, transparent 2px);
   --neon-pixel-size: 14px 14px;
 }
 
@@ -1915,6 +1919,107 @@ legend {
 }
 
 /* ============================================
+   NEON DARK MODE - Additional Color Overrides
+   Ensuring ALL blue elements become neon green
+   ============================================ */
+
+/* Segmented Button Tabs (My Tickets / All Tickets) - Premium styling */
+[data-theme-preset="neon"].dark .ant-segmented-item-selected {
+  background: linear-gradient(135deg, var(--neon-primary) 0%, #00ffca 100%) !important;
+  color: #000000 !important;
+  box-shadow:
+    0 0 12px rgba(var(--color-primary-rgb, 0, 229, 153), 0.35),
+    0 0 24px rgba(var(--color-primary-rgb, 0, 229, 153), 0.15) !important;
+  border-radius: 8px !important;
+}
+
+[data-theme-preset="neon"].dark .ant-segmented-item-selected .ant-segmented-item-label {
+  color: #000000 !important;
+  font-weight: 700;
+  text-shadow: none;
+}
+
+[data-theme-preset="neon"].dark .ant-segmented {
+  background: rgba(var(--color-primary-rgb, 0, 229, 153), 0.06) !important;
+  border: 1px solid rgba(var(--color-primary-rgb, 0, 229, 153), 0.15) !important;
+  padding: 4px !important;
+  border-radius: 12px !important;
+}
+
+[data-theme-preset="neon"].dark .ant-segmented-item:not(.ant-segmented-item-selected) {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+[data-theme-preset="neon"].dark .ant-segmented-item:not(.ant-segmented-item-selected):hover {
+  color: var(--neon-primary) !important;
+}
+
+/* ALL Buttons - Default, Text, Link variants */
+[data-theme-preset="neon"].dark .ant-btn-default:hover,
+[data-theme-preset="neon"].dark .ant-btn-default:focus {
+  color: var(--neon-primary) !important;
+  border-color: var(--neon-primary) !important;
+}
+
+[data-theme-preset="neon"].dark .ant-btn-text:hover {
+  color: var(--neon-primary) !important;
+}
+
+[data-theme-preset="neon"].dark .ant-btn-link {
+  color: var(--neon-primary) !important;
+}
+
+[data-theme-preset="neon"].dark .ant-btn-link:hover {
+  color: #00ffaa !important;
+}
+
+/* Brand/Logo in Header - Force neon color */
+[data-theme-preset="neon"].dark .brand-name,
+[data-theme-preset="neon"].dark .brand-text,
+[data-theme-preset="neon"].dark .logo-text,
+[data-theme-preset="neon"].dark .tenant-name,
+[data-theme-preset="neon"].dark .page-action-bar .brand-name,
+[data-theme-preset="neon"].dark .ant-layout-sider .brand-name {
+  color: var(--neon-primary) !important;
+  text-shadow: 0 0 15px rgba(0, 229, 153, 0.3);
+}
+
+/* Welcome Hub - Get Started button and other buttons */
+[data-theme-preset="neon"].dark .welcome-hub .ant-btn,
+[data-theme-preset="neon"].dark .content-body .ant-btn-primary,
+[data-theme-preset="neon"].dark .main-content .ant-btn-primary {
+  background: linear-gradient(135deg, var(--neon-primary) 0%, #00ffca 100%) !important;
+  color: #000000 !important;
+  border: none !important;
+  box-shadow: 0 0 15px rgba(0, 229, 153, 0.4) !important;
+}
+
+/* Highlighted name in welcome message */
+[data-theme-preset="neon"].dark .welcome-name,
+[data-theme-preset="neon"].dark h1 span {
+  color: var(--neon-primary) !important;
+  text-shadow: 0 0 20px rgba(0, 229, 153, 0.4);
+}
+
+/* Override any remaining Ant Design blue colors */
+[data-theme-preset="neon"].dark .ant-typography-primary,
+[data-theme-preset="neon"].dark .ant-alert-info,
+[data-theme-preset="neon"].dark .ant-steps-item-process .ant-steps-item-icon {
+  color: var(--neon-primary) !important;
+  border-color: var(--neon-primary) !important;
+}
+
+/* Active/Selected states */
+[data-theme-preset="neon"].dark *:focus-visible {
+  outline-color: var(--neon-primary) !important;
+}
+
+[data-theme-preset="neon"].dark ::selection {
+  background: rgba(0, 229, 153, 0.3);
+  color: #ffffff;
+}
+
+/* ============================================
    NEON LIGHT MODE - Premium Tech Aesthetic
    Clean whites with vibrant neon accents
    ============================================ */
@@ -2239,4 +2344,84 @@ legend {
 
 [data-theme-preset="neon"]:not(.dark) .ant-pagination-item-active a {
   color: #00a06a !important;
+}
+
+/* ============================================
+   NEON LIGHT MODE - Additional Color Overrides
+   Ensuring ALL blue elements become neon green
+   ============================================ */
+
+/* Segmented Button Tabs */
+[data-theme-preset="neon"]:not(.dark) .ant-segmented-item-selected {
+  background: var(--neon-primary) !important;
+  color: #000000 !important;
+}
+
+[data-theme-preset="neon"]:not(.dark) .ant-segmented-item-selected .ant-segmented-item-label {
+  color: #000000 !important;
+  font-weight: 600;
+}
+
+[data-theme-preset="neon"]:not(.dark) .ant-segmented {
+  background: rgba(0, 229, 153, 0.12) !important;
+}
+
+/* ALL Buttons - Default, Text, Link variants */
+[data-theme-preset="neon"]:not(.dark) .ant-btn-default:hover,
+[data-theme-preset="neon"]:not(.dark) .ant-btn-default:focus {
+  color: #00a06a !important;
+  border-color: var(--neon-primary) !important;
+}
+
+[data-theme-preset="neon"]:not(.dark) .ant-btn-text:hover {
+  color: #00a06a !important;
+}
+
+[data-theme-preset="neon"]:not(.dark) .ant-btn-link {
+  color: #00a06a !important;
+}
+
+[data-theme-preset="neon"]:not(.dark) .ant-btn-link:hover {
+  color: var(--neon-primary) !important;
+}
+
+/* Brand/Logo in Header */
+[data-theme-preset="neon"]:not(.dark) .brand-name,
+[data-theme-preset="neon"]:not(.dark) .brand-text,
+[data-theme-preset="neon"]:not(.dark) .logo-text,
+[data-theme-preset="neon"]:not(.dark) .tenant-name {
+  color: #00a06a !important;
+}
+
+/* Welcome Hub buttons */
+[data-theme-preset="neon"]:not(.dark) .welcome-hub .ant-btn,
+[data-theme-preset="neon"]:not(.dark) .content-body .ant-btn-primary,
+[data-theme-preset="neon"]:not(.dark) .main-content .ant-btn-primary {
+  background: linear-gradient(135deg, var(--neon-primary) 0%, #00d68a 100%) !important;
+  color: #000000 !important;
+  border: none !important;
+  box-shadow: 0 4px 15px rgba(0, 229, 153, 0.35) !important;
+}
+
+/* Highlighted name in welcome message */
+[data-theme-preset="neon"]:not(.dark) .welcome-name,
+[data-theme-preset="neon"]:not(.dark) h1 span {
+  color: var(--neon-primary) !important;
+  text-shadow: 0 0 15px rgba(0, 229, 153, 0.2);
+}
+
+/* Override any remaining Ant Design blue colors */
+[data-theme-preset="neon"]:not(.dark) .ant-typography-primary,
+[data-theme-preset="neon"]:not(.dark) .ant-alert-info {
+  color: #00a06a !important;
+}
+
+/* Active/Selected states */
+[data-theme-preset="neon"]:not(.dark) *:focus-visible {
+  outline-color: var(--neon-primary) !important;
+}
+
+[data-theme-preset="neon"]:not(.dark) ::selection {
+  background: rgba(0, 229, 153, 0.2);
+  color: #000000;
 }

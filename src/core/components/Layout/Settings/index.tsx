@@ -8,6 +8,7 @@ import { LanguageSelect } from '../LanguageSelect';
 import { useSettings } from '@/core/hooks/useSettings';
 import { useAuthStore } from '@/core/lib/store';
 import { getTenantThemeConfig, updateTenantTheme, TenantThemeConfig } from '@/core/theme/ThemeRegistry';
+import { THEME_PRESETS, getPresetOptions } from '@/core/theme/presets';
 import { supabase } from '@/lib/supabase';
 import type { Organization, Location } from '@/core/lib/types';
 import { Tabs } from 'antd';
@@ -15,6 +16,16 @@ import { Palette, Globe, Image as ImageIcon, Type, Sparkles, Upload as UploadIco
 import PublitioAPI from 'publitio_js_sdk';
 
 const { Title, Text } = Typography;
+
+// Helper to extract hex string from ColorPicker value (can be Color object or string)
+const getColorString = (value: any): string => {
+  if (!value) return '#1890ff';
+  if (typeof value === 'string') return value;
+  if (typeof value?.toHexString === 'function') return value.toHexString();
+  if (typeof value?.metaColor?.toHexString === 'function') return value.metaColor.toHexString();
+  return '#1890ff';
+};
+
 
 interface SettingsProps {
   open: boolean;
@@ -140,30 +151,29 @@ export const Settings: React.FC<SettingsProps> = ({ open, onClose }) => {
 
   const [showAdvanced, setShowAdvanced] = useState(false);
 
-  const themePresetsOptions = useMemo(() => [
-    { value: 'glassmorphism', label: 'Glassmorphism (Modern)' },
-    { value: 'gradient_card', label: 'Gradient Card (Premium)' },
-    { value: 'branded_header', label: 'Branded Header (Red/Amber)' },
-    { value: 'corporate', label: 'Corporate (Enterprise)' },
-    { value: 'ultra_glass', label: 'Ultra Glass (Experimental)' },
-  ], []);
+  // Theme preset options from centralized helper
+  const themePresetsOptions = useMemo(() => getPresetOptions(), []);
 
-  // Handle preset change
+  // Handle preset change - Apply preset colors immediately
   const handlePresetChange = (presetId: string) => {
-    const preset = (THEME_PRESETS as any)[presetId];
+    const preset = THEME_PRESETS[presetId];
     if (!preset) return;
 
+    // Unified config: preset defines all colors
     const newValues = {
       preset: presetId,
       borderRadius: preset.borderRadius || 8,
-      light_primaryColor: preset.light?.primaryColor || preset.primaryColor || '#1890ff',
-      light_secondaryColor: preset.light?.secondaryColor || preset.secondaryColor || '#1890ff',
+      // Primary colors - use from preset (not tenant override)
+      light_primaryColor: preset.light?.primaryColor || '#1890ff',
+      dark_primaryColor: preset.dark?.primaryColor || '#1890ff',
+      // Secondary colors
+      light_secondaryColor: preset.light?.secondaryColor || '#1890ff',
+      dark_secondaryColor: preset.dark?.secondaryColor || '#1890ff',
+      // Backgrounds
       light_cardBg: preset.light?.cardBg || '#ffffff',
       light_layoutBg: preset.light?.layoutBg || '#f0f2f5',
       light_headerBg: preset.light?.headerBg || '#ffffff',
       light_siderBg: preset.light?.siderBg || '#ffffff',
-      dark_primaryColor: preset.dark?.primaryColor || preset.primaryColor || '#1890ff',
-      dark_secondaryColor: preset.dark?.secondaryColor || preset.secondaryColor || '#1890ff',
       dark_cardBg: preset.dark?.cardBg || '#1f1f1f',
       dark_layoutBg: preset.dark?.layoutBg || '#141414',
       dark_headerBg: preset.dark?.headerBg || '#141414',
@@ -175,27 +185,32 @@ export const Settings: React.FC<SettingsProps> = ({ open, onClose }) => {
   };
 
   // --- Branding Logic ---
+  // Priority: Database values (tenant customizations) > Preset defaults
   useEffect(() => {
     if (open && themeConfig) {
+      // Preset is fallback only when database doesn't have custom values
+      const preset = themeConfig.preset ? THEME_PRESETS[themeConfig.preset] : null;
+
       form.setFieldsValue({
         preset: themeConfig.preset,
         brandName: themeConfig.brandName,
         faviconUrl: themeConfig.faviconUrl,
-        borderRadius: themeConfig.borderRadius || 8,
-        light_primaryColor: themeConfig.light?.primaryColor || themeConfig.primaryColor,
-        light_secondaryColor: themeConfig.light?.secondaryColor || themeConfig.secondaryColor,
+        borderRadius: themeConfig.borderRadius || preset?.borderRadius || 8,
+        // Database values WIN - preset is only fallback
+        light_primaryColor: themeConfig.light?.primaryColor || themeConfig.primaryColor || preset?.light?.primaryColor,
+        light_secondaryColor: themeConfig.light?.secondaryColor || themeConfig.secondaryColor || preset?.light?.secondaryColor,
         light_logoUrl: themeConfig.light?.logoUrl || themeConfig.logoUrl,
-        light_cardBg: themeConfig.light?.cardBg || '#ffffff',
-        light_layoutBg: themeConfig.light?.layoutBg || '#f0f2f5',
-        light_headerBg: themeConfig.light?.headerBg || '#ffffff',
-        light_siderBg: themeConfig.light?.siderBg || '#ffffff',
-        dark_primaryColor: themeConfig.dark?.primaryColor || themeConfig.primaryColor,
-        dark_secondaryColor: themeConfig.dark?.secondaryColor || themeConfig.secondaryColor,
+        light_cardBg: themeConfig.light?.cardBg || preset?.light?.cardBg || '#ffffff',
+        light_layoutBg: themeConfig.light?.layoutBg || preset?.light?.layoutBg || '#f0f2f5',
+        light_headerBg: themeConfig.light?.headerBg || preset?.light?.headerBg || '#ffffff',
+        light_siderBg: themeConfig.light?.siderBg || preset?.light?.siderBg || '#ffffff',
+        dark_primaryColor: themeConfig.dark?.primaryColor || themeConfig.primaryColor || preset?.dark?.primaryColor,
+        dark_secondaryColor: themeConfig.dark?.secondaryColor || themeConfig.secondaryColor || preset?.dark?.secondaryColor,
         dark_logoUrl: themeConfig.dark?.logoUrl || themeConfig.logoUrl,
-        dark_cardBg: themeConfig.dark?.cardBg || '#1f1f1f',
-        dark_layoutBg: themeConfig.dark?.layoutBg || '#141414',
-        dark_headerBg: themeConfig.dark?.headerBg || '#141414',
-        dark_siderBg: themeConfig.dark?.siderBg || '#141414',
+        dark_cardBg: themeConfig.dark?.cardBg || preset?.dark?.cardBg || '#1f1f1f',
+        dark_layoutBg: themeConfig.dark?.layoutBg || preset?.dark?.layoutBg || '#141414',
+        dark_headerBg: themeConfig.dark?.headerBg || preset?.dark?.headerBg || '#141414',
+        dark_siderBg: themeConfig.dark?.siderBg || preset?.dark?.siderBg || '#141414',
       });
     }
   }, [open, themeConfig, form]);

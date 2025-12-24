@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { Button } from 'antd';
 import {
     LayoutDashboard,
     Ticket,
@@ -50,7 +50,6 @@ export const WelcomeHub: React.FC = () => {
     // Get user's first name
     const firstName = user?.name?.split(' ')[0] || t('common.label.user_placeholder');
 
-
     // Format date
     const formatDate = () => {
         return currentTime.toLocaleDateString(i18n.language === 'kn' ? 'kn-IN' : 'en-US', {
@@ -60,6 +59,25 @@ export const WelcomeHub: React.FC = () => {
             day: 'numeric',
         });
     };
+
+    // Feature list for the right card
+    const features = [
+        {
+            icon: <LayoutDashboard className="text-blue-400" size={24} />,
+            title: t('core.welcome_hub.feature.analytics_title'),
+            desc: t('core.welcome_hub.feature.analytics_desc'),
+        },
+        {
+            icon: <Ticket className="text-purple-400" size={24} />,
+            title: t('core.welcome_hub.feature.support_title'),
+            desc: t('core.welcome_hub.feature.support_desc'),
+        },
+        {
+            icon: <Calendar className="text-orange-400" size={24} />,
+            title: t('core.welcome_hub.feature.workflow_title'),
+            desc: t('core.welcome_hub.feature.workflow_desc'),
+        }
+    ];
 
     return (
         <>
@@ -86,35 +104,15 @@ export const WelcomeHub: React.FC = () => {
             {/* Main Content Area */}
             <div className="main-content">
                 <div className="content-body">
-                    <motion.div
-                        initial="hidden"
-                        animate="visible"
-                        variants={{
-                            hidden: { opacity: 0 },
-                            visible: {
-                                opacity: 1,
-                                transition: {
-                                    staggerChildren: 0.15,
-                                    delayChildren: 0.1
-                                }
-                            }
-                        }}
-                        className="max-w-7xl mx-auto py-8 md:py-12"
-                    >
+                    <div className="max-w-7xl mx-auto py-8 md:py-12">
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
 
                             {/* Left Section: Value Proposition */}
-                            <motion.div
-                                variants={{
-                                    hidden: { opacity: 0, x: -30 },
-                                    visible: { opacity: 1, x: 0, transition: { duration: 0.6, ease: "easeOut" } }
-                                }}
-                                className="space-y-8"
-                            >
+                            <div className="space-y-8">
                                 <div className="space-y-4">
                                     <h1 className={`text-5xl md:text-7xl font-bold leading-tight ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                                         {getGreeting()}, <br />
-                                        <span className="bg-gradient-to-r from-[var(--color-primary)] to-purple-500 bg-clip-text text-transparent">
+                                        <span className="bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-secondary,var(--color-primary))] bg-clip-text text-transparent">
                                             {firstName}
                                         </span>
                                     </h1>
@@ -124,46 +122,34 @@ export const WelcomeHub: React.FC = () => {
                                 </div>
 
                                 <div className="flex flex-wrap gap-4">
-                                    <motion.button
-                                        whileHover={{ scale: 1.05, boxShadow: "0 10px 25px -5px rgba(var(--color-primary-rgb), 0.4)" }}
-                                        whileTap={{ scale: 0.95 }}
+                                    <Button
+                                        type="primary"
+                                        size="large"
                                         onClick={() => navigate('/dashboard')}
-                                        className="px-8 py-4 bg-[var(--color-primary)] text-white rounded-2xl font-semibold shadow-xl shadow-[var(--color-primary)]/20 flex items-center gap-2 transition-all hover:brightness-110"
+                                        icon={<ArrowRight size={18} />}
+                                        iconPosition="end"
+                                        className="h-12 px-8 rounded-xl font-semibold"
                                     >
                                         {t('core.welcome_hub.action.get_started')}
-                                        <ArrowRight size={22} />
-                                    </motion.button>
+                                    </Button>
 
-                                    <motion.button
-                                        whileHover={{ scale: 1.05 }}
-                                        whileTap={{ scale: 0.95 }}
+                                    <Button
+                                        type="default"
+                                        size="large"
                                         onClick={() => navigate('/support/tickets')}
-                                        className={`px-8 py-4 rounded-2xl font-semibold border transition-all backdrop-blur-sm
-                                            ${isDarkMode
-                                                ? 'bg-gray-800/40 border-gray-700 text-gray-300 hover:bg-gray-700'
-                                                : 'bg-white/40 border-gray-200 text-gray-700 hover:bg-gray-50'
-                                            }`}
+                                        className="h-12 px-8 rounded-xl font-semibold"
                                     >
                                         {t('core.welcome_hub.action.view_tickets')}
-                                    </motion.button>
+                                    </Button>
                                 </div>
 
-                                <motion.p
-                                    variants={{ hidden: { opacity: 0 }, visible: { opacity: 1 } }}
-                                    className={`text-sm font-medium ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}
-                                >
+                                <p className={`text-sm font-medium ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
                                     {organization?.name} • {brandName} Platform
-                                </motion.p>
-                            </motion.div>
+                                </p>
+                            </div>
 
-                            {/* Right Section: Glassmorphism Feature Card */}
-                            <motion.div
-                                variants={{
-                                    hidden: { opacity: 0, scale: 0.9, y: 30 },
-                                    visible: { opacity: 1, scale: 1, y: 0, transition: { duration: 0.7, ease: "circOut" } }
-                                }}
-                                className="relative"
-                            >
+                            {/* Right Section: Feature Card */}
+                            <div className="relative">
                                 {/* Background ambient glow */}
                                 <div className="absolute -inset-10 bg-[var(--color-primary)]/10 rounded-full blur-[100px] pointer-events-none" />
 
@@ -178,34 +164,8 @@ export const WelcomeHub: React.FC = () => {
                                     </h2>
 
                                     <div className="space-y-10">
-                                        {[
-                                            {
-                                                icon: <LayoutDashboard className="text-blue-400" size={24} />,
-                                                title: t('core.welcome_hub.feature.analytics_title'),
-                                                desc: t('core.welcome_hub.feature.analytics_desc'),
-                                                bgColor: 'bg-blue-500/10'
-                                            },
-                                            {
-                                                icon: <Ticket className="text-purple-400" size={24} />,
-                                                title: t('core.welcome_hub.feature.support_title'),
-                                                desc: t('core.welcome_hub.feature.support_desc'),
-                                                bgColor: 'bg-purple-500/10'
-                                            },
-                                            {
-                                                icon: <Calendar className="text-orange-400" size={24} />,
-                                                title: t('core.welcome_hub.feature.workflow_title'),
-                                                desc: t('core.welcome_hub.feature.workflow_desc'),
-                                                bgColor: 'bg-orange-500/10'
-                                            }
-                                        ].map((feature, i) => (
-                                            <motion.div
-                                                key={i}
-                                                variants={{
-                                                    hidden: { opacity: 0, x: 20 },
-                                                    visible: { opacity: 1, x: 0 }
-                                                }}
-                                                className="flex gap-6 group cursor-default"
-                                            >
+                                        {features.map((feature, i) => (
+                                            <div key={i} className="flex gap-6 group cursor-default">
                                                 <div className={`flex-shrink-0 w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:rotate-3 shadow-sm
                                                     ${isDarkMode ? 'bg-white/5 border border-white/5' : 'bg-gray-50 border border-gray-100'}`}
                                                 >
@@ -219,14 +179,14 @@ export const WelcomeHub: React.FC = () => {
                                                         {feature.desc}
                                                     </p>
                                                 </div>
-                                            </motion.div>
+                                            </div>
                                         ))}
                                     </div>
                                 </div>
-                            </motion.div>
+                            </div>
 
                         </div>
-                    </motion.div>
+                    </div>
                 </div>
             </div>
         </>

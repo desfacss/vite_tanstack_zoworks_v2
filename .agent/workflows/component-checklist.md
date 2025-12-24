@@ -222,6 +222,37 @@ Complete agentic workflow for creating a new component or page in a module, incl
 
 ---
 
+## Lean Code Principles
+
+### Use Standard Components
+- **ALWAYS** use Ant Design components instead of custom elements:
+  ```tsx
+  // ❌ Wrong - custom button with custom CSS
+  <motion.button className="custom-btn" onClick={...}>Click</motion.button>
+  
+  // ✅ Correct - Ant Design Button with theme styling
+  <Button type="primary" onClick={...}>Click</Button>
+  ```
+
+### No Framer Motion for UI Elements
+- **AVOID** `framer-motion` for buttons, forms, and standard UI
+- Use CSS transitions for simple hover/active states
+- Framer Motion is acceptable ONLY for complex page transitions or charts
+- If motion.button exists, replace with `<Button>` from antd
+
+### Theme Styling via CSS, Not Custom Classes
+- Style components via theme presets in `src/index.css`
+- Use `[data-theme-preset="neon"]` selectors for theme-specific styling
+- **DO NOT** create one-off custom CSS classes for buttons (e.g., `neon-primary-btn`)
+- All `type="primary"` buttons get theme styling automatically via `.ant-btn-primary`
+
+### CSS Variable Consistency
+- Use `--color-primary`, `--color-secondary` for colors
+- Use `--color-primary-rgb` for rgba() transparency effects
+- These are set by ThemeRegistry from database theme_config
+
+---
+
 ## Common Patterns
 
 ### Standard Page with DynamicViews

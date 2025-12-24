@@ -1,11 +1,47 @@
 import { TenantThemeConfig } from './ThemeRegistry';
 
-export const THEME_PRESETS: Record<string, Partial<TenantThemeConfig>> = {
+/**
+ * Theme Presets - Standardized Configuration
+ * 
+ * Each preset defines:
+ * - borderRadius: 4 (sharp), 8 (standard), 16 (rounded)
+ * - light & dark mode colors
+ * - Optional feature flags (heroHeader)
+ * 
+ * When a preset is selected, its colors should override tenant config.
+ */
+export const THEME_PRESETS: Record<string, Partial<TenantThemeConfig> & { description?: string }> = {
+    // Base/Default - Clean, minimal, professional
+    base: {
+        borderRadius: 8,
+        description: 'Clean and minimal design',
+        light: {
+            primaryColor: '#1677ff',
+            secondaryColor: '#722ed1',
+            cardBg: '#ffffff',
+            layoutBg: '#f5f5f5',
+            headerBg: '#ffffff',
+            siderBg: '#ffffff',
+            textColor: '#1f1f1f',
+        },
+        dark: {
+            primaryColor: '#1890ff',
+            secondaryColor: '#9254de',
+            cardBg: '#1f1f1f',
+            layoutBg: '#141414',
+            headerBg: '#1f1f1f',
+            siderBg: '#1f1f1f',
+            textColor: '#ffffff',
+        }
+    },
+
+    // Glassmorphism - Apple-inspired frosted glass
     glassmorphism: {
         borderRadius: 16,
+        description: 'Apple-inspired frosted glass',
         light: {
-            primaryColor: '#007AFF', // Apple Blue
-            secondaryColor: '#5856D6', // Apple Purple
+            primaryColor: '#007AFF',
+            secondaryColor: '#5856D6',
             cardBg: 'rgba(255, 255, 255, 0.7)',
             layoutBg: '#f5f5f7',
             headerBg: 'rgba(255, 255, 255, 0.8)',
@@ -13,8 +49,8 @@ export const THEME_PRESETS: Record<string, Partial<TenantThemeConfig>> = {
             textColor: '#1d1d1f',
         },
         dark: {
-            primaryColor: '#0A84FF', // Apple Dark Blue
-            secondaryColor: '#5E5CE6', // Apple Dark Purple
+            primaryColor: '#0A84FF',
+            secondaryColor: '#5E5CE6',
             cardBg: 'rgba(28, 28, 30, 0.7)',
             layoutBg: '#000000',
             headerBg: 'rgba(28, 28, 30, 0.8)',
@@ -23,59 +59,12 @@ export const THEME_PRESETS: Record<string, Partial<TenantThemeConfig>> = {
         }
     },
 
-    // Gradient Card Layout - modern gradient header with white card content
-    gradient_card: {
-        borderRadius: 16,
-        heroHeader: true,
-        light: {
-            primaryColor: '#4F46E5', // Indigo
-            secondaryColor: '#10B981', // Emerald - gorgeous teal/green mix
-            cardBg: '#ffffff',
-            layoutBg: '#f8fafc',
-            headerBg: '#4F46E5',
-            siderBg: '#ffffff',
-            textColor: '#0f172a',
-        },
-        dark: {
-            primaryColor: '#6366F1',
-            secondaryColor: '#34D399',
-            cardBg: '#1e293b',
-            layoutBg: '#0f172a',
-            headerBg: '#312e81',
-            siderBg: '#0f172a',
-            textColor: '#f8fafc',
-        }
-    },
-
-    // Branded Header (VKBS/Red variant)
-    branded_header: {
-        borderRadius: 16,
-        heroHeader: true,
-        light: {
-            primaryColor: '#EF4444', // Red 500
-            secondaryColor: '#F59E0B', // Amber 500
-            cardBg: '#ffffff',
-            layoutBg: '#fdf2f2',
-            headerBg: '#EF4444',
-            siderBg: '#ffffff',
-            textColor: '#1a1a1a',
-        },
-        dark: {
-            primaryColor: '#F87171',
-            secondaryColor: '#FBBF24',
-            cardBg: '#1e1e1e',
-            layoutBg: '#111827',
-            headerBg: '#991B1B',
-            siderBg: '#1e1e1e',
-            textColor: '#ffffff',
-        }
-    },
-
-    // Corporate/Enterprise theme
+    // Corporate - Sharp, professional, enterprise
     corporate: {
         borderRadius: 4,
+        description: 'Sharp and professional for enterprise',
         light: {
-            primaryColor: '#1e40af', // Blue 800
+            primaryColor: '#1e40af',
             secondaryColor: '#1e3a8a',
             cardBg: '#ffffff',
             layoutBg: '#f1f5f9',
@@ -94,37 +83,63 @@ export const THEME_PRESETS: Record<string, Partial<TenantThemeConfig>> = {
         }
     },
 
-    ultra_glass: {
-        borderRadius: 24,
+    // Gradient Card - Modern gradient header
+    gradient_card: {
+        borderRadius: 16,
         heroHeader: true,
+        description: 'Bold gradients with hero header',
+        light: {
+            primaryColor: '#4F46E5',
+            secondaryColor: '#10B981',
+            cardBg: '#ffffff',
+            layoutBg: '#f8fafc',
+            headerBg: '#4F46E5',
+            siderBg: '#ffffff',
+            textColor: '#0f172a',
+        },
         dark: {
-            primaryColor: '#8B5CF6', // Violet
-            secondaryColor: '#EC4899', // Pink
-            cardBg: 'rgba(255, 255, 255, 0.05)',
-            layoutBg: 'linear-gradient(135deg, #0f172a 0%, #312e81 50%, #581c87 100%)',
+            primaryColor: '#6366F1',
+            secondaryColor: '#34D399',
+            cardBg: '#1e293b',
+            layoutBg: '#0f172a',
+            headerBg: '#312e81',
+            siderBg: '#0f172a',
             textColor: '#f8fafc',
         }
     },
 
-    // Neon Tech Theme - Inspired by Neon.com
+    // Neon Tech - Electric, modern, high-impact (with CSS animation layer)
     neon: {
         borderRadius: 8,
-        preset: 'neon',
+        preset: 'neon', // Triggers CSS layer in index.css
+        description: 'Electric neon with thunder animations',
         light: {
-            primaryColor: '#00E599', // Neon Green/Cyan
-            secondaryColor: '#00A3FF', // Neon Blue
+            primaryColor: '#00E599',    // Neon Green
+            secondaryColor: '#00A3FF',  // Neon Blue
             cardBg: '#ffffff',
-            layoutBg: '#f9fbfd',
-            textColor: '#0a0a0a',
+            layoutBg: '#f8fafb',        // Off-white with subtle warmth
+            headerBg: 'rgba(255, 255, 255, 0.85)',  // Frosted glass header
+            siderBg: 'rgba(255, 255, 255, 0.9)',   // Frosted glass sidebar
+            inputBg: '#ffffff',
+            textColor: '#1a1a2e',       // Deep slate for contrast
         },
         dark: {
-            primaryColor: '#00E599',
-            secondaryColor: '#00A3FF',
-            cardBg: '#0f0f0f', // Near black card
-            layoutBg: '#020202', // Pitch black layout
-            headerBg: '#000000',
-            siderBg: '#000000',
+            primaryColor: '#00E599',    // Neon Green
+            secondaryColor: '#00A3FF',  // Neon Blue
+            cardBg: '#0f0f0f',          // Near black card
+            layoutBg: '#020202',        // Pitch black layout
+            headerBg: '#000000',        // Pure black header
+            siderBg: '#000000',         // Pure black sidebar
+            inputBg: '#111111',         // Dark input fields
             textColor: '#ffffff',
         }
     }
 };
+
+// Helper to get preset options for UI
+export const getPresetOptions = () =>
+    Object.entries(THEME_PRESETS).map(([key, preset]) => ({
+        value: key,
+        label: key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' '),
+        description: preset.description || '',
+    }));
