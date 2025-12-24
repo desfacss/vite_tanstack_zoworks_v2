@@ -3,8 +3,7 @@ import { Drawer, Menu } from 'antd';
 import { useLocation, useNavigate } from 'react-router-dom';
 import type { MenuProps } from 'antd';
 import type { ItemType } from 'antd/es/menu/interface';
-import { useThemeStore } from '@/core/lib/store';
-import { getTenantLogoUrl, getTenantBrandName } from '@/core/theme/ThemeRegistry';
+import { BrandLogo } from '@/core/components/shared/BrandAsset';
 import { ProfileWelcomeCard } from '../Profile';
 
 interface MobileMenuProps {
@@ -20,11 +19,6 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
 }) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { isDarkMode } = useThemeStore();
-
-  // Get branding
-  const logoUrl = getTenantLogoUrl(isDarkMode);
-  const brandName = getTenantBrandName();
 
   // State to track the currently open submenu keys
   const [openKeys, setOpenKeys] = useState<string[]>([]);
@@ -69,19 +63,8 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
     >
       {/* Custom Header with Logo and Welcome Card */}
       <div className="border-b border-[var(--color-border)]" style={{ padding: '24px 24px 20px 24px' }}>
-        {/* Logo */}
         <div className="flex items-center gap-3 mb-6">
-          {logoUrl ? (
-            <img
-              src={logoUrl}
-              alt={brandName}
-              className="h-8 w-auto max-w-full object-contain"
-            />
-          ) : (
-            <h1 className="text-xl font-bold text-[var(--color-primary)] m-0">
-              {brandName}
-            </h1>
-          )}
+          <BrandLogo />
         </div>
 
         {/* Profile Welcome Card (Level 3) */}

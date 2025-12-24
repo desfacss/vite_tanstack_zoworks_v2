@@ -9,7 +9,7 @@ import {
     ArrowRight,
 } from 'lucide-react';
 import { useAuthStore, useThemeStore } from '@/core/lib/store';
-import { getTenantBrandName, getTenantLogoUrl } from '@/core/theme/ThemeRegistry';
+import { BrandLogo } from '@/core/components/shared/BrandAsset';
 import { useTranslation } from 'react-i18next';
 import {
     PageActionBar,
@@ -30,7 +30,6 @@ export const WelcomeHub: React.FC = () => {
     const [currentTime, setCurrentTime] = useState(new Date());
 
     // Get branding
-    const logoUrl = getTenantLogoUrl(isDarkMode);
     const brandName = getTenantBrandName();
 
     // Update time every minute
@@ -84,13 +83,7 @@ export const WelcomeHub: React.FC = () => {
             {/* Page Header - Left: Brand, Right: Date */}
             <PageActionBar>
                 <ActionBarLeft>
-                    {logoUrl ? (
-                        <img src={logoUrl} alt={brandName} className="h-8 w-auto" />
-                    ) : (
-                        <span className="text-xl font-bold text-[var(--color-primary)]">
-                            {brandName}
-                        </span>
-                    )}
+                    <BrandLogo />
                 </ActionBarLeft>
                 <ActionBarRight>
                     <div className={`text-sm flex items-center gap-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>

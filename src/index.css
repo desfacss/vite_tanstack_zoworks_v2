@@ -1586,7 +1586,7 @@ p {
 
 .dark[data-theme-layout="gradient-card"] .ant-layout-sider,
 .dark[data-theme-layout="gradient-card"] .ant-menu {
-  background: #1a1a1a !important;
+  background: var(--color-bg-primary) !important;
   color: #ffffff !important;
 }
 
@@ -1619,12 +1619,12 @@ p {
 }
 
 .dark[data-theme-layout="gradient-card"] .ant-drawer-content {
-  background: #1a1a1a !important;
+  background: var(--color-bg-primary) !important;
 }
 
 .dark[data-theme-layout="gradient-card"] .ant-drawer-header {
-  background: #242424 !important;
-  border-bottom-color: #333 !important;
+  background: var(--color-bg-secondary) !important;
+  border-bottom-color: var(--color-border) !important;
 }
 
 /* ===== RESPONSIVE: TABLET (768px+) ===== */
@@ -2153,8 +2153,8 @@ legend {
 [data-theme-preset="neon"].dark .ant-input,
 [data-theme-preset="neon"].dark .ant-select-selector,
 [data-theme-preset="neon"].dark .ant-input-number {
-  background: #111111 !important;
-  border: 1px solid #222 !important;
+  background: var(--color-bg-secondary) !important;
+  border: 1px solid var(--color-border) !important;
   color: #ffffff !important;
 }
 

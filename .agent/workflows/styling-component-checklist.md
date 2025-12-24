@@ -76,6 +76,15 @@ Ensure the component's visual behavior aligns with the active preset:
 - [ ] **NO CSS OVERRIDE** for height or padding.
 - [ ] **Lucide Icons ONLY**: No Ant Design icons allowed.
 - [ ] Icon sizes standardized: `size={14}` for buttons, `size={18}` for menus.
+- [ ] **Branding System**: Tenant logos/icons MUST use `<BrandLogo />` or `<BrandIcon />` (from `@/core/components/shared/BrandAsset`). **NO** raw `<img>` tags.
+
+---
+
+## 6. Persistence & Form Audit
+
+- [ ] **Deep Save**: Verify that `form.getFieldsValue(true)` is used in the save handler.
+- [ ] **Unmounted Data**: Ensure fields in collapsed sections or background tabs are correctly captured.
+- [ ] **Reset Integrity**: Verify "Reset to Defaults" strictly uses `THEME_PRESETS` and wipes all local overrides.
 
 ---
 

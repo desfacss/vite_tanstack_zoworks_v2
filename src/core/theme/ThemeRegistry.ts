@@ -19,9 +19,10 @@ import { THEME_PRESETS } from './presets';
  * Mode-specific theme parameters
  */
 export interface ThemeModeConfig {
-    primaryColor: string;
+    primaryColor?: string;
     secondaryColor?: string;
     logoUrl?: string;
+    logoIconUrl?: string;
     cardBg?: string;      // Background color for cards (e.g., colorBgContainer)
     layoutBg?: string;    // Background color for main background (e.g., colorBgLayout)
     headerBg?: string;    // Background color for Top Header
@@ -46,6 +47,7 @@ export interface TenantThemeConfig {
     primaryColor: string;        // Fallback or Light primary
     secondaryColor?: string;
     logoUrl?: string;
+    logoIconUrl?: string;        // New: Square/Favicon asset
     loginBgImage?: string;       // Custom login page background
 
     // Typography (Advanced tenants)
@@ -90,7 +92,6 @@ export function loadTenantTheme(config: TenantThemeConfig): void {
     let mergedConfig: TenantThemeConfig = {
         allowUserDarkMode: true,
         defaultMode: 'light',
-        borderRadius: 12,
         ...presetData,
         ...config,
         // Carry forward the resolved preset key
@@ -454,22 +455,37 @@ export function getTenantBrandName(): string {
 
 /**
  * Get tenant logo URL based on current mode
- * Returns undefined for invalid URLs (e.g., c:\fakepath\)
  */
 export function getTenantLogoUrl(isDarkMode: boolean = false): string | undefined {
     const modeConfig = isDarkMode ? tenantConfig?.dark : tenantConfig?.light;
     const logoUrl = modeConfig?.logoUrl || tenantConfig?.logoUrl;
+    return validateAssetUrl(logoUrl);
+}
 
-    // Validate the URL - filter out invalid paths like "c:\fakepath\"
-    if (!logoUrl) return undefined;
-    if (logoUrl.toLowerCase().includes('fakepath')) {
-        console.warn('[Theme] Invalid logo URL detected (contains fakepath):', logoUrl);
+/**
+ * Get tenant logo ICON (square) URL based on current mode
+ */
+export function getTenantLogoIconUrl(isDarkMode: boolean = false): string | undefined {
+    const modeConfig = isDarkMode ? tenantConfig?.dark : tenantConfig?.light;
+    const logoIconUrl = modeConfig?.logoIconUrl || tenantConfig?.logoIconUrl;
+    return validateAssetUrl(logoIconUrl);
+}
+
+/**
+ * Validates and filters out junk fake paths from browser uploads 
+ * Returns undefined for invalid URLs (e.g., c:\fakepath\)
+ */
+function validateAssetUrl(url: string | undefined): string | undefined {
+    if (!url) return undefined;
+    if (url.toLowerCase().includes('fakepath')) {
+        console.warn('[Theme] Invalid asset URL detected (contains fakepath):', url);
         return undefined;
     }
-    if (!logoUrl.startsWith('http://') && !logoUrl.startsWith('https://') && !logoUrl.startsWith('/')) {
-        console.warn('[Theme] Invalid logo URL detected (not a valid URL):', logoUrl);
+    // Handle standard URLs or relative paths
+    if (!url.startsWith('http://') && !url.startsWith('https://') && !url.startsWith('/') && !url.startsWith('data:')) {
+        console.warn('[Theme] Invalid asset URL detected (not a valid URL):', url);
         return undefined;
     }
 
-    return logoUrl;
+    return url;
 }

@@ -10,7 +10,7 @@ import { getTenantThemeConfig, updateTenantTheme, TenantThemeConfig } from '@/co
 import { THEME_PRESETS, getPresetOptions } from '@/core/theme/presets';
 import { supabase } from '@/lib/supabase';
 import type { Organization, Location } from '@/core/lib/types';
-import { Palette, Globe, Image as ImageIcon, Type, Sparkles, Upload as UploadIcon, Move } from 'lucide-react';
+import { Palette, ImageIcon, Upload as UploadIcon, Type, Sparkles, Globe, Grid, Move } from 'lucide-react';
 import PublitioAPI from 'publitio_js_sdk';
 
 const { Title, Text } = Typography;
@@ -46,8 +46,7 @@ export const Settings: React.FC<SettingsProps> = ({ open, onClose }) => {
 
   const themeConfig = getTenantThemeConfig();
   const [saving, setSaving] = useState(false);
-  const [uploading, setUploading] = useState<string | null>(null);
-  const [selectedFiles, setSelectedFiles] = useState<{ light?: string; dark?: string }>({});
+  const [uploading, setUploading] = useState<'light' | 'dark' | null>(null);
 
   const publitio = useMemo(() => new PublitioAPI('xr7tJHfDaqk5ov18TkJX', 'aApiZqz6Di1eacmemfof14xwN63lyJHG'), []);
 
@@ -164,6 +163,10 @@ export const Settings: React.FC<SettingsProps> = ({ open, onClose }) => {
           dark_primaryColor: preset.dark?.primaryColor || '#1890ff',
           light_secondaryColor: preset.light?.secondaryColor || preset.light?.primaryColor || '#1890ff',
           dark_secondaryColor: preset.dark?.secondaryColor || preset.dark?.primaryColor || '#1890ff',
+          light_logoUrl: preset.light?.logoUrl || '',
+          dark_logoUrl: preset.dark?.logoUrl || '',
+          light_logoIconUrl: preset.light?.logoIconUrl || '',
+          dark_logoIconUrl: preset.dark?.logoIconUrl || '',
           light_cardBg: preset.light?.cardBg || '#ffffff',
           light_layoutBg: preset.light?.layoutBg || '#f0f2f5',
           light_headerBg: preset.light?.headerBg || '#ffffff',
@@ -198,6 +201,7 @@ export const Settings: React.FC<SettingsProps> = ({ open, onClose }) => {
         light_primaryColor: themeConfig.light?.primaryColor || themeConfig.primaryColor || preset?.light?.primaryColor,
         light_secondaryColor: themeConfig.light?.secondaryColor || themeConfig.secondaryColor || preset?.light?.secondaryColor,
         light_logoUrl: themeConfig.light?.logoUrl || themeConfig.logoUrl,
+        light_logoIconUrl: themeConfig.light?.logoIconUrl || themeConfig.logoIconUrl,
         light_cardBg: themeConfig.light?.cardBg || preset?.light?.cardBg || '#ffffff',
         light_layoutBg: themeConfig.light?.layoutBg || preset?.light?.layoutBg || '#f0f2f5',
         light_headerBg: themeConfig.light?.headerBg || preset?.light?.headerBg || '#ffffff',
@@ -205,6 +209,7 @@ export const Settings: React.FC<SettingsProps> = ({ open, onClose }) => {
         dark_primaryColor: themeConfig.dark?.primaryColor || themeConfig.primaryColor || preset?.dark?.primaryColor,
         dark_secondaryColor: themeConfig.dark?.secondaryColor || themeConfig.secondaryColor || preset?.dark?.secondaryColor,
         dark_logoUrl: themeConfig.dark?.logoUrl || themeConfig.logoUrl,
+        dark_logoIconUrl: themeConfig.dark?.logoIconUrl || themeConfig.logoIconUrl,
         dark_cardBg: themeConfig.dark?.cardBg || preset?.dark?.cardBg || '#1f1f1f',
         dark_layoutBg: themeConfig.dark?.layoutBg || preset?.dark?.layoutBg || '#141414',
         dark_headerBg: themeConfig.dark?.headerBg || preset?.dark?.headerBg || '#141414',
@@ -232,6 +237,7 @@ export const Settings: React.FC<SettingsProps> = ({ open, onClose }) => {
         primaryColor: getColorString(currentValues.light_primaryColor),
         secondaryColor: getColorString(currentValues.light_secondaryColor),
         logoUrl: currentValues.light_logoUrl,
+        logoIconUrl: currentValues.light_logoIconUrl,
         cardBg: getColorString(currentValues.light_cardBg),
         layoutBg: getColorString(currentValues.light_layoutBg),
         headerBg: getColorString(currentValues.light_headerBg),
@@ -241,6 +247,7 @@ export const Settings: React.FC<SettingsProps> = ({ open, onClose }) => {
         primaryColor: getColorString(currentValues.dark_primaryColor),
         secondaryColor: getColorString(currentValues.dark_secondaryColor),
         logoUrl: currentValues.dark_logoUrl,
+        logoIconUrl: currentValues.dark_logoIconUrl,
         cardBg: getColorString(currentValues.dark_cardBg),
         layoutBg: getColorString(currentValues.dark_layoutBg),
         headerBg: getColorString(currentValues.dark_headerBg),
@@ -272,6 +279,7 @@ export const Settings: React.FC<SettingsProps> = ({ open, onClose }) => {
           primaryColor: getColorString(values.light_primaryColor),
           secondaryColor: getColorString(values.light_secondaryColor),
           logoUrl: values.light_logoUrl,
+          logoIconUrl: values.light_logoIconUrl,
           cardBg: getColorString(values.light_cardBg),
           layoutBg: getColorString(values.light_layoutBg),
           headerBg: getColorString(values.light_headerBg),
@@ -281,6 +289,7 @@ export const Settings: React.FC<SettingsProps> = ({ open, onClose }) => {
           primaryColor: getColorString(values.dark_primaryColor),
           secondaryColor: getColorString(values.dark_secondaryColor),
           logoUrl: values.dark_logoUrl,
+          logoIconUrl: values.dark_logoIconUrl,
           cardBg: getColorString(values.dark_cardBg),
           layoutBg: getColorString(values.dark_layoutBg),
           headerBg: getColorString(values.dark_headerBg),
@@ -311,22 +320,35 @@ export const Settings: React.FC<SettingsProps> = ({ open, onClose }) => {
   };
 
   // --- Logo Upload ---
-  const handleLogoUpload = async (file: File, mode: 'light' | 'dark') => {
+  const handleLogoUpload = async (file: File, mode: 'light' | 'dark', type: 'logo' | 'icon' = 'logo') => {
+    const fieldName = `${mode}_${type === 'logo' ? 'logoUrl' : 'logoIconUrl'}`;
     setUploading(mode);
-    setSelectedFiles(prev => ({ ...prev, [mode]: file.name }));
+    const hide = message.loading(`Uploading ${type} to Publitio...`, 0);
     try {
-      const result = await publitio.uploadFile(file, 'file', { title: `logo - ${mode} -${organization?.id} ` });
-      if (result.success === false) throw new Error(result.error?.message || 'Upload failed');
-      const logoUrl = result.url_preview;
-      form.setFieldValue(`${mode} _logoUrl`, logoUrl);
-      handleValuesChange(null, form.getFieldsValue());
-      message.success(`${mode} logo uploaded successfully!`);
-      setSelectedFiles(prev => ({ ...prev, [mode]: undefined }));
-    } catch (err: any) {
-      console.error('Logo upload error:', err);
-      message.error(`Failed to upload ${mode} logo: ${err.message} `);
-      setSelectedFiles(prev => ({ ...prev, [mode]: undefined }));
+      // 1. Upload to Publitio
+      const result = await publitio.uploadFile(file, 'file', {
+        title: `${type} - ${mode} - ${organization?.name || 'unknown'}`,
+        public_id: `branding_${organization?.id}_${mode}_${type}_${Date.now()}`
+      });
+
+      if (result.success === false) {
+        throw new Error(result.error?.message || 'Publitio upload failed');
+      }
+
+      const publicUrl = result.url_preview;
+
+      // 2. Update form state
+      form.setFieldsValue({ [fieldName]: publicUrl });
+
+      // 3. Trigger preview update
+      handleValuesChange(null, form.getFieldsValue(true));
+
+      message.success(`${type} uploaded successfully to Publitio!`);
+    } catch (error: any) {
+      console.error('[Settings] Upload error:', error);
+      message.error(`Failed to upload ${type}: ` + error.message);
     } finally {
+      hide();
       setUploading(null);
     }
   };
@@ -501,26 +523,48 @@ export const Settings: React.FC<SettingsProps> = ({ open, onClose }) => {
                   label: <span className="flex items-center gap-1"><Palette size={14} /> Light Mode</span>,
                   children: (
                     <div className="pt-4 space-y-4">
-                      <Form.Item name="light_logoUrl" label="Logo URL">
-                        <div className="space-y-2">
-                          <Space.Compact className="w-full">
-                            <Input placeholder="https://..." prefix={<ImageIcon size={14} />} className="flex-1" />
-                            <input
-                              type="file"
-                              id="light-logo-upload"
-                              hidden
-                              accept="image/*"
-                              onChange={(e) => {
-                                e.target.files?.[0] && handleLogoUpload(e.target.files[0], 'light')
-                              }}
-                            />
-                            <Button
-                              icon={<UploadIcon size={14} />}
-                              onClick={() => document.getElementById('light-logo-upload')?.click()}
-                            />
-                          </Space.Compact>
-                        </div>
-                      </Form.Item>
+                      <div className="grid grid-cols-2 gap-4">
+                        <Form.Item name="light_logoUrl" label="Logo (Horizontal)">
+                          <div className="space-y-2">
+                            <Space.Compact className="w-full">
+                              <Input placeholder="https://..." prefix={<ImageIcon size={14} />} className="flex-1" />
+                              <input
+                                type="file"
+                                id="light-logo-upload"
+                                hidden
+                                accept="image/*"
+                                onChange={(e) => {
+                                  e.target.files?.[0] && handleLogoUpload(e.target.files[0], 'light', 'logo')
+                                }}
+                              />
+                              <Button
+                                icon={<UploadIcon size={14} />}
+                                onClick={() => document.getElementById('light-logo-upload')?.click()}
+                              />
+                            </Space.Compact>
+                          </div>
+                        </Form.Item>
+                        <Form.Item name="light_logoIconUrl" label="Icon (Square)">
+                          <div className="space-y-2">
+                            <Space.Compact className="w-full">
+                              <Input placeholder="https://..." prefix={<Grid size={14} />} className="flex-1" />
+                              <input
+                                type="file"
+                                id="light-icon-upload"
+                                hidden
+                                accept="image/*"
+                                onChange={(e) => {
+                                  e.target.files?.[0] && handleLogoUpload(e.target.files[0], 'light', 'icon')
+                                }}
+                              />
+                              <Button
+                                icon={<UploadIcon size={14} />}
+                                onClick={() => document.getElementById('light-icon-upload')?.click()}
+                              />
+                            </Space.Compact>
+                          </div>
+                        </Form.Item>
+                      </div>
 
                       {showAdvanced && (
                         <div className="grid grid-cols-2 gap-x-4 gap-y-2">
@@ -546,26 +590,48 @@ export const Settings: React.FC<SettingsProps> = ({ open, onClose }) => {
                   label: <span className="flex items-center gap-1"><Palette size={14} /> Dark Mode</span>,
                   children: (
                     <div className="pt-4 space-y-4">
-                      <Form.Item name="dark_logoUrl" label="Logo URL">
-                        <div className="space-y-2">
-                          <Space.Compact className="w-full">
-                            <Input placeholder="https://..." prefix={<ImageIcon size={14} />} className="flex-1" />
-                            <input
-                              type="file"
-                              id="dark-logo-upload"
-                              hidden
-                              accept="image/*"
-                              onChange={(e) => {
-                                e.target.files?.[0] && handleLogoUpload(e.target.files[0], 'dark')
-                              }}
-                            />
-                            <Button
-                              icon={<UploadIcon size={14} />}
-                              onClick={() => document.getElementById('dark-logo-upload')?.click()}
-                            />
-                          </Space.Compact>
-                        </div>
-                      </Form.Item>
+                      <div className="grid grid-cols-2 gap-4">
+                        <Form.Item name="dark_logoUrl" label="Logo (Horizontal)">
+                          <div className="space-y-2">
+                            <Space.Compact className="w-full">
+                              <Input placeholder="https://..." prefix={<ImageIcon size={14} />} className="flex-1" />
+                              <input
+                                type="file"
+                                id="dark-logo-upload"
+                                hidden
+                                accept="image/*"
+                                onChange={(e) => {
+                                  e.target.files?.[0] && handleLogoUpload(e.target.files[0], 'dark', 'logo')
+                                }}
+                              />
+                              <Button
+                                icon={<UploadIcon size={14} />}
+                                onClick={() => document.getElementById('dark-logo-upload')?.click()}
+                              />
+                            </Space.Compact>
+                          </div>
+                        </Form.Item>
+                        <Form.Item name="dark_logoIconUrl" label="Icon (Square)">
+                          <div className="space-y-2">
+                            <Space.Compact className="w-full">
+                              <Input placeholder="https://..." prefix={<Grid size={14} />} className="flex-1" />
+                              <input
+                                type="file"
+                                id="dark-icon-upload"
+                                hidden
+                                accept="image/*"
+                                onChange={(e) => {
+                                  e.target.files?.[0] && handleLogoUpload(e.target.files[0], 'dark', 'icon')
+                                }}
+                              />
+                              <Button
+                                icon={<UploadIcon size={14} />}
+                                onClick={() => document.getElementById('dark-icon-upload')?.click()}
+                              />
+                            </Space.Compact>
+                          </div>
+                        </Form.Item>
+                      </div>
 
                       {showAdvanced && (
                         <div className="grid grid-cols-2 gap-x-4 gap-y-2">

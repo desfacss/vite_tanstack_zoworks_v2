@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Layout, Menu } from 'antd';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useAuthStore, useThemeStore } from '@/core/lib/store';
-import { getTenantLogoUrl, getTenantBrandName } from '@/core/theme/ThemeRegistry';
+import { useAuthStore } from '@/core/lib/store';
+import { BrandLogo, BrandIcon } from '@/core/components/shared/BrandAsset';
 
 const { Sider: AntSider } = Layout;
 
@@ -53,9 +53,9 @@ export const Sider: React.FC<SiderProps> = ({ collapsed, navigationItems: propNa
   //   if (!i18n.isInitialized || !navigationItems || navigationItems.length === 0) {
   //   return null; // or a loading skeleton
   // }
-  const { isDarkMode } = useThemeStore();
-  const logoUrl = getTenantLogoUrl(isDarkMode);
-  const brandName = getTenantBrandName();
+  // const { isDarkMode } = useThemeStore();
+  // const logoUrl = getTenantLogoUrl(isDarkMode);
+  // const brandName = getTenantBrandName();
 
   return (
     <AntSider
@@ -80,27 +80,18 @@ export const Sider: React.FC<SiderProps> = ({ collapsed, navigationItems: propNa
         className="flex items-center gap-3 overflow-hidden border-b border-[var(--color-border)]"
         style={{
           minHeight: 'var(--header-height, 56px)',
-          padding: '0 var(--layout-padding, 24px)', // Sync with global layout padding
+          padding: `0 var(--layout-padding, 24px)`, // Sync with global layout padding
         }}
       >
-        {logoUrl ? (
-          <img
-            src={logoUrl}
-            alt={brandName}
-            className={`h-8 w-auto max-w-full object-contain transition-all duration-300 ${collapsed ? 'mx-auto' : ''}`}
-            style={{ marginLeft: collapsed ? -4 : 0 }}
+        {!collapsed ? (
+          <BrandLogo
+            className="transition-all duration-300"
           />
         ) : (
-          <div className="flex items-center gap-2 overflow-hidden">
-            {!collapsed ? (
-              <h1 className="text-xl font-bold truncate text-[var(--color-primary)] m-0">
-                {brandName}
-              </h1>
-            ) : (
-              <div className="w-full text-center font-bold text-lg text-[var(--color-primary)]">
-                {brandName.substring(0, 2).toUpperCase()}
-              </div>
-            )}
+          <div className="flex justify-center w-full">
+            <BrandIcon
+              className="transition-all duration-300"
+            />
           </div>
         )}
       </div>
@@ -113,7 +104,7 @@ export const Sider: React.FC<SiderProps> = ({ collapsed, navigationItems: propNa
         onClick={handleMenuClick}
         // --------------------------------
         className="bg-transparent"
-        openKeys={openKeys}
+        openKeys={collapsed ? [] : openKeys}
         onOpenChange={onOpenChange}
       />
     </AntSider>
