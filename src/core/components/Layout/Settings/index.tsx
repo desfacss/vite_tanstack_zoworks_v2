@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Drawer, Form, InputNumber, Space, Typography, ColorPicker, Input, Button, message, Select } from 'antd';
+import { Drawer, Form, InputNumber, Space, Typography, ColorPicker, Input, Button, message, Select, Modal, Tabs } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
@@ -10,7 +10,6 @@ import { getTenantThemeConfig, updateTenantTheme, TenantThemeConfig } from '@/co
 import { THEME_PRESETS, getPresetOptions } from '@/core/theme/presets';
 import { supabase } from '@/lib/supabase';
 import type { Organization, Location } from '@/core/lib/types';
-import { Tabs } from 'antd';
 import { Palette, Globe, Image as ImageIcon, Type, Sparkles, Upload as UploadIcon, Move } from 'lucide-react';
 import PublitioAPI from 'publitio_js_sdk';
 
@@ -80,7 +79,7 @@ export const Settings: React.FC<SettingsProps> = ({ open, onClose }) => {
   const handleOrganizationChange = async (orgId: string) => {
     const selectedOrgData = userOrgLocations.find(org => org.organization_id === orgId);
     if (selectedOrgData && user?.id) {
-      console.group(`%c[Settings] Switch to ${selectedOrgData.organization_name}`, 'color: #1890ff');
+      console.group(`% c[Settings] Switch to ${selectedOrgData.organization_name} `, 'color: #1890ff');
       setIsSwitchingOrg(true);
       message.loading({ content: t('common.message.switching_to', { name: selectedOrgData.organization_name }), key: 'orgSwitch' });
 
@@ -146,37 +145,42 @@ export const Settings: React.FC<SettingsProps> = ({ open, onClose }) => {
   // Theme preset options from centralized helper
   const themePresetsOptions = useMemo(() => getPresetOptions(), []);
 
-  // Handle preset change - Apply preset colors immediately
-  const handlePresetChange = (presetId: string) => {
-    const preset = THEME_PRESETS[presetId];
+  // Handle reset to preset defaults
+  const handleResetToPreset = () => {
+    const currentPresetId = form.getFieldValue('preset') || themeConfig?.preset || 'base';
+    const preset = THEME_PRESETS[currentPresetId];
     if (!preset) return;
 
-    // Unified config: preset defines all colors
-    const newValues = {
-      preset: presetId,
-      borderRadius: preset.borderRadius || 8,
-      // Primary colors - use from preset (not tenant override)
-      light_primaryColor: preset.light?.primaryColor || '#1890ff',
-      dark_primaryColor: preset.dark?.primaryColor || '#1890ff',
-      // Secondary colors
-      light_secondaryColor: preset.light?.secondaryColor || '#1890ff',
-      dark_secondaryColor: preset.dark?.secondaryColor || '#1890ff',
-      // Backgrounds
-      light_cardBg: preset.light?.cardBg || '#ffffff',
-      light_layoutBg: preset.light?.layoutBg || '#f0f2f5',
-      light_headerBg: preset.light?.headerBg || '#ffffff',
-      light_siderBg: preset.light?.siderBg || '#ffffff',
-      dark_cardBg: preset.dark?.cardBg || '#1f1f1f',
-      dark_layoutBg: preset.dark?.layoutBg || '#141414',
-      dark_headerBg: preset.dark?.headerBg || '#141414',
-      dark_siderBg: preset.dark?.siderBg || '#141414',
-      baseFontSize: preset.baseFontSize || 14,
-      containerPadding: preset.containerPadding || 24,
-    };
-
-    form.setFieldsValue(newValues);
-    handleValuesChange(null, form.getFieldsValue());
+    Modal.confirm({
+      title: 'Reset to Preset Defaults?',
+      content: `This will wipe all manual color overrides and restore the original ${currentPresetId} style.`,
+      onOk: () => {
+        const newValues = {
+          borderRadius: preset.borderRadius || 8,
+          baseFontSize: preset.baseFontSize || 14,
+          containerPadding: preset.containerPadding || 24,
+          // Use preset colors strictly, only fall back to system defaults, never to (potentially corrupted) current themeConfig
+          light_primaryColor: preset.light?.primaryColor || '#1890ff',
+          dark_primaryColor: preset.dark?.primaryColor || '#1890ff',
+          light_secondaryColor: preset.light?.secondaryColor || preset.light?.primaryColor || '#1890ff',
+          dark_secondaryColor: preset.dark?.secondaryColor || preset.dark?.primaryColor || '#1890ff',
+          light_cardBg: preset.light?.cardBg || '#ffffff',
+          light_layoutBg: preset.light?.layoutBg || '#f0f2f5',
+          light_headerBg: preset.light?.headerBg || '#ffffff',
+          light_siderBg: preset.light?.siderBg || '#ffffff',
+          dark_cardBg: preset.dark?.cardBg || '#1f1f1f',
+          dark_layoutBg: preset.dark?.layoutBg || '#141414',
+          dark_headerBg: preset.dark?.headerBg || '#141414',
+          dark_siderBg: preset.dark?.siderBg || '#141414',
+        };
+        form.setFieldsValue(newValues);
+        // Explicitly pass newValues to ensure handleValuesChange doesn't use stale getFieldsValue()
+        handleValuesChange(null, { ...form.getFieldsValue(true), ...newValues });
+        message.success(`Reset to ${currentPresetId} defaults`);
+      }
+    } as any);
   };
+
 
   // --- Branding Logic ---
   // Priority: Database values (tenant customizations) > Preset defaults
@@ -207,38 +211,45 @@ export const Settings: React.FC<SettingsProps> = ({ open, onClose }) => {
         dark_siderBg: themeConfig.dark?.siderBg || preset?.dark?.siderBg || '#141414',
         baseFontSize: themeConfig.baseFontSize || preset?.baseFontSize || 14,
         containerPadding: themeConfig.containerPadding || preset?.containerPadding || 24,
+        defaultMode: themeConfig.defaultMode || 'light',
+        allowUserDarkMode: themeConfig.allowUserDarkMode !== undefined ? themeConfig.allowUserDarkMode : true,
       });
     }
   }, [open, themeConfig, form]);
 
   const handleValuesChange = (_: any, allValues: any) => {
+    // Merge provided changes with all current values (including unmounted fields via true)
+    const currentValues = { ...form.getFieldsValue(true), ...allValues };
+
     const updatedConfig: Partial<TenantThemeConfig> = {
-      preset: allValues.preset,
-      brandName: allValues.brandName,
-      faviconUrl: allValues.faviconUrl,
-      borderRadius: allValues.borderRadius,
-      primaryColor: getColorString(allValues.light_primaryColor),
-      secondaryColor: getColorString(allValues.light_secondaryColor),
+      preset: currentValues.preset,
+      brandName: currentValues.brandName,
+      faviconUrl: currentValues.faviconUrl,
+      borderRadius: currentValues.borderRadius,
+      primaryColor: getColorString(currentValues.light_primaryColor),
+      secondaryColor: getColorString(currentValues.light_secondaryColor),
       light: {
-        primaryColor: getColorString(allValues.light_primaryColor),
-        secondaryColor: getColorString(allValues.light_secondaryColor),
-        logoUrl: allValues.light_logoUrl,
-        cardBg: getColorString(allValues.light_cardBg),
-        layoutBg: getColorString(allValues.light_layoutBg),
-        headerBg: getColorString(allValues.light_headerBg),
-        siderBg: getColorString(allValues.light_siderBg),
+        primaryColor: getColorString(currentValues.light_primaryColor),
+        secondaryColor: getColorString(currentValues.light_secondaryColor),
+        logoUrl: currentValues.light_logoUrl,
+        cardBg: getColorString(currentValues.light_cardBg),
+        layoutBg: getColorString(currentValues.light_layoutBg),
+        headerBg: getColorString(currentValues.light_headerBg),
+        siderBg: getColorString(currentValues.light_siderBg),
       },
       dark: {
-        primaryColor: getColorString(allValues.dark_primaryColor),
-        secondaryColor: getColorString(allValues.dark_secondaryColor),
-        logoUrl: allValues.dark_logoUrl,
-        cardBg: getColorString(allValues.dark_cardBg),
-        layoutBg: getColorString(allValues.dark_layoutBg),
-        headerBg: getColorString(allValues.dark_headerBg),
-        siderBg: getColorString(allValues.dark_siderBg),
+        primaryColor: getColorString(currentValues.dark_primaryColor),
+        secondaryColor: getColorString(currentValues.dark_secondaryColor),
+        logoUrl: currentValues.dark_logoUrl,
+        cardBg: getColorString(currentValues.dark_cardBg),
+        layoutBg: getColorString(currentValues.dark_layoutBg),
+        headerBg: getColorString(currentValues.dark_headerBg),
+        siderBg: getColorString(currentValues.dark_siderBg),
       },
-      baseFontSize: allValues.baseFontSize,
-      containerPadding: allValues.containerPadding,
+      baseFontSize: currentValues.baseFontSize,
+      containerPadding: currentValues.containerPadding,
+      defaultMode: currentValues.defaultMode,
+      allowUserDarkMode: currentValues.allowUserDarkMode,
     };
     updateTenantTheme(updatedConfig);
   };
@@ -247,7 +258,8 @@ export const Settings: React.FC<SettingsProps> = ({ open, onClose }) => {
     if (!organization?.id) return;
     setSaving(true);
     try {
-      const values = form.getFieldsValue();
+      // Use true to get all fields including unmounted ones (Inactive tabs/Advanced section)
+      const values = form.getFieldsValue(true);
       const payload: Partial<TenantThemeConfig> = {
         ...themeConfig,
         preset: values.preset,
@@ -276,6 +288,8 @@ export const Settings: React.FC<SettingsProps> = ({ open, onClose }) => {
         },
         baseFontSize: values.baseFontSize,
         containerPadding: values.containerPadding,
+        defaultMode: values.defaultMode,
+        allowUserDarkMode: values.allowUserDarkMode,
       };
 
       const { error } = await supabase
@@ -301,16 +315,16 @@ export const Settings: React.FC<SettingsProps> = ({ open, onClose }) => {
     setUploading(mode);
     setSelectedFiles(prev => ({ ...prev, [mode]: file.name }));
     try {
-      const result = await publitio.uploadFile(file, 'file', { title: `logo-${mode}-${organization?.id}` });
+      const result = await publitio.uploadFile(file, 'file', { title: `logo - ${mode} -${organization?.id} ` });
       if (result.success === false) throw new Error(result.error?.message || 'Upload failed');
       const logoUrl = result.url_preview;
-      form.setFieldValue(`${mode}_logoUrl`, logoUrl);
+      form.setFieldValue(`${mode} _logoUrl`, logoUrl);
       handleValuesChange(null, form.getFieldsValue());
       message.success(`${mode} logo uploaded successfully!`);
       setSelectedFiles(prev => ({ ...prev, [mode]: undefined }));
     } catch (err: any) {
       console.error('Logo upload error:', err);
-      message.error(`Failed to upload ${mode} logo: ${err.message}`);
+      message.error(`Failed to upload ${mode} logo: ${err.message} `);
       setSelectedFiles(prev => ({ ...prev, [mode]: undefined }));
     } finally {
       setUploading(null);
@@ -396,15 +410,25 @@ export const Settings: React.FC<SettingsProps> = ({ open, onClose }) => {
             onValuesChange={handleValuesChange}
             size="small"
             className="px-1"
+            preserve={true}
           >
-            <Form.Item name="preset" label="Theme Style Preset">
-              <Select
-                options={themePresetsOptions}
-                onChange={handlePresetChange}
-                placeholder="Select a style..."
-                className="w-full h-9"
-              />
-            </Form.Item>
+            <div className="flex gap-2 items-end">
+              <Form.Item name="preset" label="Theme Style Preset" className="flex-1 mb-0">
+                <Select
+                  options={themePresetsOptions}
+                  placeholder="Select a style..."
+                  className="w-full h-9"
+                />
+              </Form.Item>
+              <Button
+                onClick={handleResetToPreset}
+                icon={<Sparkles size={14} />}
+                className="h-9 text-xs"
+                title="Reset manual overrides to preset defaults"
+              >
+                Reset
+              </Button>
+            </div>
 
             <Tabs
               activeKey={activeTab}
@@ -429,6 +453,14 @@ export const Settings: React.FC<SettingsProps> = ({ open, onClose }) => {
                           label={<span className="flex items-center gap-1"><Move size={12} /> Padding</span>}
                         >
                           <InputNumber min={16} max={48} className="w-full" precision={0} />
+                        </Form.Item>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <Form.Item name="defaultMode" label="Default Mode">
+                          <Select options={[{ value: 'light', label: 'Light' }, { value: 'dark', label: 'Dark' }]} />
+                        </Form.Item>
+                        <Form.Item name="allowUserDarkMode" label="User Toggle" valuePropName="checked">
+                          <Select options={[{ value: true, label: 'Enabled' }, { value: false, label: 'Disabled' }]} />
                         </Form.Item>
                       </div>
                       <div className="grid grid-cols-2 gap-4">
