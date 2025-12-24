@@ -1,8 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/core/lib/store';
-import viewConfigs from '@/schemas/viewConfig';
-import entityConfigs from '@/schemas/config';
+import { getCacheConfig } from '@/core/lib/cacheConfig';
 
 interface Config {
   available_views?: string[] | null;
@@ -30,29 +29,33 @@ interface ViewConfig {
   v_metadata?: any[] | null;
 }
 
-export const useViewConfigEnhanced = (entityType: string, entitySchema: string, testing: boolean) => {
+/**
+ * Fetches entity and view configuration from the database.
+ *
+ * This hook queries `core.entities` and `core.view_configs` tables,
+ * merges them into a unified structure, and caches the result based
+ * on environment settings.
+ *
+ * @param entityType - The entity type (e.g., 'tickets', 'users')
+ * @param entitySchema - The database schema (default: 'public')
+ * @returns Combined config and viewConfig objects
+ *
+ * @example
+ * const { data, isLoading } = useViewConfigEnhanced('tickets', 'public');
+ * const { config, viewConfig } = data || {};
+ */
+export const useViewConfigEnhanced = (entityType: string, entitySchema: string) => {
   const { organization } = useAuthStore();
+  const cacheConfig = getCacheConfig();
 
   return useQuery<{ config: Config | null; viewConfig: ViewConfig | null }>({
     queryKey: ['viewConfigEnhanced', entityType, entitySchema, organization?.id],
     queryFn: async () => {
-      if (!organization?.id || !entityType || !entitySchema) return { config: null, viewConfig: null };
-
-      // Step 1: Try loading from local file
-      try {
-        const localConfig = (entityConfigs as any)[entityType];
-        const localViewConfig = (viewConfigs as any)[entityType];
-
-        if (localConfig && localViewConfig) {
-          return { config: localConfig, viewConfig: localViewConfig };
-        }
-
-        console.warn(`Local config file for ${entityType} not found, falling back to database.`);
-      } catch (error) {
-        console.warn(`Error loading local config for ${entityType}, falling back to database.`, error);
+      if (!organization?.id || !entityType || !entitySchema) {
+        return { config: null, viewConfig: null };
       }
 
-      // Step 2: Fall back to database
+      // Fetch entity data from core.entities
       const { data: entityData, error: entityError } = await supabase
         .schema('core')
         .from('entities')
@@ -62,10 +65,11 @@ export const useViewConfigEnhanced = (entityType: string, entitySchema: string, 
         .single();
 
       if (entityError) {
-        console.warn(`No entity found in core.entities for ${entitySchema}.${entityType}.`);
+        console.warn(`[useViewConfigEnhanced] No entity found in core.entities for ${entitySchema}.${entityType}`);
         return { config: null, viewConfig: null };
       }
 
+      // Fetch view config from core.view_configs
       const { data: viewConfigData, error: viewConfigError } = await supabase
         .schema('core')
         .from('view_configs')
@@ -74,11 +78,12 @@ export const useViewConfigEnhanced = (entityType: string, entitySchema: string, 
         .single();
 
       if (viewConfigError) {
-        console.warn(`No view config found in core.view_configs for entity_id: ${entityData.id}`);
+        console.warn(`[useViewConfigEnhanced] No view config found in core.view_configs for entity_id: ${entityData.id}`);
         return { config: null, viewConfig: null };
       }
 
-      const mergedConfig = {
+      // Merge and format data for DynamicViews consumption
+      const mergedConfig: Config = {
         ...viewConfigData.general,
         details: {
           ...(entityData.semantics?.details || {}),
@@ -86,11 +91,20 @@ export const useViewConfigEnhanced = (entityType: string, entitySchema: string, 
         },
       };
 
-      return { config: mergedConfig, viewConfig: { ...viewConfigData, metadata: entityData?.metadata, v_metadata: entityData?.v_metadata } };
+      const mergedViewConfig: ViewConfig = {
+        ...viewConfigData,
+        metadata: entityData?.metadata,
+        v_metadata: entityData?.v_metadata,
+      };
+
+      return {
+        config: mergedConfig,
+        viewConfig: mergedViewConfig,
+      };
     },
     enabled: !!entityType && !!organization?.id && !!entitySchema,
-    staleTime: 24 * (testing ? 1 : (60 * 60 * 1000)),
-    gcTime: 30 * 24 * (testing ? 1 : (60 * 60 * 1000)),
+    staleTime: cacheConfig.staleTime,
+    gcTime: cacheConfig.gcTime,
     retry: 2,
   });
 };

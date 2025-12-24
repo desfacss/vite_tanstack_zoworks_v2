@@ -778,8 +778,6 @@ interface DynamicViewsProps {
   };
   /** The schema configuration for forms. */
   schema?: any;
-  /** A flag for enabling testing configurations. */
-  testing?: boolean;
   /** A flag indicating if this view is nested inside another component (e.g., a drawer). */
   detailView?: boolean;
   /**
@@ -803,7 +801,6 @@ const DynamicViews: React.FC<DynamicViewsProps> = ({
   defaultFilters: propDefaultFilters = {},
   searchConfig,
   schema,
-  testing = false,
   detailView = false,
   parentRecord,
 }) => {
@@ -836,8 +833,7 @@ const DynamicViews: React.FC<DynamicViewsProps> = ({
   // --- Configuration Query ---
   const { data, isLoading: isConfigLoading, error: configError } = useViewConfigEnhanced(
     entityType,
-    entitySchema,
-    testing
+    entitySchema
   );
   const config = data?.config;
   const viewConfig = data?.viewConfig;
