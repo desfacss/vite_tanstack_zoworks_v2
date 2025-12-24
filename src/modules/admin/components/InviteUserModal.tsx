@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { Button, Drawer, Form, Spin, message, notification } from "antd";
+import { Button, Drawer, Form, Spin, message } from "antd";
 import { Plus } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAuthStore } from "@/core/lib/store";
-import DynamicForm from "../../common/DynamicForm";
+import DynamicForm from "@/core/components/DynamicForm";
 import env_def from "../../../utils/constants";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -11,31 +11,15 @@ interface FormSchema {
   [key: string]: any;
 }
 
-interface UserDetails {
-  email?: string;
-  mobile?: string;
-  firstName?: string;
-  lastName?: string;
-  rate?: number;
-  role_type?: string;
-  designation?: string;
-  department?: string;
-  joiningDate?: string;
-  birthDate?: string;
-  address?: string;
-  emergencyContact?: string;
-}
 
-interface Role {
-  id: string;
-  role_name: string;
-}
+
+
 
 const InviteUserModal: React.FC = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState<boolean>(false);
   const [schema, setSchema] = useState<FormSchema | undefined>();
   const [loading, setLoading] = useState<boolean>(false);
-  const [roles, setRoles] = useState<Role[]>([]);
+
   const [form] = Form.useForm();
   const { organization, user, location } = useAuthStore();
   const queryClient = useQueryClient();
@@ -54,21 +38,7 @@ const InviteUserModal: React.FC = () => {
     }
   };
 
-  // Fetch roles
-  const fetchRoles = async () => {
-    const { data, error } = await supabase
-      .schema("identity")
-      .from("roles")
-      .select("*")
-      .eq("organization_id", organization?.id)
-      .order("name", { ascending: true });
-    if (error) {
-      console.error("Error fetching roles:", error);
-      message.error("Failed to fetch roles.");
-    } else {
-      setRoles(data);
-    }
-  };
+
 
   //   // Handle form submission
   //   const handleInviteUser = async (values: any) => {
@@ -233,7 +203,6 @@ const InviteUserModal: React.FC = () => {
     } = values;
 
     // --- 1. Prepare Common Payload Data ---
-    const role_type = roles?.find((r) => r.id === role_id)?.role_name;
     const userName = `${firstName} ${lastName}`;
     const orgId = organization?.id;
     const currentUserId = user?.id; // The user performing the invite
@@ -409,7 +378,6 @@ const InviteUserModal: React.FC = () => {
   useEffect(() => {
     if (isDrawerOpen) {
       getForms();
-      fetchRoles();
     }
   }, [isDrawerOpen]);
   console.log("lz", location, user);
@@ -436,7 +404,13 @@ const InviteUserModal: React.FC = () => {
         }}
       >
         <Spin spinning={loading}>
-          <DynamicForm schemas={schema} onFinish={handleInviteUser} formData={{ location_id: location?.id }} form={form} />
+          {schema && (
+            <DynamicForm
+              schemas={schema as any}
+              onFinish={handleInviteUser}
+              formData={{ location_id: location?.id }}
+            />
+          )}
         </Spin>
       </Drawer>
     </>

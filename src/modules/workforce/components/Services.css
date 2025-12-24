@@ -1,0 +1,17 @@
+/* Services.css - Styles for Workforce cards grid */
+.service-card {
+    height: 100%;
+    transition: all 0.3s ease;
+}
+
+.service-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.service-card-title {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 16px 0;
+}

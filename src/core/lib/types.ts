@@ -141,3 +141,23 @@ export interface Profile {
   created_at: string;
   updated_at: string;
 }
+export interface MasterDataSchema {
+  key: string;
+  display_name: string;
+  type: string;
+  is_visible: boolean;
+  is_editable: boolean;
+  foreign_key?: {
+    source_table: string;
+    source_column: string;
+    display_column: string;
+  };
+}
+
+export interface Dashboard {
+  id?: string;
+  name: string;
+  entityType: string;
+  widgets: any[];
+  organizationId: string;
+}

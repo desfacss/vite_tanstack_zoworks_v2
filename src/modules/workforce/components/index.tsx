@@ -1,18 +1,18 @@
-import { Button, Card, notification, Table, Drawer, Modal, Form, Avatar, message, Spin, Tooltip, Menu, Dropdown, Col, Row, Input, Select } from "antd";
+import { Button, Card, notification, Table, Drawer, Modal, Form, Avatar, message, Spin, Tooltip, Menu, Dropdown, Col, Row, Input } from "antd";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Plus, Pencil, Trash2, Send, List, MoreHorizontal, LayoutGrid, Search, Copy, AlertCircle, Eye } from "lucide-react";
-import { LeftOutlined, RightOutlined, HolderOutlined } from '@ant-design/icons';
+
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/core/lib/store';
 import './Services.css'; // Add a CSS file to style the cards grid
 import { serverErrorParsing } from "@/core/components/common/utils/serverErrorParsing";
 import { camelCaseToTitleCase } from "@/core/components/common/utils/casing";
-import DynamicForm from "@/core/components/shared/DynamicForm";
+import DynamicForm from "@/core/components/DynamicForm";
 import AgentActivityReport from "./AgentActivityReport"; // Import the AgentActivityReport component
 import env_def from "@/core/lib/env";
 
-export const getAllValues = (obj) => {
-  let values = [];
+export const getAllValues = (obj: any): any[] => {
+  let values: any[] = [];
   for (const key in obj) {
     if (key.toLowerCase().includes("id")) {
       // Skip properties containing 'id'
@@ -73,11 +73,7 @@ interface Role {
   role_name: string;
 }
 
-interface Location {
-  id: string;
-  name: string;
-  leave_settings?: any;
-}
+
 
 interface FormSchema {
   [key: string]: any;
@@ -107,7 +103,7 @@ const TeamUsers: React.FC<TeamUsersProps> = ({ selectedTeamId }) => {
   const filteredUsers = useMemo(() => {
     if (!searchText) return users;
     return users?.filter((item) =>
-      getAllValues(item).some((value) =>
+      getAllValues(item).some((value: any) =>
         String(value).toLowerCase().includes(searchText.toLowerCase())
       )
     );
@@ -146,7 +142,7 @@ const TeamUsers: React.FC<TeamUsersProps> = ({ selectedTeamId }) => {
       .eq('is_active', true)
       .order('name', { ascending: true });
     // Conditionally filter by location_id
-    if (location?.id && organization?.app_settings?.partition === 'locations') {
+    if (location?.id && (organization as any)?.app_settings?.partition === 'locations') {
       query = query.eq('location_id', location.id);
     }
     // If a team is selected, filter users by team_id
@@ -253,7 +249,7 @@ const TeamUsers: React.FC<TeamUsersProps> = ({ selectedTeamId }) => {
           .eq('organization_id', organization?.id);
 
         if (checkError && checkError?.code !== 'PGRST116') throw checkError;
-        if (existingUser?.length > 0) {
+        if (existingUser && existingUser.length > 0) {
           message.warning('User with this email already exists.');
           return;
         }
@@ -376,19 +372,7 @@ const TeamUsers: React.FC<TeamUsersProps> = ({ selectedTeamId }) => {
       },
     });
   };
-  const prefill = {
-    "rate": 70,
-    "email": "ganeshmr3003@gmail.com",
-    "mobile": 2342342342,
-    "lastName": "R",
-    "firstName": "ganesh",
-    "department": "Dept3",
-    "designation": "Desig3",
-    "joiningDate": "2025-03-28",
-    "id": "914bbeea-c7ed-4b78-93f8-4a8c33e2171c",
-    "location_id": "22222222-1111-1111-1111-111111111111",
-    "team_id": []
-  }
+
 
 
   // New handler for opening the activity report drawer
@@ -525,8 +509,8 @@ const TeamUsers: React.FC<TeamUsersProps> = ({ selectedTeamId }) => {
                     <p><b>Name:</b> {user.name}</p>
                     <p><b>Email:</b> {user.details?.email}</p>
                     <p><b>Mobile:</b> {user.details?.mobile}</p>
-                    <p><b>Role:</b> {camelCaseToTitleCase(user?.role?.name || '')}</p>
-                    <p><b>Teams:</b> {user.team_id?.length > 0 ? user.team_id.join(', ') : 'None'}</p>
+                    <p><b>Role:</b> {camelCaseToTitleCase((user as any)?.role?.name || '')}</p>
+                    <p><b>Teams:</b> {user.team_id && user.team_id.length > 0 ? user.team_id.join(', ') : 'None'}</p>
                   </Card>
                 </Col>
               ))}
@@ -540,7 +524,7 @@ const TeamUsers: React.FC<TeamUsersProps> = ({ selectedTeamId }) => {
               dataSource={filteredUsers}
               rowKey={(record) => record.id}
               loading={loading}
-              pagination={true}
+              pagination={{}}
             />
           </div>
         )}
@@ -559,7 +543,13 @@ const TeamUsers: React.FC<TeamUsersProps> = ({ selectedTeamId }) => {
         }}
       >
         <Spin spinning={loading}>
-          <DynamicForm schemas={schema} onFinish={handleAddOrEdit} formData={editItem} />
+          {schema && (
+            <DynamicForm
+              schemas={schema as any}
+              onFinish={handleAddOrEdit}
+              formData={editItem}
+            />
+          )}
         </Spin>
       </Drawer>
       <Drawer
@@ -572,7 +562,7 @@ const TeamUsers: React.FC<TeamUsersProps> = ({ selectedTeamId }) => {
         }}
         closable={true}
       >
-        {selectedUserId && <AgentActivityReport editItem={{ id: selectedUserId }} />}
+        {selectedUserId && <AgentActivityReport userId={selectedUserId} />}
       </Drawer>
     </Card>
   );

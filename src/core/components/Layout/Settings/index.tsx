@@ -539,6 +539,7 @@ export const Settings: React.FC<SettingsProps> = ({ open, onClose }) => {
                               />
                               <Button
                                 icon={<UploadIcon size={14} />}
+                                loading={uploading === 'light'}
                                 onClick={() => document.getElementById('light-logo-upload')?.click()}
                               />
                             </Space.Compact>
@@ -559,6 +560,7 @@ export const Settings: React.FC<SettingsProps> = ({ open, onClose }) => {
                               />
                               <Button
                                 icon={<UploadIcon size={14} />}
+                                loading={uploading === 'light'}
                                 onClick={() => document.getElementById('light-icon-upload')?.click()}
                               />
                             </Space.Compact>
@@ -606,6 +608,7 @@ export const Settings: React.FC<SettingsProps> = ({ open, onClose }) => {
                               />
                               <Button
                                 icon={<UploadIcon size={14} />}
+                                loading={uploading === 'dark'}
                                 onClick={() => document.getElementById('dark-logo-upload')?.click()}
                               />
                             </Space.Compact>
@@ -626,6 +629,7 @@ export const Settings: React.FC<SettingsProps> = ({ open, onClose }) => {
                               />
                               <Button
                                 icon={<UploadIcon size={14} />}
+                                loading={uploading === 'dark'}
                                 onClick={() => document.getElementById('dark-icon-upload')?.click()}
                               />
                             </Space.Compact>

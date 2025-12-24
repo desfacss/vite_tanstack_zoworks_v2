@@ -63,6 +63,11 @@ We use a unified component system for branding to ensure consistency and robust 
 1. **Icon**: If `logoIconUrl` is missing, renders a square box with the first letter of `brandName`, a 2px border of `var(--tenant-primary)`, and `4px` border radius.
 2. **Logo**: If `logoUrl` is missing, renders `brandName` as an `h1` styled with `var(--tenant-primary)`.
 
+### Asset Hosting (Publitio)
+The platform uses **Publitio** for high-performance image hosting.
+- **Workflow**: Upload to Publitio API -> Store `url_preview` in Supabase `theme_config`.
+- **Naming Convention**: `branding_{orgId}_{mode}_{type}_{timestamp}`.
+
 ---
 
 ## 3. Strict Prohibitions (NEVER DO THESE)
@@ -114,6 +119,7 @@ When the USER requests a styling fix or a new component:
 3.  **Check Light/Dark**: Verify background colors are correctly inverted using semantic variables.
 4.  **RGB Check**: If using transparency, ensure it uses `rgba(var(--color-primary-rgb), ...)` and NOT a hardcoded blue-rgba.
 5.  **Branding Guard**: Ensure no raw `img` tags are used for tenant logos; use `BrandLogo`/`BrandIcon`.
+6.  **Sider UX**: Verify that `openKeys` is cleared when the sidebar is collapsed to allow Ant Design's native hover popups to function.
 
 ---
 
@@ -123,6 +129,7 @@ When implementing settings or branding forms:
 
 1.  **Deep Save**: Always use `form.getFieldsValue(true)`. Ant Design's default `getFieldsValue()` omits fields that are currently unmounted (e.g., in a background tab or collapsed advanced section). Failure to use `true` will result in data loss on save.
 2.  **Explicit Reset**: When implementing a "Reset" button, strictly pull from `THEME_PRESETS`. Never fall back to the "current" `themeConfig` as it may contain the very overrides you are trying to wipe.
-3.  **Mode Awareness**: Always honor `allowUserDarkMode`. If `false`, the theme toggle should be hidden or disabled.
+3.  **Loading States**: Always provide visual feedback for asynchronous actions (like uploads) using local state (e.g., `uploading` state bound to button `loading` prop).
+4.  **Mode Awareness**: Always honor `allowUserDarkMode`. If `false`, the theme toggle should be hidden or disabled.
 
 *Last Updated: 2025-12-24*

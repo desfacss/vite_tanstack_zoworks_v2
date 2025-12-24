@@ -77,12 +77,14 @@ Ensure the component's visual behavior aligns with the active preset:
 - [ ] **Lucide Icons ONLY**: No Ant Design icons allowed.
 - [ ] Icon sizes standardized: `size={14}` for buttons, `size={18}` for menus.
 - [ ] **Branding System**: Tenant logos/icons MUST use `<BrandLogo />` or `<BrandIcon />` (from `@/core/components/shared/BrandAsset`). **NO** raw `<img>` tags.
+- [ ] **Sider UX**: Verify `openKeys={collapsed ? [] : openKeys}` in `Sider` to ensure hover popups persist.
 
 ---
 
 ## 6. Persistence & Form Audit
 
 - [ ] **Deep Save**: Verify that `form.getFieldsValue(true)` is used in the save handler.
+- [ ] **Loading Feedback**: Verify that async actions (uploads/saves) trigger a `loading` state on the triggering button.
 - [ ] **Unmounted Data**: Ensure fields in collapsed sections or background tabs are correctly captured.
 - [ ] **Reset Integrity**: Verify "Reset to Defaults" strictly uses `THEME_PRESETS` and wipes all local overrides.
 

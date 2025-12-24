@@ -1,6 +1,6 @@
-// Make sure Location is imported if used here, or handled within types.ts
-import { createClient, Session } from '@supabase/supabase-js';
-import { Organization, User, Module, MasterDataSchema, Dashboard, Location } from './types';
+import { createClient } from '@supabase/supabase-js';
+import { Organization, Location, MasterDataSchema, Dashboard } from './types';
+import env_def from './env';
 
 // --- Supabase Client Initialization (Keep) ---
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
@@ -25,13 +25,11 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     flowType: 'pkce',
     // Dynamic cookie domain for cross-subdomain session sharing
     cookieOptions: {
-      domain: typeof window !== 'undefined'
-        ? (window.location.hostname.includes('localhost') ? 'localhost' : '.zoworks.ai')
-        : undefined,
+      domain: env_def.COOKIE_DOMAIN,
       path: '/',
       sameSite: 'lax',
       secure: typeof window !== 'undefined' ? window.location.protocol === 'https:' : true,
-    }
+    } as any
   },
   global: {
     headers: {
