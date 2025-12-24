@@ -5,10 +5,9 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/core/lib/store';
 import DynamicForm from '../DynamicForm';
-import DetailsView from '../details/DetailsView';
+const DetailsView = lazy(() => import('../details/DetailsView'));
 import { useFormConfig } from '../DynamicViews/hooks/useFormConfig';
 import { useNestedContext } from '@/core/lib/NestedContext';
-import { useLocation } from 'react-router-dom';
 import { registry } from '@/core/registry';
 import { RowActions as RowActionsStandard } from '@/core/components/ActionBar';
 
@@ -52,7 +51,7 @@ const RowActions: React.FC<RowActionsProps> = ({
   const hasAccess = useCallback((action: string) => {
     if (!accessConfig?.[action]) return true;
     const { roles = [], users = [] } = accessConfig[action];
-    return users.includes(user?.id || '') || roles.includes(user?.role || '');
+    return users.includes(user?.id || '') || roles.includes(user?.role_id || '');
   }, [accessConfig, user]);
 
   const fetchRelatedData = async (projectId: string) => {
@@ -132,24 +131,24 @@ const RowActions: React.FC<RowActionsProps> = ({
   const handleEdit = async (form: string) => {
     setFormName(form);
     setCurrentAction('Edit');
-    
+
     // Check if this is a component path (starts with ../ or ./)
     const isComponentPath = form.startsWith('../') || form.startsWith('./');
-    
+
     if (isComponentPath) {
       // Load custom component dynamically
       try {
         const pageModules = import.meta.glob('@/pages/**/*.tsx');
         const moduleComponents = import.meta.glob('@/modules/**/components/*.tsx');
         const allModules = { ...pageModules, ...moduleComponents };
-        
+
         // Extract component name from path (e.g., "TicketEdit" from "../pages/Clients/TicketEdit")
         const componentName = form.split('/').pop()?.replace('.tsx', '') || '';
-        
-        const modulePath = Object.keys(allModules).find(key => 
+
+        const modulePath = Object.keys(allModules).find(key =>
           key.endsWith(`/${componentName}.tsx`)
         );
-        
+
         if (modulePath && allModules[modulePath]) {
           const Component = await allModules[modulePath]() as any;
           setLoadedActionComponent(() => Component.default || Component);
@@ -161,7 +160,7 @@ const RowActions: React.FC<RowActionsProps> = ({
         console.error('Error loading component:', error);
       }
     }
-    
+
     const isLegacyPath = !!legacyComponentMap[form];
     if (isLegacyPath) {
       setIsDrawerVisible(true);
@@ -254,8 +253,8 @@ const RowActions: React.FC<RowActionsProps> = ({
     filteredActions.registered.forEach(a => {
       items.push({
         key: a.id,
-        label: typeof a.label === 'function' ? a.label((s: any) => s) : a.label,
-        icon: a.icon || <Edit2 size={16} />,
+        label: typeof a.label === 'function' ? (a.label as any)((s: any) => s) : a.label,
+        icon: (a as any).icon || <Edit2 size={16} />,
         onClick: () => handleRegistryActionClick(a.id)
       });
     });
@@ -323,13 +322,15 @@ const RowActions: React.FC<RowActionsProps> = ({
         onClose={() => { setIsDetailsDrawerVisible(false); if (contextId) closeContext(contextId); }}
         width={window.innerWidth <= 768 ? '100%' : '70%'}
       >
-        <DetailsView
-          config={config}
-          entityType={entityType}
-          viewConfig={viewConfig}
-          editItem={record}
-          rawData={rawData}
-        />
+        <Suspense fallback={<Spin />}>
+          <DetailsView
+            config={config}
+            entityType={entityType}
+            viewConfig={viewConfig}
+            editItem={record}
+            rawData={rawData}
+          />
+        </Suspense>
       </Drawer>
 
       {deleteRecord && handleDeleteConfirm()}

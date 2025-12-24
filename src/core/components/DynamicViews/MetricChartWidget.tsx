@@ -11,8 +11,7 @@ const debounce = (func: (...args: any[]) => void, delay: number) => {
 
 import React, { useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Card, Statistic, message, Spin, Typography, Select, Col } from 'antd';
-import Plotly from 'plotly.js-dist-min';
+import { Card, Statistic, message, Spin, Typography } from 'antd';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/core/lib/store';
 import { snakeToTitleCase } from '@/core/components/common/utils/casing';
@@ -92,182 +91,184 @@ const MetricChartWidget: React.FC<MetricChartWidgetProps> = ({ widgetConfig, vie
     : 'N/A';
 
   const getDisplayValue = (item: any, key: string) => {
-    const metadata = viewConfig?.metadata?.find((m: any) => m.key === key);
     return item[`display_${key}`] || item[key] || 'N/A';
   };
 
   useEffect(() => {
-    // FIX: Simplified the useEffect condition
-    if (plotRef.current && metricData && metricData.length > 0 && chartType !== 'statistic') {
-      console.log(`Rendering Plotly chart for widget ${widgetId}. Data:`, metricData);
+    const renderChart = async () => {
+      if (plotRef.current && metricData && metricData.length > 0 && chartType !== 'statistic') {
+        const Plotly = (await import('plotly.js-dist-min')).default;
+        console.log(`Rendering Plotly chart for widget ${widgetId}. Data:`, metricData);
 
-      const metricDisplayName = metricDefinition?.display_name || snakeToTitleCase(metricKey);
-      const widgetTitle = customTitle || metricDisplayName;
+        const metricDisplayName = metricDefinition?.display_name || snakeToTitleCase(metricKey);
+        const widgetTitle = customTitle || metricDisplayName;
 
-      // Plotly requires either grouped data or a single value for gauges
-      if (groupByColumns.length === 0 && chartType !== 'gauge') {
-        console.warn(`Skipping Plotly for non-grouped chart type: ${chartType}.`);
-        return;
-      }
+        // Plotly requires either grouped data or a single value for gauges
+        if (groupByColumns.length === 0 && chartType !== 'gauge') {
+          console.warn(`Skipping Plotly for non-grouped chart type: ${chartType}.`);
+          return;
+        }
 
-      const labels = metricData.map((item: any) =>
-        groupByColumns.length > 0
-          ? groupByColumns.map(col => getDisplayValue(item, col)).join(' - ')
-          : 'Total' // Fallback label for single-value charts (like Gauge)
-      );
-      const values = metricData.map((item: any) => item.metric_value);
+        const labels = metricData.map((item: any) =>
+          groupByColumns.length > 0
+            ? groupByColumns.map(col => getDisplayValue(item, col)).join(' - ')
+            : 'Total' // Fallback label for single-value charts (like Gauge)
+        );
+        const values = metricData.map((item: any) => item.metric_value);
 
-      let plotData: Plotly.Data[] = [];
-      let plotLayout: Partial<Plotly.Layout> = {
-        title: widgetTitle,
-        height: 300,
-        margin: { l: 50, r: 50, b: 80, t: 50, pad: 4 },
-        hovermode: 'closest',
-        font: { family: 'Inter, sans-serif' },
-        paper_bgcolor: 'transparent',
-        plot_bgcolor: 'transparent',
-        xaxis: { automargin: true, tickangle: -45, title: groupByColumns.map(snakeToTitleCase).join(' - ') },
-        yaxis: { automargin: true, title: metricDisplayName },
-      };
+        let plotData: any[] = [];
+        let plotLayout: any = {
+          title: widgetTitle,
+          height: 300,
+          margin: { l: 50, r: 50, b: 80, t: 50, pad: 4 },
+          hovermode: 'closest',
+          font: { family: 'Inter, sans-serif' },
+          paper_bgcolor: 'transparent',
+          plot_bgcolor: 'transparent',
+          xaxis: { automargin: true, tickangle: -45, title: groupByColumns.map(snakeToTitleCase).join(' - ') },
+          yaxis: { automargin: true, title: metricDisplayName },
+        };
 
-      switch (chartType) {
-        case 'bar':
-          plotData = [{
-            x: labels,
-            y: values,
-            type: 'bar',
-            marker: { color: 'var(--color-primary)' },
-            hovertemplate: `<b>%{x}</b><br>${metricDisplayName}: %{y}<extra></extra>`,
-          }];
-          break;
-        case 'pie':
-          plotData = [{
-            labels: labels,
-            values: values,
-            type: 'pie',
-            hoverinfo: 'label+percent+value',
-            textinfo: 'percent',
-            automargin: true,
-            marker: {
-              colors: [
-                '#1890ff', '#2fc25b', '#facc14', '#eb2f96', '#722ed1', '#fa8c16', '#a0d911', '#597ef7', '#f759ab', '#9254de'
-              ]
-            }
-          }];
-          plotLayout = {
-            title: widgetTitle,
-            height: 300,
-            margin: { l: 0, r: 0, b: 0, t: 50, pad: 0 },
-            font: { family: 'Inter, sans-serif' },
-            paper_bgcolor: 'transparent',
-            plot_bgcolor: 'transparent',
-            showlegend: true,
-            legend: { orientation: 'h', x: 0, y: -0.2 },
-          };
-          break;
-        case 'line':
-        case 'scatter':
-          plotData = [{
-            x: labels,
-            y: values,
-            type: 'scatter',
-            mode: chartType === 'line' ? 'lines+markers' : 'markers',
-            marker: { color: 'var(--color-primary)' },
-            line: { color: 'var(--color-primary)' },
-            hovertemplate: `<b>%{x}</b><br>${metricDisplayName}: %{y}<extra></extra>`,
-          }];
-          break;
-        case 'area':
-          plotData = [{
-            x: labels,
-            y: values,
-            type: 'scatter',
-            mode: 'lines',
-            fill: 'tozeroy',
-            marker: { color: 'var(--color-primary)' },
-            line: { color: 'var(--color-primary)' },
-            hovertemplate: `<b>%{x}</b><br>${metricDisplayName}: %{y}<extra></extra>`,
-          }];
-          break;
-        case 'gauge':
-          plotData = [{
-            type: 'indicator',
-            mode: 'gauge+number',
-            value: values[0] || 0,
-            title: { text: metricDisplayName },
-            gauge: {
-              axis: { range: [null, values[0] * 2 || 100] },
-              bar: { color: 'var(--color-primary)' },
-              bgcolor: 'transparent',
-              borderwidth: 0,
-              steps: [
-                { range: [0, (values[0] * 0.5) || 50], color: '#d9d9d9' },
-                { range: [(values[0] * 0.5) || 50, (values[0] * 1.5) || 100], color: '#bfbfbf' }
-              ],
-              threshold: {
-                line: { color: "red", width: 4 },
-                thickness: 0.75,
-                value: values[0] * 1.2 || 80
+        switch (chartType) {
+          case 'bar':
+            plotData = [{
+              x: labels,
+              y: values,
+              type: 'bar',
+              marker: { color: 'var(--color-primary)' },
+              hovertemplate: `<b>%{x}</b><br>${metricDisplayName}: %{y}<extra></extra>`,
+            }];
+            break;
+          case 'pie':
+            plotData = [{
+              labels: labels,
+              values: values,
+              type: 'pie',
+              hoverinfo: 'label+percent+value',
+              textinfo: 'percent',
+              automargin: true,
+              marker: {
+                colors: [
+                  '#1890ff', '#2fc25b', '#facc14', '#eb2f96', '#722ed1', '#fa8c16', '#a0d911', '#597ef7', '#f759ab', '#9254de'
+                ]
               }
-            }
-          }];
-          plotLayout = {
-            title: widgetTitle,
-            height: 300,
-            margin: { l: 20, r: 20, b: 20, t: 50, pad: 4 },
-            font: { family: 'Inter, sans-serif' },
-            paper_bgcolor: 'transparent',
-            plot_bgcolor: 'transparent',
-          };
-          break;
-        case 'funnel':
-          plotData = [{
-            x: values,
-            y: labels,
-            type: 'funnel',
-            marker: {
-              color: [
-                '#1890ff', '#2fc25b', '#facc14', '#eb2f96', '#722ed1', '#fa8c16', '#a0d911', '#597ef7', '#f759ab', '#9254de'
-              ]
-            },
-            hovertemplate: `<b>%{y}</b><br>${metricDisplayName}: %{x}<extra></extra>`,
-          }];
-          plotLayout = {
-            title: widgetTitle,
-            height: 300,
-            margin: { l: 80, r: 50, b: 50, t: 50, pad: 4 },
-            font: { family: 'Inter, sans-serif' },
-            paper_bgcolor: 'transparent',
-            plot_bgcolor: 'transparent',
-          };
-          break;
-        default:
-          break;
+            }];
+            plotLayout = {
+              title: widgetTitle,
+              height: 300,
+              margin: { l: 0, r: 0, b: 0, t: 50, pad: 0 },
+              font: { family: 'Inter, sans-serif' },
+              paper_bgcolor: 'transparent',
+              plot_bgcolor: 'transparent',
+              showlegend: true,
+              legend: { orientation: 'h', x: 0, y: -0.2 },
+            };
+            break;
+          case 'line':
+          case 'scatter':
+            plotData = [{
+              x: labels,
+              y: values,
+              type: 'scatter',
+              mode: chartType === 'line' ? 'lines+markers' : 'markers',
+              marker: { color: 'var(--color-primary)' },
+              line: { color: 'var(--color-primary)' },
+              hovertemplate: `<b>%{x}</b><br>${metricDisplayName}: %{y}<extra></extra>`,
+            }];
+            break;
+          case 'area':
+            plotData = [{
+              x: labels,
+              y: values,
+              type: 'scatter',
+              mode: 'lines',
+              fill: 'tozeroy',
+              marker: { color: 'var(--color-primary)' },
+              line: { color: 'var(--color-primary)' },
+              hovertemplate: `<b>%{x}</b><br>${metricDisplayName}: %{y}<extra></extra>`,
+            }];
+            break;
+          case 'gauge':
+            plotData = [{
+              type: 'indicator',
+              mode: 'gauge+number',
+              value: values[0] || 0,
+              title: { text: metricDisplayName },
+              gauge: {
+                axis: { range: [null, values[0] * 2 || 100] },
+                bar: { color: 'var(--color-primary)' },
+                bgcolor: 'transparent',
+                borderwidth: 0,
+                steps: [
+                  { range: [0, (values[0] * 0.5) || 50], color: '#d9d9d9' },
+                  { range: [(values[0] * 0.5) || 50, (values[0] * 1.5) || 100], color: '#bfbfbf' }
+                ],
+                threshold: {
+                  line: { color: "red", width: 4 },
+                  thickness: 0.75,
+                  value: values[0] * 1.2 || 80
+                }
+              }
+            }];
+            plotLayout = {
+              title: widgetTitle,
+              height: 300,
+              margin: { l: 20, r: 20, b: 20, t: 50, pad: 4 },
+              font: { family: 'Inter, sans-serif' },
+              paper_bgcolor: 'transparent',
+              plot_bgcolor: 'transparent',
+            };
+            break;
+          case 'funnel':
+            plotData = [{
+              x: values,
+              y: labels,
+              type: 'funnel',
+              marker: {
+                color: [
+                  '#1890ff', '#2fc25b', '#facc14', '#eb2f96', '#722ed1', '#fa8c16', '#a0d911', '#597ef7', '#f759ab', '#9254de'
+                ]
+              },
+              hovertemplate: `<b>%{y}</b><br>${metricDisplayName}: %{x}<extra></extra>`,
+            }];
+            plotLayout = {
+              title: widgetTitle,
+              height: 300,
+              margin: { l: 80, r: 50, b: 50, t: 50, pad: 4 },
+              font: { family: 'Inter, sans-serif' },
+              paper_bgcolor: 'transparent',
+              plot_bgcolor: 'transparent',
+            };
+            break;
+          default:
+            break;
+        }
+
+        // Set explicit dimensions to prevent auto-margin redraws
+        plotLayout.width = plotRef.current.clientWidth;
+        plotLayout.height = plotRef.current.clientHeight;
+
+        Plotly.newPlot(plotRef.current, plotData, plotLayout, { displayModeBar: false, responsive: true }).then((instance: any) => {
+          plotlyInstance.current = instance;
+        });
+
+        const handleResize = debounce(() => {
+          if (plotRef.current && plotlyInstance.current) {
+            Plotly.Plots.resize(plotRef.current);
+          }
+        }, 200);
+
+        window.addEventListener('resize', handleResize);
+
+        return () => {
+          window.removeEventListener('resize', handleResize);
+          if (plotRef.current) {
+            Plotly.purge(plotRef.current);
+          }
+        };
       }
-
-      // Set explicit dimensions to prevent auto-margin redraws
-      plotLayout.width = plotRef.current.clientWidth;
-      plotLayout.height = plotRef.current.clientHeight;
-
-      Plotly.newPlot(plotRef.current, plotData, plotLayout, { displayModeBar: false, responsive: true }).then((instance) => {
-        plotlyInstance.current = instance;
-      });
-
-      const handleResize = debounce(() => {
-        if (plotRef.current && plotlyInstance.current) {
-          Plotly.Plots.resize(plotRef.current);
-        }
-      }, 200);
-
-      window.addEventListener('resize', handleResize);
-
-      return () => {
-        window.removeEventListener('resize', handleResize);
-        if (plotRef.current) {
-          Plotly.purge(plotRef.current);
-        }
-      };
-    }
+    };
+    renderChart();
   }, [plotRef, metricData, chartType, groupByColumns, metricKey, metricDefinition, customTitle, widgetId]);
 
   const renderContent = () => {

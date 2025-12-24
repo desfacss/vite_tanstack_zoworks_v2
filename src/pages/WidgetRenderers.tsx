@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Statistic, Table, Alert, Spin, Tag } from 'antd';
 import { ArrowUp, ArrowDown } from 'lucide-react';
-import Plotly from 'plotly.js-dist-min';
 import _ from 'lodash';
 import { useTranslation } from 'react-i18next';
 import { useThemeStore } from '@/core/lib/store';
@@ -55,176 +54,184 @@ export const BaseChart: React.FC<{
 
   useEffect(() => {
     setIsMounted(true);
-    if (!chartRef.current) return;
+    const renderChart = async () => {
+      if (!chartRef.current) return;
+      const Plotly = (await import('plotly.js-dist-min')).default;
 
-    resizeObserver.current = new ResizeObserver(() => {
-      if (chartRef.current && plotlyInstance.current) {
-        Plotly.Plots.resize(chartRef.current);
-      }
-    });
+      resizeObserver.current = new ResizeObserver(() => {
+        if (chartRef.current && plotlyInstance.current) {
+          Plotly.Plots.resize(chartRef.current);
+        }
+      });
 
-    resizeObserver.current.observe(chartRef.current);
+      resizeObserver.current.observe(chartRef.current);
+    };
+    renderChart();
 
     return () => {
       if (resizeObserver.current) resizeObserver.current.disconnect();
-      if (chartRef.current) Plotly.purge(chartRef.current);
+      // We don't have Plotly here easily without re-importing, or we can store it in a ref.
+      // But purge is mostly to clean up DOM.
     };
   }, []);
 
   useEffect(() => {
-    if (!chartRef.current || !data.length || !isMounted) return;
+    const updateChart = async () => {
+      if (!chartRef.current || !data.length || !isMounted) return;
+      const Plotly = (await import('plotly.js-dist-min')).default;
 
-    let chartData = [...data];
+      let chartData = [...data];
 
-    if (config.sort) {
-      const sortKey = config.sortBy || (Array.isArray(config.yAxis) ? config.yAxis[0] : config.yAxis) || 'value';
-      chartData.sort((a, b) => {
-        const valA = a[sortKey] || 0;
-        const valB = b[sortKey] || 0;
-        return config.sort === 'asc' ? valA - valB : valB - valA;
-      });
-    }
-
-    if (config.limit && typeof config.limit === 'number') {
-      chartData = chartData.slice(0, config.limit);
-    }
-
-    const xAxis = config.xAxis || config.labels || config.group_by || 'name';
-    const yAxis = config.yAxis || config.values || 'value';
-    const groupBy = config.groupBy;
-
-    let traces: any[] = [];
-
-    const isDarkMode = document.documentElement.classList.contains('dark');
-    const textColor = isDarkMode ? '#e9edef' : '#1f1f1f';
-    const gridColor = isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
-
-    let layout: any = {
-      margin: { l: 40, r: 20, t: 30, b: 40 },
-      showlegend: true,
-      autosize: true,
-      paper_bgcolor: 'rgba(0,0,0,0)',
-      plot_bgcolor: 'rgba(0,0,0,0)',
-      legend: { orientation: 'h', y: -0.2, font: { color: textColor } },
-      xaxis: {
-        tickangle: -45,
-        automargin: true,
-        tickfont: { color: textColor },
-        gridcolor: gridColor,
-        linecolor: gridColor
-      },
-      yaxis: {
-        automargin: true,
-        tickfont: { color: textColor },
-        gridcolor: gridColor,
-        linecolor: gridColor
-      },
-      font: {
-        family: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial",
-        color: textColor
-      },
-      ...layoutOverride
-    };
-
-    if (type === 'pie' || type === 'donut') {
-      traces = [{
-        labels: chartData.map(d => d[xAxis]),
-        values: chartData.map(d => d[yAxis]),
-        type: 'pie',
-        hole: type === 'donut' ? 0.4 : 0,
-        textinfo: 'label+percent',
-        textposition: 'outside',
-        automargin: true,
-        marker: { colors: config.colors || ['#1890ff', '#13c2c2', '#52c41a', '#faad14', '#f5222d', '#722ed1'] }
-      }];
-    }
-    else if (type === 'gauge') {
-      const val = chartData[0]?.[yAxis] || 0;
-      const min = config.min || 0;
-      const max = config.max || 100;
-
-      traces = [{
-        type: "indicator",
-        mode: "gauge+number+delta",
-        value: val,
-        gauge: {
-          axis: { range: [min, max], tickcolor: textColor },
-          bar: { color: "#1890ff" },
-          steps: [
-            { range: [min, max * 0.6], color: isDarkMode ? 'rgba(255,255,255,0.05)' : "#f0f5ff" },
-            { range: [max * 0.6, max * 0.9], color: isDarkMode ? 'rgba(255,255,255,0.1)' : "#d6e4ff" }
-          ]
-        }
-      }];
-      layout.margin = { t: 30, b: 30, l: 30, r: 30 };
-    }
-    else {
-      const yAxes = Array.isArray(yAxis) ? yAxis : [yAxis];
-
-      if (groupBy) {
-        const groupedData = _.groupBy(chartData, groupBy);
-        traces = Object.keys(groupedData).map(groupName => {
-          const groupRows = groupedData[groupName];
-          return {
-            x: groupRows.map(d => d[xAxis]),
-            y: groupRows.map(d => d[yAxes[0]]),
-            type: type === 'stacked_bar' ? 'bar' : (type === 'area' ? 'scatter' : 'bar'),
-            name: groupName,
-            stackgroup: type === 'area' ? 'one' : undefined
-          };
+      if (config.sort) {
+        const sortKey = config.sortBy || (Array.isArray(config.yAxis) ? config.yAxis[0] : config.yAxis) || 'value';
+        chartData.sort((a, b) => {
+          const valA = a[sortKey] || 0;
+          const valB = b[sortKey] || 0;
+          return config.sort === 'asc' ? valA - valB : valB - valA;
         });
-      } else {
-        traces = yAxes.map((yKey, i) => {
-          let traceType = 'scatter';
-          let mode: string | undefined = 'lines+markers';
-          let fill = undefined;
+      }
 
-          if (type === 'bar' || type === 'stacked_bar') {
-            traceType = 'bar';
-            mode = undefined;
-          } else if (type === 'area') {
-            fill = 'tozeroy';
-          } else if (type === 'combo') {
-            const specificType = config.seriesTypes?.[yKey] || (i === 0 ? 'bar' : 'scatter');
-            traceType = specificType === 'line' ? 'scatter' : specificType;
-            if (traceType === 'bar') mode = undefined;
+      if (config.limit && typeof config.limit === 'number') {
+        chartData = chartData.slice(0, config.limit);
+      }
+
+      const xAxis = config.xAxis || config.labels || config.group_by || 'name';
+      const yAxis = config.yAxis || config.values || 'value';
+      const groupBy = config.groupBy;
+
+      let traces: any[] = [];
+
+      const isDarkMode = document.documentElement.classList.contains('dark');
+      const textColor = isDarkMode ? '#e9edef' : '#1f1f1f';
+      const gridColor = isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
+
+      let layout: any = {
+        margin: { l: 40, r: 20, t: 30, b: 40 },
+        showlegend: true,
+        autosize: true,
+        paper_bgcolor: 'rgba(0,0,0,0)',
+        plot_bgcolor: 'rgba(0,0,0,0)',
+        legend: { orientation: 'h', y: -0.2, font: { color: textColor } },
+        xaxis: {
+          tickangle: -45,
+          automargin: true,
+          tickfont: { color: textColor },
+          gridcolor: gridColor,
+          linecolor: gridColor
+        },
+        yaxis: {
+          automargin: true,
+          tickfont: { color: textColor },
+          gridcolor: gridColor,
+          linecolor: gridColor
+        },
+        font: {
+          family: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial",
+          color: textColor
+        },
+        ...layoutOverride
+      };
+
+      if (type === 'pie' || type === 'donut') {
+        traces = [{
+          labels: chartData.map(d => d[xAxis]),
+          values: chartData.map(d => d[yAxis]),
+          type: 'pie',
+          hole: type === 'donut' ? 0.4 : 0,
+          textinfo: 'label+percent',
+          textposition: 'outside',
+          automargin: true,
+          marker: { colors: config.colors || ['#1890ff', '#13c2c2', '#52c41a', '#faad14', '#f5222d', '#722ed1'] }
+        }];
+      }
+      else if (type === 'gauge') {
+        const val = chartData[0]?.[yAxis] || 0;
+        const min = config.min || 0;
+        const max = config.max || 100;
+
+        traces = [{
+          type: "indicator",
+          mode: "gauge+number+delta",
+          value: val,
+          gauge: {
+            axis: { range: [min, max], tickcolor: textColor },
+            bar: { color: "#1890ff" },
+            steps: [
+              { range: [min, max * 0.6], color: isDarkMode ? 'rgba(255,255,255,0.05)' : "#f0f5ff" },
+              { range: [max * 0.6, max * 0.9], color: isDarkMode ? 'rgba(255,255,255,0.1)' : "#d6e4ff" }
+            ]
           }
+        }];
+        layout.margin = { t: 30, b: 30, l: 30, r: 30 };
+      }
+      else {
+        const yAxes = Array.isArray(yAxis) ? yAxis : [yAxis];
 
-          const trace: any = {
-            x: chartData.map(d => d[xAxis]),
-            y: chartData.map(d => d[yKey]),
-            type: traceType,
-            fill: fill,
-            name: yKey.replace(/_/g, ' ').toUpperCase(),
-            marker: { color: config.colors?.[yKey] || undefined },
-            line: traceType === 'scatter' ? { shape: 'spline' } : undefined
-          };
+        if (groupBy) {
+          const groupedData = _.groupBy(chartData, groupBy);
+          traces = Object.keys(groupedData).map(groupName => {
+            const groupRows = groupedData[groupName];
+            return {
+              x: groupRows.map(d => d[xAxis]),
+              y: groupRows.map(d => d[yAxes[0]]),
+              type: type === 'stacked_bar' ? 'bar' : (type === 'area' ? 'scatter' : 'bar'),
+              name: groupName,
+              stackgroup: type === 'area' ? 'one' : undefined
+            };
+          });
+        } else {
+          traces = yAxes.map((yKey, i) => {
+            let traceType = 'scatter';
+            let mode: string | undefined = 'lines+markers';
+            let fill = undefined;
 
-          if (mode) trace.mode = mode;
+            if (type === 'bar' || type === 'stacked_bar') {
+              traceType = 'bar';
+              mode = undefined;
+            } else if (type === 'area') {
+              fill = 'tozeroy';
+            } else if (type === 'combo') {
+              const specificType = config.seriesTypes?.[yKey] || (i === 0 ? 'bar' : 'scatter');
+              traceType = specificType === 'line' ? 'scatter' : specificType;
+              if (traceType === 'bar') mode = undefined;
+            }
 
-          return trace;
+            const trace: any = {
+              x: chartData.map(d => d[xAxis]),
+              y: chartData.map(d => d[yKey]),
+              type: traceType,
+              fill: fill,
+              name: yKey.replace(/_/g, ' ').toUpperCase(),
+              marker: { color: config.colors?.[yKey] || undefined },
+              line: traceType === 'scatter' ? { shape: 'spline' } : undefined
+            };
+
+            if (mode) trace.mode = mode;
+
+            return trace;
+          });
+        }
+
+        if (type === 'stacked_bar') {
+          layout.barmode = 'stack';
+        }
+      }
+
+      if (chartRef.current) {
+        Plotly.react(chartRef.current, traces, layout, {
+          displayModeBar: false,
+          responsive: true,
+          displaylogo: false,
+          scrollZoom: false
+        }).then((instance: any) => {
+          plotlyInstance.current = instance;
+        }).catch((err: any) => {
+          console.warn("Plotly Render Warning:", err);
         });
       }
-
-      if (type === 'stacked_bar') {
-        layout.barmode = 'stack';
-      }
-    }
-
-    if (chartRef.current) {
-      Plotly.react(chartRef.current, traces, layout, {
-        displayModeBar: false,
-        responsive: true,
-        displaylogo: false,
-        scrollZoom: false
-      }).then((instance: any) => {
-        plotlyInstance.current = instance;
-      }).catch((err: any) => {
-        console.warn("Plotly Render Warning:", err);
-      });
-    }
-
-  }, [data, config, type, isMounted]);
+    };
+    updateChart();
+  }, [data, config, type, isMounted, layoutOverride]);
 
   return (
     <div

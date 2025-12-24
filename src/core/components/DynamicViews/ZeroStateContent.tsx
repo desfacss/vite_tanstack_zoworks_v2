@@ -3,7 +3,6 @@ import { snakeToTitleCase } from '@/core/components/common/utils/casing';
 
 // --- External Libraries ---
 import ReactMarkdown from 'react-markdown';
-import mermaid from 'mermaid';
 
 // Assuming your build system can load the markdown file as a string
 import RichZeroStateContent from './ZeroStateContent.md?raw';
@@ -33,6 +32,7 @@ const MermaidComponent: React.FC<MermaidComponentProps> = ({ chart, id }) => {
         if (chart) {
             const renderMermaid = async () => {
                 try {
+                    const mermaid = (await import('mermaid')).default;
                     // Initialize Mermaid (theme: neutral is generally good for dark/light mode compatibility)
                     mermaid.initialize({ startOnLoad: false, theme: 'neutral', securityLevel: 'loose' });
                     // Use mermaid.render() to get the SVG string

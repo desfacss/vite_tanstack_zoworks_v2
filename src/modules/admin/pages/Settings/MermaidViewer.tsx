@@ -1,5 +1,3 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import mermaid from 'mermaid';
 import { Select, Button, Space, message } from 'antd';
 import { ZoomIn, ZoomOut, Home } from 'lucide-react';
 
@@ -21,13 +19,7 @@ interface PanState {
   initialTy: number;
 }
 
-// Initialize Mermaid once
-mermaid.initialize({
-  startOnLoad: false,
-  theme: 'default',
-  securityLevel: 'loose',
-});
-
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 const INITIAL_TRANSFORM: TransformState = { scale: 1, translateX: 0, translateY: 0 };
 
 export default function MermaidViewer(): JSX.Element {
@@ -77,17 +69,25 @@ export default function MermaidViewer(): JSX.Element {
 
   useEffect(() => {
     if (mermaidCode) {
-      const id = 'mermaid-render-target';
+      const renderDiagram = async () => {
+        const mermaid = (await import('mermaid')).default;
+        mermaid.initialize({
+          startOnLoad: false,
+          theme: 'default',
+          securityLevel: 'loose',
+        });
+        const id = 'mermaid-render-target';
 
-      mermaid.render(id, mermaidCode)
-        .then(({ svg }) => {
+        try {
+          const { svg } = await mermaid.render(id, mermaidCode);
           setSvgContent(svg);
-        })
-        .catch(error => {
+        } catch (error) {
           console.error('Mermaid render error:', error);
           setSvgContent(`<div style="color: red; font-weight: bold;">Error rendering diagram. Check the Mermaid syntax.</div>`);
           message.error('Mermaid rendering failed.');
-        });
+        }
+      };
+      renderDiagram();
     } else {
       setSvgContent('');
     }

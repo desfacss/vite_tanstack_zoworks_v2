@@ -1,17 +1,50 @@
 // DetailOverview.tsx
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { Card, Divider, Tag, Button, Typography, Switch, message, Spin } from 'antd';
-import * as LucideIcons from 'lucide-react';
+import {
+  Eye,
+  EyeOff,
+  AlertCircle,
+  HelpCircle,
+  TrendingUp,
+  TrendingDown,
+  Info,
+  CheckCircle2,
+  XCircle,
+  Clock,
+  User,
+  Settings,
+  Folder,
+  FileText
+} from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import QRCard from './QRCard';
-import RowActions from '../DynamicViews/RowActions';
-import TaskReportPage from '@/core/components/common/doc/ServiceReportDrawer';
-import DocView from './DocView';
-import ApprovalActionButtons from './ApprovalActionButtons';
+const QRCard = lazy(() => import('./QRCard'));
+const RowActions = lazy(() => import('../DynamicViews/RowActions'));
+const DocView = lazy(() => import('./DocView'));
+const ApprovalActionButtons = lazy(() => import('./ApprovalActionButtons'));
 // NOTE: Expensesheet and Timesheet are now registered via workforce module registry
 // and loaded dynamically through registry.getDetailComponent()
 import { registry } from '@/core/registry';
 import { useAuthStore } from '@/core/lib/store';
+
+// --- Local Icon Map to avoid importing the entire Lucide library ---
+const ICON_MAP: Record<string, React.ComponentType<any>> = {
+  Eye,
+  EyeOff,
+  AlertCircle,
+  HelpCircle,
+  TrendingUp,
+  TrendingDown,
+  Info,
+  CheckCircle2,
+  XCircle,
+  Clock,
+  User,
+  Settings,
+  Folder,
+  FileText,
+};
+// -------------------------------------------------------------------
 
 const { Text, Title } = Typography;
 
@@ -183,11 +216,11 @@ const DetailOverview: React.FC<DetailOverviewProps> = ({
   const [toggledGroups, setToggledGroups] = useState<Set<string>>(new Set());
   const { organization } = useAuthStore();
   const recordId = data?.id;
-
-  const getIcon = (iconName?: string): React.ReactNode => {
-    return iconName && (LucideIcons as any)[iconName]
-      ? React.createElement((LucideIcons as any)[iconName])
-      : null;
+  // Function to render icon based on name
+  const getIcon = (iconName?: string) => {
+    if (!iconName) return null;
+    const Icon = ICON_MAP[iconName];
+    return Icon ? React.createElement(Icon, { size: 16 }) : null;
   };
 
   const fetchDetailData = useCallback(async () => {
@@ -516,8 +549,8 @@ const DetailOverview: React.FC<DetailOverviewProps> = ({
                   className="mr-2"
                   checked={toggledGroups.has(group.name)}
                   onChange={() => handleToggle(group.name)}
-                  checkedChildren={<LucideIcons.EyeOff size={14} />}
-                  unCheckedChildren={<LucideIcons.Eye size={14} />}
+                  checkedChildren={<EyeOff size={14} />}
+                  unCheckedChildren={<Eye size={14} />}
                 />
                 {toggledGroups.has(group.name) ? 'Hidden' : 'Visible'}
               </div>
@@ -583,15 +616,17 @@ const DetailOverview: React.FC<DetailOverviewProps> = ({
   // Find the field path that matched the card title for optional exclusion later
   // const titleFieldPath = TITLE_FIELD_PRIORITY.find(key => getNestedValue(currentData, key) === cardTitleText);
 
-  if (templateName && templateData) {
+  if (templateName && templateData && fetchedData) {
     return (
-      <DocView
-        data={currentData}
-        _viewConfig={viewConfig}
-        templateSettings={templateData.settings}
-        templateStyles={templateData.styles}
-        templateConfig={templateData.template_config}
-      />
+      <Suspense fallback={<Spin />}>
+        <DocView
+          data={fetchedData}
+          templateSettings={viewConfig.detailview.print_template.settings}
+          templateStyles={viewConfig.detailview.print_template.styles}
+          templateConfig={viewConfig.detailview.print_template.config}
+          _viewConfig={viewConfig}
+        />
+      </Suspense>
     );
   }
 
@@ -610,7 +645,7 @@ const DetailOverview: React.FC<DetailOverviewProps> = ({
     return (
       <Card className="detail-overview-card" title="Error">
         <div style={{ padding: '20px', textAlign: 'center', color: 'red' }}>
-          <LucideIcons.AlertCircle style={{ fontSize: 24, marginBottom: 10 }} />
+          <AlertCircle style={{ fontSize: 24, marginBottom: 10 }} />
           <p>Failed to load the record details. Please try again.</p>
         </div>
       </Card>
@@ -622,31 +657,34 @@ const DetailOverview: React.FC<DetailOverviewProps> = ({
       className="detail-overview-card"
       title={cardTitle}
       extra={
-        <RowActions
-          entityType={viewConfig?.entity_type}
-          record={currentData}
-          actions={viewConfig?.tableview?.actions.row.filter(
-            (action: any) => action.name === 'Edit',
-          )}
-          accessConfig={viewConfig?.access_config}
-          viewConfig={viewConfig}
-          config={config}
-        />
+        <Suspense fallback={<Spin />}>
+          <RowActions
+            entityType={data?.entity_type}
+            record={data}
+            actions={Object.values(viewConfig.actions || {})}
+            viewConfig={viewConfig}
+            config={config}
+          />
+        </Suspense>
       }
     >
-      <ApprovalActionButtons
-        entityId={currentData.id}
-        entityType={viewConfig?.entity_type}
-        entitySchema={viewConfig?.entity_schema}
-        currentStatus={currentData.stage_id}
-        submitterUserId={currentData.user_id}
-        createdAt={currentData.created_at}
-      />
-      {viewConfig?.details_overview?.component === 'expense_sheet' && (
-        <DetailComponentRenderer componentId="expense_sheet" data={currentData} />
+      {fetchedData && (
+        <Suspense fallback={<Spin />}>
+          <ApprovalActionButtons
+            entityId={fetchedData.id}
+            entityType={viewConfig?.entity_type}
+            entitySchema={viewConfig?.entity_schema}
+            currentStatus={fetchedData.stage_id}
+            submitterUserId={fetchedData.user_id}
+            createdAt={fetchedData.created_at}
+          />
+        </Suspense>
       )}
-      {viewConfig?.details_overview?.component === 'timesheet' && (
-        <DetailComponentRenderer componentId="timesheet" data={currentData} />
+      {viewConfig?.details_overview?.component && (
+        <DetailComponentRenderer
+          componentId={viewConfig.details_overview.component}
+          data={currentData}
+        />
       )}
       {viewConfig?.general?.features?.qr_form && (
         <div className="pb-4">
@@ -673,10 +711,10 @@ const DetailOverview: React.FC<DetailOverviewProps> = ({
             <Divider />
             <div className="actions-container">{renderActions()}</div>
           </>
+          //   )}
+          // {viewConfig?.entity_type === 'organization.tasks' && (
+          //   <TaskReportPage editItem={currentData as { id: string }} />
         )}
-      {viewConfig?.entity_type === 'organization.tasks' && (
-        <TaskReportPage editItem={currentData as { id: string }} />
-      )}
     </Card>
   );
 };
