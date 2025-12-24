@@ -7339,7 +7339,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"mermaid@npm:^11.12.0":
+"mermaid@npm:^11.12.2":
   version: 11.12.2
   resolution: "mermaid@npm:11.12.2"
   dependencies:
@@ -9280,13 +9280,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-is@npm:19.1.0":
-  version: 19.1.0
-  resolution: "react-is@npm:19.1.0"
-  checksum: 10c0/b6c6cadd172d5d39f66d493700d137a5545c294a62ce0f8ec793d59794c97d2bed6bad227626f16bd0e90004ed7fdc8ed662a004e6edcf5d2b7ecb6e3040ea6b
-  languageName: node
-  linkType: hard
-
 "react-is@npm:^16.13.1":
   version: 16.13.1
   resolution: "react-is@npm:16.13.1"
@@ -9294,7 +9287,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-is@npm:^18.2.0":
+"react-is@npm:^18.2.0, react-is@npm:^18.3.1":
   version: 18.3.1
   resolution: "react-is@npm:18.3.1"
   checksum: 10c0/f2f1e60010c683479e74c63f96b09fb41603527cd131a9959e2aee1e5a8b0caf270b365e5ca77d4a6b18aae659b60a86150bb3979073528877029b35aecd2072
@@ -11299,7 +11292,7 @@ __metadata:
     leaflet-draw: "npm:^1.0.4"
     lodash: "npm:^4.17.21"
     lucide-react: "npm:^0.562.0"
-    mermaid: "npm:^11.12.0"
+    mermaid: "npm:^11.12.2"
     papaparse: "npm:^5.5.2"
     plotly.js-dist-min: "npm:^3.0.1"
     postcss: "npm:^8.4.35"
@@ -11316,7 +11309,7 @@ __metadata:
     react-grid-layout: "npm:^1.5.1"
     react-i18next: "npm:^14.1.0"
     react-image-crop: "npm:^11.0.10"
-    react-is: "npm:19.1.0"
+    react-is: "npm:^18.3.1"
     react-leaflet: "npm:4.2.1"
     react-leaflet-draw: "npm:^0.20.6"
     react-markdown: "npm:^10.1.0"

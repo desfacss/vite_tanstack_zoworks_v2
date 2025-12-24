@@ -63,7 +63,7 @@ const RowActions: React.FC<RowActionsProps> = ({
     const schemaName = parts.length === 2 ? parts[0] : 'public';
     const tableName = parts.length === 2 ? parts[1] : relatedTable.name;
 
-    const { data, error } = await supabase
+    const { data, error }: { data: any[] | null; error: any } = await supabase
       .schema(schemaName)
       .from(tableName)
       .select('*')
@@ -74,6 +74,8 @@ const RowActions: React.FC<RowActionsProps> = ({
       console.error('Error fetching related data:', error.message);
       return [];
     }
+
+    if (!data) return [];
 
     return data.map((item: any) => {
       const transformed: any = {};
