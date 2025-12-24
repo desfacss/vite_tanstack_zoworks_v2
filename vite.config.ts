@@ -130,7 +130,8 @@ export default defineConfig({
         prefer_related_applications: false
       },
       workbox: {
-        // globPatterns: ['**/*.{js,css,html,ico,png,svg,json,woff2}'],
+        // Exclude large async chunks from precaching
+        globIgnores: ['**/plotly.min*.js', '**/mermaid.core*.js', '**/cytoscape*.js'],
         cleanupOutdatedCaches: true,
         sourcemap: true,
         navigateFallback: '/index.html',
