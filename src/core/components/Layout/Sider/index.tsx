@@ -73,14 +73,14 @@ export const Sider: React.FC<SiderProps> = ({ collapsed, navigationItems: propNa
         zIndex: 1000, // Ensure it's above the header if they ever overlap
       }}
       className="border-r border-[var(--color-border)]"
-      width={256}
+      width="var(--sidebar-width-expanded, 256px)"
     >
       {/* Sider header - aligned with app header */}
       <div
         className="flex items-center gap-3 overflow-hidden border-b border-[var(--color-border)]"
         style={{
           minHeight: 'var(--header-height, 56px)',
-          padding: '0 24px', // Standard Ant Design Menu padding for icons
+          padding: '0 var(--layout-padding, 24px)', // Sync with global layout padding
         }}
       >
         {logoUrl ? (

@@ -265,6 +265,7 @@ function getLoginPortalConfig(): TenantConfig {
             mode: 'light',
             primaryColor: '#1890ff',
             brandName: 'Zoworks',
+            preset: 'base',
         },
         enabled_languages: ['en'],
         default_language: 'en',
@@ -295,7 +296,7 @@ function getEmergencyDefaults(subdomain: string): TenantConfig {
             mode: 'light',
             primaryColor: '#1890ff',
             brandName: 'Zoworks',
-            // No preset - theme is fully driven by database
+            preset: 'base',
         },
         enabled_languages: ['en', 'kn'],
         default_language: 'en',

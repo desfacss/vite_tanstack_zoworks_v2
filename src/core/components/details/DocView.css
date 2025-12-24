@@ -1,8 +1,8 @@
 /* DocView.css */
 .doc-view-container {
   padding: 40px;
-  background: #fff;
-  border: 1px solid #e8e8e8;
+  background: var(--color-bg-primary, #fff);
+  border: 1px solid var(--color-border, #e8e8e8);
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   font-family: Arial, sans-serif;
   min-height: 80vh;
@@ -18,7 +18,7 @@
 .doc-header .doc-title {
   margin: 0;
   font-size: 24px;
-  color: #1890ff;
+  color: var(--color-primary, #1890ff);
 }
 
 .doc-header .doc-subtitle {
@@ -40,7 +40,8 @@
 
 .doc-label {
   display: inline-block;
-  min-width: 100px; /* Aligns the values */
+  min-width: 100px;
+  /* Aligns the values */
 }
 
 .doc-value {
@@ -50,5 +51,5 @@
 .doc-footer {
   text-align: center;
   margin-top: 40px;
-  color: #888;
+  color: var(--color-text-secondary, #888);
 }

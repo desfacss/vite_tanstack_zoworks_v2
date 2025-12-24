@@ -22,7 +22,7 @@ export const NotificationsDrawer: React.FC<NotificationsDrawerProps> = ({
       (!notification.start || new Date(notification.start) <= new Date());
 
     return (
-      <List.Item className={isActive ? 'bg-blue-50 dark:bg-gray-700' : ''}>
+      <List.Item className={isActive ? 'bg-[var(--color-bg-tertiary)]' : ''}>
         <List.Item.Meta
           title={
             <div className="flex items-center gap-2">
@@ -40,7 +40,7 @@ export const NotificationsDrawer: React.FC<NotificationsDrawerProps> = ({
           }
           description={notification.message}
         />
-        <div className="text-xs text-gray-500">
+        <div className="text-xs text-[var(--color-text-tertiary)]">
           {new Date(notification.created_at).toLocaleDateString()}
         </div>
       </List.Item>

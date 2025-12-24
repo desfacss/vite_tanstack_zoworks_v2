@@ -21,15 +21,15 @@ export const ProfileAvatar: React.FC<{ size?: number; className?: string }> = ({
             size={size}
             className={`flex-shrink-0 border-none transition-all duration-300 hover:scale-105 ${className}`}
             style={{
-                background: 'linear-gradient(135deg, var(--tenant-primary) 0%, var(--tenant-secondary) 100%)',
-                color: '#fff',
+                background: 'transparent',
+                color: 'var(--color-primary)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 fontSize: size > 40 ? '1.1rem' : '0.85rem',
                 fontWeight: 700,
-                boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
-                border: '2px solid var(--tenant-card-bg)', // Glass effect ring
+                border: '2px solid var(--color-primary)', // Simple primary border
+                boxShadow: '0 0 10px rgba(var(--color-primary-rgb), 0.2)', // Subtle neon glow
             }}
         >
             {initials}

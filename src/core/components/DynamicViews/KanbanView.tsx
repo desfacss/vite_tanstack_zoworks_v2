@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { Card, Select, Button, message } from 'antd';
+import { LeftOutlined, RightOutlined, HolderOutlined } from '@ant-design/icons';
 import { MoreHorizontal, Plus } from 'lucide-react';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import styled from 'styled-components';
@@ -454,7 +455,7 @@ const KanbanView: React.FC<KanbanViewProps> = ({
                   <Lane
                     color={lane.color}
                     className={collapsedLanes[lane.id] ? 'collapsed' : ''}
-                    {...(snapshot.isDraggingOver && { highlighted: 'true' })} //highlighted={snapshot.isDraggingOver}
+                    {...(snapshot.isDraggingOver && { highlighted: true })} //highlighted={snapshot.isDraggingOver}
                   >
                     <div
                       className={`flex items-center justify-between mb-4 cursor-pointer ${collapsedLanes[lane.id] ? 'column-title-collapsed' : ''
@@ -468,7 +469,7 @@ const KanbanView: React.FC<KanbanViewProps> = ({
                           <LeftOutlined style={{ fontSize: 20 }} />
                         )}
                         {/* Display lane.title (which is stage.name or laneConfig.name) */}
-                        <h3 className="font-semibold text-lg text-gray-700">{lane.title}</h3>
+                        <h3 className="text-h3 text-gray-700 !mb-0">{lane.title}</h3>
                       </div>
                       {!collapsedLanes[lane.id] && viewConfig.kanbanview?.actions?.bulk?.some((action: any) => action.name === 'add_') && (
                         <Button type="dashed" block icon={<Plus size={14} />}>

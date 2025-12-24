@@ -154,6 +154,7 @@ Complete agentic workflow for creating a new component or page in a module, incl
 - [ ] **7.6 Theme Compatibility**
   - Verify component looks good in light mode
   - Verify component looks good in dark mode
+  - **MANDATORY**: Run the [/styling-component-checklist](file:///.agent/workflows/styling-component-checklist.md) workflow on the new file to ensure zero hardcoded colors.
 
 ---
 
@@ -240,16 +241,40 @@ Complete agentic workflow for creating a new component or page in a module, incl
 - Framer Motion is acceptable ONLY for complex page transitions or charts
 - If motion.button exists, replace with `<Button>` from antd
 
-### Theme Styling via CSS, Not Custom Classes
-- Style components via theme presets in `src/index.css`
-- Use `[data-theme-preset="neon"]` selectors for theme-specific styling
-- **DO NOT** create one-off custom CSS classes for buttons (e.g., `neon-primary-btn`)
-- All `type="primary"` buttons get theme styling automatically via `.ant-btn-primary`
+### Icons inside Primary Elements
+- [ ] All SVG icons in primary buttons are `#000000`
+- [ ] All Lucide icons are `#000000` in primary elements
+
+### Typography Standards
+- [ ] Uses `.text-h1` through `.text-h6` for headings
+- [ ] Uses `.text-title` for card titles
+- [ ] Uses `.text-subtitle` for descriptions
+- [ ] Font weights match standards (600 for H1-H3, 500 for H4-H6)
+
+### Border Radius & Layout
+- [ ] Uses `var(--tenant-border-radius)` for all custom rounding
+- [ ] Layout uses `.layout-canvas` or `.layout-record` as appropriate
+- [ ] Page implements `.entry-animate` for surface transitions
+- [ ] Grid/List items use `.entry-animate-container` for staggered loading
 
 ### CSS Variable Consistency
 - Use `--color-primary`, `--color-secondary` for colors
 - Use `--color-primary-rgb` for rgba() transparency effects
+- Use `var(--tenant-border-radius)` for custom border radii
 - These are set by ThemeRegistry from database theme_config
+
+### Typography Standardization
+- **ALWAYS** use standardized typography classes for headings:
+  - `text-h1` to `text-h6` for primary headers
+  - `text-title` for secondary/card titles
+  - `text-subtitle` for descriptions
+- Avoid hardcoded `font-bold` or `text-4xl` without the standard classes.
+
+### Layout & Animations
+- Use `.layout-canvas` for dashbods/profiles (no outer border)
+- Use `.layout-record` for data tables (with border)
+- Apply `.entry-animate` to the main content container
+- Use `.entry-animate-container` on the parent of staggered items (Cards, Grid items)
 
 ---
 

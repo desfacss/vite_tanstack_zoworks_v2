@@ -83,7 +83,7 @@ const Signup = () => {
               />
             </div>
 
-            <h1 className="text-2xl font-bold text-center mb-2">{t('core.auth.label.create_account')}</h1>
+            <h1 className="text-h2 text-center mb-2">{t('core.auth.label.create_account')}</h1>
             <p className="text-center mb-6">{t('core.auth.label.signup_desc')}</p>
 
             <Form

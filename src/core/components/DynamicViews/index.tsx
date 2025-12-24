@@ -605,7 +605,7 @@
 
 //   return (
 //     <div className={!detailView ? 'space-y-4' : ''}>
-//       <Card variant={parentEditItem ? 'outlined' : 'borderless'} className={detailView ? 'p-0' : ''} styles={{ body: { padding: isMobile ? 10:'' } }}>
+//       <Card variant={parentEditItem ? 'outlined' : 'borderless'} className={`${detailView ? 'p-0' : ''} layout-record`} styles={{ body: { padding: isMobile ? 10:'' } }}>
 //         {!detailView && (
 //           <div className="flex justify-between items-center mb-2">
 //             {renderTabs()}
@@ -728,7 +728,6 @@ import GlobalFilters from './GlobalFilters';
 import { useViewConfigEnhanced } from './hooks/useEntityConfig';
 import ImportExportComponent from './ImportExport';
 import { snakeToTitleCase } from '@/core/components/common/utils/casing';
-import MetricsView from './MetricsView';
 import DetailOverview from '@/core/components/details/DetailOverview';
 import { isLocationPartition } from '@/core/components/common/utils/partitionPermissions';
 import { useNestedContext } from '../../lib/NestedContext';
@@ -740,6 +739,7 @@ import {
   ActionBarLeft,
   ActionBarRight,
   Pagination,
+  TabsComponent,
 } from '@/core/components/ActionBar';
 
 
@@ -799,7 +799,6 @@ interface DynamicViewsProps {
 const DynamicViews: React.FC<DynamicViewsProps> = ({
   entityType,
   entitySchema = 'public',
-  formName,
   tabOptions = [],
   defaultFilters: propDefaultFilters = {},
   searchConfig,
@@ -944,7 +943,7 @@ const DynamicViews: React.FC<DynamicViewsProps> = ({
     return availableViews.filter((view: string) => !restrictedViews.includes(view));
   }, [availableViews, isTopLevel]);
 
-  const { viewType = defaultView, setViewType } = useViewState(entityType, defaultView as ViewType, filteredAvailableViews as ViewType[], viewContextKey);
+  const { viewType = defaultView, setViewType } = useViewState(entityType, defaultView as ViewType, filteredAvailableViews as ViewType[], viewContextKey as string);
 
   const ViewComponent = useMemo(() => {
     if (!viewType || !filteredAvailableViews.includes(viewType)) {
@@ -1158,7 +1157,6 @@ const DynamicViews: React.FC<DynamicViewsProps> = ({
       allDisplayableColumns={allDisplayableColumns}
       visibleColumns={visibleColumns}
       setVisibleColumns={setVisibleColumns}
-      layout="inline"
     />
   ), [entities, entityType, JSON.stringify(propDefaultFilters), searchConfig, JSON.stringify(initialFilters), allDisplayableColumns, visibleColumns, filterValues]);
 
@@ -1169,17 +1167,17 @@ const DynamicViews: React.FC<DynamicViewsProps> = ({
   }, [detailView, setConfig, globalFiltersElement]);
 
   useEffect(() => {
-    const preferencesToSave = {
+    const preferencesToSave: any = {
       viewType,
       currentTab,
       filters: filterValues,
       pageSize: pageSize,
       tabs: {
-        ...(user?.id ? (viewPreferences as any)[user.id]?.[viewContextKey]?.tabs : {}),
-        [currentTab]: { currentPage: currentPageIndex + 1 }, // Store as human readable 1-based
+        ...(user?.id ? (viewPreferences as any)[user.id]?.[viewContextKey as string]?.tabs : {}),
+        [currentTab || 'default']: { currentPage: currentPageIndex + 1 }, // Store as human readable 1-based
       },
     };
-    if (user?.id) setViewPreferences(user.id, viewContextKey, preferencesToSave);
+    if (user?.id && viewContextKey) setViewPreferences(user.id, viewContextKey, preferencesToSave);
   }, [user?.id, viewType, currentTab, JSON.stringify(filterValues), pageSize, currentPageIndex]);
 
   // --- Handlers ---
@@ -1309,37 +1307,12 @@ const DynamicViews: React.FC<DynamicViewsProps> = ({
       );
     }
 
-    if (isMobile) {
-      const menuItems = tabOptions.map(tab => ({
-        key: tab.key,
-        label: tab.label,
-        onClick: () => handleTabChange(tab.key),
-      }));
-
-      return (
-        <Dropdown menu={{ items: menuItems }} trigger={['click']}>
-          <Button>
-            {tabOptions.find(tab => tab.key === currentTab)?.label} <Menu size={14} />
-          </Button>
-        </Dropdown>
-      );
-    }
-
     return (
-      <Space>
-        {tabOptions.map((tab) => (
-          <button
-            key={tab.key}
-            className={`px-4 py-2 rounded-md transition-colors ${currentTab === tab.key
-              ? 'bg-[var(--color-primary)] text-white'
-              : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text)]'
-              }`}
-            onClick={() => handleTabChange(tab.key)}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </Space>
+      <TabsComponent
+        tabs={tabOptions.map(t => ({ key: t.key, label: t.label }))}
+        activeTab={currentTab}
+        onChange={handleTabChange}
+      />
     );
   };
 
@@ -1462,13 +1435,11 @@ const DynamicViews: React.FC<DynamicViewsProps> = ({
       </PageActionBar>
 
 
-      {/* Main Content - white card */}
-      <div className="main-content">
+      {/* Main Content - Toggles between Canvas and Record layout */}
+      <div className={`main-content ${viewType === 'tableview' && entities.length > 0 ? 'layout-record' : 'layout-canvas'} entry-animate`}>
         <Suspense
           fallback={
-            <div className="flex justify-center items-center h-64">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--color-primary)]"></div>
-            </div>
+            <div className="w-full h-64 rounded-xl content-shimmer" />
           }
         >
           <div ref={printRef}>

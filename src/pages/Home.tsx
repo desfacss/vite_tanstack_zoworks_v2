@@ -92,8 +92,8 @@ const Home = () => {
         transition={{ duration: 0.5 }}
         className="max-w-md w-full"
       >
-        <div className="bg-[var(--color-background)] rounded-lg shadow-md p-8">
-          <h1 className="text-4xl font-bold text-[var(--color-text)] mb-6">
+        <div className="bg-[var(--color-bg-primary)] rounded-[var(--tenant-border-radius,12px)] shadow-md p-8 text-center border-[var(--color-border)]">
+          <h1 className="text-h1 mb-6 text-[var(--color-primary)]">
             {t('core.home.label.welcome_title')}
           </h1>
           <p className="text-[var(--color-text-secondary)] mb-8">

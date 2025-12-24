@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Select, Button, message, Drawer, Empty, Spin, Card } from 'antd';
+import { Select, Button, message, Drawer, Empty, Card } from 'antd';
 import { Save, Plus, Pencil, Eye, RefreshCw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@/core/lib/store';
@@ -191,7 +191,25 @@ const DashboardPage: React.FC = () => {
     setIsDirty(true);
   };
 
-  if (loading && !currentDashboard) return <div className="flex h-screen items-center justify-center bg-[var(--color-bg-primary)]"><Spin size="large" /></div>;
+  if (loading && !currentDashboard) {
+    return (
+      <div className="space-y-4 entry-animate">
+        {/* Shimmer Header */}
+        <div className="h-14 w-full content-shimmer rounded-lg" />
+
+        {/* Shimmer Content */}
+        <div className="layout-canvas">
+          <div className="content-body">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <div key={i} className="h-48 w-full content-shimmer rounded-[var(--tenant-border-radius,12px)]" />
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -206,7 +224,7 @@ const DashboardPage: React.FC = () => {
               if (d) setCurrentDashboard(d);
             }}
             disabled={isEditMode}
-            className="rounded-lg shadow-sm"
+            className="shadow-sm overflow-hidden"
           >
             {dashboards.map(d => <Option key={d.id} value={d.id}>{d.name}</Option>)}
           </Select>
@@ -221,6 +239,7 @@ const DashboardPage: React.FC = () => {
                 icon={<RefreshCw size={16} />}
                 onClick={() => fetchMetricData(currentDashboard?.widgets || [], true)}
                 className="hover:scale-105 transition-transform"
+                style={{ color: 'var(--color-primary)', borderColor: 'var(--color-primary)' }}
               >
                 {t('common.action.refresh')}
               </Button>
@@ -241,6 +260,7 @@ const DashboardPage: React.FC = () => {
                   setIsEditMode(false);
                   setIsDirty(false);
                 }}
+                style={{ color: 'var(--color-text-secondary)' }}
               >
                 {t('common.action.cancel')}
               </Button>
@@ -248,6 +268,7 @@ const DashboardPage: React.FC = () => {
                 variant="outlined"
                 icon={<Plus size={16} />}
                 onClick={() => setIsLibraryOpen(true)}
+                style={{ color: 'var(--color-primary)', borderColor: 'var(--color-primary)' }}
               >
                 {t('common.action.add_widget')}
               </Button>
@@ -263,9 +284,9 @@ const DashboardPage: React.FC = () => {
       </PageActionBar>
 
 
-      {/* Main Content - White Card */}
-      <div className="main-content">
-        <div className="content-body">
+      {/* Main Content Area - Canvas layout (individual cards) */}
+      <div className="layout-canvas entry-animate">
+        <div className="content-body entry-animate-container">
           {currentDashboard ? (
             <DashboardCanvas
               widgets={currentDashboard.widgets || []}
@@ -296,15 +317,15 @@ const DashboardPage: React.FC = () => {
               key={def.id}
               size="small"
               hoverable
-              className="cursor-pointer border-l-4 border-l-transparent hover:border-l-blue-500 bg-[var(--color-bg-secondary)] border-[var(--color-border)]"
+              className="cursor-pointer border-l-4 border-l-transparent hover:border-l-[var(--color-primary)] bg-[var(--color-bg-secondary)] border-[var(--color-border)]"
               onClick={() => addWidget(def.id)}
             >
               <div className="flex justify-between items-center">
                 <div>
                   <div className="font-semibold">{def.name}</div>
-                  <div className="text-xs text-gray-400">{def.widget_type}</div>
+                  <div className="text-xs text-[var(--color-text-secondary)]">{def.widget_type}</div>
                 </div>
-                <Plus size={16} className="text-blue-500" />
+                <Plus size={16} style={{ color: 'var(--color-primary)' }} />
               </div>
             </Card>
           ))}

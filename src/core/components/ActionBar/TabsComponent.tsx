@@ -27,17 +27,21 @@ export const TabsComponent: React.FC<TabsComponentProps> = ({
     activeTab,
     onChange,
 }) => {
+    // Don't render if no tabs or only one tab
+    if (!tabs || tabs.length <= 1) return null;
+
     const deviceType = useDeviceType();
+    // Responsive mode detection
     const isMobile = deviceType === 'mobile';
+    const isTablet = deviceType === 'tablet';
 
-    // Don't render if no tabs
-    if (!tabs || tabs.length === 0) return null;
+    // Collapse to dropdown if:
+    // 1. We are on mobile
+    // 2. We are on tablet AND have more than 2 tabs
+    const shouldShowDropdown = isMobile || (isTablet && tabs.length > 2);
 
-    // Don't render if only one tab
-    if (tabs.length === 1) return null;
-
-    // Mobile: Dropdown
-    if (isMobile) {
+    // Mobile/Tablet Dropdown
+    if (shouldShowDropdown) {
         return (
             <Select
                 value={activeTab}

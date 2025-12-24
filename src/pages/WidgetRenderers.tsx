@@ -340,7 +340,7 @@ export const TableWidget: React.FC<{ data: any[]; config: any }> = ({ data, conf
   }));
 
   return (
-    <div className="h-full w-full overflow-hidden rounded-lg bg-[var(--color-bg-secondary)]">
+    <div className="h-full w-full overflow-hidden rounded-[var(--tenant-border-radius,12px)] bg-[var(--color-bg-secondary)]">
       <Table
         dataSource={processedData}
         columns={columns}

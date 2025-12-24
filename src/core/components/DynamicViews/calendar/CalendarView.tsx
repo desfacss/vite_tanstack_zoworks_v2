@@ -9,7 +9,7 @@ import { Event } from '../types';
 import EventList from './EventList';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 const localizer = dayjsLocalizer(dayjs);
 
 interface CalendarViewProps {
@@ -226,9 +226,9 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, viewMode, isMobile 
       {/* Header */}
       <div className="px-4 py-3 border-b bg-gray-50">
         <div className="flex items-center justify-between mb-2">
-          <Title level={4} className="!mb-0">
+          <h1 className="text-h4 !mb-0">
             {getViewTitle()}
-          </Title>
+          </h1>
           <div className="flex gap-2">
             <Button
               type="text"
@@ -270,23 +270,35 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, viewMode, isMobile 
                   className={`
                     flex flex-col items-center p-2 rounded-lg cursor-pointer transition-all duration-200 ${colSpan}
                     ${isSelected
-                      ? 'bg-blue-100 border-2 border-blue-500'
+                      ? 'border-2'
                       : isToday
-                        ? 'bg-blue-50 border border-blue-200'
-                        : 'hover:bg-gray-100 border border-transparent'
+                        ? 'border'
+                        : 'hover:bg-[var(--color-bg-secondary)] border border-transparent'
                     }
                   `}
+                  style={{
+                    backgroundColor: isSelected
+                      ? 'rgba(var(--color-primary-rgb), 0.12)'
+                      : isToday
+                        ? 'rgba(var(--color-primary-rgb), 0.05)'
+                        : 'transparent',
+                    borderColor: isSelected
+                      ? 'var(--color-primary)'
+                      : isToday
+                        ? 'rgba(var(--color-primary-rgb), 0.3)'
+                        : 'transparent'
+                  }}
                   onClick={() => handleWeekDaySelect(date)}
                 >
                   <Text
-                    className={`text-xs font-medium ${isSelected ? 'text-blue-600' : isToday ? 'text-blue-500' : 'text-gray-500'
-                      }`}
+                    className={`text-xs font-medium`}
+                    style={{ color: isSelected || isToday ? 'var(--color-primary)' : 'var(--color-text-secondary)' }}
                   >
                     {dayjs(date).format('ddd')}
                   </Text>
                   <Text
-                    className={`text-lg font-semibold ${isSelected ? 'text-blue-600' : isToday ? 'text-blue-500' : 'text-gray-900'
-                      }`}
+                    className={`text-lg font-semibold`}
+                    style={{ color: isSelected || isToday ? 'var(--color-primary)' : 'var(--color-text-primary)' }}
                   >
                     {dayjs(date).format('D')}
                   </Text>
@@ -299,15 +311,15 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, viewMode, isMobile 
                           Array.from({ length: Math.min(eventsCount, 3) }).map((_, i) => (
                             <div
                               key={i}
-                              className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-blue-600' : 'bg-blue-400'
-                                }`}
+                              className={`w-1.5 h-1.5 rounded-full`}
+                              style={{ backgroundColor: isSelected ? 'var(--color-primary)' : 'rgba(var(--color-primary-rgb), 0.5)' }}
                             />
                           ))
                         ) : (
                           // Show a single larger dot for 4+ events
                           <div
-                            className={`w-2 h-2 rounded-full ${isSelected ? 'bg-blue-600' : 'bg-blue-400'
-                              }`}
+                            className={`w-2 h-2 rounded-full`}
+                            style={{ backgroundColor: isSelected ? 'var(--color-primary)' : 'rgba(var(--color-primary-rgb), 0.5)' }}
                           />
                         )}
                       </div>
@@ -371,9 +383,9 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, viewMode, isMobile 
       {selectedDate && (
         <div className="border-t bg-white">
           <div className="px-4 py-3 bg-gray-50">
-            <Title level={5} className="!mb-0">
+            <h2 className="text-h5 !mb-0">
               Events for {dayjs(currentDate).format('dddd, MMMM D, YYYY')}
-            </Title>
+            </h2>
           </div>
           <div className="max-h-48 overflow-auto">
             {selectedEvents.length > 0 ? (

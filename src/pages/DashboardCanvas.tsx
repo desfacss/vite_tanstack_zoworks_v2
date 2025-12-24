@@ -141,7 +141,7 @@ const DashboardCanvas: React.FC<DashboardCanvasProps> = ({
         </div>
       )}
 
-      <div className="dashboard-canvas p-2 sm:p-4 rounded-lg min-h-[80vh] bg-[var(--color-bg-primary)]">
+      <div className="dashboard-canvas p-2 sm:p-4 rounded-[var(--tenant-border-radius,12px)] min-h-[80vh] bg-[var(--color-bg-primary)]">
         <ResponsiveGridLayout
           className="layout"
           breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
@@ -158,7 +158,7 @@ const DashboardCanvas: React.FC<DashboardCanvasProps> = ({
           useCSSTransforms={true}
         >
           {widgets.map(widget => (
-            <div key={widget.id} className="shadow-sm rounded-lg border flex flex-col overflow-hidden hover:shadow-md transition-shadow bg-[var(--color-bg-secondary)] border-[var(--color-border)]">
+            <div key={widget.id} className="shadow-sm rounded-[var(--tenant-border-radius,12px)] border flex flex-col overflow-hidden hover:shadow-md transition-shadow bg-[var(--color-bg-secondary)] border-[var(--color-border)]">
               <div className={`flex justify-between items-center px-3 border-b z-10 shrink-0 bg-[var(--color-bg-secondary)] border-[var(--color-border)] ${isEditMode ? 'cursor-move drag-handle opacity-80' : ''}`} style={{ height: '40px' }}>
                 <div className="flex items-center gap-2 overflow-hidden">
                   {isEditMode && <GripVertical size={16} className="text-gray-400" />}

@@ -9,17 +9,32 @@
    Used across header, page-header, main-content.
    ============================================ */
 :root {
-  /* Layout padding - managed by ThemeRegistry.ts */
-  --layout-padding: 24px;
+  /* Layout padding - unified across all containers */
   --layout-padding-mobile: 16px;
-  --layout-padding-desktop: 24px;
+  --layout-padding-tablet: 24px;
+  --layout-padding-desktop: 32px;
+
+  /* Current padding (responsive) */
+  --layout-padding: var(--layout-padding-mobile);
 
   /* Header height */
   --header-height: 56px;
 
   /* Sidebar widths */
   --sidebar-width-collapsed: 80px;
-  --sidebar-width-expanded: 240px;
+  --sidebar-width-expanded: 256px;
+}
+
+@media (min-width: 768px) {
+  :root {
+    --layout-padding: var(--layout-padding-tablet);
+  }
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --layout-padding: var(--layout-padding-desktop);
+  }
 }
 
 /* ===== Core Layout & Utility Classes ===== */
@@ -29,8 +44,6 @@
   padding: var(--layout-padding);
   flex: 1 1 0%;
   overflow: auto;
-  gap: var(--tenant-gutter, 1rem);
-  /* Use gutter for flex gaps if any */
 }
 
 
@@ -68,13 +81,13 @@
 .card-grid {
   display: grid;
   grid-template-columns: repeat(1, minmax(0, 1fr));
-  gap: var(--tenant-gutter, 1rem);
+  gap: 1rem;
 }
 
 @media (min-width: 768px) {
   .card-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: calc(var(--tenant-gutter, 1rem) * 1.5);
+    gap: 1.5rem;
   }
 }
 
@@ -87,13 +100,13 @@
 .card-grid-wide {
   display: grid;
   grid-template-columns: repeat(1, minmax(0, 1fr));
-  gap: var(--tenant-gutter, 1rem);
+  gap: 1rem;
 }
 
 @media (min-width: 768px) {
   .card-grid-wide {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: calc(var(--tenant-gutter, 1rem) * 1.5);
+    gap: 1.5rem;
   }
 }
 
@@ -195,31 +208,21 @@
 :root {
   --color-primary: var(--tenant-primary);
   --color-secondary: var(--tenant-secondary);
-  /* Base Theme RGB (Sync'd by ThemeRegistry.ts) */
-  --color-primary-rgb: 0, 229, 153;
-  /* Default: Neon Green */
-  --color-secondary-rgb: 0, 229, 153;
-  /* Default: Neon Green */
-  --color-bg-primary-rgb: 255, 255, 255;
-  --color-bg-secondary-rgb: 248, 250, 252;
+  --color-primary-rgb: 79, 70, 229;
+  --color-secondary-rgb: 79, 70, 229;
 
-  /* Semantic Backgrounds (Linked to Tenant System) */
-  --color-bg-primary: var(--tenant-layout-bg, #ffffff);
-  --color-bg-secondary: var(--tenant-card-bg, #f8fafc);
-  --color-bg-tertiary: var(--tenant-sider-bg, #f1f5f9);
+  --color-bg-primary: #ffffff;
+  --color-bg-secondary: #f8fafc;
+  /* Lighter slate */
+  --color-bg-tertiary: #f1f5f9;
 
-  /* Semantic Text (Adaptive defaults) */
   --color-text-primary: #0f172a;
-  /* Slate 900 - Dark text for Light mode */
+  /* Slate 900 */
   --color-text-secondary: #64748b;
   /* Slate 500 */
-  --color-text-tertiary: #94a3b8;
-  /* Slate 400 */
 
-  /* Semantic Borders & Shadows */
-  --color-border: rgba(0, 0, 0, 0.08);
-  --color-border-hover: rgba(0, 0, 0, 0.15);
-  --color-shadow: rgba(0, 0, 0, 0.05);
+  --color-border: rgba(0, 0, 0, 0.05);
+  --color-border-hover: rgba(0, 0, 0, 0.1);
 
   --color-whatsapp-green: #25D366;
   --color-whatsapp-teal: #008069;
@@ -234,17 +237,15 @@
   --color-bg-tertiary: #334155;
   /* Slate 700 */
 
-  /* Dark Mode specific text/border adjustments */
   --color-text-primary: #f8fafc;
-  /* Slate 50 - Light text for Dark mode */
+  /* Slate 50 */
   --color-text-secondary: #94a3b8;
   /* Slate 400 */
-  --color-text-tertiary: #64748b;
-  /* Slate 500 */
 
-  --color-border: rgba(255, 255, 255, 0.1);
-  --color-border-hover: rgba(255, 255, 255, 0.2);
-  --color-shadow: rgba(0, 0, 0, 0.4);
+  --color-border: rgba(255, 255, 255, 0.08);
+  --color-border-hover: rgba(255, 255, 255, 0.15);
+
+  --color-shadow: rgba(0, 0, 0, 0.3);
 }
 
 /* ===== Global Styles ===== */
@@ -260,156 +261,6 @@ body {
   background-color: var(--color-bg-primary);
 }
 
-/* ============================================
-   LAYER 2: BASE ANT DESIGN OVERRIDES
-   Applied to ALL themes - uses CSS variables
-   NO height/padding overrides - respects size prop
-   ============================================ */
-
-/* === Primary Button === */
-.ant-btn-primary {
-  background: var(--color-primary) !important;
-  border-color: var(--color-primary) !important;
-  color: #000000 !important;
-  font-weight: 600 !important;
-  border-radius: var(--tenant-border-radius, 12px) !important;
-  height: 40px !important;
-  /* Strict 40px standard */
-  padding: 0 20px !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-}
-
-.ant-btn-primary:hover,
-.ant-btn-primary:focus {
-  background: var(--color-primary) !important;
-  border-color: var(--color-primary) !important;
-  filter: brightness(1.05);
-}
-
-/* Primary button icons - always dark */
-.ant-btn-primary svg,
-.ant-btn-primary .lucide {
-  color: #000000 !important;
-  stroke: #000000 !important;
-}
-
-/* === Segmented Controls (Tabs) === */
-.ant-segmented {
-  background: rgba(var(--color-primary-rgb, 0, 0, 0), 0.08) !important;
-  border-radius: 12px !important;
-  padding: 4px !important;
-}
-
-.ant-segmented-item-selected {
-  background: var(--color-primary) !important;
-  color: #000000 !important;
-  border-radius: 8px !important;
-  font-weight: 600 !important;
-}
-
-.ant-segmented-item-selected .ant-segmented-item-label {
-  color: #000000 !important;
-}
-
-/* === Radio Button Group (View Toggle + Tabs) === */
-.ant-radio-group {
-  display: inline-flex !important;
-  border-radius: 12px !important;
-  overflow: hidden;
-  background: rgba(var(--color-primary-rgb, 0, 0, 0), 0.1) !important;
-  padding: 0 !important;
-  /* Removed padding to eliminate "second border" look */
-  border: none !important;
-  gap: 0 !important;
-  align-items: center !important;
-  height: 40px !important;
-  /* Strict 40px standard */
-}
-
-/* All items - no gaps, no individual borders */
-.ant-radio-button-wrapper {
-  background: transparent !important;
-  border: none !important;
-  border-radius: 0 !important;
-  margin: 0 !important;
-  padding: 0 16px !important;
-  height: 40px !important;
-  /* Strict 40px standard */
-  line-height: 40px !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  box-shadow: none !important;
-  transition: all 0.2s ease !important;
-}
-
-.ant-radio-button-wrapper::before {
-  display: none !important;
-}
-
-/* First item - rounded left */
-.ant-radio-button-wrapper:first-child {
-  border-radius: 8px 0 0 8px !important;
-}
-
-/* Last item - rounded right */
-.ant-radio-button-wrapper:last-child {
-  border-radius: 0 8px 8px 0 !important;
-}
-
-/* Only item - fully rounded */
-.ant-radio-button-wrapper:only-child {
-  border-radius: 8px !important;
-}
-
-.ant-radio-button-wrapper::before {
-  display: none !important;
-}
-
-/* Checked state */
-.ant-radio-button-wrapper-checked {
-  background: var(--color-primary) !important;
-  border-color: transparent !important;
-  color: #000000 !important;
-  font-weight: 600 !important;
-}
-
-.ant-radio-button-wrapper-checked:hover {
-  background: var(--color-primary) !important;
-  border-color: transparent !important;
-}
-
-/* Radio button icons - always dark when checked, perfectly centered */
-.ant-radio-button-wrapper svg,
-.ant-radio-button-wrapper .lucide {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  margin: 0 !important;
-}
-
-.ant-radio-button-wrapper-checked svg,
-.ant-radio-button-wrapper-checked .lucide {
-  color: #000000 !important;
-  stroke: #000000 !important;
-}
-
-/* === Default/Secondary Button === */
-.ant-btn-default {
-  border-radius: 8px !important;
-  font-weight: 500 !important;
-  height: 40px !important;
-  /* Standardized height */
-  padding: 0 16px !important;
-}
-
-.ant-btn-default:hover {
-  color: var(--color-primary) !important;
-  border-color: var(--color-primary) !important;
-}
-
 /* Clean Form Look - Global Overrides */
 .ant-form-item-label>label {
   font-weight: 500 !important;
@@ -419,29 +270,14 @@ body {
   letter-spacing: 0.025em;
 }
 
-/* === Input, Select, Picker - Consistent Styling === */
+/* Borderless/Filled Input Style for "Clean Look" */
 .ant-input,
 .ant-input-number,
-.ant-input-number-input,
 .ant-select-selector,
 .ant-picker {
   background-color: var(--color-bg-secondary) !important;
-  border: 1px solid rgba(var(--color-primary-rgb, var(--color-secondary-rgb)), 0.5) !important;
-  /* 50% transparent primary border */
-  border-radius: var(--tenant-border-radius, 12px) !important;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
-  height: 40px !important;
-  /* Strict 40px standard */
-  display: flex !important;
-  align-items: center !important;
-}
-
-.ant-select-selector {
-  padding: 0 12px !important;
-}
-
-.ant-input-number {
-  width: 100% !important;
+  border: 1px solid transparent !important;
+  transition: all 0.2s ease !important;
 }
 
 .ant-input:hover,
@@ -453,12 +289,10 @@ body {
 
 .ant-input:focus,
 .ant-input-focused,
-.ant-select-focused .ant-select-selector,
-.ant-picker-focused {
+.ant-select-focused .ant-select-selector {
   border-color: var(--color-primary) !important;
   background-color: var(--color-bg-primary) !important;
-  box-shadow: 0 0 0 4px rgba(var(--color-primary-rgb), 0.15), 0 0 12px rgba(var(--color-primary-rgb), 0.1) !important;
-  /* Neon Glow */
+  box-shadow: 0 0 0 2px rgba(var(--color-primary-rgb), 0.1) !important;
 }
 
 /* Ensure 100% width on forms */
@@ -646,7 +480,7 @@ body {
 }
 
 .resizable-handle:hover {
-  background: var(--color-primary);
+  background: #1890ff;
 }
 
 /* Hover elevation effect */
@@ -812,100 +646,9 @@ body {
 .page-content {
   width: 100%;
   padding: 0 var(--layout-padding);
-  /* Fixed: prevents touching sidebar */
   box-sizing: border-box;
 }
 
-
-/* ===== TYPOGRAPHY STANDARDIZATION ===== */
-.text-h1,
-h1,
-.ant-typography h1,
-.ant-typography.ant-typography-h1 {
-  font-size: calc(2.285 * var(--tenant-font-size, 14px));
-  font-weight: 700;
-  line-height: 1.2;
-  margin-bottom: 0.5em;
-  color: var(--color-text);
-}
-
-.text-h2,
-h2,
-.ant-typography h2,
-.ant-typography.ant-typography-h2 {
-  font-size: calc(1.714 * var(--tenant-font-size, 14px));
-  font-weight: 600;
-  line-height: 1.3;
-  margin-bottom: 0.5em;
-  color: var(--color-text);
-}
-
-.text-h3,
-h3,
-.ant-typography h3,
-.ant-typography.ant-typography-h3 {
-  font-size: calc(1.428 * var(--tenant-font-size, 14px));
-  font-weight: 600;
-  line-height: 1.4;
-  margin-bottom: 0.5em;
-  color: var(--color-text);
-}
-
-.text-h4,
-h4,
-.ant-typography h4,
-.ant-typography.ant-typography-h4 {
-  font-size: calc(1.285 * var(--tenant-font-size, 14px));
-  font-weight: 600;
-  line-height: 1.4;
-  margin-bottom: 0.5em;
-  color: var(--color-text);
-}
-
-.text-h5,
-h5,
-.ant-typography h5,
-.ant-typography.ant-typography-h5 {
-  font-size: calc(1.142 * var(--tenant-font-size, 14px));
-  font-weight: 500;
-  line-height: 1.5;
-  margin-bottom: 0.5em;
-  color: var(--color-text);
-}
-
-.text-h6,
-h6,
-.ant-typography h6,
-.ant-typography.ant-typography-h6 {
-  font-size: var(--tenant-font-size, 14px);
-  font-weight: 500;
-  line-height: 1.5;
-  margin-bottom: 0.5em;
-  color: var(--color-text);
-}
-
-.text-title,
-.ant-typography.ant-typography-title {
-  font-size: 22px;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  color: var(--color-text);
-}
-
-.text-subtitle,
-.ant-typography-secondary {
-  font-size: 14px;
-  color: var(--color-text-secondary);
-  font-weight: 400;
-}
-
-.ant-typography-p,
-p {
-  font-size: 14px;
-  line-height: 1.6;
-  font-weight: 400;
-  color: var(--color-text);
-}
 
 /* ===== PAGE HEADER (Base) ===== */
 .page-header {
@@ -916,21 +659,20 @@ p {
   justify-content: center;
   align-items: flex-start;
   text-align: left;
+
 }
 
-/* Unified Page Title */
 .page-header .page-title {
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 600;
-  color: var(--color-text);
+  color: var(--color-text, #1a1a1a);
   margin: 0;
   line-height: 1.4;
-  letter-spacing: -0.01em;
 }
 
 .page-header .page-description {
   font-size: 14px;
-  color: var(--color-text-secondary);
+  color: var(--color-text-secondary, #666);
   margin-top: 4px;
 }
 
@@ -944,69 +686,36 @@ p {
   min-height: 40px;
 }
 
-/* Left side of action bar - Title/Tabs should NOT shrink */
+/* Left side of action bar */
 .page-header .action-bar>*:first-child {
   display: flex;
   align-items: center;
   gap: 12px;
-  flex-shrink: 0;
-  min-width: 0;
-}
-
-/* Right side of action bar - Allow filters to take available space and align right */
-.page-header .action-bar>*:last-child {
   flex-shrink: 1;
-  flex-grow: 1;
-  display: flex;
-  justify-content: flex-end;
   min-width: 0;
 }
 
-
-/* ===== LAYOUT TEMPLATES (Stage 4) ===== */
-
-/* 1. Canvas Layout: No outer border, transparent background. 
-   Used for: Welcome Hub, Profile, SamplePage, Empty States, Grid/Kanban/Dashboard views. */
-.layout-canvas {
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-  min-height: auto !important;
-  width: 100%;
+/* Right side of action bar - don't shrink */
+.page-header .action-bar>*:last-child {
+  flex-shrink: 0;
 }
 
-.layout-canvas .content-body {
-  padding: 0 !important;
-}
 
-/* 2. Record Layout: Standard bordered container with solid background.
-   Used for: Table Views with data. */
-.layout-record {
-  background: var(--color-bg-primary) !important;
-  border: 1px solid var(--color-border) !important;
-  border-radius: var(--tenant-border-radius, 12px) !important;
-  overflow: hidden;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
-}
-
-.layout-record .content-body {
-  padding: var(--layout-padding);
-}
-
-/* Base class for backward compatibility */
+/* ===== MAIN CONTENT (Base) ===== */
 .main-content {
-  width: 100%;
+  background: var(--color-bg-primary, #ffffff);
+  border-radius: 12px;
   min-height: 200px;
-  box-sizing: border-box;
+  overflow: visible;
 }
 
 .main-content.rounded {
-  border-radius: var(--tenant-border-radius, 12px);
+  border-radius: 12px;
   margin-bottom: 24px;
 }
 
 .main-content .content-body {
-  padding: var(--layout-padding);
+  padding: 20px;
 }
 
 /* ===== LIST ITEMS (Base) ===== */
@@ -1064,73 +773,10 @@ p {
 }
 
 
-/* ===== UNIFIED ANIMATIONS & SHIMMER ===== */
-
-@keyframes pageEntry {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes shimmer {
-  0% {
-    background-position: -1000px 0;
-  }
-
-  100% {
-    background-position: 1000px 0;
-  }
-}
-
-.entry-animate {
-  animation: pageEntry 0.4s ease-out forwards;
-}
-
-/* Staggered entry for children */
-.entry-animate-container>* {
-  opacity: 0;
-  animation: pageEntry 0.4s ease-out forwards;
-}
-
-.entry-animate-container>*:nth-child(1) {
-  animation-delay: 0.05s;
-}
-
-.entry-animate-container>*:nth-child(2) {
-  animation-delay: 0.1s;
-}
-
-.entry-animate-container>*:nth-child(3) {
-  animation-delay: 0.15s;
-}
-
-.entry-animate-container>*:nth-child(4) {
-  animation-delay: 0.2s;
-}
-
-.entry-animate-container>*:nth-child(5) {
-  animation-delay: 0.25s;
-}
-
-.content-shimmer {
-  background: linear-gradient(90deg,
-      rgba(var(--color-primary-rgb), 0.03) 25%,
-      rgba(var(--color-primary-rgb), 0.08) 50%,
-      rgba(var(--color-primary-rgb), 0.03) 75%);
-  background-size: 1000px 100%;
-  animation: shimmer 2s infinite linear;
-}
-
-/* RESPONSIVE: Desktop Overrides */
+/* ===== RESPONSIVE: Desktop ===== */
 @media (min-width: 768px) {
   .page-header .page-title {
-    font-size: 24px;
+    font-size: 22px;
   }
 }
 
@@ -1138,28 +784,43 @@ p {
    ACTION BAR COMPONENT CLASSES
    ============================================ */
 
-/* Action bar left section - Navigation Priority */
+/* Action bar left section */
 .action-bar-left {
   display: flex;
   align-items: center;
   gap: 12px;
-  flex-shrink: 0;
+  flex: 1;
   min-width: 0;
 }
 
-/* Action bar right section - Fluid Filters */
+/* Action bar right section */
 .action-bar-right {
   display: flex;
   align-items: center;
   gap: 8px;
-  flex: 1;
-  min-width: 0;
-  justify-content: flex-end;
+  flex-shrink: 0;
 }
 
 /* Title container */
 .action-bar-title {
   flex-shrink: 0;
+}
+
+/* Tabs styling */
+.action-bar-tabs-desktop .ant-radio-button-wrapper {
+  border-radius: 16px !important;
+  border: none !important;
+  background: var(--color-bg-secondary, #f5f5f5) !important;
+  margin-right: 4px;
+}
+
+.action-bar-tabs-desktop .ant-radio-button-wrapper-checked {
+  background: var(--color-primary, #1677ff) !important;
+  color: white !important;
+}
+
+.action-bar-tabs-desktop .ant-radio-button-wrapper::before {
+  display: none !important;
 }
 
 .action-bar-tabs-mobile {
@@ -1171,6 +832,11 @@ p {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+/* View toggle */
+.action-bar-view-desktop .ant-radio-button-wrapper {
+  padding: 4px 8px;
 }
 
 .action-bar-view-mobile {
@@ -1833,7 +1499,8 @@ legend {
 }
 
 .dark .sticky-pagination-bar {
-  background-color: rgba(var(--color-bg-primary-rgb, 15, 23, 42), 0.85);
+  background-color: rgba(15, 23, 42, 0.85);
+  /* Matches slate-900 */
 }
 
 /* Ensure parents support sticky */
@@ -1880,31 +1547,6 @@ legend {
     linear-gradient(90deg, rgba(var(--color-primary-rgb, 0, 229, 153), 0.08) 2px, transparent 2px);
   --neon-pixel-size: 14px 14px;
 }
-
-/* ============================================
-   LAYER 3: NEON THEME EFFECTS
-   Gradient effects - same for light AND dark
-   ============================================ */
-
-/* Primary Button - Gradient effect */
-[data-theme-preset="neon"] .ant-btn-primary {
-  background: linear-gradient(135deg, var(--color-primary, #00E599) 0%, #00ffca 100%) !important;
-}
-
-/* Segmented Selected - Gradient effect */
-[data-theme-preset="neon"] .ant-segmented-item-selected {
-  background: linear-gradient(135deg, var(--color-primary, #00E599) 0%, #00ffca 100%) !important;
-}
-
-/* Radio Button Checked - Gradient effect */
-[data-theme-preset="neon"] .ant-radio-button-wrapper-checked {
-  background: linear-gradient(135deg, var(--color-primary, #00E599) 0%, #00ffca 100%) !important;
-}
-
-/* ============================================
-   LAYER 4: NEON DARK MODE
-   Glow shadows, dark backgrounds
-   ============================================ */
 
 /* Base Layout Overrides - Immersive Startup Pattern */
 [data-theme-preset="neon"].dark .ant-layout {
@@ -2106,11 +1748,17 @@ legend {
   letter-spacing: -0.01em;
 }
 
-/* Primary Button - Dark Mode Glow */
+/* More Electric Primary Button */
 [data-theme-preset="neon"].dark .ant-btn-primary {
+  background: linear-gradient(135deg, var(--color-primary, #00E599) 0%, #00ffca 100%) !important;
+  color: #000000 !important;
+  border: none !important;
+  font-weight: 700 !important;
   box-shadow:
     0 0 15px rgba(var(--color-primary-rgb, 0, 229, 153), 0.4),
     0 0 30px rgba(var(--color-primary-rgb, 0, 229, 153), 0.2) !important;
+  border-radius: 12px !important;
+  transition: all 0.3s ease !important;
 }
 
 [data-theme-preset="neon"].dark .ant-btn-primary:hover {
@@ -2118,6 +1766,7 @@ legend {
     0 0 25px rgba(var(--color-primary-rgb, 0, 229, 153), 0.6),
     0 0 50px rgba(var(--color-primary-rgb, 0, 229, 153), 0.3) !important;
   transform: translateY(-2px);
+  filter: brightness(1.05);
 }
 
 /* Fancy Scrollbar for Neon */
@@ -2274,16 +1923,27 @@ legend {
    Ensuring ALL blue elements become neon green
    ============================================ */
 
-/* Segmented Button Tabs - Dark Mode Glow */
+/* Segmented Button Tabs (My Tickets / All Tickets) - Premium styling */
 [data-theme-preset="neon"].dark .ant-segmented-item-selected {
+  background: linear-gradient(135deg, var(--neon-primary) 0%, #00ffca 100%) !important;
+  color: #000000 !important;
   box-shadow:
     0 0 12px rgba(var(--color-primary-rgb, 0, 229, 153), 0.35),
     0 0 24px rgba(var(--color-primary-rgb, 0, 229, 153), 0.15) !important;
+  border-radius: 8px !important;
+}
+
+[data-theme-preset="neon"].dark .ant-segmented-item-selected .ant-segmented-item-label {
+  color: #000000 !important;
+  font-weight: 700;
+  text-shadow: none;
 }
 
 [data-theme-preset="neon"].dark .ant-segmented {
   background: rgba(var(--color-primary-rgb, 0, 229, 153), 0.06) !important;
   border: 1px solid rgba(var(--color-primary-rgb, 0, 229, 153), 0.15) !important;
+  padding: 4px !important;
+  border-radius: 12px !important;
 }
 
 [data-theme-preset="neon"].dark .ant-segmented-item:not(.ant-segmented-item-selected) {
@@ -2291,7 +1951,7 @@ legend {
 }
 
 [data-theme-preset="neon"].dark .ant-segmented-item:not(.ant-segmented-item-selected):hover {
-  color: var(--color-primary) !important;
+  color: var(--neon-primary) !important;
 }
 
 /* ALL Buttons - Default, Text, Link variants */
@@ -2514,14 +2174,28 @@ legend {
   text-shadow: 0 0 20px rgba(0, 229, 153, 0.3);
 }
 
-/* Light Mode Primary Button - Soft Shadow (no glow) */
+/* Light Mode Primary Button */
 [data-theme-preset="neon"]:not(.dark) .ant-btn-primary {
+  background: linear-gradient(135deg, var(--color-primary, #00E599) 0%, #00d68a 100%) !important;
+  color: #000000 !important;
+  border: none !important;
+  font-weight: 700 !important;
   box-shadow: 0 4px 15px rgba(var(--color-primary-rgb, 0, 229, 153), 0.35) !important;
+  border-radius: 12px !important;
+  transition: all 0.3s ease !important;
 }
 
 [data-theme-preset="neon"]:not(.dark) .ant-btn-primary:hover {
   box-shadow: 0 6px 25px rgba(var(--color-primary-rgb, 0, 229, 153), 0.5) !important;
   transform: translateY(-2px);
+  filter: brightness(1.05);
+}
+
+/* Light Mode Primary Button Icons - ensure black color */
+[data-theme-preset="neon"]:not(.dark) .ant-btn-primary .lucide,
+[data-theme-preset="neon"]:not(.dark) .ant-btn-primary svg {
+  color: #000000 !important;
+  stroke: #000000 !important;
 }
 
 /* Light Mode Navigation */
@@ -2682,13 +2356,24 @@ legend {
    Ensuring ALL blue elements become neon green
    ============================================ */
 
-/* Segmented Button Tabs - Light Mode Shadow */
+/* Segmented Button Tabs - Premium styling matching buttons */
 [data-theme-preset="neon"]:not(.dark) .ant-segmented-item-selected {
+  background: linear-gradient(135deg, var(--color-primary, #00E599) 0%, #00d68a 100%) !important;
+  color: #000000 !important;
   box-shadow: 0 4px 12px rgba(var(--color-primary-rgb, 0, 229, 153), 0.35) !important;
+  border-radius: 8px !important;
+}
+
+[data-theme-preset="neon"]:not(.dark) .ant-segmented-item-selected .ant-segmented-item-label {
+  color: #000000 !important;
+  font-weight: 700;
 }
 
 [data-theme-preset="neon"]:not(.dark) .ant-segmented {
+  background: rgba(var(--color-primary-rgb, 0, 229, 153), 0.08) !important;
   border: 1px solid rgba(var(--color-primary-rgb, 0, 229, 153), 0.2) !important;
+  padding: 4px !important;
+  border-radius: 12px !important;
 }
 
 [data-theme-preset="neon"]:not(.dark) .ant-segmented-item:not(.ant-segmented-item-selected) {
@@ -2759,9 +2444,18 @@ legend {
   color: #000000;
 }
 
-/* Radio Button Group - Light Mode Shadow */
+/* Radio Button Group (View Toggle - Grid/List icons) - Light Mode */
 [data-theme-preset="neon"]:not(.dark) .ant-radio-button-wrapper-checked {
+  background: linear-gradient(135deg, var(--color-primary, #00E599) 0%, #00d68a 100%) !important;
+  border-color: var(--color-primary, #00E599) !important;
+  color: #000000 !important;
   box-shadow: 0 4px 12px rgba(var(--color-primary-rgb, 0, 229, 153), 0.35) !important;
+}
+
+[data-theme-preset="neon"]:not(.dark) .ant-radio-button-wrapper-checked svg,
+[data-theme-preset="neon"]:not(.dark) .ant-radio-button-wrapper-checked .lucide {
+  color: #000000 !important;
+  stroke: #000000 !important;
 }
 
 [data-theme-preset="neon"]:not(.dark) .ant-radio-button-wrapper:not(.ant-radio-button-wrapper-checked) {
@@ -2773,9 +2467,18 @@ legend {
   color: var(--color-primary, #00E599) !important;
 }
 
-/* Radio Button Group - Dark Mode Glow */
+/* Radio Button Group - Dark Mode */
 [data-theme-preset="neon"].dark .ant-radio-button-wrapper-checked {
+  background: linear-gradient(135deg, var(--color-primary, #00E599) 0%, #00ffca 100%) !important;
+  border-color: var(--color-primary, #00E599) !important;
+  color: #000000 !important;
   box-shadow: 0 0 12px rgba(var(--color-primary-rgb, 0, 229, 153), 0.4) !important;
+}
+
+[data-theme-preset="neon"].dark .ant-radio-button-wrapper-checked svg,
+[data-theme-preset="neon"].dark .ant-radio-button-wrapper-checked .lucide {
+  color: #000000 !important;
+  stroke: #000000 !important;
 }
 
 [data-theme-preset="neon"].dark .ant-radio-button-wrapper:not(.ant-radio-button-wrapper-checked) {
@@ -2787,38 +2490,4 @@ legend {
 [data-theme-preset="neon"].dark .ant-radio-button-wrapper:hover {
   color: var(--color-primary, #00E599) !important;
   border-color: var(--color-primary, #00E599) !important;
-}
-
-/* ============================================
-   GLOBAL FILTERS REFINING
-   ============================================ */
-.global-filters-form .ant-form-item-label {
-  display: none !important;
-}
-
-@media (max-width: 767px) {
-  .global-filters-form .ant-form-item-label {
-    display: block !important;
-    margin-bottom: 4px;
-    opacity: 0.8;
-  }
-}
-
-.global-filters-form .ant-input,
-.global-filters-form .ant-select-selector,
-.global-filters-form .ant-picker {
-  background-color: var(--color-bg-secondary) !important;
-  border-color: var(--color-border) !important;
-  transition: all 0.2s ease !important;
-}
-
-.global-filters-form .ant-input:hover,
-.global-filters-form .ant-select-selector:hover,
-.global-filters-form .ant-picker:hover {
-  border-color: var(--tenant-primary) !important;
-}
-
-.global-filters-form .ant-input::placeholder {
-  color: var(--color-text-secondary) !important;
-  opacity: 0.7 !important;
 }

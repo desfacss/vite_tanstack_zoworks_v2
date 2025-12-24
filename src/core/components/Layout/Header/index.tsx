@@ -167,7 +167,7 @@ export const Header: React.FC<HeaderProps> = ({
       <div>
         <span className='font-medium'>{org.organization_name}</span>
         <br />
-        <span className='text-xs text-gray-500'>{org.roles?.join(', ')}</span>
+        <span className='text-xs' style={{ color: 'var(--color-text-secondary)' }}>{org.roles?.join(', ')}</span>
       </div>
     )
   })), [userOrgLocations]);

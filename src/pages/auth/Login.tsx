@@ -222,9 +222,9 @@ const Login = () => {
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
             <Card className="p-4 sm:p-6">
               <div className="flex justify-center mb-4">
-                <Avatar size={48} icon={<Building2 size={24} />} className="bg-blue-500" />
+                <Avatar size={48} icon={<Building2 size={24} />} className="bg-[var(--color-primary)]" />
               </div>
-              <h1 className="text-2xl font-bold text-center mb-2">{t('core.auth.label.select_workspace')}</h1>
+              <h1 className="text-h2 text-center mb-2">{t('core.auth.label.select_workspace')}</h1>
               <p className="text-center text-gray-500 mb-6">
                 {t('core.auth.label.multiple_orgs')}
               </p>
@@ -277,15 +277,15 @@ const Login = () => {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
           <Card className="p-4 sm:p-6">
             <div className="flex justify-center mb-4">
-              <Avatar size={48} className="bg-[#bbdefb] dark:bg-[#37474f] border-2 border-[#40c4ff] dark:border-[#4fc3f7]" />
+              <Avatar size={48} style={{ background: 'rgba(var(--color-primary-rgb), 0.1)', border: '2px solid var(--color-primary)' }} />
             </div>
             {!isForgotPassword ? (
               <>
-                <h1 className="text-2xl font-bold text-center mb-2">{t('core.auth.label.title')}</h1>
+                <h1 className="text-h2 text-center mb-2">{t('core.auth.label.title')}</h1>
                 <p className="text-center mb-6">{t('core.auth.label.subtitle')}</p>
 
                 {redirectTo && (
-                  <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 mb-4 text-sm text-blue-600 dark:text-blue-300">
+                  <div className="bg-[rgba(var(--color-primary-rgb),0.05)] border border-[var(--color-primary)] rounded-lg p-3 mb-4 text-sm text-[var(--color-primary)]">
                     {t('core.auth.label.workspace_title')}
                   </div>
                 )}
@@ -293,7 +293,7 @@ const Login = () => {
                 <Form form={form} layout="vertical" onFinish={handleLogin} requiredMark={false}>
                   <Form.Item label={t('common.label.email')} name="email" rules={[{ required: true, message: t('core.auth.message.email_required') }, { type: 'email', message: t('core.auth.message.email_invalid') }]}>
                     <Input
-                      prefix={<Mail className="text-gray-400" size={20} />}
+                      prefix={<Mail className="text-[var(--color-text-secondary)]" size={20} />}
                       placeholder={t('common.label.email')}
                       size="large"
                     />
@@ -336,7 +336,7 @@ const Login = () => {
               </>
             ) : (
               <>
-                <h1 className="text-2xl font-bold text-center mb-2">{t('auth.forgot_password_title')}</h1>
+                <h1 className="text-h2 text-center mb-2">{t('auth.forgot_password_title')}</h1>
                 <Form form={form} layout="vertical" onFinish={handleForgotPassword} requiredMark={false}>
                   <Form.Item label={t('auth.email')} name="email" rules={[{ required: true }, { type: 'email' }]}>
                     <Input prefix={<Mail size={16} />} placeholder={t('auth.email')} size="large" />

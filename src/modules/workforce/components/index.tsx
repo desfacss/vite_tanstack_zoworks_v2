@@ -1,6 +1,7 @@
-import { Button, Card, notification, Table, Drawer, Modal, Form, Avatar, message, Spin, Tooltip, Menu, Dropdown, Col, Row, Input } from "antd";
+import { Button, Card, notification, Table, Drawer, Modal, Form, Avatar, message, Spin, Tooltip, Menu, Dropdown, Col, Row, Input, Select } from "antd";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Plus, Pencil, Trash2, Send, List, MoreHorizontal, LayoutGrid, Search, Copy, AlertCircle, Eye } from "lucide-react";
+import { LeftOutlined, RightOutlined, HolderOutlined } from '@ant-design/icons';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/core/lib/store';
 import './Services.css'; // Add a CSS file to style the cards grid
@@ -472,8 +473,11 @@ const TeamUsers: React.FC<TeamUsersProps> = ({ selectedTeamId }) => {
 
   return (
     <Card styles={{ body: { padding: '0px' } }}>
-      <div className="d-flex p-2 justify-content-between align-items-center" style={{ marginBottom: '16px' }}>
-        <h2 style={{ margin: 0 }}>Manage Team</h2>
+      <div
+        className="d-flex p-2 justify-content-between align-items-center"
+        style={{ marginBottom: '16px' }}
+      >
+        <h2 className="text-h2 !m-0">Manage Team</h2>
         <div>
           <Input
             className="mr-2"

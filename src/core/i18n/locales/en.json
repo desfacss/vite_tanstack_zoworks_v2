@@ -13,6 +13,7 @@
         "organization": "Organization",
         "location": "Location",
         "all_locations": "All Locations",
+        "session_context": "Current Session Context",
         "users": "Users",
         "settings": "Settings",
         "profile": "Profile",

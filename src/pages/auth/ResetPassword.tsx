@@ -56,7 +56,7 @@ const ResetPassword = () => {
                                 {t('common.action.back')}
                             </Link>
                         </div>
-                        <h1 className="text-2xl font-bold text-center mb-2">{t('core.auth.label.reset_password')}</h1>
+                        <h1 className="text-h2 text-center mb-2">{t('core.auth.label.reset_password')}</h1>
                         <p className="text-center mb-6">{t('core.auth.label.reset_password_desc')}</p>
                         <Form
                             form={form}
@@ -79,7 +79,7 @@ const ResetPassword = () => {
                                     size="large"
                                     loading={loading}
                                     icon={loading ? <Loader2 className="animate-spin" size={20} /> : undefined}
-                                    className="h-12 bg-blue-600 hover:bg-blue-700 font-semibold text-lg"
+                                    className="h-10 bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)]"
                                 >
                                     {t('core.auth.action.reset_password')}
                                 </Button>

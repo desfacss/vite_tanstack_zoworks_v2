@@ -1,6 +1,5 @@
 import React from 'react';
 import { Drawer } from 'antd';
-import { useThemeStore } from '@/core/lib/store';
 
 interface FormDrawerProps {
   title: string;
@@ -16,7 +15,6 @@ export const FormDrawer: React.FC<FormDrawerProps> = ({
   children,
 }) => {
   const isMobile = window.innerWidth <= 768;
-  const isDarkMode = useThemeStore((state) => state.isDarkMode);
 
   return (
     <Drawer
@@ -27,10 +25,10 @@ export const FormDrawer: React.FC<FormDrawerProps> = ({
       width={isMobile ? '100%' : 600}
       styles={{
         header: {
-          background: isDarkMode ? 'var(--copper-800)' : 'var(--blue-50)',
+          background: 'var(--color-bg-secondary)',
         },
         body: {
-          background: isDarkMode ? 'var(--copper-900)' : 'var(--blue-100)',
+          background: 'var(--color-bg-primary)',
           padding: '24px',
         },
       }}

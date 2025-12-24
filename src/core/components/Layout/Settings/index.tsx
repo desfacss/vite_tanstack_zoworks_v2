@@ -5,14 +5,13 @@ import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { ThemeToggle } from '../ThemeToggle';
 import { LanguageSelect } from '../LanguageSelect';
-import { useSettings } from '@/core/hooks/useSettings';
 import { useAuthStore } from '@/core/lib/store';
 import { getTenantThemeConfig, updateTenantTheme, TenantThemeConfig } from '@/core/theme/ThemeRegistry';
 import { THEME_PRESETS, getPresetOptions } from '@/core/theme/presets';
 import { supabase } from '@/lib/supabase';
 import type { Organization, Location } from '@/core/lib/types';
 import { Tabs } from 'antd';
-import { Palette, Globe, Image as ImageIcon, Type, Sparkles, Upload as UploadIcon } from 'lucide-react';
+import { Palette, Globe, Image as ImageIcon, Type, Sparkles, Upload as UploadIcon, Move } from 'lucide-react';
 import PublitioAPI from 'publitio_js_sdk';
 
 const { Title, Text } = Typography;
@@ -33,25 +32,18 @@ interface SettingsProps {
 }
 
 export const Settings: React.FC<SettingsProps> = ({ open, onClose }) => {
-  const {
-    user,
-    organization,
-    location,
-    setOrganization,
-    setLocation,
-    viewPreferences,
-    setViewPreferences,
-    setIsSwitchingOrg
-  } = useAuthStore();
+  const auth = useAuthStore();
+  const user = auth.user;
+  const organization = auth.organization;
+  const location = auth.location;
+  const setOrganization = auth.setOrganization;
+  const setLocation = auth.setLocation;
+  const viewPreferences = auth.viewPreferences;
+  const setViewPreferences = auth.setViewPreferences;
+  const setIsSwitchingOrg = auth.setIsSwitchingOrg;
   const { t } = useTranslation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const {
-    fontSize,
-    setFontSize,
-    zoom,
-    setZoom
-  } = useSettings();
 
   const themeConfig = getTenantThemeConfig();
   const [saving, setSaving] = useState(false);
@@ -100,7 +92,7 @@ export const Settings: React.FC<SettingsProps> = ({ open, onClose }) => {
         const newLocations = selectedOrgData.locations;
         let targetLocation: Location | null = null;
         if (newLocations.length > 0) {
-          const stickyId = viewPreferences[user.id]?.['global']?.lastLocationByOrg?.[orgId];
+          const stickyId = viewPreferences[user?.id || '']?.['global']?.lastLocationByOrg?.[orgId];
           const stickyLoc = newLocations.find((l: any) => l.location_id === stickyId);
           const locData = stickyLoc || newLocations[0];
           targetLocation = { id: locData.location_id, name: locData.location_name } as Location;
@@ -129,8 +121,8 @@ export const Settings: React.FC<SettingsProps> = ({ open, onClose }) => {
 
     if (selectedLoc) {
       setLocation({ id: selectedLoc.location_id, name: selectedLoc.location_name } as Location);
-      setViewPreferences(user.id, 'global', {
-        lastLocationByOrg: { ...(viewPreferences[user.id]?.['global']?.lastLocationByOrg || {}), [organization.id]: locId },
+      setViewPreferences(user?.id || '', 'global', {
+        lastLocationByOrg: { ...(viewPreferences[user?.id || '']?.['global']?.lastLocationByOrg || {}), [organization.id]: locId },
       });
       message.success(t('common.message.switched_to', { name: selectedLoc.location_name }));
     }
@@ -138,7 +130,7 @@ export const Settings: React.FC<SettingsProps> = ({ open, onClose }) => {
 
   const organizationOptions = useMemo(() => userOrgLocations.map(org => ({
     value: org.organization_id,
-    label: (<div><span className='font-medium'>{org.organization_name}</span><br /><span className='text-xs text-gray-500'>{org.roles?.join(', ')}</span></div>)
+    label: (<div><span className='font-medium'>{org.organization_name}</span><br /><span className='text-xs text-[var(--color-text-secondary)]'>{org.roles?.join(', ')}</span></div>)
   })), [userOrgLocations]);
 
   const currentLocations = useMemo(() => {
@@ -178,6 +170,8 @@ export const Settings: React.FC<SettingsProps> = ({ open, onClose }) => {
       dark_layoutBg: preset.dark?.layoutBg || '#141414',
       dark_headerBg: preset.dark?.headerBg || '#141414',
       dark_siderBg: preset.dark?.siderBg || '#141414',
+      baseFontSize: preset.baseFontSize || 14,
+      containerPadding: preset.containerPadding || 24,
     };
 
     form.setFieldsValue(newValues);
@@ -211,6 +205,8 @@ export const Settings: React.FC<SettingsProps> = ({ open, onClose }) => {
         dark_layoutBg: themeConfig.dark?.layoutBg || preset?.dark?.layoutBg || '#141414',
         dark_headerBg: themeConfig.dark?.headerBg || preset?.dark?.headerBg || '#141414',
         dark_siderBg: themeConfig.dark?.siderBg || preset?.dark?.siderBg || '#141414',
+        baseFontSize: themeConfig.baseFontSize || preset?.baseFontSize || 14,
+        containerPadding: themeConfig.containerPadding || preset?.containerPadding || 24,
       });
     }
   }, [open, themeConfig, form]);
@@ -240,7 +236,9 @@ export const Settings: React.FC<SettingsProps> = ({ open, onClose }) => {
         layoutBg: getColorString(allValues.dark_layoutBg),
         headerBg: getColorString(allValues.dark_headerBg),
         siderBg: getColorString(allValues.dark_siderBg),
-      }
+      },
+      baseFontSize: allValues.baseFontSize,
+      containerPadding: allValues.containerPadding,
     };
     updateTenantTheme(updatedConfig);
   };
@@ -275,7 +273,9 @@ export const Settings: React.FC<SettingsProps> = ({ open, onClose }) => {
           layoutBg: getColorString(values.dark_layoutBg),
           headerBg: getColorString(values.dark_headerBg),
           siderBg: getColorString(values.dark_siderBg),
-        }
+        },
+        baseFontSize: values.baseFontSize,
+        containerPadding: values.containerPadding,
       };
 
       const { error } = await supabase
@@ -328,8 +328,8 @@ export const Settings: React.FC<SettingsProps> = ({ open, onClose }) => {
     >
       <div className="space-y-8">
         {/* Context Switching Section */}
-        <div className="bg-gray-50/50 p-4 rounded-xl space-y-4">
-          <Title level={5} className="m-0 text-slate-700">{t('core.settings.label.context')}</Title>
+        <div className="bg-[var(--color-bg-secondary)] p-4 rounded-xl space-y-4">
+          <Title level={5} className="m-0 text-[var(--color-text-primary)]">{t('core.settings.label.context')}</Title>
           <Form layout="vertical" size="middle">
             <Form.Item label={t('common.label.organization')} className="mb-3">
               <Select
@@ -361,9 +361,9 @@ export const Settings: React.FC<SettingsProps> = ({ open, onClose }) => {
             <ThemeToggle />
           </div>
           <Space direction="vertical" className="w-full" size="middle">
-            <div className="flex justify-between items-center bg-white p-3 rounded-lg border border-gray-100 shadow-sm">
+            <div className="flex justify-between items-center bg-[var(--color-bg-primary)] p-3 rounded-lg border border-[var(--color-border)] shadow-sm">
               <div className="flex items-center gap-2">
-                <Globe size={16} className="text-slate-500" />
+                <Globe size={16} className="text-[var(--color-text-secondary)]" />
                 <Text>{t('core.settings.label.language')}</Text>
               </div>
               <LanguageSelect />
@@ -375,20 +375,17 @@ export const Settings: React.FC<SettingsProps> = ({ open, onClose }) => {
         <div className="border-t border-gray-100 pt-6">
           <div className="flex items-center justify-between mb-4 px-1">
             <Title level={5} className="flex items-center gap-2 m-0">
-              <Sparkles size={18} className="text-amber-500" />
+              <Sparkles size={18} className="text-[var(--color-warning)]" />
               {t('core.settings.label.theme_editing')}
             </Title>
             <div className="flex items-center gap-2">
-              <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Advanced</span>
-              <ThemeToggle
-              // Using ThemeToggle is not right, let's use a simple checkbox or switch
-              // Wait, I'll just use a small button for now or Switch if I knew it's imported
-              />
+              <span className="text-[10px] uppercase tracking-wider text-[var(--color-text-quaternary)] font-bold">Advanced</span>
+              <ThemeToggle />
               <input
                 type="checkbox"
                 checked={showAdvanced}
                 onChange={e => setShowAdvanced(e.target.checked)}
-                className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
+                className="w-4 h-4 rounded border-[var(--color-border)] text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
               />
             </div>
           </div>
@@ -421,11 +418,19 @@ export const Settings: React.FC<SettingsProps> = ({ open, onClose }) => {
                   children: (
                     <div className="pt-4 space-y-4">
                       <Form.Item name="brandName" label={t('core.settings.label.brand_name')}>
-                        <Input placeholder="e.g. Zoworks" prefix={<Type size={14} className="text-slate-400" />} />
+                        <Input placeholder="e.g. Zoworks" prefix={<Type size={14} className="text-[var(--color-text-quaternary)]" />} />
                       </Form.Item>
-                      <Form.Item name="borderRadius" label="Corner Roundness (px)">
-                        <InputNumber min={0} max={24} className="w-full" />
-                      </Form.Item>
+                      <div className="grid grid-cols-2 gap-4">
+                        <Form.Item name="borderRadius" label="Rounding">
+                          <InputNumber min={0} max={24} className="w-full" precision={0} />
+                        </Form.Item>
+                        <Form.Item
+                          name="containerPadding"
+                          label={<span className="flex items-center gap-1"><Move size={12} /> Padding</span>}
+                        >
+                          <InputNumber min={16} max={48} className="w-full" precision={0} />
+                        </Form.Item>
+                      </div>
                       <div className="grid grid-cols-2 gap-4">
                         <Form.Item name="light_primaryColor" label="Primary (Light)">
                           <ColorPicker showText size="small" />
@@ -434,6 +439,28 @@ export const Settings: React.FC<SettingsProps> = ({ open, onClose }) => {
                           <ColorPicker showText size="small" />
                         </Form.Item>
                       </div>
+                    </div>
+                  )
+                },
+                {
+                  key: 'typography',
+                  label: <span className="flex items-center gap-1"><Type size={14} /> Typography</span>,
+                  children: (
+                    <div className="pt-4 space-y-4">
+                      <Form.Item name="baseFontSize" label="Base Font Size (Zoom)">
+                        <div className="space-y-2">
+                          <InputNumber
+                            min={12}
+                            max={20}
+                            className="w-full"
+                            addonAfter="px"
+                            precision={0}
+                          />
+                          <Text type="secondary" className="text-[11px] block italic leading-tight">
+                            Increasing this will proportionally zoom the entire UI (typography, margins, and button heights).
+                          </Text>
+                        </div>
+                      </Form.Item>
                     </div>
                   )
                 },
@@ -451,7 +478,9 @@ export const Settings: React.FC<SettingsProps> = ({ open, onClose }) => {
                               id="light-logo-upload"
                               hidden
                               accept="image/*"
-                              onChange={(e) => e.target.files?.[0] && handleLogoUpload(e.target.files[0], 'light')}
+                              onChange={(e) => {
+                                e.target.files?.[0] && handleLogoUpload(e.target.files[0], 'light')
+                              }}
                             />
                             <Button
                               icon={<UploadIcon size={14} />}
@@ -494,7 +523,9 @@ export const Settings: React.FC<SettingsProps> = ({ open, onClose }) => {
                               id="dark-logo-upload"
                               hidden
                               accept="image/*"
-                              onChange={(e) => e.target.files?.[0] && handleLogoUpload(e.target.files[0], 'dark')}
+                              onChange={(e) => {
+                                e.target.files?.[0] && handleLogoUpload(e.target.files[0], 'dark')
+                              }}
                             />
                             <Button
                               icon={<UploadIcon size={14} />}
@@ -541,29 +572,19 @@ export const Settings: React.FC<SettingsProps> = ({ open, onClose }) => {
         {/* Accessibility Section */}
         <div className="border-t border-gray-100 pt-6 pb-12">
           <Title level={5} className="mb-4">{t('core.settings.label.accessibility')}</Title>
-          <Form layout="horizontal" size="small" labelCol={{ span: 12 }}>
-            <Form.Item label="Global Font Size" className="mb-3">
-              <InputNumber
-                min={12}
-                max={20}
-                value={fontSize}
-                onChange={(value) => setFontSize(value || 16)}
-                formatter={(value) => `${value}px`}
-                className="w-full"
-              />
-            </Form.Item>
-            <Form.Item label="UI Zoom Factor" className="mb-0">
-              <InputNumber
-                min={80}
-                max={120}
-                step={5}
-                value={zoom}
-                onChange={(value) => setZoom(value || 100)}
-                formatter={(value) => `${value}%`}
-                className="w-full"
-              />
-            </Form.Item>
-          </Form>
+          <div className="bg-[var(--color-warning-bg)] rounded-lg p-3 border border-[var(--color-warning-border)] mb-4">
+            <Text className="text-xs leading-tight block text-[var(--color-warning)]">
+              Global typography and zoom are now managed at the <strong>Tenant Level</strong> in the Brand tab above to ensure consistency for all users.
+            </Text>
+          </div>
+          <Space direction="vertical" className="w-full" size="middle">
+            <div className="flex justify-between items-center bg-[var(--color-bg-primary)] p-3 rounded-lg border border-[var(--color-border)] shadow-sm opacity-50 grayscale">
+              <div className="flex items-center gap-2">
+                <Type size={16} className="text-[var(--color-text-secondary)]" />
+                <Text>Per-User Scaling (Disabled)</Text>
+              </div>
+            </div>
+          </Space>
         </div>
       </div>
     </Drawer>

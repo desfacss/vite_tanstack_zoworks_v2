@@ -53,7 +53,10 @@ export interface TenantThemeConfig {
 
     // Layout Preferences
     compactMode?: boolean;       // Denser UI for power users
-    borderRadius?: number;       // 0=sharp, 16=very rounded
+    borderRadius: number;        // 0=sharp, 16=very rounded
+    containerPadding?: number;   // Layout horizontal padding (px)
+    baseFontSize?: number;       // Base font size for zoom (default 14)
+    globalGutter?: number;      // Grid/Gap spacing (default 16)
 
     // Feature Flags
     allowUserDarkMode?: boolean; // Default true
@@ -79,29 +82,34 @@ function notifyListeners() {
 // ============================================================================
 
 export function loadTenantTheme(config: TenantThemeConfig): void {
+    // 1. Resolve preset (Strict fallback to 'base')
+    const presetKey = (config.preset && THEME_PRESETS[config.preset]) ? config.preset : 'base';
+    const presetData = THEME_PRESETS[presetKey];
+
+    // 2. Perform resilient merge: Default -> Preset -> Config
     let mergedConfig: TenantThemeConfig = {
         allowUserDarkMode: true,
-        defaultMode: 'light' as 'light' | 'dark',
-        borderRadius: 8,
+        defaultMode: 'light',
+        borderRadius: 12,
+        ...presetData,
         ...config,
+        // Carry forward the resolved preset key
+        preset: presetKey,
     };
 
-    // Apply preset if specified
-    if (config.preset && THEME_PRESETS[config.preset]) {
-        const presetData = THEME_PRESETS[config.preset];
-        mergedConfig = {
-            ...presetData,
-            ...mergedConfig,
-            // Deep merge for light/dark objects
-            light: { ...presetData.light, ...mergedConfig.light },
-            dark: { ...presetData.dark, ...mergedConfig.dark },
-        } as TenantThemeConfig;
+    // 3. Deep merge mode-specific settings to ensure partial overrides don't wipe preset defaults
+    mergedConfig.light = { ...presetData.light, ...config.light };
+    mergedConfig.dark = { ...presetData.dark, ...config.dark };
+
+    // Standardize border radius
+    if (config.borderRadius === undefined && presetData.borderRadius !== undefined) {
+        mergedConfig.borderRadius = presetData.borderRadius;
     }
 
     tenantConfig = mergedConfig;
-    console.log('[Theme] Merged Config Preset:', mergedConfig.preset);
+    console.log(`[Theme] Loaded: ${mergedConfig.brandName} (Preset: ${presetKey})`);
 
-    // Apply static branding (doesn't change with mode)
+    // Apply static branding
     applyStaticBranding(mergedConfig);
 
     console.log('[Theme] Loaded tenant config:', {
@@ -138,11 +146,19 @@ export function subscribeToTheme(listener: () => void): () => void {
  * Convert hex color to RGB values (e.g., "#00E599" -> "0, 229, 153")
  * Used for CSS rgba() variables
  */
-function hexToRgb(hex: string): string {
+export function hexToRgb(hex: string): string {
     // Remove # if present
     const cleanHex = hex.replace('#', '');
 
-    // Parse hex values
+    // Handle 3-digit hex (e.g., #0E9)
+    if (cleanHex.length === 3) {
+        const r = parseInt(cleanHex[0] + cleanHex[0], 16);
+        const g = parseInt(cleanHex[1] + cleanHex[1], 16);
+        const b = parseInt(cleanHex[2] + cleanHex[2], 16);
+        return `${r}, ${g}, ${b}`;
+    }
+
+    // Parse 6-digit hex values
     const r = parseInt(cleanHex.substring(0, 2), 16);
     const g = parseInt(cleanHex.substring(2, 4), 16);
     const b = parseInt(cleanHex.substring(4, 6), 16);
@@ -165,18 +181,30 @@ function applyStaticBranding(config: TenantThemeConfig): void {
 
     // CSS Variables for custom styles
     const root = document.documentElement;
-    root.setAttribute('data-theme-preset', config.preset || 'default');
+    root.setAttribute('data-theme-preset', config.preset || 'base');
     root.style.setProperty('--tenant-primary', config.primaryColor);
     root.style.setProperty('--tenant-secondary', config.secondaryColor || config.primaryColor);
     root.style.setProperty('--tenant-brand-name', config.brandName);
-    root.style.setProperty('--tenant-border-radius', `${config.borderRadius || 8}px`);
+    const standardRadius = config.borderRadius ?? 12;
+    const componentRadius = Math.max(3, standardRadius - 2);
+    root.style.setProperty('--tenant-border-radius', `${standardRadius}px`);
+    root.style.setProperty('--tenant-border-radius-interactive', `${componentRadius}px`);
 
-    // Also update antd primary color if needed via global CSS if not using ConfigProvider
-    // But we are using ConfigProvider, so getAntdTheme will handle it.
+    // Zoom & Typography
+    const baseSize = config.baseFontSize || 14;
+    const zoomFactor = baseSize / 14;
+    root.style.setProperty('--tenant-font-size', `${baseSize}px`);
+    root.style.setProperty('--tenant-zoom-factor', `${zoomFactor}`);
 
-    if (config.fontFamily) {
-        root.style.setProperty('--tenant-font-family', config.fontFamily);
-    }
+    // Layout Padding centralization
+    const padding = (config.containerPadding !== undefined ? config.containerPadding : 24) * zoomFactor;
+    root.style.setProperty('--layout-padding', `${padding}px`);
+    root.style.setProperty('--layout-padding-mobile', `${Math.max(16, padding - 8)}px`);
+    root.style.setProperty('--layout-padding-desktop', `${padding}px`);
+
+    // Global Gutter & Spacing
+    const gutter = config.globalGutter || 16;
+    root.style.setProperty('--tenant-gutter', `${gutter * zoomFactor}px`);
 
     // Dynamic UI Variables for components
     const lightPrimary = config.light?.primaryColor || config.primaryColor;
@@ -202,15 +230,20 @@ function applyStaticBranding(config: TenantThemeConfig): void {
     const isDark = document.documentElement.classList.contains('dark');
     const currentPrimary = isDark ? darkPrimary : lightPrimary;
     const currentSecondary = isDark ? darkSecondary : lightSecondary;
+    const currentCard = isDark ? darkCard : lightCard;
+    const currentLayout = isDark ? darkLayout : lightLayout;
 
     root.style.setProperty('--tenant-primary', currentPrimary);
     root.style.setProperty('--tenant-secondary', currentSecondary);
-    root.style.setProperty('--tenant-card-bg', isDark ? darkCard : lightCard);
-    root.style.setProperty('--tenant-layout-bg', isDark ? darkLayout : lightLayout);
+    root.style.setProperty('--tenant-card-bg', currentCard);
+    root.style.setProperty('--tenant-layout-bg', currentLayout);
+    root.style.setProperty('--tenant-sider-bg', isDark ? (config.dark?.siderBg || '#141414') : (config.light?.siderBg || '#ffffff'));
 
-    // RGB values for rgba() support in CSS (enables dynamic glow effects)
+    // RGB values for rgba() support in CSS (enables dynamic glow/glass effects)
     root.style.setProperty('--color-primary-rgb', hexToRgb(currentPrimary));
     root.style.setProperty('--color-secondary-rgb', hexToRgb(currentSecondary));
+    root.style.setProperty('--color-bg-primary-rgb', hexToRgb(currentLayout));
+    root.style.setProperty('--color-bg-secondary-rgb', hexToRgb(currentCard));
 
     root.style.setProperty('--tenant-card-bg-light', lightCard);
     root.style.setProperty('--tenant-card-bg-dark', darkCard);
@@ -274,10 +307,12 @@ export function getAntdTheme(isDarkMode: boolean = false): ThemeConfig {
     const modeConfig = isDarkMode ? tenantConfig?.dark : tenantConfig?.light;
     const primaryColor = modeConfig?.primaryColor || tenantConfig?.primaryColor || '#1890ff';
     const secondaryColor = modeConfig?.secondaryColor || tenantConfig?.secondaryColor || primaryColor;
-    const borderRadius = tenantConfig?.borderRadius ?? 8;
+    const borderRadius = tenantConfig?.borderRadius ?? 12; // Use 12 as default
+    const fontSize = tenantConfig?.baseFontSize || 14;
+    const componentRadius = Math.max(3, borderRadius - 2);
 
     // Use the comprehensive theme settings from settings.ts
-    const baseTheme = getBaseTheme(isDarkMode, primaryColor, secondaryColor);
+    const baseTheme = getBaseTheme(isDarkMode, primaryColor, secondaryColor, borderRadius, fontSize);
 
     // Merge in tenant-specific overrides
     return {
@@ -291,15 +326,46 @@ export function getAntdTheme(isDarkMode: boolean = false): ThemeConfig {
         },
         components: {
             ...baseTheme.components,
+            Button: {
+                ...baseTheme.components?.Button,
+                borderRadius: componentRadius,
+                fontWeight: 600,
+                // Primary button has subtle gradient
+                colorPrimary: primaryColor,
+                colorPrimaryHover: primaryColor, // Ant computes hover automatically if not specified
+            },
+            Input: {
+                ...baseTheme.components?.Input,
+                borderRadius: componentRadius,
+                // Clean look: filled background, no border by default via variant
+                // (Variant is set at component level or via ConfigProvider)
+                colorBgContainer: 'var(--color-bg-secondary)',
+            },
+            Select: {
+                ...baseTheme.components?.Select,
+                borderRadius: componentRadius,
+                colorBgContainer: 'var(--color-bg-secondary)',
+            },
+            InputNumber: {
+                ...baseTheme.components?.InputNumber,
+                borderRadius: componentRadius,
+                colorBgContainer: 'var(--color-bg-secondary)',
+            },
+            DatePicker: {
+                ...baseTheme.components?.DatePicker,
+                borderRadius: componentRadius,
+                colorBgContainer: 'var(--color-bg-secondary)',
+            },
+            Card: {
+                borderRadiusLG: borderRadius + 4,
+                paddingLG: 24,
+                boxShadowTertiary: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
+            },
             Layout: {
                 ...baseTheme.components?.Layout,
                 headerBg: 'var(--tenant-card-bg)',
                 siderBg: 'var(--tenant-card-bg)',
             },
-            Input: {
-                ...baseTheme.components?.Input,
-                colorBgContainer: modeConfig?.inputBg || (isDarkMode ? '#1f1f1f' : '#ffffff'),
-            }
         }
     };
 }
@@ -324,10 +390,26 @@ export function applyThemeMode(isDarkMode: boolean): void {
     const cardBg = root.getAttribute(isDarkMode ? 'data-dark-card' : 'data-light-card');
     const layoutBg = root.getAttribute(isDarkMode ? 'data-dark-layout' : 'data-light-layout');
 
-    if (primary) root.style.setProperty('--tenant-primary', primary);
-    if (secondary) root.style.setProperty('--tenant-secondary', secondary);
-    if (cardBg) root.style.setProperty('--tenant-card-bg', cardBg);
-    if (layoutBg) root.style.setProperty('--tenant-layout-bg', layoutBg);
+    if (primary) {
+        root.style.setProperty('--tenant-primary', primary);
+        root.style.setProperty('--color-primary-rgb', hexToRgb(primary));
+    }
+    if (secondary) {
+        root.style.setProperty('--tenant-secondary', secondary);
+        root.style.setProperty('--color-secondary-rgb', hexToRgb(secondary));
+    }
+    if (cardBg) {
+        root.style.setProperty('--tenant-card-bg', cardBg);
+        root.style.setProperty('--color-bg-secondary-rgb', hexToRgb(cardBg));
+    }
+    if (layoutBg) {
+        root.style.setProperty('--tenant-layout-bg', layoutBg);
+        root.style.setProperty('--color-bg-primary-rgb', hexToRgb(layoutBg));
+    }
+
+    // Update sider background
+    const siderBg = isDarkMode ? (tenantConfig?.dark?.siderBg || '#141414') : (tenantConfig?.light?.siderBg || '#ffffff');
+    root.style.setProperty('--tenant-sider-bg', siderBg);
 }
 
 

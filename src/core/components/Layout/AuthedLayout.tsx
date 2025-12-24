@@ -22,8 +22,8 @@ import { GlobalLoader } from '../shared/GlobalLoader';
 
 const { Content } = Layout;
 
-// Define the Sider widths
-const SIDER_WIDTH = 256;
+// Define the Sider widths - Should match index.css variables
+const SIDER_WIDTH = 240;
 const COLLAPSED_SIDER_WIDTH = 80; // Ant Design's default collapsed width
 
 export const AuthedLayout: FC = () => {

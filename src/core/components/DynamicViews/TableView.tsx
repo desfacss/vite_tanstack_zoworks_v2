@@ -6,7 +6,6 @@ import { UserIcon } from 'lucide-react';
 import { useAuthedLayoutConfig } from '../Layout/AuthedLayoutContext';
 import dayjs from 'dayjs';
 import RowActions from './RowActions';
-import { lightTheme } from '../../lib/theme';
 
 interface TableViewProps {
   entityType: string;
@@ -89,86 +88,61 @@ const TableView: React.FC<TableViewProps> = ({
       )
     ];
 
-    return combinedFields
+    const tableColumns = combinedFields
       .filter(field => visibleColumns.includes(field.fieldPath))
-      .filter(field => !hiddenFields.includes(field.fieldPath)) // Filter out hidden fields
-      .map((field) => ({
+      .filter(field => !hiddenFields.includes(field.fieldPath))
+      .map((field: any) => ({
         title: field.fieldName,
         dataIndex: field.fieldPath,
         key: field.fieldPath,
         sorter: viewConfig?.tableview?.showFeatures?.includes('sorting'),
-        // Inside the columns useMemo hook, within the .map() and render:
         render: (value: any) => {
-          // Handle arrayCount renderType
-          // console.log("vx",typeof value,value,field.renderType);
           if (field.renderType === 'arrayCount' && Array.isArray(value)) {
             return value.length || '-';
           }
-
-          // Handle arrays that are NOT arrayCount, rendering as tags
-          if (Array.isArray(value) && value.length > 0) {
-            // Check if the array contains objects, and if so, extract the 'name'
-            const tagsToRender = value.map(item => typeof item === 'object' && item !== null ? item.name : item);
+          if (Array.isArray(value)) {
+            if (value.length === 0) return '-';
+            const tags = value.map(item => typeof item === 'object' && item !== null ? item.name : item);
             return (
-              <>
-                {tagsToRender.map((tag, index) => (
-                  <Tag key={index} color="blue">
-                    {tag}
-                  </Tag>
-                ))}
-              </>
+              <div className="flex flex-wrap gap-1">
+                {tags.map((tag, i) => <Tag key={i}>{tag}</Tag>)}
+              </div>
             );
-          } else if (Array.isArray(value) && value.length === 0) {
-            return '-';
           }
-
-          // Define a simple regex to check for common date/time patterns (e.g., YYYY-MM-DD or ISO 8601)
-          const isLikelyDate = /^\d{4}-\d{2}-\d{2}/.test(value);
-
-          // Handle date/time fields only if the string looks like a date and is a valid date object
-          if (typeof value === 'string' && isLikelyDate && dayjs(value).isValid()) {
-            // Check for the presence of a time component (e.g., 'T' in ISO 8601)
-            if (value.includes('T')) {
-              return dayjs(value).format('MMM D, YYYY, HH:mm:ss');
-            } else {
-              // If it's just a date, format without the time
-              return dayjs(value).format('MMM D, YYYY');
-            }
+          const isDateStr = typeof value === 'string' && /^\d{4}-\d{2}-\d{2}/.test(value);
+          if (isDateStr && dayjs(value).isValid()) {
+            return value.includes('T') ? dayjs(value).format('MMM D, YYYY, HH:mm') : dayjs(value).format('MMM D, YYYY');
           }
-
-          // Handle boolean fields as Ant Design Tags
           if (typeof value === 'boolean') {
-            return (
-              <Tag color={value ? 'green' : 'red'}>
-                {value ? 'Yes' : 'No'}
-              </Tag>
-            );
+            return <Tag color={value ? 'success' : 'error'}>{value ? 'Yes' : 'No'}</Tag>;
           }
-
-          // Default rendering for other values
-          const content = value !== null && value !== undefined && value !== '' ? value : '-';
-          return field.fieldPath === firstDisplayFieldPath && content !== '-'
-            ? <span style={{ color: lightTheme?.token?.colorPrimary, whiteSpace: 'nowrap' }}>{content}</span>
-            : content;
+          const content = (value !== null && value !== undefined && value !== '') ? value : '-';
+          if (field.fieldPath === firstDisplayFieldPath && content !== '-') {
+            return <span className="font-semibold" style={{ color: 'var(--tenant-primary)', whiteSpace: 'nowrap' }}>{content}</span>
+          }
+          return content;
         },
-      }))
-      .concat(...(viewConfig?.tableview?.actions?.row?.length > 0
-        ? [{
-          title: 'Actions',
-          key: 'actions',
-          render: (_: any, record: any) => (
-            <RowActions
-              entityType={entityType}
-              record={record}
-              actions={viewConfig?.tableview?.actions.row}
-              accessConfig={viewConfig?.access_config}
-              viewConfig={viewConfig}
-              rawData={data}
-              config={config}
-            />
-          ),
-        }]
-        : []));
+      })) as any[];
+
+    if ((viewConfig?.tableview?.actions?.row?.length || 0) > 0) {
+      tableColumns.push({
+        title: 'Actions',
+        key: 'actions',
+        render: (_: any, record: any) => (
+          <RowActions
+            entityType={entityType}
+            record={record}
+            actions={viewConfig?.tableview?.actions.row || []}
+            accessConfig={viewConfig?.access_config}
+            viewConfig={viewConfig}
+            rawData={data}
+            config={config}
+          />
+        ),
+      });
+    }
+
+    return tableColumns;
   }, [viewConfig, entityType, currentTab, tabOptions, allDisplayableColumns, visibleColumns, data, config]);
 
   const actionButtons = useMemo(() => {

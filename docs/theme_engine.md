@@ -1,88 +1,95 @@
-# Theme Engine Architecture - Zoworks SaaS
+# Definitive Theme Engine Guide (v2)
 
-## 1. Overview: Base Theme vs. Presets
-
-The Zoworks Theme Engine separates **Foundational Structure** from **Aesthetic Style**.
-
-| Concept | Level | Description |
-|-----------|-------|-------------|
-| **Base Theme** | Foundation | The core Ant Design configuration + global CSS. It defines the "Clean Look" (borderless inputs, filled backgrounds, standard typography, and responsive spacing). |
-| **Theme Presets** | Aesthetic | Pre-configured sets of aesthetic variables (colors, border radius, layout modes). Switching a preset instantly rebrands the entire app while maintaining the "Clean Look". |
-
-## 2. Theme Configuration Layers
-
-1.  **Platform Presets**: Standardized styles like `Glassmorphism`, `Gradient Premium`, or `Corporate`.
-2.  **Tenant Override**: Brands can select a preset and then fine-tune their specific Primary/Secondary colors and Brand Name/Logo.
-3.  **Advanced Mode**: A UI toggle that hides granular color settings (Card Background, Layout Background, etc.) to ensure consistency, while allowing power users to tweak specifics.
+This document is the **Single Source of Truth** for all styling in the Zoworks platform. Every component, page, and module MUST adhere to these standards.
 
 ---
 
-## 3. Available Theme Presets
+## 1. The 5-Layer Styling Architecture
 
-Common presets defined in `src/core/theme/presets.ts`:
+We use a layered CSS approach to ensure themes are consistent yet flexible.
 
-| Preset ID | Style | Layout Impact |
-|-----------|-------|---------------|
-| `gradient_card` | Indigo & Emerald gradients, white content cards. | **Gradient Page Header** |
-| `glassmorphism` | Frosted glass effect, semi-transparent backgrounds. | **Blurred Containers** |
-| `corporate` | Sharp corners, professional blues, high contrast. | Standard Layout |
-| `ultra_glass` | Pink & Violet gradients with extreme transparency. | Standard Layout |
-
----
-
-## 4. UI Consistency & Control
-
-To ensure a consistent experience across all themes, the following UX rules are enforced:
-
-### Scrolling & Layout
-- **Global Scrolling**: The main content area (`Content`) is now the primary scroll container. `html` and `body` are non-scrollable to prevent "double scrollbars". 
-- **Auto-Fixed Bottom Bar**: For list views and grids, the Pagination bar is strictly **sticky to the bottom** of the content area. This ensures navigation is always reachable without scrolling to the very end of a 100-record list.
-- **Glass Effects**: Sticky bars and headers automatically gain a frosted glass (`backdrop-filter`) effect in modern presets for a premium feel.
-
-### Advanced Branding
-- **Default Simplicity**: When a preset is selected, all mode-specific colors are auto-filled.
-- **Advanced Mode**: Users must explicitly enable "Advanced" in settings to see granular color pickers. This prevents accidental inconsistencies where light mode backgrounds might conflict with preset intentions.
+| Layer | Name | Scope | Location | Responsibility |
+|-------|------|-------|----------|----------------|
+| **1** | **Tenant Tokens** | Dynamic | `ThemeRegistry.ts` | Sets CSS variables from DB (`--tenant-primary`, etc.) |
+| **2** | **Semantic Map** | Global | `index.css` :root | Maps tokens to usable names (`--color-bg-primary`, `--color-primary-rgb`) |
+| **3** | **AntD Overrides** | Base | `index.css` | Fixes Ant Design components to use Layer 2 variables. |
+| **4** | **Theme Presets** | Preset | `index.css` | CSS Effects (`[data-theme-preset="neon"]`) like gradients and glows. |
+| **5** | **Mode Overrides** | Light/Dark | `index.css` | Specific color/contrast tweaks for `.dark` and `:not(.dark)`. |
 
 ---
 
-## 5. Database Configuration (Per-Tenant)
+## 2. Mandatory CSS Variables
 
-Theme is stored in `identity.organizations.theme_config` as JSONB.
+### Core Colors
+| Variable | Usage | Source |
+|----------|-------|--------|
+| `var(--color-primary)` | Primary branding (buttons, links, active states) | `--tenant-primary` |
+| `var(--color-secondary)` | Secondary branding / accents | `--tenant-secondary` |
+| `rgba(var(--color-primary-rgb), alpha)` | For glows, transparent backgrounds, and borders | Synchronized by `ThemeRegistry` |
 
-```json
-{
-  "preset": "gradient_card",
-  "brandName": "Zoworks Premium",
-  "primaryColor": "#4F46E5",
-  "secondaryColor": "#10B981", 
-  "borderRadius": 16,
-  "light": {
-    "logoUrl": "https://...",
-    "cardBg": "#ffffff"
-  },
-  "dark": {
-    "logoUrl": "https://...",
-    "cardBg": "#1e293b"
-  }
-}
+### Semantic Backgrounds
+| Variable | Usage | Light Mode Default | Dark Mode Default |
+|----------|-------|--------------------|-------------------|
+| `var(--color-bg-primary)` | Main Page Background | `#ffffff` | `#0f172a` (Slate 900) |
+| `var(--color-bg-secondary)` | Cards, Modals, Popovers | `#f8fafc` | `#1e293b` (Slate 800) |
+| `var(--color-bg-tertiary)` | Headers, Hover States, Sidebars | `#f1f5f9` | `#334155` (Slate 700) |
+
+### Semantic Typography
+| Variable | Usage | Light Mode Default | Dark Mode Default |
+|----------|-------|--------------------|-------------------|
+| `var(--color-text-primary)` | Headings, Body Text | `#0f172a` | `#f8fafc` |
+| `var(--color-text-secondary)`| Descriptions, Labels | `#64748b` | `#94a3b8` |
+| `var(--color-text-tertiary)` | Mentions, Small Meta Data | `#94a3b8` | `#64748b` |
+
+---
+
+## 3. Strict Prohibitions (NEVER DO THESE)
+
+1.  **❌ NO Tailwind Color Classes**: Avoid `bg-blue-50`, `text-slate-900`, etc. Use CSS variables.
+2.  **❌ NO Hardcoded Hex Colors**: All colors must come from the variable system.
+3.  **❌ NO Manual Border Radius**: Use `var(--tenant-border-radius)` or `var(--tenant-border-radius-interactive)`.
+4.  **❌ NO Height Overrides**: Let Ant Design's `size` prop control component height.
+5.  **❌ NO Manual Transitions**: The system provides a global `0.2s` transition. Don't add custom ones unless absolutely necessary.
+
+---
+
+## 4. How to Style Your Component
+
+### Option A: Standard Ant Design
+Simply use the component. Layer 3 already ensures it looks correct.
+```tsx
+<Button type="primary">Branded Button</Button>
+```
+
+### Option B: Custom Element (Inline Style)
+When you need custom styling, map to the variables.
+```tsx
+<div style={{ 
+  background: 'var(--color-bg-secondary)', 
+  borderColor: 'var(--color-border)',
+  borderRadius: 'var(--tenant-border-radius)'
+}}>
+  <Text style={{ color: 'var(--color-primary)' }}>Branded Text</Text>
+</div>
+```
+
+### Option C: Custom Element (Tailwind)
+Use Tailwind for layout only, variables for style.
+```tsx
+<div className="p-4 border border-[var(--color-border)] bg-[var(--color-bg-primary)]">
+  ...
+</div>
 ```
 
 ---
 
-## 6. CSS Variable Reference
+## 5. Agent Workflow: Styling Audit
 
-| Variable | Description |
-|----------|-------------|
-| `--tenant-primary` | Main brand color. |
-| `--tenant-secondary` | Accent/Link color, often used in gradients. |
-| `--tenant-card-bg` | Background for white/translucent card containers. |
-| `--tenant-layout-bg` | Backdrop color for the entire page body. |
+When the USER requests a styling fix or a new component:
 
----
+1.  **Grep for Leaks**: Check for `blue-`, `indigo-`, or hex codes in the new code.
+2.  **Verify Variable Map**: Ensure the component uses `var(--color-...)` instead of hardcoded values.
+3.  **Check Light/Dark**: Verify background colors are correctly inverted using semantic variables.
+4.  **RGB Check**: If using transparency, ensure it uses `rgba(var(--color-primary-rgb), ...)` and NOT a hardcoded blue-rgba.
 
-## 7. Responsive Behavior
-
-- **Mobile**: Margins reduce to `16px`, pagination switches to "Mini" mode (icon-only), and inputs maintain a minimum `16px` font size to prevent iOS auto-zoom.
-- **Desktop**: Margins expand to `32px`, full pagination is shown, and the Sidebar maintains a fixed width (`256px` or `80px`).
-
-*Last Updated: 2025-12-22*
+*Last Updated: 2025-12-24*

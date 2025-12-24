@@ -71,61 +71,61 @@ const SupportTicketProgress: React.FC<SupportTicketProgressProps> = ({
     // Past stages dropdown (if any past stages exist)
     ...(pastStages.length > 0
       ? [
-          {
-            title: (
-              <Dropdown overlay={pastStagesMenu} trigger={['click']}>
-                <Tooltip title="View Past Stages">
-                  <MoreOutlined style={{ fontSize: 16 }} />
-                </Tooltip>
-              </Dropdown>
-            ),
-            status: 'finish',
-            icon: <CheckCircleOutlined />,
-            className: 'past-stages-dropdown',
-          },
-        ]
+        {
+          title: (
+            <Dropdown overlay={pastStagesMenu} trigger={['click']}>
+              <Tooltip title="View Past Stages">
+                <MoreOutlined style={{ fontSize: 16 }} />
+              </Tooltip>
+            </Dropdown>
+          ),
+          status: 'finish',
+          icon: <CheckCircleOutlined />,
+          className: 'past-stages-dropdown',
+        },
+      ]
       : []),
     // Last completed and current stages
     ...visibleStages.map(stage => ({
-  title: (
-    <Tooltip title={stage.stage_name}>
-      <span
-        style={{
-          backgroundColor: stage.id === currentStageId ? '#79c0ff' : 'transparent',
-          padding: '6px 6px',
-          borderRadius: 10,
-        }}
-      >
-        {stage.stage_name}
-      </span>
-    </Tooltip>
-  ),
-  status: stage.ordinal < currentOrdinal ? 'finish' : 'process',
-  icon:
-    stage.ordinal < currentOrdinal ? (
-      <CheckCircleOutlined />
-    ) : (
-      <ClockCircleOutlined />
-    ),
-  className: stage.ordinal < currentOrdinal ? 'past-stage' : 'current-stage',
-})),
-,
+      title: (
+        <Tooltip title={stage.stage_name}>
+          <span
+            style={{
+              backgroundColor: stage.id === currentStageId ? 'rgba(var(--color-primary-rgb, 24, 144, 255), 0.3)' : 'transparent',
+              padding: '6px 6px',
+              borderRadius: 10,
+            }}
+          >
+            {stage.stage_name}
+          </span>
+        </Tooltip>
+      ),
+      status: stage.ordinal < currentOrdinal ? 'finish' : 'process',
+      icon:
+        stage.ordinal < currentOrdinal ? (
+          <CheckCircleOutlined />
+        ) : (
+          <ClockCircleOutlined />
+        ),
+      className: stage.ordinal < currentOrdinal ? 'past-stage' : 'current-stage',
+    })),
+    ,
     // Future stages dropdown (if any future stages exist)
     ...(futureStages.length > 0
       ? [
-          {
-            title: (
-              <Dropdown overlay={futureStagesMenu} trigger={['click']}>
-                <Tooltip title="Select Next Stage">
-                  <span style={{ cursor: 'pointer' }}>Next Stages</span>
-                  <MoreOutlined style={{ fontSize: 16 }} />
-                </Tooltip>
-              </Dropdown>
-            ),
-            status: 'wait',
-            className: 'future-stages-dropdown',
-          },
-        ]
+        {
+          title: (
+            <Dropdown overlay={futureStagesMenu} trigger={['click']}>
+              <Tooltip title="Select Next Stage">
+                <span style={{ cursor: 'pointer' }}>Next Stages</span>
+                <MoreOutlined style={{ fontSize: 16 }} />
+              </Tooltip>
+            </Dropdown>
+          ),
+          status: 'wait',
+          className: 'future-stages-dropdown',
+        },
+      ]
       : []),
   ];
 

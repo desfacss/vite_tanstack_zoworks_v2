@@ -18,10 +18,10 @@ const Profile = () => {
         </ActionBarLeft>
       </PageActionBar>
 
-      <div className="main-content">
-        <div className="content-body">
+      <div className="layout-canvas entry-animate">
+        <div className="content-body entry-animate-container">
           <Card>
-            <p>{t('common.message.coming_soon')}</p>
+            <p className="text-subtitle">{t('common.message.coming_soon')}</p>
           </Card>
         </div>
       </div>

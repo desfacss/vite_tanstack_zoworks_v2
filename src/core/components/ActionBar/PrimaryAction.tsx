@@ -50,7 +50,7 @@ export const PrimaryAction: React.FC<PrimaryActionProps> = ({
                         icon={icon}
                         loading={loading}
                         disabled={disabled}
-                        className="flex items-center justify-center h-10 w-10 p-0 rounded-lg shadow-sm border-none"
+                        className="flex items-center justify-center h-10 w-10 p-0 shadow-sm border-none"
                     />
                 </Dropdown>
             );
@@ -63,7 +63,7 @@ export const PrimaryAction: React.FC<PrimaryActionProps> = ({
                 onClick={onClick}
                 loading={loading}
                 disabled={disabled}
-                className="flex items-center justify-center h-10 w-10 p-0 rounded-lg shadow-sm border-none"
+                className="flex items-center justify-center h-10 w-10 p-0 shadow-sm border-none"
                 aria-label={label}
             />
         );
@@ -97,7 +97,7 @@ export const PrimaryAction: React.FC<PrimaryActionProps> = ({
             onClick={onClick}
             loading={loading}
             disabled={disabled}
-            className="flex items-center gap-2 h-10 px-4 rounded-lg font-medium shadow-sm border-none transition-all hover:scale-[1.02] active:scale-[0.98]"
+            className="flex items-center gap-2 h-10 px-4 font-medium shadow-sm border-none transition-all hover:scale-[1.02] active:scale-[0.98]"
         >
             {label}
         </Button>

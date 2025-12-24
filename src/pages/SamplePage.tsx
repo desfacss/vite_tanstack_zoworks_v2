@@ -53,11 +53,12 @@ const SamplePage: React.FC = () => {
                 </ActionBarRight>
             </PageActionBar>
 
-            {/* Main Content - white card */}
-            <div className="main-content">
-                <div className="content-body">
+            {/* Main Content Area - Canvas layout (individual cards) */}
+            <div className="layout-canvas entry-animate">
+                <div className="content-body entry-animate-container">
                     {/* Context Info Card */}
-                    <Card className="mb-4" title={t('modules.sample.label.context')}>
+                    <Card className="mb-6">
+                        <h1 className="text-h1 text-center">{t('common.label.session_context')}</h1>
                         <Space direction="vertical" className="w-full">
                             <div>
                                 <Text strong>{t('common.label.users')}: </Text>

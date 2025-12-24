@@ -63,7 +63,7 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
       onClose={onClose}
       open={open}
       styles={{
-        body: { padding: 0, backgroundColor: 'var(--color-background)' },
+        body: { padding: 0, backgroundColor: 'var(--tenant-sider-bg)' },
         header: { display: 'none' }
       }}
     >
@@ -99,10 +99,10 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
           navigate(key);
           onClose();
         }}
-        className="custom-mobile-menu border-none"
-        style={{ backgroundColor: 'var(--color-bg-primary)' }}
         openKeys={openKeys}
         onOpenChange={onOpenChange}
+        style={{ backgroundColor: 'var(--tenant-sider-bg)' }}
+        className="custom-mobile-menu border-none"
       />
     </Drawer>
   );

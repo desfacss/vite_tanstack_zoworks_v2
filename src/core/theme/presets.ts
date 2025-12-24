@@ -14,6 +14,8 @@ export const THEME_PRESETS: Record<string, Partial<TenantThemeConfig> & { descri
     // Base/Default - Clean, minimal, professional
     base: {
         borderRadius: 8,
+        baseFontSize: 14,
+        containerPadding: 24,
         description: 'Clean and minimal design',
         light: {
             primaryColor: '#1677ff',
@@ -38,6 +40,8 @@ export const THEME_PRESETS: Record<string, Partial<TenantThemeConfig> & { descri
     // Glassmorphism - Apple-inspired frosted glass
     glassmorphism: {
         borderRadius: 16,
+        baseFontSize: 14,
+        containerPadding: 24,
         description: 'Apple-inspired frosted glass',
         light: {
             primaryColor: '#007AFF',
@@ -62,6 +66,8 @@ export const THEME_PRESETS: Record<string, Partial<TenantThemeConfig> & { descri
     // Corporate - Sharp, professional, enterprise
     corporate: {
         borderRadius: 4,
+        baseFontSize: 14,
+        containerPadding: 20,
         description: 'Sharp and professional for enterprise',
         light: {
             primaryColor: '#1e40af',
@@ -86,6 +92,8 @@ export const THEME_PRESETS: Record<string, Partial<TenantThemeConfig> & { descri
     // Gradient Card - Modern gradient header
     gradient_card: {
         borderRadius: 16,
+        baseFontSize: 14,
+        containerPadding: 28,
         heroHeader: true,
         description: 'Bold gradients with hero header',
         light: {
@@ -111,11 +119,13 @@ export const THEME_PRESETS: Record<string, Partial<TenantThemeConfig> & { descri
     // Neon Tech - Electric, modern, high-impact (with CSS animation layer)
     neon: {
         borderRadius: 8,
+        baseFontSize: 16,
+        containerPadding: 28,
         preset: 'neon', // Triggers CSS layer in index.css
         description: 'Electric neon with thunder animations',
         light: {
             primaryColor: '#00E599',    // Neon Green
-            secondaryColor: '#00A3FF',  // Neon Blue
+            secondaryColor: '#00E599',  // Standardize to green
             cardBg: '#ffffff',
             layoutBg: '#f8fafb',        // Off-white with subtle warmth
             headerBg: 'rgba(255, 255, 255, 0.85)',  // Frosted glass header
@@ -125,7 +135,7 @@ export const THEME_PRESETS: Record<string, Partial<TenantThemeConfig> & { descri
         },
         dark: {
             primaryColor: '#00E599',    // Neon Green
-            secondaryColor: '#00A3FF',  // Neon Blue
+            secondaryColor: '#00E599',  // Standardize to green for pure neon look
             cardBg: '#0f0f0f',          // Near black card
             layoutBg: '#020202',        // Pitch black layout
             headerBg: '#000000',        // Pure black header

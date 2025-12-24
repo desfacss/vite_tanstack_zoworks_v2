@@ -275,7 +275,7 @@ const LocationSettings: React.FC = () => {
         className="d-flex p-2 justify-content-between align-items-center"
         style={{ marginBottom: '16px' }}
       >
-        <h2 style={{ margin: 0 }}>Locations</h2>
+        <h2 className="text-h2 !m-0">Locations</h2>
         <Button
           type="primary"
           icon={<Plus size={16} />}

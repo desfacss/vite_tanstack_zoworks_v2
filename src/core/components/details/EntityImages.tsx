@@ -254,7 +254,7 @@ const EntityImages: React.FC<EntityImagesProps> = ({ entity_type, entity_id }) =
                                   paddingTop: 30,
                                 }}
                               >
-                                <File size={40} className="text-blue-500" />
+                                <File size={40} style={{ color: 'var(--color-primary)' }} />
                               </a>
                             </Tooltip>
                           )}

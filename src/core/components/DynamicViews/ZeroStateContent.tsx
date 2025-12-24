@@ -1,6 +1,4 @@
-import { Empty, Button, Typography, Space, Card, Divider, Row, Col } from 'antd';
-import { Filter, FileText } from 'lucide-react';
-import React, { useMemo, useEffect, useRef, useState } from 'react';
+import React, { useMemo, useEffect, useState } from 'react';
 import { snakeToTitleCase } from '@/core/components/common/utils/casing';
 
 // --- External Libraries ---
@@ -10,7 +8,10 @@ import mermaid from 'mermaid';
 // Assuming your build system can load the markdown file as a string
 import RichZeroStateContent from './ZeroStateContent.md?raw';
 
-const { Title, Text, Paragraph } = Typography;
+import { Typography, Button, Space, Row, Col, Card, Empty } from 'antd';
+import { Filter, FileText } from 'lucide-react';
+
+const { Text } = Typography;
 
 // Unique delimiter to cleanly separate the prose from the mermaid code
 const MERMAID_DELIMITER = '```mermaid';
@@ -94,14 +95,14 @@ const CustomMarkdownRenderer: React.FC<{ content: string; entityTitle: string }>
     // Regex for removing the entire code block for ReactMarkdown processing
 
     // 2. Define custom Ant Design components for rich styling
-    const components = {
-        h1: ({ children }) => <Title level={4} className="mt-4 mb-2 text-center">{children}</Title>,
-        h2: ({ children }) => <Title level={5} className="mt-3 mb-2 text-center">{children}</Title>,
-        h3: ({ children }) => <Title level={5} className="mt-3 mb-2 font-semibold text-[var(--color-primary)]">{children}</Title>,
-        p: ({ children }) => <Paragraph className="text-[var(--color-text-secondary)] text-center">{children}</Paragraph>,
+    const components: any = {
+        h1: ({ children }: any) => <h1 className="text-h1 mt-4 mb-2 text-center">{children}</h1>,
+        h2: ({ children }: any) => <h2 className="text-h2 mt-3 mb-2 text-center">{children}</h2>,
+        h3: ({ children }: any) => <h3 className="text-h3 mt-3 mb-2 text-[var(--color-primary)]">{children}</h3>,
+        p: ({ children }: any) => <p className="text-[var(--color-text-secondary)] text-center text-sm">{children}</p>,
         // List styling is critical for left alignment
-        ul: ({ children }) => <ul className="text-left list-disc list-inside space-y-2 pl-4 text-[var(--color-text)]">{children}</ul>,
-        li: ({ children }) => <li className="text-sm">{children}</li>,
+        ul: ({ children }: any) => <ul className="text-left list-disc list-inside space-y-2 pl-4 text-[var(--color-text)]">{children}</ul>,
+        li: ({ children }: any) => <li className="text-sm">{children}</li>,
     };
 
     // Determine if we need a two-column layout
@@ -258,7 +259,7 @@ export const ZeroStateContent: React.FC<ZeroStateContentProps> = ({
                     description={
                         <div className="mt-4 max-w-6xl mx-auto">
                             {/* Main Page Title (Top-level container title) */}
-                            <Title level={3} className="text-center font-bold mb-2 text-[var(--color-text-title)]">{mainTitle}</Title>
+                            <h1 className="text-h3 text-center mb-2 text-[var(--color-text-title)]">{mainTitle}</h1>
                             <div className="text-[var(--color-text-secondary)] text-sm mb-6 text-center">
                                 {description}
                             </div>

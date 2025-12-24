@@ -12,10 +12,15 @@ import { ThemeConfig, theme } from 'antd';
 export const getAntdTheme = (
     isDark: boolean,
     primaryColor: string = '#1890ff',
-    secondaryColor: string = '#4F46E5'
+    secondaryColor: string = '#4F46E5',
+    borderRadius: number = 8,
+    fontSize: number = 14
 ): ThemeConfig => {
-    // Generate derived colors from primary for hover states etc.
-    // In a real app we might use tinycolor2 or similar, but for now we rely on internal algorithm
+    const ratio = fontSize / 14;
+    const baseControlHeight = Math.round(44 * ratio);
+    const lgControlHeight = Math.round(52 * ratio);
+    const inputControlHeight = Math.round(46 * ratio);
+    const componentRadius = Math.max(3, borderRadius - 2);
 
     return {
         // Use dark algorithm for dark mode
@@ -35,29 +40,29 @@ export const getAntdTheme = (
             // We use colorPrimaryContainer or similar for secondary effects
 
             // Backgrounds (Adaptive based on mode)
-            colorBgContainer: 'var(--color-bg-primary)',
-            colorBgElevated: isDark ? '#1e293b' : '#ffffff',
+            colorBgContainer: 'var(--color-bg-secondary)',
+            colorBgElevated: 'var(--color-bg-secondary)',
             colorBgLayout: 'var(--color-bg-primary)',
-            colorBgSpotlight: isDark ? '#334155' : '#0f172a',
+            colorBgSpotlight: 'var(--color-bg-tertiary)',
 
             // Text
-            colorText: isDark ? '#f8fafc' : '#0f172a',
-            colorTextSecondary: isDark ? '#94a3b8' : '#64748b',
-            colorTextTertiary: isDark ? '#64748b' : '#94a3b8',
+            colorText: 'var(--color-text-primary)',
+            colorTextSecondary: 'var(--color-text-secondary)',
+            colorTextTertiary: 'var(--color-text-tertiary)',
 
             // Borders
             colorBorder: 'var(--color-border)',
             colorBorderSecondary: 'var(--color-border)',
 
             // ===== Border Radius =====
-            borderRadius: 10,
-            borderRadiusLG: 14,
-            borderRadiusSM: 8,
+            borderRadius,
+            borderRadiusLG: borderRadius + 4,
+            borderRadiusSM: borderRadius - 2,
 
             // ===== Typography =====
             fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-            fontSize: 14,
-            controlHeight: 44,
+            fontSize,
+            controlHeight: baseControlHeight,
             boxShadow: isDark
                 ? '0 10px 15px -3px rgba(0, 0, 0, 0.4)'
                 : '0 10px 15px -3px rgba(0, 0, 0, 0.05)',
@@ -69,55 +74,67 @@ export const getAntdTheme = (
                 bodyBg: 'var(--color-bg-primary)',
                 headerBg: 'var(--color-bg-primary)',
                 siderBg: 'var(--color-bg-primary)',
-                headerHeight: 64,
+                headerHeight: Math.round(64 * ratio),
             },
             Card: {
-                borderRadiusLG: 16,
-                paddingLG: 24,
+                borderRadiusLG: borderRadius + 4,
+                paddingLG: Math.round(24 * ratio),
                 boxShadowTertiary: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
             },
             Button: {
-                controlHeight: 44,
-                controlHeightLG: 52,
-                borderRadius: 10,
+                controlHeight: baseControlHeight,
+                controlHeightLG: lgControlHeight,
+                borderRadius: componentRadius,
                 fontWeight: 600,
                 // Primary button has subtle gradient
                 colorPrimary: primaryColor,
                 colorPrimaryHover: primaryColor, // Ant computes hover automatically if not specified
             },
             Input: {
-                controlHeight: 46,
-                borderRadius: 10,
+                controlHeight: inputControlHeight,
+                borderRadius: componentRadius,
                 // Clean look: filled background, no border by default via variant
                 // (Variant is set at component level or via ConfigProvider)
                 colorBgContainer: 'var(--color-bg-secondary)',
             },
             Select: {
-                controlHeight: 46,
-                borderRadius: 10,
+                controlHeight: inputControlHeight,
+                borderRadius: componentRadius,
                 colorBgContainer: 'var(--color-bg-secondary)',
             },
             InputNumber: {
-                controlHeight: 46,
-                borderRadius: 10,
+                controlHeight: inputControlHeight,
+                borderRadius: componentRadius,
                 colorBgContainer: 'var(--color-bg-secondary)',
             },
             DatePicker: {
-                controlHeight: 46,
-                borderRadius: 10,
+                controlHeight: inputControlHeight,
+                borderRadius: componentRadius,
                 colorBgContainer: 'var(--color-bg-secondary)',
             },
             Menu: {
-                itemHeight: 44,
-                itemBorderRadius: 8,
+                itemHeight: baseControlHeight,
+                itemBorderRadius: componentRadius,
                 itemSelectedBg: 'rgba(var(--color-primary-rgb), 0.1)',
                 itemSelectedColor: primaryColor,
             },
             Table: {
                 headerBg: 'var(--color-bg-secondary)',
                 headerColor: 'var(--color-text-secondary)',
-                headerBorderRadius: 10,
-                cellPaddingBlock: 16,
+                headerBorderRadius: Math.round(10 * ratio),
+                cellPaddingBlock: Math.round(16 * ratio),
+            },
+            Tag: {
+                borderRadiusSM: Math.max(2, componentRadius - 2),
+            },
+            Pagination: {
+                borderRadius: componentRadius,
+            },
+            Checkbox: {
+                borderRadiusSM: Math.max(2, componentRadius - 4),
+            },
+            Radio: {
+                borderRadius: componentRadius,
             }
         },
     };
