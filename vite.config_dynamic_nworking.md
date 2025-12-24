@@ -186,18 +186,59 @@ export default defineConfig({
     })
   ],
   optimizeDeps: {
-    exclude: ['lucide-react', 'react-calendar-timeline']
+    include: ['react', 'react-dom', 'react-is'],
+    exclude: ['react-calendar-timeline']
   },
   build: {
     sourcemap: true,
+    commonjsOptions: {
+      // Force styled-components and other CJS modules to use the same React
+      include: [/node_modules/],
+      transformMixedEsModules: true,
+    },
     rollupOptions: {
       output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom', 'react-router-dom'],
-          ui: ['antd', '@ant-design/icons'],
-          form: ['@rjsf/antd', '@rjsf/core', '@rjsf/utils', '@rjsf/validator-ajv8'],
-          state: ['@tanstack/react-query', 'zustand'],
-          animation: ['framer-motion']
+        manualChunks: (id) => {
+          // Vendor - core React libraries
+          if (id.includes('node_modules/react-dom') ||
+            id.includes('node_modules/react-router-dom')) {
+            return 'vendor';
+          }
+
+          // React core
+          if (id.includes('node_modules/react/') && !id.includes('react-dom')) {
+            return 'react';
+          }
+
+          // Ant Design - keep together (CSS-in-JS needs shared deps)
+          if (id.includes('node_modules/antd/')) {
+            return 'ui';
+          }
+
+          // @ant-design utilities (cssinjs, colors, etc) - not icons
+          if (id.includes('node_modules/@ant-design/') &&
+            !id.includes('@ant-design/icons')) {
+            return 'ui';
+          }
+
+          // Form libraries
+          if (id.includes('node_modules/@rjsf/')) {
+            return 'form';
+          }
+
+          // State management
+          if (id.includes('node_modules/@tanstack/') ||
+            id.includes('node_modules/zustand')) {
+            return 'state';
+          }
+
+          // Animation
+          if (id.includes('node_modules/framer-motion')) {
+            return 'animation';
+          }
+
+          // Lucide icons - let them tree-shake naturally with app code
+          // No explicit chunk = better dead code elimination
         }
       }
     }
