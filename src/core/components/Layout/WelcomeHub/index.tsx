@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { useAuthStore, useThemeStore } from '@/core/lib/store';
 import { BrandLogo } from '@/core/components/shared/BrandAsset';
+import { getTenantBrandName } from '@/core/theme/ThemeRegistry';
 import { useTranslation } from 'react-i18next';
 import {
     PageActionBar,
