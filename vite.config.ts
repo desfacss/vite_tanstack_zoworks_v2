@@ -15,8 +15,12 @@ export default defineConfig({
     alias: {
       '@/views': path.resolve(__dirname, './src/views'),
       '@': path.resolve(__dirname, 'src'),
-      "antd/lib": "antd/es", // Add the alias here
+      "antd/lib": "antd/es",
       'plotly.js/dist/plotly': 'plotly.js-dist-min',
+      // Force single React instance
+      'react': path.resolve(__dirname, 'node_modules/react'),
+      'react-dom': path.resolve(__dirname, 'node_modules/react-dom'),
+      'react-is': path.resolve(__dirname, 'node_modules/react-is'),
     },
   },
   base: '/', // This is often the fix for Vercel if your app is at the root
