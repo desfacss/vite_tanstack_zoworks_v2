@@ -186,6 +186,7 @@ export default defineConfig({
     })
   ],
   optimizeDeps: {
+    include: ['react', 'react-dom', 'react-is'],
     exclude: ['react-calendar-timeline']
   },
   build: {
