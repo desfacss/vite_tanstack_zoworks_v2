@@ -69,6 +69,6 @@ alias: {
 
 ## Future Optimizations
 
-- [ ] Dynamic import for Leaflet (~151KB)
-- [ ] Dynamic import for Cytoscape (~432KB)  
-- [ ] Lodash tree-shaking: `import debounce from 'lodash/debounce'`
+- [ ] Dynamic import for Leaflet (~151KB) — used only in MapView
+- [ ] Dynamic import for Cytoscape (~432KB) — used via Mermaid
+- [ ] Remove Lodash entirely — replace with native JS alternatives

@@ -4,7 +4,7 @@ import { Button, Popconfirm, Typography, Badge } from 'antd';
 import { Trash2, Settings, GripVertical, Tablet, Monitor, Smartphone } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { WidgetWrapper, BaseChart, KPIWidget, TableWidget } from './WidgetRenderers';
-import _ from 'lodash';
+import isEqual from 'lodash/isEqual';
 
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
@@ -93,7 +93,7 @@ const DashboardCanvas: React.FC<DashboardCanvasProps> = ({
     };
 
     const newLayouts = generateLayouts();
-    if (!_.isEqual(newLayouts, layouts)) {
+    if (!isEqual(newLayouts, layouts)) {
       setLayouts(newLayouts);
     }
   }, [widgets, layouts]);

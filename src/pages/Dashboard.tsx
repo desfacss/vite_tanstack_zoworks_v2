@@ -5,7 +5,10 @@ import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@/core/lib/store';
 import { supabase } from '../lib/supabase';
 import DashboardCanvas from './DashboardCanvas';
-import _ from 'lodash';
+import keyBy from 'lodash/keyBy';
+import isEmpty from 'lodash/isEmpty';
+import isEqual from 'lodash/isEqual';
+import map from 'lodash/map';
 import {
   PageActionBar,
   ActionBarLeft,
@@ -40,7 +43,7 @@ const DashboardPage: React.FC = () => {
       setLoading(true);
       try {
         const { data: defs } = await supabase.schema('core').from('widget_definitions').select('*').eq('is_active', true);
-        setWidgetDefinitions(_.keyBy(defs, 'id'));
+        setWidgetDefinitions(keyBy(defs, 'id'));
 
         const { data: dashData } = await supabase.schema('core').from('user_dashboards').select('*');
         if (dashData && dashData.length > 0) {
@@ -86,7 +89,7 @@ const DashboardPage: React.FC = () => {
   }, [organization, location, widgetDefinitions]);
 
   useEffect(() => {
-    if (currentDashboard?.widgets && !_.isEmpty(widgetDefinitions)) {
+    if (currentDashboard?.widgets && !isEmpty(widgetDefinitions)) {
       fetchMetricData(currentDashboard.widgets);
     }
   }, [currentDashboard?.id, widgetDefinitions, location]);
@@ -121,7 +124,7 @@ const DashboardPage: React.FC = () => {
         };
       });
 
-      if (!_.isEqual(prev.widgets, updatedWidgets)) {
+      if (!isEqual(prev.widgets, updatedWidgets)) {
         setIsDirty(true);
         return { ...prev, widgets: updatedWidgets };
       }
@@ -312,7 +315,7 @@ const DashboardPage: React.FC = () => {
         width={320}
       >
         <div className="space-y-3">
-          {_.map(widgetDefinitions, (def) => (
+          {map(widgetDefinitions, (def) => (
             <Card
               key={def.id}
               size="small"

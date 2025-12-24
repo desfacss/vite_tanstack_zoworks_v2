@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Statistic, Table, Alert, Spin, Tag } from 'antd';
 import { ArrowUp, ArrowDown } from 'lucide-react';
-import _ from 'lodash';
+import lodashGroupBy from 'lodash/groupBy';
 import { useTranslation } from 'react-i18next';
 import { useThemeStore } from '@/core/lib/store';
 
@@ -168,7 +168,7 @@ export const BaseChart: React.FC<{
         const yAxes = Array.isArray(yAxis) ? yAxis : [yAxis];
 
         if (groupBy) {
-          const groupedData = _.groupBy(chartData, groupBy);
+          const groupedData = lodashGroupBy(chartData, groupBy);
           traces = Object.keys(groupedData).map(groupName => {
             const groupRows = groupedData[groupName];
             return {
