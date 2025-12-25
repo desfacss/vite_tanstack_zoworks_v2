@@ -35,7 +35,9 @@ interface ViewPreferences {
   };
 }
 interface ThemeState {
-  isDarkMode: boolean;
+  themeMode: 'light' | 'dark' | 'system';
+  isDarkMode: boolean; // Computed from themeMode + system preference
+  setThemeMode: (mode: 'light' | 'dark' | 'system') => void;
   toggleTheme: () => void;
 }
 
@@ -132,24 +134,69 @@ const initialState: Partial<AuthState> = {
   isLoggingOut: false, // <--- ADDED
 };
 
+/**
+ * Helper to resolve actual dark mode based on mode setting
+ */
+function resolveIsDarkMode(mode: 'light' | 'dark' | 'system'): boolean {
+  if (mode === 'system') {
+    return typeof window !== 'undefined'
+      ? window.matchMedia('(prefers-color-scheme: dark)').matches
+      : false;
+  }
+  return mode === 'dark';
+}
+
 // --- STORES ---
 
 /**
  * @store useThemeStore
- * @description A simple Zustand store for managing the application's theme state.
+ * @description Theme store with system mode support. Default: 'system' (auto-detect from OS)
  */
 export const useThemeStore = create<ThemeState>()(
   persist(
-    (set) => ({
-      isDarkMode: false,
-      toggleTheme: () => set((state) => ({ isDarkMode: !state.isDarkMode })),
+    (set, get) => ({
+      themeMode: 'system',
+      isDarkMode: resolveIsDarkMode('system'),
+      setThemeMode: (mode) => set({
+        themeMode: mode,
+        isDarkMode: resolveIsDarkMode(mode)
+      }),
+      toggleTheme: () => {
+        const currentMode = get().themeMode;
+        // Cycle: light → dark → system → light
+        const nextMode = currentMode === 'light' ? 'dark'
+          : currentMode === 'dark' ? 'system'
+            : 'light';
+        set({
+          themeMode: nextMode,
+          isDarkMode: resolveIsDarkMode(nextMode)
+        });
+      },
     }),
     {
       name: 'theme-store',
       storage: secureStorage,
+      partialize: (state) => ({ themeMode: state.themeMode }),
+      onRehydrateStorage: () => (state) => {
+        if (state) {
+          // Recompute isDarkMode on hydration (system preference may have changed)
+          state.isDarkMode = resolveIsDarkMode(state.themeMode);
+        }
+      },
     }
   )
 );
+
+// Listen to OS theme changes when in system mode
+if (typeof window !== 'undefined') {
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+    const { themeMode, setThemeMode } = useThemeStore.getState();
+    if (themeMode === 'system') {
+      // Re-trigger to update isDarkMode
+      setThemeMode('system');
+    }
+  });
+}
 
 /**
  * @store useAuthStore

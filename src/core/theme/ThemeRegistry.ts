@@ -62,9 +62,56 @@ export interface TenantThemeConfig {
 
     // Feature Flags
     allowUserDarkMode?: boolean; // Default true
-    defaultMode?: 'light' | 'dark'; // Tenant's default, user can override
+    defaultMode?: ThemeMode;     // Tenant's default, user can override (now supports 'system')
     preset?: string;             // ID of a base preset (e.g., 'glassmorphism')
     heroHeader?: boolean;        // NEW: Enable branded hero-style header
+}
+
+/**
+ * Theme mode options
+ * - 'light': Always light mode
+ * - 'dark': Always dark mode
+ * - 'system': Auto-detect from OS preference
+ */
+export type ThemeMode = 'light' | 'dark' | 'system';
+
+/**
+ * Get the user's OS color scheme preference
+ */
+export function getSystemPreference(): 'light' | 'dark' {
+    if (typeof window === 'undefined') return 'light';
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+
+/**
+ * Resolve theme mode to actual light/dark
+ */
+export function resolveThemeMode(mode: ThemeMode): boolean {
+    if (mode === 'system') {
+        return getSystemPreference() === 'dark';
+    }
+    return mode === 'dark';
+}
+
+/**
+ * Listen to OS theme preference changes (for system mode)
+ * Returns cleanup function
+ */
+export function listenToSystemThemeChanges(callback: (isDark: boolean) => void): () => void {
+    if (typeof window === 'undefined') return () => { };
+
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handler = (e: MediaQueryListEvent) => callback(e.matches);
+
+    // Modern browsers
+    if (mediaQuery.addEventListener) {
+        mediaQuery.addEventListener('change', handler);
+        return () => mediaQuery.removeEventListener('change', handler);
+    }
+
+    // Legacy browsers
+    mediaQuery.addListener(handler);
+    return () => mediaQuery.removeListener(handler);
 }
 
 // ============================================================================
@@ -428,8 +475,8 @@ export function isUserDarkModeAllowed(): boolean {
 /**
  * Get tenant's default mode preference
  */
-export function getTenantDefaultMode(): 'light' | 'dark' {
-    return tenantConfig?.defaultMode || 'light';
+export function getTenantDefaultMode(): ThemeMode {
+    return tenantConfig?.defaultMode || 'system';
 }
 
 /**

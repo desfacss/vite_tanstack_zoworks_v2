@@ -2038,8 +2038,8 @@ legend {
   position: relative;
   overflow: hidden;
   background-image:
-    radial-gradient(circle at 20% -10%, rgba(0, 229, 153, 0.15) 0%, transparent 40%),
-    radial-gradient(circle at 80% 10%, rgba(0, 163, 255, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 20% -10%, rgba(var(--color-primary-rgb), 0.15) 0%, transparent 40%),
+    radial-gradient(circle at 80% 10%, rgba(var(--color-secondary-rgb), 0.1) 0%, transparent 50%),
     linear-gradient(180deg, #000000 0%, #050505 100%) !important;
   background-size: 100% 100% !important;
   background-attachment: fixed !important;
@@ -2086,16 +2086,15 @@ legend {
    ================================================== */
 [data-theme-preset="neon"].dark .page-card {
   background: linear-gradient(135deg, rgba(8, 8, 8, 0.98) 0%, rgba(15, 15, 15, 0.95) 100%) !important;
-  background-image:
-    linear-gradient(90deg, rgba(0, 229, 153, 0.05) 1px, transparent 1px),
-    linear-gradient(180deg, rgba(0, 229, 153, 0.05) 1px, transparent 1px),
+  background-image: linear-gradient(90deg, rgba(var(--color-primary-rgb), 0.05) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(var(--color-primary-rgb), 0.05) 1px, transparent 1px),
     linear-gradient(135deg, rgba(8, 8, 8, 0.98) 0%, rgba(15, 15, 15, 0.95) 100%) !important;
   background-size: 16px 16px, 16px 16px, 100% 100% !important;
   backdrop-filter: blur(25px);
-  border: 1px solid rgba(0, 229, 153, 0.1) !important;
+  border: 1px solid rgba(var(--color-primary-rgb), 0.1) !important;
   box-shadow:
     0 10px 40px rgba(0, 0, 0, 0.8),
-    inset 0 0 50px rgba(0, 229, 153, 0.02) !important;
+    inset 0 0 50px rgba(var(--color-primary-rgb), 0.02) !important;
   transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1) !important;
   position: relative;
   overflow: hidden;
@@ -2104,7 +2103,7 @@ legend {
 /* Nested .ant-card inside .page-card - NO neon effects */
 [data-theme-preset="neon"].dark .page-card .ant-card {
   background: rgba(15, 15, 15, 0.6) !important;
-  border: 1px solid rgba(0, 229, 153, 0.05) !important;
+  border: 1px solid rgba(var(--color-primary-rgb), 0.05) !important;
   box-shadow: none !important;
 }
 
@@ -2129,7 +2128,7 @@ legend {
   filter: blur(0.5px);
   box-shadow:
     0 0 15px var(--neon-primary),
-    0 0 30px rgba(0, 229, 153, 0.4) !important;
+    0 0 30px rgba(var(--color-primary-rgb), 0.4) !important;
   z-index: 20;
   pointer-events: none;
   border-radius: 100px;
@@ -2209,7 +2208,7 @@ legend {
   animation: none;
   /* Stop shimmer if hovering */
   opacity: 1;
-  background: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(0, 229, 153, 0.15) 0%, transparent 50%);
+  background: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(var(--color-primary-rgb), 0.15) 0%, transparent 50%);
   mask-image: none;
   transition: opacity 0.4s ease;
 }
@@ -2239,7 +2238,7 @@ legend {
 [data-theme-preset="neon"].dark .page-title,
 [data-theme-preset="neon"].dark h1 {
   color: #ffffff !important;
-  text-shadow: 0 0 15px rgba(0, 229, 153, 0.3);
+  text-shadow: 0 0 15px rgba(var(--color-primary-rgb), 0.3);
   letter-spacing: -0.01em;
 }
 
@@ -2274,7 +2273,7 @@ legend {
 }
 
 [data-theme-preset="neon"].dark .ant-menu-item-selected {
-  background: rgba(0, 229, 153, 0.1) !important;
+  background: rgba(var(--color-primary-rgb), 0.1) !important;
   color: var(--neon-primary) !important;
 }
 
@@ -2298,7 +2297,7 @@ legend {
 [data-theme-preset="neon"].dark .ant-input:focus,
 [data-theme-preset="neon"].dark .ant-select-focused .ant-select-selector {
   border-color: var(--neon-primary) !important;
-  box-shadow: 0 0 0 2px rgba(0, 229, 153, 0.15) !important;
+  box-shadow: 0 0 0 2px rgba(var(--color-primary-rgb), 0.15) !important;
 }
 
 /* Status dots - Glow effect */
@@ -2353,12 +2352,12 @@ legend {
 
 /* Dropdown Selections */
 [data-theme-preset="neon"].dark .ant-select-item-option-selected {
-  background: rgba(0, 229, 153, 0.15) !important;
+  background: rgba(var(--color-primary-rgb), 0.15) !important;
   color: var(--neon-primary) !important;
 }
 
 [data-theme-preset="neon"].dark .ant-select-item-option-active {
-  background: rgba(0, 229, 153, 0.08) !important;
+  background: rgba(var(--color-primary-rgb), 0.08) !important;
 }
 
 /* Tabs */
@@ -2372,7 +2371,7 @@ legend {
 
 /* Table Row Selection */
 [data-theme-preset="neon"].dark .ant-table-row-selected>td {
-  background: rgba(0, 229, 153, 0.08) !important;
+  background: rgba(var(--color-primary-rgb), 0.08) !important;
 }
 
 /* Checkbox & Radio */
@@ -2458,7 +2457,7 @@ legend {
 [data-theme-preset="neon"].dark .page-action-bar .brand-name,
 [data-theme-preset="neon"].dark .ant-layout-sider .brand-name {
   color: var(--neon-primary) !important;
-  text-shadow: 0 0 15px rgba(0, 229, 153, 0.3);
+  text-shadow: 0 0 15px rgba(var(--color-primary-rgb), 0.3);
 }
 
 /* Welcome Hub - Get Started button and other buttons */
@@ -2468,14 +2467,14 @@ legend {
   background: linear-gradient(135deg, var(--neon-primary) 0%, #00ffca 100%) !important;
   color: #000000 !important;
   border: none !important;
-  box-shadow: 0 0 15px rgba(0, 229, 153, 0.4) !important;
+  box-shadow: 0 0 15px rgba(var(--color-primary-rgb), 0.4) !important;
 }
 
 /* Highlighted name in welcome message */
 [data-theme-preset="neon"].dark .welcome-name,
 [data-theme-preset="neon"].dark h1 span {
   color: var(--neon-primary) !important;
-  text-shadow: 0 0 20px rgba(0, 229, 153, 0.4);
+  text-shadow: 0 0 20px rgba(var(--color-primary-rgb), 0.4);
 }
 
 /* Override any remaining Ant Design blue colors */
@@ -2492,7 +2491,7 @@ legend {
 }
 
 [data-theme-preset="neon"].dark ::selection {
-  background: rgba(0, 229, 153, 0.3);
+  background: rgba(var(--color-primary-rgb), 0.3);
   color: #ffffff;
 }
 
@@ -2504,7 +2503,7 @@ legend {
 [data-theme-preset="neon"]:not(.dark) {
   --neon-light-bg: #f8fafb;
   --neon-light-card: #ffffff;
-  --neon-light-border: rgba(0, 229, 153, 0.25);
+  --neon-light-border: rgba(var(--color-primary-rgb), 0.25);
   --neon-light-text: #1a1a2e;
   --neon-light-text-secondary: #4a5568;
 }
@@ -2513,8 +2512,8 @@ legend {
 [data-theme-preset="neon"]:not(.dark) .ant-layout {
   background: var(--neon-light-bg) !important;
   background-image:
-    radial-gradient(circle at 20% 0%, rgba(0, 229, 153, 0.08) 0%, transparent 40%),
-    radial-gradient(circle at 80% 100%, rgba(0, 163, 255, 0.05) 0%, transparent 50%) !important;
+    radial-gradient(circle at 20% 0%, rgba(var(--color-primary-rgb), 0.08) 0%, transparent 40%),
+    radial-gradient(circle at 80% 100%, rgba(var(--color-secondary-rgb), 0.05) 0%, transparent 50%) !important;
 }
 
 [data-theme-preset="neon"]:not(.dark) .ant-layout-sider {
@@ -2526,7 +2525,7 @@ legend {
 [data-theme-preset="neon"]:not(.dark) .ant-layout-header {
   background: rgba(255, 255, 255, 0.85) !important;
   backdrop-filter: blur(12px);
-  border-bottom: 1px solid rgba(0, 229, 153, 0.1) !important;
+  border-bottom: 1px solid rgba(var(--color-primary-rgb), 0.1) !important;
 }
 
 /* Light Mode Cards with Subtle Grid */
@@ -2534,12 +2533,12 @@ legend {
 [data-theme-preset="neon"]:not(.dark) .ant-card {
   background: var(--neon-light-card) !important;
   background-image:
-    linear-gradient(rgba(0, 229, 153, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 229, 153, 0.03) 1px, transparent 1px) !important;
+    linear-gradient(rgba(var(--color-primary-rgb), 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(var(--color-primary-rgb), 0.03) 1px, transparent 1px) !important;
   background-size: 16px 16px !important;
   border: 1px solid var(--neon-light-border) !important;
   box-shadow:
-    0 4px 20px rgba(0, 229, 153, 0.08),
+    0 4px 20px rgba(var(--color-primary-rgb), 0.08),
     0 1px 3px rgba(0, 0, 0, 0.05) !important;
   transition: all 0.4s ease !important;
   position: relative;
@@ -2548,15 +2547,16 @@ legend {
 
 [data-theme-preset="neon"]:not(.dark) .main-content:hover,
 [data-theme-preset="neon"]:not(.dark) .ant-card:hover {
-  border-color: rgba(0, 229, 153, 0.5) !important;
+  border-color: rgba(var(--color-primary-rgb), 0.5) !important;
   box-shadow:
-    0 8px 30px rgba(0, 229, 153, 0.15),
+    0 8px 30px rgba(var(--color-primary-rgb), 0.15),
     0 2px 8px rgba(0, 0, 0, 0.08) !important;
   transform: translateY(-2px);
 }
 
 /* Light Mode Electric Thunderbolt - Enhanced Visibility */
 [data-theme-preset="neon"]:not(.dark) .main-content::before,
+[data-theme-preset="neon"]:not(.dark) .page-card::before,
 [data-theme-preset="neon"]:not(.dark) .ant-card::before {
   content: '';
   position: absolute;
@@ -2569,9 +2569,9 @@ legend {
       #00E599 80%,
       transparent 100%);
   box-shadow:
-    0 0 8px rgba(0, 229, 153, 0.8),
-    0 0 20px rgba(0, 229, 153, 0.5),
-    0 0 35px rgba(0, 229, 153, 0.3) !important;
+    0 0 8px rgba(var(--color-primary-rgb), 0.8),
+    0 0 20px rgba(var(--color-primary-rgb), 0.5),
+    0 0 35px rgba(var(--color-primary-rgb), 0.3) !important;
   z-index: 20;
   pointer-events: none;
   border-radius: 100px;
@@ -2584,6 +2584,7 @@ legend {
 
 /* Light Mode Micro-Shimmer & Hover Glow */
 [data-theme-preset="neon"]:not(.dark) .main-content::after,
+[data-theme-preset="neon"]:not(.dark) .page-card::after,
 [data-theme-preset="neon"]:not(.dark) .ant-card::after {
   content: '';
   position: absolute;
@@ -2596,10 +2597,10 @@ legend {
 
   /* Subtle shimmer grid for light mode */
   background-image:
-    linear-gradient(rgba(0, 229, 153, 0.06) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 229, 153, 0.06) 1px, transparent 1px);
+    linear-gradient(rgba(var(--color-primary-rgb), 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(var(--color-primary-rgb), 0.06) 1px, transparent 1px);
   background-size: 16px 16px;
-  background-color: rgba(0, 229, 153, 0.08);
+  background-color: rgba(var(--color-primary-rgb), 0.08);
   mask-image: radial-gradient(circle at 30% 30%, black 0%, transparent 30%);
   mask-repeat: no-repeat;
   mask-size: 150% 150%;
@@ -2610,10 +2611,11 @@ legend {
 
 /* Light Mode Hover Glow */
 [data-theme-preset="neon"]:not(.dark) .main-content:hover::after,
+[data-theme-preset="neon"]:not(.dark) .page-card:hover::after,
 [data-theme-preset="neon"]:not(.dark) .ant-card:hover::after {
   animation: none;
   opacity: 1;
-  background: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(0, 229, 153, 0.1) 0%, transparent 50%);
+  background: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(var(--color-primary-rgb), 0.1) 0%, transparent 50%);
   mask-image: none;
   transition: opacity 0.4s ease;
 }
