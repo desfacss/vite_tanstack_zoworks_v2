@@ -11,21 +11,19 @@ const Profile = () => {
   const { t } = useTranslation();
 
   return (
-    <>
+    <div className="page-content layout-canvas">
       <PageActionBar>
         <ActionBarLeft>
           <PageTitle title={t('common.label.profile')} />
         </ActionBarLeft>
       </PageActionBar>
 
-      <div className="layout-canvas entry-animate">
-        <div className="content-body entry-animate-container">
-          <Card>
-            <p className="text-subtitle">{t('common.message.coming_soon')}</p>
-          </Card>
-        </div>
+      <div className="page-card">
+        <Card>
+          <p className="text-subtitle">{t('common.message.coming_soon')}</p>
+        </Card>
       </div>
-    </>
+    </div>
   );
 };
 

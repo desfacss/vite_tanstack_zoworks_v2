@@ -991,18 +991,18 @@ p {
   padding: 0 !important;
 }
 
-/* 2. Record Layout: Standard bordered container with solid background.
-   Used for: Table Views with data. */
+/* 2. Record Layout: Transparent container for table views.
+   Card styling comes from .page-card if needed, not from layout mode. */
 .layout-record {
-  background: var(--color-bg-primary) !important;
-  border: 1px solid var(--color-border) !important;
-  border-radius: var(--tenant-border-radius, 12px) !important;
-  overflow: hidden;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  min-height: auto !important;
+  width: 100%;
 }
 
 .layout-record .content-body {
-  padding: var(--layout-padding);
+  padding: 0 !important;
 }
 
 /* Base class for backward compatibility */
@@ -1036,7 +1036,7 @@ p {
    ===================================================== */
 
 .page-card {
-  background: var(--color-bg-secondary);
+  background: var(--color-bg-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--tenant-border-radius, 12px);
   padding: var(--layout-padding);
@@ -1075,9 +1075,14 @@ p {
   margin-bottom: 0;
 }
 
-/* Flush variant: No internal padding for dashboard/grid layouts */
+/* Flush variant: No internal padding for dashboard widgets (edge-to-edge) */
 .page-card-flush {
   padding: 0;
+}
+
+/* Grid variant: Small padding for grid/card layouts */
+.page-card-grid {
+  padding: 16px;
 }
 
 /* Entrance animation keyframes */
@@ -1950,21 +1955,13 @@ legend {
 .sticky-pagination-bar {
   position: sticky;
   bottom: 0px;
-  background-color: var(--color-bg-primary);
-  border-top: 1px solid var(--color-border);
-  padding: 12px var(--layout-padding);
+  padding: 16px 0;
   margin-top: auto;
   z-index: 50;
   display: flex;
   justify-content: flex-end;
-  /* Glass effect for modern look */
-  backdrop-filter: blur(8px);
-  background-color: rgba(var(--color-bg-primary-rgb, 255, 255, 255), 0.85);
-  transition: all 0.3s ease;
-}
-
-.dark .sticky-pagination-bar {
-  background-color: rgba(var(--color-bg-primary-rgb, 15, 23, 42), 0.85);
+  /* No background - integrates with content */
+  background: transparent;
 }
 
 /* Ensure parents support sticky */
@@ -2037,15 +2034,26 @@ legend {
    Glow shadows, dark backgrounds
    ============================================ */
 
+/* Override base dark colors with bottle green for neon theme */
+[data-theme-preset="neon"].dark {
+  --color-bg-primary: #061612;
+  /* Bottle green - darkest */
+  --color-bg-secondary: #0a1f1a;
+  /* Bottle green - dark */
+  --color-bg-tertiary: #0d2920;
+  /* Bottle green - medium */
+  --color-bg-primary-rgb: 6, 22, 18;
+}
+
 /* Base Layout Overrides - Immersive Startup Pattern */
 [data-theme-preset="neon"].dark .ant-layout {
-  background: #000000 !important;
+  background: #061612 !important;
   position: relative;
   overflow: hidden;
   background-image:
-    radial-gradient(circle at 20% -10%, rgba(var(--color-primary-rgb), 0.15) 0%, transparent 40%),
-    radial-gradient(circle at 80% 10%, rgba(var(--color-secondary-rgb), 0.1) 0%, transparent 50%),
-    linear-gradient(180deg, #000000 0%, #050505 100%) !important;
+    radial-gradient(circle at 20% -10%, rgba(var(--color-primary-rgb), 0.2) 0%, transparent 40%),
+    radial-gradient(circle at 80% 10%, rgba(0, 229, 153, 0.1) 0%, transparent 50%),
+    linear-gradient(180deg, #061612 0%, #0a1f1a 100%) !important;
   background-size: 100% 100% !important;
   background-attachment: fixed !important;
 }
@@ -2073,7 +2081,7 @@ legend {
 */
 
 [data-theme-preset="neon"].dark .ant-layout-sider {
-  background: rgba(0, 0, 0, 0.6) !important;
+  background: rgba(6, 22, 18, 0.85) !important;
   backdrop-filter: blur(30px);
   border-right: 1px solid var(--neon-border) !important;
 }
@@ -2090,26 +2098,45 @@ legend {
    .ant-card inside .page-card = Plain card (no effects)
    ================================================== */
 [data-theme-preset="neon"].dark .page-card {
-  background: linear-gradient(135deg, rgba(8, 8, 8, 0.98) 0%, rgba(15, 15, 15, 0.95) 100%) !important;
-  background-image: linear-gradient(90deg, rgba(var(--color-primary-rgb), 0.05) 1px, transparent 1px),
-    linear-gradient(180deg, rgba(var(--color-primary-rgb), 0.05) 1px, transparent 1px),
-    linear-gradient(135deg, rgba(8, 8, 8, 0.98) 0%, rgba(15, 15, 15, 0.95) 100%) !important;
+  background: linear-gradient(135deg, rgba(10, 31, 26, 0.98) 0%, rgba(15, 40, 33, 0.95) 100%) !important;
+  background-image: linear-gradient(90deg, rgba(var(--color-primary-rgb), 0.06) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(var(--color-primary-rgb), 0.06) 1px, transparent 1px),
+    linear-gradient(135deg, rgba(10, 31, 26, 0.98) 0%, rgba(15, 40, 33, 0.95) 100%) !important;
   background-size: 16px 16px, 16px 16px, 100% 100% !important;
   backdrop-filter: blur(25px);
-  border: 1px solid rgba(var(--color-primary-rgb), 0.1) !important;
+  border: 1px solid rgba(var(--color-primary-rgb), 0.15) !important;
   box-shadow:
     0 10px 40px rgba(0, 0, 0, 0.8),
-    inset 0 0 50px rgba(var(--color-primary-rgb), 0.02) !important;
+    inset 0 0 50px rgba(var(--color-primary-rgb), 0.03) !important;
   transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1) !important;
   position: relative;
   overflow: hidden;
 }
 
-/* Nested .ant-card inside .page-card - NO neon effects */
+/* Nested .ant-card inside .page-card - DARKER for readability (matches table) */
 [data-theme-preset="neon"].dark .page-card .ant-card {
-  background: rgba(15, 15, 15, 0.6) !important;
-  border: 1px solid rgba(var(--color-primary-rgb), 0.05) !important;
+  background: #061612 !important;
+  /* Darkest, matches table bg */
+  border: 1px solid rgba(0, 229, 153, 0.15) !important;
   box-shadow: none !important;
+}
+
+/* Dashboard widget cards - MATCH grid cards styling */
+/* Dashboard canvas container - transparent so widgets stand out */
+[data-theme-preset="neon"].dark .dashboard-canvas {
+  background: transparent !important;
+}
+
+[data-theme-preset="neon"].dark .dashboard-canvas>.react-grid-layout>div {
+  background: #061612 !important;
+  /* Matches grid cards */
+  border: 1px solid rgba(0, 229, 153, 0.15) !important;
+}
+
+[data-theme-preset="neon"].dark .dashboard-canvas>.react-grid-layout>div>div:first-child {
+  background: #061612 !important;
+  /* Widget header */
+  border-color: rgba(0, 229, 153, 0.1) !important;
 }
 
 [data-theme-preset="neon"].dark .page-card .ant-card::before,
@@ -2410,6 +2437,37 @@ legend {
   color: var(--neon-primary) !important;
 }
 
+/* Drawer - LIGHTER than background to appear on top (dark mode principle) */
+[data-theme-preset="neon"].dark .ant-drawer-content {
+  background: #0d2920 !important;
+  /* Lighter bottle green = appears on top */
+  box-shadow:
+    -4px 0 40px rgba(0, 0, 0, 0.5),
+    -1px 0 0 rgba(0, 229, 153, 0.2) !important;
+}
+
+[data-theme-preset="neon"].dark .ant-drawer-header {
+  background: rgba(0, 229, 153, 0.08) !important;
+  border-bottom: 1px solid rgba(0, 229, 153, 0.15) !important;
+}
+
+[data-theme-preset="neon"].dark .ant-drawer-body {
+  background: transparent !important;
+}
+
+/* Form inputs inside drawer - slightly darker to differentiate from drawer bg */
+[data-theme-preset="neon"].dark .ant-drawer .ant-input,
+[data-theme-preset="neon"].dark .ant-drawer .ant-select-selector,
+[data-theme-preset="neon"].dark .ant-drawer .ant-input-number {
+  background: rgba(6, 22, 18, 0.6) !important;
+  border-color: rgba(0, 229, 153, 0.2) !important;
+}
+
+/* Drawer mask - darker overlay so background recedes into darkness */
+[data-theme-preset="neon"].dark .ant-drawer-mask {
+  background: rgba(0, 0, 0, 0.6) !important;
+}
+
 /* ============================================
    NEON DARK MODE - Additional Color Overrides
    Ensuring ALL blue elements become neon green
@@ -2535,7 +2593,7 @@ legend {
 
 /* Light Mode Cards with Subtle Grid */
 [data-theme-preset="neon"]:not(.dark) .main-content,
-[data-theme-preset="neon"]:not(.dark) .ant-card {
+[data-theme-preset="neon"]:not(.dark) .page-card {
   background: var(--neon-light-card) !important;
   background-image:
     linear-gradient(rgba(var(--color-primary-rgb), 0.03) 1px, transparent 1px),
@@ -2551,7 +2609,7 @@ legend {
 }
 
 [data-theme-preset="neon"]:not(.dark) .main-content:hover,
-[data-theme-preset="neon"]:not(.dark) .ant-card:hover {
+[data-theme-preset="neon"]:not(.dark) .page-card:hover {
   border-color: rgba(var(--color-primary-rgb), 0.5) !important;
   box-shadow:
     0 8px 30px rgba(var(--color-primary-rgb), 0.15),
@@ -2561,8 +2619,7 @@ legend {
 
 /* Light Mode Electric Thunderbolt - Enhanced Visibility */
 [data-theme-preset="neon"]:not(.dark) .main-content::before,
-[data-theme-preset="neon"]:not(.dark) .page-card::before,
-[data-theme-preset="neon"]:not(.dark) .ant-card::before {
+[data-theme-preset="neon"]:not(.dark) .page-card::before {
   content: '';
   position: absolute;
   width: 140px;
@@ -2589,8 +2646,7 @@ legend {
 
 /* Light Mode Micro-Shimmer & Hover Glow */
 [data-theme-preset="neon"]:not(.dark) .main-content::after,
-[data-theme-preset="neon"]:not(.dark) .page-card::after,
-[data-theme-preset="neon"]:not(.dark) .ant-card::after {
+[data-theme-preset="neon"]:not(.dark) .page-card::after {
   content: '';
   position: absolute;
   top: 0;
@@ -2616,8 +2672,7 @@ legend {
 
 /* Light Mode Hover Glow */
 [data-theme-preset="neon"]:not(.dark) .main-content:hover::after,
-[data-theme-preset="neon"]:not(.dark) .page-card:hover::after,
-[data-theme-preset="neon"]:not(.dark) .ant-card:hover::after {
+[data-theme-preset="neon"]:not(.dark) .page-card:hover::after {
   animation: none;
   opacity: 1;
   background: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(var(--color-primary-rgb), 0.1) 0%, transparent 50%);

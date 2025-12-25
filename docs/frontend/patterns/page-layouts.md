@@ -86,6 +86,33 @@ For data-centric pages: tables, lists, grids. One card spans full width.
 > [!CAUTION]
 > **Styling system is frozen.** Do not modify `index.css` or add inline styles when auditing pages.
 
+### Animation Architecture
+
+| Element | Gets Neon Effects | Reason |
+|---------|-------------------|--------|
+| `.page-card` | ✅ Yes | Layout container |
+| `.main-content` | ✅ Yes | Legacy layout container |
+| `.ant-card` | ❌ No | Content card (plain styling) |
+
+**Rule:** Animation on containers, not content. Individual grid/table cards should never animate.
+
+### Card Hierarchy
+
+| Card Type | CSS Class | Use For | Style |
+|-----------|-----------|---------|-------|
+| **Hero Card** | `.page-card` | Welcome, Onboarding | Neon effects, entrance animation, decorative |
+| **Content Card** | `.ant-card` inside `.page-card` | Widgets, Grid items, Data cards | Plain white, subtle border, no animation |
+
+**Design Rules:**
+
+1. **Hero Card** (`.page-card`) = Special moment pages (Welcome, Onboarding)
+   - Full-width, theme animations, premium feel
+   
+2. **Content Card** (`.ant-card`) = Operational surfaces
+   - Dashboard widgets, Grid view items, Entity cards
+   - All look the same: white bg, subtle border, clean typography
+   - NO animation, NO neon effects
+
 ---
 
 ## Layout Patterns

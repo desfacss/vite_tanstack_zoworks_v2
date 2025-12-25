@@ -1417,7 +1417,7 @@ const DynamicViews: React.FC<DynamicViewsProps> = ({
 
   // Top-level views use consistent page layout
   return (
-    <>
+    <div className={`page-content ${viewType === 'tableview' && entities.length > 0 ? 'layout-record' : 'layout-canvas'}`}>
       {/* Page Header - tabs on left, actions on right */}
       <PageActionBar>
         <ActionBarLeft>
@@ -1430,9 +1430,8 @@ const DynamicViews: React.FC<DynamicViewsProps> = ({
         </ActionBarRight>
       </PageActionBar>
 
-
-      {/* Main Content - Toggles between Canvas and Record layout */}
-      <div className={`main-content ${viewType === 'tableview' && entities.length > 0 ? 'layout-record' : 'layout-canvas'} entry-animate`}>
+      {/* Main Content - Wrapped in page-card for theming and animation */}
+      <div className={`page-card ${viewType === 'gridview' ? 'page-card-grid' : ''}`}>
         <Suspense
           fallback={
             <div className="w-full h-64 rounded-xl content-shimmer" />
@@ -1456,7 +1455,7 @@ const DynamicViews: React.FC<DynamicViewsProps> = ({
                 clearFilters={handleClearFilters}
               />
             ) : (
-              <div className="content-body">
+              <>
                 <ViewComponent
                   entityType={entityType}
                   entitySchema={entitySchema}
@@ -1487,12 +1486,12 @@ const DynamicViews: React.FC<DynamicViewsProps> = ({
                     />
                   </div>
                 )}
-              </div>
+              </>
             )}
           </div>
         </Suspense>
       </div>
-    </>
+    </div>
   );
 };
 
