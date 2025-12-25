@@ -1,7 +1,6 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { Card, Select, Button, message } from 'antd';
-import { LeftOutlined, RightOutlined, HolderOutlined } from '@ant-design/icons';
-import { MoreHorizontal, Plus } from 'lucide-react';
+import { MoreHorizontal, Plus, ChevronLeft, ChevronRight, GripVertical } from 'lucide-react';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import styled from 'styled-components';
 import { motion } from 'framer-motion';
@@ -464,9 +463,9 @@ const KanbanView: React.FC<KanbanViewProps> = ({
                     >
                       <div className="flex items-center gap-2">
                         {collapsedLanes[lane.id] ? (
-                          <RightOutlined style={{ fontSize: 20 }} />
+                          <ChevronRight size={20} />
                         ) : (
-                          <LeftOutlined style={{ fontSize: 20 }} />
+                          <ChevronLeft size={20} />
                         )}
                         {/* Display lane.title (which is stage.name or laneConfig.name) */}
                         <h3 className="text-h3 text-gray-700 !mb-0">{lane.title}</h3>
@@ -490,7 +489,7 @@ const KanbanView: React.FC<KanbanViewProps> = ({
                               >
                                 <Card>
                                   <div className="card-title">
-                                    <HolderOutlined style={{ fontSize: 16 }} className="text-gray-400" />
+                                    <GripVertical size={16} className="text-gray-400" />
                                     <span>{getFieldValue(card, viewConfig.kanbanview?.cardFields?.title)}</span>
                                   </div>
                                   <p className="card-description">

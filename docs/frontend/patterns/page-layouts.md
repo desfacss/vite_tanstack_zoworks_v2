@@ -1,212 +1,330 @@
 # Page Layout Patterns
 
-This document defines the consistent page layout patterns used across all pages and themes.
+> Layout components and structure for authenticated pages.
 
 ---
 
-## Related Documentation
-
-- **[Action Bar Patterns](./action_bar_patterns.md)** - Detailed component specifications for action bars
-- **[Theme Engine](./theme_engine.md)** - Theme configuration and presets
-
----
-
-## Layout Structure
+## Architecture Overview
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│ APP HEADER (sticky)                                             │
-│ Desktop: [Brand] [Navigation]     [Notifications] [User]        │
-│ Mobile:  [☰] [Page Title]         [🔍] [🔔] [⚙️] [👤]           │
+│                      AuthedLayout                                │
 ├─────────────────────────────────────────────────────────────────┤
-│ PAGE HEADER (.page-header)                                      │
-│   Contains: Action Bar                                          │
-│   Desktop: [Title/Tabs] [Filters]      [Actions] [Views] [More] │
-│   Mobile:  [Tabs ▼]                    [+] [View] [⋯]           │
-├─────────────────────────────────────────────────────────────────┤
-│ MAIN CONTENT (.main-content)                                    │
-│   Contains: .content-body (with padding)                        │
-│   Tables, Cards, Forms, etc.                                    │
+│ ┌──────────┐ ┌─────────────────────────────────────────────────┐│
+│ │  SIDER   │ │                    HEADER                       ││
+│ │ (fixed)  │ │ [☰] [Title]        [Org] [Loc] [🔔] [⚙️] [👤]   ││
+│ │          │ ├─────────────────────────────────────────────────┤│
+│ │ [Brand]  │ │                    CONTENT                      ││
+│ │          │ │                                                 ││
+│ │ [Nav]    │ │   .page-content                                 ││
+│ │          │ │   ├── PageActionBar                             ││
+│ │          │ │   └── .main-content                             ││
+│ │          │ │                                                 ││
+│ └──────────┘ └─────────────────────────────────────────────────┘│
 └─────────────────────────────────────────────────────────────────┘
 ```
-
----
-
-## CSS Classes
-
-### Container Classes
-
-| Class | Description |
-|-------|-------------|
-| `.page-content` | Wrapper with side margins (24px mobile, 32px desktop) |
-| `.page-header` | Container for action bar |
-| `.main-content` | White card container for page content |
-| `.content-body` | Inner padding wrapper (20px) |
-
-### Action Bar Classes
-
-| Class | Description |
-|-------|-------------|
-| `.action-bar` | Flex container: left ↔ right layout |
-| `.action-bar-left` | Left section container |
-| `.action-bar-right` | Right section container |
-| `.action-bar-title` | Title wrapper |
-| `.action-bar-tabs-desktop` | Desktop tabs (radio buttons) |
-| `.action-bar-tabs-mobile` | Mobile tabs (dropdown) |
-| `.action-bar-filters` | Filter controls container |
-| `.action-bar-view-desktop` | Desktop view toggle (radio group) |
-| `.action-bar-view-mobile` | Mobile view toggle (cycle button) |
-| `.action-bar-more` | More menu button |
-
----
-
-## Responsive Margins
-
-| Breakpoint | Side Padding |
-|------------|--------------|
-| Mobile (<768px) | 24px |
-| Tablet/Desktop (≥768px) | 32px |
-
-Content width is always 100% with fixed side margins (no max-width constraint).
-
----
-
-## Desktop vs Mobile Behavior
-
-### Header
-| Element | Desktop | Mobile |
-|---------|---------|--------|
-| Page Title | In action bar | In header (next to ☰) |
-| Search Icon | N/A | Opens filter drawer |
-| Navigation | In header | In drawer (via ☰) |
-
-### Action Bar
-| Element | Desktop | Mobile |
-|---------|---------|--------|
-| Title | Left side | Moved to header |
-| Tabs | Inline buttons | Dropdown |
-| Filters | Up to 2 inline + [⋯] | All in drawer |
-| Primary Action | Icon + text button | Icon-only button |
-| View Toggle | All views visible | Current view only (cycles on click) |
-| More Menu | Always visible | Always visible |
-
-### View Toggle Rules
-- **1 view available**: Hide completely (both desktop and mobile)
-- **>1 views available**: Show toggle control
-
----
-
-## Usage with ActionBar Components
-
-### Import Components
-```tsx
-import {
-  PageActionBar,
-  ActionBarLeft,
-  ActionBarRight,
-  PageTitle,
-  TabsComponent,
-  InlineFilters,
-  PrimaryAction,
-  ViewToggle,
-  MoreMenu,
-} from '@/core/components/ActionBar';
-```
-
-### Simple Page (Title + Action)
-```tsx
-<>
-  <PageActionBar>
-    <ActionBarLeft>
-      <PageTitle title="Accounts" />
-    </ActionBarLeft>
-    <ActionBarRight>
-      <PrimaryAction label="Add" onClick={handleAdd} />
-      <MoreMenu items={menuItems} />
-    </ActionBarRight>
-  </PageActionBar>
-  
-  <div className="main-content">
-    <div className="content-body">
-      {/* Content */}
-    </div>
-  </div>
-</>
-```
-
-### List Page with Tabs and Filters
-```tsx
-<>
-  <PageActionBar>
-    <ActionBarLeft>
-      <TabsComponent
-        tabs={tabs}
-        activeTab={currentTab}
-        onChange={setCurrentTab}
-      />
-      <InlineFilters
-        filters={filterConfig}
-        values={filterValues}
-        onChange={setFilterValues}
-        maxVisible={2}
-      />
-    </ActionBarLeft>
-    <ActionBarRight>
-      <PrimaryAction label="Add" onClick={handleAdd} />
-      <ViewToggle
-        views={viewOptions}
-        activeView={currentView}
-        onChange={setCurrentView}
-      />
-      <MoreMenu items={menuItems} />
-    </ActionBarRight>
-  </PageActionBar>
-  
-  <div className="main-content">
-    <div className="content-body">
-      {/* Table/Grid content */}
-    </div>
-  </div>
-</>
-```
-
----
-
-## Theme-Specific Overrides
-
-The base layout CSS applies to all themes. Theme presets can override:
-
-| Theme | Background | Card Style |
-|-------|------------|------------|
-| Default (no preset) | White | White with subtle border |
-| `gradient_card` | Gradient (brand → white) | Solid white, rounded top |
-| `glassmorphism` | Blur effect | Transparent with blur |
-| `corporate` | Dark sidebar | Sharp corners |
 
 ---
 
 ## File Structure
 
 ```
-src/core/components/
-├── ActionBar/              # Action bar components
-│   ├── index.tsx           # Main exports
-│   ├── types.ts            # TypeScript interfaces
-│   ├── PageActionBar.tsx   # Container
-│   ├── PageTitle.tsx       # Title component
-│   ├── TabsComponent.tsx   # Responsive tabs
-│   ├── InlineFilters.tsx   # Desktop inline filters
-│   ├── PrimaryAction.tsx   # Primary button
-│   ├── ViewToggle.tsx      # View selector
-│   └── MoreMenu.tsx        # Overflow menu
-├── Layout/                 # Layout components
-│   ├── AuthedLayout.tsx    # Main authenticated layout
-│   ├── Header/             # App header
-│   ├── Sider/              # Sidebar navigation
-│   └── WelcomeHub/         # Welcome page
-└── DynamicViews/           # Dynamic list views
+src/core/components/Layout/
+├── AuthedLayout.tsx            # Main layout wrapper
+├── AuthedLayoutContext.tsx     # Context for page config
+├── AuthGuard.tsx               # Route protection
+├── GlobalSessionWatcher.tsx    # Session management
+├── PublicLayout.tsx            # Unauthenticated layout
+│
+├── Header/
+│   └── index.tsx               # Sticky header with org/location
+├── Sider/
+│   ├── index.tsx               # Fixed sidebar
+│   └── navigation.tsx          # Menu generation
+├── MobileMenu/
+│   └── index.tsx               # Mobile drawer menu
+├── NotificationsDrawer/
+│   └── index.tsx               # Notifications panel
+├── ProfileMenu/
+│   └── index.tsx               # User avatar dropdown
+├── Settings/
+│   └── index.tsx               # Global settings drawer
+└── WelcomeHub/
+    └── index.tsx               # Landing welcome page
 ```
 
 ---
 
-*Last Updated: 2025-12-22*
+## Key Layout Constants
+
+```typescript
+// src/core/components/Layout/AuthedLayout.tsx
+const SIDER_WIDTH = 240;           // Expanded sidebar
+const COLLAPSED_SIDER_WIDTH = 80;  // Collapsed sidebar
+
+// CSS Variables (index.css)
+--header-height: 56px;
+--sidebar-width-expanded: 256px;
+--layout-padding: 24px;
+--layout-padding-mobile: 16px;
+```
+
+---
+
+## Sider (Fixed Sidebar)
+
+**Desktop only** — Hidden on mobile.
+
+```tsx
+<Sider
+  collapsed={collapsed}
+  navigationItems={navigationItems}
+/>
+```
+
+**Key Features:**
+- **Position**: Fixed left, full viewport height
+- **Collapsed State**: Brand logo → Brand icon
+- **openKeys Management**: Clear on collapse for native hover popups
+- **Ctrl+Click**: Opens route in new tab
+
+```tsx
+// Handles Ctrl+Click for new tab
+const handleMenuClick = ({ key, domEvent }) => {
+  if (key.startsWith('/')) {
+    if (domEvent.ctrlKey || domEvent.metaKey) {
+      window.open(key, '_blank');
+    } else {
+      navigate(key);
+    }
+  }
+};
+```
+
+---
+
+## Header (Sticky)
+
+**Full width**, adjusts content margin based on sider state.
+
+```tsx
+<Header
+  collapsed={collapsed}
+  setCollapsed={setCollapsed}
+  isMobile={isMobile}
+  unreadCount={unreadCount}
+  setShowNotifications={setShowNotifications}
+  setShowMobileMenu={setShowMobileMenu}
+  showSearch={showSearch}
+  setShowSearch={setShowSearch}
+  pageTitle={getPageTitle()}
+/>
+```
+
+### Desktop vs Mobile Layout
+
+| Element | Desktop | Mobile |
+|---------|---------|--------|
+| Left | Hamburger (toggle sider) | Hamburger (open drawer) + Page Title |
+| Center | — | Location selector (if multiple) |
+| Right | Org selector, Location, Notifications, Settings, Profile | Notifications, Settings, Profile |
+
+### Organization Switching
+
+```typescript
+const handleOrganizationChange = async (orgId: string) => {
+  setIsSwitchingOrg(true);
+  message.loading('Switching...');
+  
+  setOrganization({ id, name });
+  navigate('/dashboard');
+  
+  // Persist preference
+  await supabase.schema('identity').rpc('set_preferred_organization', { new_org_id: orgId });
+  await supabase.auth.updateUser({ data: { org_id: orgId } });
+  
+  await queryClient.invalidateQueries({ queryKey: ['user-session'] });
+};
+```
+
+---
+
+## AuthedLayoutContext
+
+Context for pages to inject content into header:
+
+```typescript
+interface AuthedLayoutConfig {
+  searchFilters?: ReactNode;  // Shown in mobile search drawer
+  actionButtons?: {           // Extra header actions
+    icon: ReactNode;
+    tooltip: string;
+    onClick: () => void;
+  }[];
+}
+
+// Usage in page
+const { setConfig, setShowSettings } = useAuthedLayoutConfig();
+
+useEffect(() => {
+  setConfig({ searchFilters: <MyFilters /> });
+}, []);
+```
+
+---
+
+## Content Area
+
+### Structure
+
+```tsx
+<Content style={{ flex: 1, overflowY: 'auto' }}>
+  <motion.div
+    key={location.pathname}
+    initial={{ opacity: 0, y: 10 }}
+    animate={{ opacity: 1, y: 0 }}
+    className="page-content"
+  >
+    <Suspense fallback={<LoadingFallback />}>
+      <Outlet />
+    </Suspense>
+  </motion.div>
+</Content>
+```
+
+### Page Content Classes
+
+| Class | Purpose |
+|-------|---------|
+| `.page-content` | Wrapper with side margins |
+| `.page-header` | Action bar container |
+| `.main-content` | White card for content |
+| `.content-body` | Inner padding (20px) |
+
+---
+
+## Mobile Components
+
+### MobileMenu (Drawer)
+
+```tsx
+<MobileMenu
+  open={showMobileMenu}
+  onClose={() => setShowMobileMenu(false)}
+  navigationItems={navigationItems}
+/>
+```
+
+### Search Drawer
+
+Injected via context on mobile:
+
+```tsx
+{config.searchFilters && (
+  <Drawer
+    title="Search"
+    placement="right"
+    open={showSearch}
+    onClose={() => setShowSearch(false)}
+  >
+    {config.searchFilters}
+  </Drawer>
+)}
+```
+
+---
+
+## Responsive Behavior
+
+| Breakpoint | Sider | Content Margin |
+|------------|-------|----------------|
+| Mobile (<768px) | Hidden (drawer menu) | 0 |
+| Desktop (≥768px) | Fixed left | 240px / 80px |
+
+```typescript
+const contentMarginLeft = useMemo(() => {
+  if (isMobile) return 0;
+  return collapsed ? COLLAPSED_SIDER_WIDTH : SIDER_WIDTH;
+}, [collapsed, isMobile]);
+```
+
+---
+
+## Page Layout Modes
+
+### Layout Record (Table View)
+
+```tsx
+<div className="main-content layout-record">
+  {/* Full-width table */}
+</div>
+```
+
+### Layout Canvas (Cards, Forms)
+
+```tsx
+<div className="main-content layout-canvas">
+  {/* Grid of cards or form */}
+</div>
+```
+
+---
+
+## Usage Example
+
+### Standard List Page
+
+```tsx
+import { PageActionBar, ActionBarLeft, ActionBarRight } from '@/core/components/ActionBar';
+
+const TicketsPage = () => (
+  <>
+    <PageActionBar>
+      <ActionBarLeft>
+        <TabsComponent tabs={tabs} activeTab={tab} onChange={setTab} />
+      </ActionBarLeft>
+      <ActionBarRight>
+        <PrimaryAction label="New" onClick={handleNew} />
+        <ViewToggle views={views} activeView={view} onChange={setView} />
+      </ActionBarRight>
+    </PageActionBar>
+    
+    <div className="main-content">
+      <div className="content-body">
+        <DynamicViews entityType="tickets" />
+      </div>
+    </div>
+  </>
+);
+```
+
+---
+
+## Theme-Specific Overrides
+
+| Theme | Sider Style | Header Style |
+|-------|-------------|--------------|
+| `base` | White, border | White, border-bottom |
+| `glassmorphism` | Frosted glass | Frosted glass |
+| `corporate` | Dark sidebar | Branded header |
+| `gradient_card` | White | Hero gradient |
+| `neon` | Black | Black with glow |
+
+---
+
+## Implementation Checklist
+
+- [x] Fixed sider (desktop only)
+- [x] Sticky header
+- [x] Organization & location switching
+- [x] Mobile menu drawer
+- [x] Mobile search drawer (via context)
+- [x] Framer Motion page transitions
+- [x] Suspense + LoadingFallback
+- [x] GlobalLoader for org switching
+- [x] Ctrl+Click for new tab navigation
+
+---
+
+*Last Updated: 2025-12-25*
+*Source: `src/core/components/Layout/`*

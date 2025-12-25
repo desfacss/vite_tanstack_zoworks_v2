@@ -1,135 +1,385 @@
-# Definitive Theme Engine Guide (v2)
+# Theme Engine
 
-This document is the **Single Source of Truth** for all styling in the Zoworks platform. Every component, page, and module MUST adhere to these standards.
-
----
-
-## 1. The 5-Layer Styling Architecture
-
-We use a layered CSS approach to ensure themes are consistent yet flexible.
-
-| Layer | Name | Scope | Location | Responsibility |
-|-------|------|-------|----------|----------------|
-| **1** | **Tenant Tokens** | Dynamic | `ThemeRegistry.ts` | Sets CSS variables from DB (`--tenant-primary`, etc.) |
-| **2** | **Semantic Map** | Global | `index.css` :root | Maps tokens to usable names (`--color-bg-primary`, `--color-primary-rgb`) |
-| **3** | **AntD Overrides** | Base | `index.css` | Fixes Ant Design components to use Layer 2 variables. |
-| **4** | **Theme Presets** | Preset | `index.css` | CSS Effects (`[data-theme-preset="neon"]`) like gradients and glows. |
-| **5** | **Mode Overrides** | Light/Dark | `index.css` | Specific color/contrast tweaks for `.dark` and `:not(.dark)`. |
+> Tenant-aware theming with light/dark mode support, presets, and CSS variables.
 
 ---
 
-## 2. Mandatory CSS Variables
+## Architecture Overview
 
-### Core Colors
-| Variable | Usage | Source |
-|----------|-------|--------|
-| `var(--color-primary)` | Primary branding (buttons, links, active states) | `--tenant-primary` |
-| `var(--color-secondary)` | Secondary branding / accents | `--tenant-secondary` |
-| `rgba(var(--color-primary-rgb), alpha)` | For glows, transparent backgrounds, and borders | Synchronized by `ThemeRegistry` |
-
-### Semantic Backgrounds
-| Variable | Usage | Light Mode Default | Dark Mode Default |
-|----------|-------|--------------------|-------------------|
-| `var(--color-bg-primary)` | Main Page Background | `#ffffff` | `#0f172a` (Slate 900) |
-| `var(--color-bg-secondary)` | Cards, Modals, Popovers | `#f8fafc` | `#1e293b` (Slate 800) |
-| `var(--color-bg-tertiary)` | Headers, Hover States, Sidebars | `#f1f5f9` | `#334155` (Slate 700) |
-
-### Semantic Typography
-| Variable | Usage | Light Mode Default | Dark Mode Default |
-|----------|-------|--------------------|-------------------|
-| `var(--color-text-primary)` | Headings, Body Text | `#0f172a` | `#f8fafc` |
-| `var(--color-text-secondary)`| Descriptions, Labels | `#64748b` | `#94a3b8` |
-| `var(--color-text-tertiary)` | Mentions, Small Meta Data | `#94a3b8` | `#64748b` |
-| `var(--tenant-brand-name)` | Raw brand name string | From DB | From DB |
-
----
-
-## 3. Brand Identity Assets
-
-We use a unified component system for branding to ensure consistency and robust fallbacks.
-
-### Core Assets
-| Asset | Usage | Fallback |
-|-------|-------|----------|
-| **Logo** | Header, Login, Hub (Horizontal) | **Brand Name** as styled text |
-| **Icon** | Sider (Collapsed), Mobile Header | **First-Letter Avatar** with 4px border |
-
-### Mandatory Components
-**NEVER** use raw `<img>` tags for tenant logos. Use:
-- `<BrandLogo />`: Automatically resolves mode-specific `logoUrl`.
-- `<BrandIcon />`: Automatically resolves mode-specific `logoIconUrl`.
-
-### Fallback Logic
-1. **Icon**: If `logoIconUrl` is missing, renders a square box with the first letter of `brandName`, a 2px border of `var(--tenant-primary)`, and `4px` border radius.
-2. **Logo**: If `logoUrl` is missing, renders `brandName` as an `h1` styled with `var(--tenant-primary)`.
-
-### Asset Hosting (Publitio)
-The platform uses **Publitio** for high-performance image hosting.
-- **Workflow**: Upload to Publitio API -> Store `url_preview` in Supabase `theme_config`.
-- **Naming Convention**: `branding_{orgId}_{mode}_{type}_{timestamp}`.
-
----
-
-## 3. Strict Prohibitions (NEVER DO THESE)
-
-1.  **❌ NO Tailwind Color Classes**: Avoid `bg-blue-50`, `text-slate-900`, etc. Use CSS variables.
-2.  **❌ NO Hardcoded Hex Colors**: All colors must come from the variable system.
-3.  **❌ NO Manual Border Radius**: Use `var(--tenant-border-radius)` or `var(--tenant-border-radius-interactive)`.
-4.  **❌ NO Height Overrides**: Let Ant Design's `size` prop control component height.
-5.  **❌ NO Manual Transitions**: The system provides a global `0.2s` transition. Don't add custom ones unless absolutely necessary.
-
----
-
-## 4. How to Style Your Component
-
-### Option A: Standard Ant Design
-Simply use the component. Layer 3 already ensures it looks correct.
-```tsx
-<Button type="primary">Branded Button</Button>
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                      BOOTSTRAP                                   │
+│  loadTenantTheme(config) - Sets tenant colors, branding         │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│                      THEME PROVIDER                              │
+│  <ThemeProvider>                                                 │
+│  - Wraps app with ConfigProvider                                │
+│  - Generates AntD theme from tenant config + user mode          │
+│  - Subscribes to theme changes                                  │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│                      CSS VARIABLE LAYER                          │
+│  :root { --tenant-primary, --color-bg-primary, etc. }           │
+│  .dark { mode-specific overrides }                              │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
-### Option B: Custom Element (Inline Style)
-When you need custom styling, map to the variables.
+---
+
+## File Structure
+
+```
+src/core/theme/
+├── ThemeProvider.tsx    # React provider wrapping ConfigProvider
+├── ThemeRegistry.ts     # Tenant config, CSS variables, AntD theme
+├── presets.ts           # Theme presets (base, glassmorphism, neon, etc.)
+└── settings.ts          # Base AntD theme settings
+```
+
+---
+
+## Tenant Theme Configuration
+
+Stored in `identity.organizations.theme_config`:
+
+```typescript
+interface TenantThemeConfig {
+  // Branding
+  brandName: string;             // "VKBS"
+  faviconUrl?: string;           // Browser tab icon
+  
+  // Mode-specific overrides
+  light?: ThemeModeConfig;
+  dark?: ThemeModeConfig;
+  
+  // Common/Fallback
+  primaryColor: string;
+  secondaryColor?: string;
+  logoUrl?: string;
+  logoIconUrl?: string;          // Square icon for collapsed sider
+  loginBgImage?: string;
+  
+  // Typography
+  fontFamily?: string;
+  baseFontSize?: number;         // Default: 14
+  
+  // Layout
+  borderRadius: number;          // 0=sharp, 16=rounded
+  containerPadding?: number;     // px
+  globalGutter?: number;         // Default: 16
+  compactMode?: boolean;
+  
+  // Feature Flags
+  allowUserDarkMode?: boolean;   // Default: true
+  defaultMode?: 'light' | 'dark';
+  preset?: string;               // 'base', 'glassmorphism', 'neon', etc.
+  heroHeader?: boolean;          // Enable gradient hero header
+}
+
+interface ThemeModeConfig {
+  primaryColor?: string;
+  secondaryColor?: string;
+  logoUrl?: string;
+  logoIconUrl?: string;
+  cardBg?: string;
+  layoutBg?: string;
+  headerBg?: string;
+  siderBg?: string;
+  inputBg?: string;
+  textColor?: string;
+}
+```
+
+---
+
+## Theme Presets
+
+Available in `src/core/theme/presets.ts`:
+
+| Preset | Border Radius | Style | Features |
+|--------|--------------|-------|----------|
+| `base` | 8px | Clean, minimal | Standard |
+| `glassmorphism` | 16px | Frosted glass | Blur effects |
+| `corporate` | 4px | Sharp, professional | Dark sider |
+| `gradient_card` | 16px | Bold gradients | Hero header |
+| `neon` | 8px | Electric, high-impact | Thunder animations |
+
+### Preset Merge Order:
+```
+Default Values → Preset → Tenant Config
+```
+
+---
+
+## CSS Variable System
+
+### Layer 1: Tenant Tokens (Set by ThemeRegistry)
+
+```css
+--tenant-primary: #00E599;
+--tenant-secondary: #00E599;
+--tenant-brand-name: "VKBS";
+--tenant-border-radius: 8px;
+--tenant-border-radius-interactive: 6px;
+--tenant-card-bg: #ffffff;
+--tenant-layout-bg: #f5f5f5;
+--tenant-sider-bg: #ffffff;
+```
+
+### Layer 2: Mode Data Attributes
+
+```css
+[data-light-primary]: #00E599;
+[data-dark-primary]: #00E599;
+[data-light-card]: #ffffff;
+[data-dark-card]: #1f1f1f;
+```
+
+### Layer 3: RGB Values (for rgba())
+
+```css
+--color-primary-rgb: 0, 229, 153;
+--color-secondary-rgb: 0, 229, 153;
+--color-bg-primary-rgb: 245, 245, 245;
+--color-bg-secondary-rgb: 255, 255, 255;
+```
+
+### Layer 4: Semantic Variables (index.css)
+
+```css
+:root {
+  --color-primary: var(--tenant-primary);
+  --color-bg-primary: var(--tenant-layout-bg);
+  --color-bg-secondary: var(--tenant-card-bg);
+}
+```
+
+---
+
+## Initialization
+
+### At Bootstrap
+
+```typescript
+import { loadTenantTheme } from '@/core/theme/ThemeRegistry';
+
+// After fetching organization config
+loadTenantTheme({
+  brandName: org.name,
+  primaryColor: org.theme_config?.primaryColor || '#1890ff',
+  preset: org.theme_config?.preset || 'base',
+  borderRadius: org.theme_config?.borderRadius ?? 8,
+  // ... other config
+});
+```
+
+### What `loadTenantTheme` Does:
+1. Resolve preset (fallback to 'base')
+2. Deep merge: Default → Preset → Config
+3. Apply CSS variables to `:root`
+4. Set `document.title` and favicon
+5. Notify listeners
+
+---
+
+## ThemeProvider Usage
+
 ```tsx
+import { ThemeProvider } from '@/core/theme/ThemeProvider';
+
+function App() {
+  return (
+    <ThemeProvider>
+      <Router>
+        <AppRoutes />
+      </Router>
+    </ThemeProvider>
+  );
+}
+```
+
+---
+
+## Light/Dark Mode Toggle
+
+### Hook Usage
+
+```tsx
+import { useThemeToggle } from '@/core/theme/ThemeProvider';
+
+const ThemeSwitch = () => {
+  const { isDarkMode, toggleTheme, canToggle } = useThemeToggle();
+
+  if (!canToggle) return null;  // Tenant disabled dark mode
+
+  return (
+    <Switch
+      checked={isDarkMode}
+      onChange={toggleTheme}
+    />
+  );
+};
+```
+
+### Persistence
+- Mode stored in `localStorage` via Zustand (`theme-store`)
+- Respects `allowUserDarkMode` flag
+
+---
+
+## API Reference
+
+### Theme Loading
+
+```typescript
+// Load tenant theme at bootstrap
+loadTenantTheme(config: TenantThemeConfig): void
+
+// Update theme dynamically (e.g., from settings)
+updateTenantTheme(config: Partial<TenantThemeConfig>): void
+
+// Subscribe to theme changes
+subscribeToTheme(listener: () => void): () => void
+```
+
+### Theme Getters
+
+```typescript
+getTenantThemeConfig(): TenantThemeConfig | null
+getTenantPrimaryColor(): string
+getTenantBrandName(): string
+getTenantLogoUrl(isDarkMode: boolean): string | undefined
+getTenantLogoIconUrl(isDarkMode: boolean): string | undefined
+isUserDarkModeAllowed(): boolean
+getTenantDefaultMode(): 'light' | 'dark'
+```
+
+### Theme Application
+
+```typescript
+// Get Ant Design theme config
+getAntdTheme(isDarkMode: boolean): ThemeConfig
+
+// Apply mode to document (.dark class, meta theme-color)
+applyThemeMode(isDarkMode: boolean): void
+
+// Convert hex to RGB for CSS
+hexToRgb(hex: string): string  // "#00E599" → "0, 229, 153"
+```
+
+---
+
+## Styling Components
+
+### ✅ Use CSS Variables
+
+```tsx
+// Inline style
 <div style={{ 
   background: 'var(--color-bg-secondary)', 
   borderColor: 'var(--color-border)',
   borderRadius: 'var(--tenant-border-radius)'
 }}>
-  <Text style={{ color: 'var(--color-primary)' }}>Branded Text</Text>
+  <Text style={{ color: 'var(--color-primary)' }}>Branded</Text>
 </div>
-```
 
-### Option C: Custom Element (Tailwind)
-Use Tailwind for layout only, variables for style.
-```tsx
-<div className="p-4 border border-[var(--color-border)] bg-[var(--color-bg-primary)]">
+// Tailwind with variables
+<div className="bg-[var(--color-bg-primary)] border-[var(--color-border)]">
   ...
 </div>
+
+// For transparency (use RGB variables)
+<div style={{ 
+  background: 'rgba(var(--color-primary-rgb), 0.1)' 
+}}>
+  Glow effect
+</div>
+```
+
+### ❌ Prohibited Patterns
+
+```tsx
+// BAD - Hardcoded colors
+<div style={{ background: '#f0f0f0' }}>
+
+// BAD - Tailwind color classes
+<div className="bg-blue-50 text-slate-900">
+
+// BAD - Raw img for logos
+<img src={logoUrl} />  // Use <BrandLogo /> instead
 ```
 
 ---
 
-## 5. Agent Workflow: Styling Audit
+## Brand Components
 
-When the USER requests a styling fix or a new component:
+Always use these instead of raw `<img>`:
 
-1.  **Grep for Leaks**: Check for `blue-`, `indigo-`, or hex codes in the new code.
-2.  **Verify Variable Map**: Ensure the component uses `var(--color-...)` instead of hardcoded values.
-3.  **Check Light/Dark**: Verify background colors are correctly inverted using semantic variables.
-4.  **RGB Check**: If using transparency, ensure it uses `rgba(var(--color-primary-rgb), ...)` and NOT a hardcoded blue-rgba.
-5.  **Branding Guard**: Ensure no raw `img` tags are used for tenant logos; use `BrandLogo`/`BrandIcon`.
-6.  **Sider UX**: Verify that `openKeys` is cleared when the sidebar is collapsed to allow Ant Design's native hover popups to function.
+```tsx
+import { BrandLogo, BrandIcon } from '@/core/components/shared/Branding';
+
+// Full logo (header, login)
+<BrandLogo />
+
+// Square icon (collapsed sider, mobile)
+<BrandIcon />
+```
+
+### Fallback Behavior:
+- **Logo**: If missing, renders brandName as styled text
+- **Icon**: If missing, renders first letter with primary color border
 
 ---
 
-## 6. Persistence & Configuration (Form Standards)
+## Preset Data Attributes
 
-When implementing settings or branding forms:
+CSS can target presets via data attributes:
 
-1.  **Deep Save**: Always use `form.getFieldsValue(true)`. Ant Design's default `getFieldsValue()` omits fields that are currently unmounted (e.g., in a background tab or collapsed advanced section). Failure to use `true` will result in data loss on save.
-2.  **Explicit Reset**: When implementing a "Reset" button, strictly pull from `THEME_PRESETS`. Never fall back to the "current" `themeConfig` as it may contain the very overrides you are trying to wipe.
-3.  **Loading States**: Always provide visual feedback for asynchronous actions (like uploads) using local state (e.g., `uploading` state bound to button `loading` prop).
-4.  **Mode Awareness**: Always honor `allowUserDarkMode`. If `false`, the theme toggle should be hidden or disabled.
+```css
+/* Glassmorphism effects */
+[data-glass-effect="true"] .card {
+  backdrop-filter: blur(var(--tenant-backdrop-blur));
+  border: var(--tenant-card-border);
+}
 
-*Last Updated: 2025-12-24*
+/* Gradient header */
+[data-hero-header="true"] .header {
+  background: linear-gradient(135deg, var(--tenant-primary), var(--tenant-secondary));
+}
+
+/* Neon preset */
+[data-theme-preset="neon"] .primary-button {
+  box-shadow: 0 0 20px rgba(var(--color-primary-rgb), 0.5);
+}
+```
+
+---
+
+## Settings Form Best Practices
+
+1. **Deep Save**: Use `form.getFieldsValue(true)` to include unmounted fields
+2. **Explicit Reset**: Pull from `THEME_PRESETS`, not current config
+3. **Loading States**: Show spinner during uploads
+4. **Mode Awareness**: Hide dark mode toggle if `allowUserDarkMode: false`
+
+---
+
+## Implementation Checklist
+
+- [x] Tenant config loading via `loadTenantTheme`
+- [x] Preset system with deep merge
+- [x] Mode-specific colors (light/dark)
+- [x] CSS variables on `:root`
+- [x] RGB variables for rgba() support
+- [x] Dynamic favicon and title
+- [x] User dark mode preference (localStorage)
+- [x] `allowUserDarkMode` flag respect
+- [x] Subscribe to theme changes
+
+---
+
+*Last Updated: 2025-12-25*
+*Source: `src/core/theme/ThemeRegistry.ts`, `src/core/theme/ThemeProvider.tsx`, `src/core/theme/presets.ts`*

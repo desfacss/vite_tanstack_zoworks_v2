@@ -1,12 +1,12 @@
 # Action Bar Component Patterns
 
-This document defines the responsive action bar patterns used across all pages. These patterns apply to **all themes**.
+> Responsive action bar components for page-level controls.
 
 ---
 
 ## Overview
 
-The Action Bar is a flexible container that sits between the app header and main content. It contains page-level controls like titles, tabs, filters, actions, and view toggles.
+The Action Bar is a flexible container between the app header and main content. It contains page-level controls like titles, tabs, filters, actions, and view toggles.
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
@@ -14,7 +14,7 @@ The Action Bar is a flexible container that sits between the app header and main
 ├─────────────────────────────────────────────────────────────────────┤
 │ ACTION BAR (page-header)                                            │
 │   Left Side                              Right Side                 │
-│   [Title/Tabs] [Filters...]              [Actions] [Views] [More]   │
+│   [Tabs] [Filter1] [Filter2] [⋯]         [+ Action] [Views] [⋯]     │
 ├─────────────────────────────────────────────────────────────────────┤
 │ MAIN CONTENT                                                        │
 └─────────────────────────────────────────────────────────────────────┘
@@ -22,301 +22,238 @@ The Action Bar is a flexible container that sits between the app header and main
 
 ---
 
-## Desktop Layout (≥768px)
+## File Structure
 
 ```
-┌─────────────────────────────────────────────────────────────────────────┐
-│ ACTION BAR                                                              │
-│ ┌────────────────────────────────────────┬────────────────────────────┐ │
-│ │ LEFT SECTION                           │ RIGHT SECTION              │ │
-│ │ [Title/Tabs] [Filter1] [Filter2] [⋯]   │ [+ Action] [Views] [⋯]    │ │
-│ └────────────────────────────────────────┴────────────────────────────┘ │
-└─────────────────────────────────────────────────────────────────────────┘
-```
-
-### Left Section (in order)
-1. **Title** - Page name (e.g., "Accounts")
-   - OR **Tabs** - If page has multiple views (e.g., "My Tickets | All Tickets")
-   - Tabs render as inline buttons on desktop
-2. **Inline Filters** - Show up to 2 filter controls based on available space
-3. **More Filters** `[⋯]` - Button that opens dropdown/popover with remaining filters
-
-### Right Section (in order)
-1. **Primary Action** `[+ Add]` - Always visible, primary colored button
-2. **View Toggle** - Radio group showing all available views (Table, Grid, Calendar, etc.)
-   - Only show if more than 1 view available
-   - If only 1 view, hide completely
-3. **More Menu** `[⋯]` - Dropdown with secondary actions (Import, Export, Print, etc.)
-
----
-
-## Mobile Layout (<768px)
-
-### Header (App-level)
-```
-┌─────────────────────────────────────────┐
-│ [☰] Page Title      [🔍] [🔔] [⚙️] [👤] │
-└─────────────────────────────────────────┘
-```
-
-- **Hamburger** `[☰]` - Opens navigation drawer
-- **Page Title** - Shows current page name (NEW requirement)
-- **Search Icon** `[🔍]` - Opens filter drawer with ALL search/filter params
-- Other header icons (notifications, settings, profile)
-
-### Action Bar
-```
-┌─────────────────────────────────────────┐
-│ [Tabs ▼]                  [+] [View] [⋯]│
-└─────────────────────────────────────────┘
-```
-
-- **Left**: Tabs as dropdown (if tabs exist), otherwise empty
-- **Right**: Primary action, current view icon (if >1 view), more menu
-
-### Filter Drawer (accessed via 🔍)
-```
-┌─────────────────────────────────────────┐
-│ × Search                                │
-├─────────────────────────────────────────┤
-│ Filter Field 1                          │
-│ [__________________________]            │
-│                                         │
-│ Filter Field 2                          │
-│ [__________________________]            │
-│                                         │
-│ Filter Field 3                          │
-│ [__________________________]            │
-│                                         │
-│ [Column Selector ⚙️]                     │
-│                                         │
-│ [Apply Filters]          [Clear All]    │
-└─────────────────────────────────────────┘
+src/core/components/ActionBar/
+├── index.tsx              # Main export
+├── types.ts               # TypeScript interfaces
+├── PageActionBar.tsx      # Container + Left/Right sections
+├── PageTitle.tsx          # Title component
+├── TabsComponent.tsx      # Tabs (inline/dropdown)
+├── InlineFilters.tsx      # Desktop filters with overflow
+├── PrimaryAction.tsx      # Primary action (supports split button)
+├── ViewToggle.tsx         # View selector
+├── MoreMenu.tsx           # Overflow menu
+├── RowActions.tsx         # Row-level actions with overflow
+├── MobileActionSheet.tsx  # Native-like bottom sheet
+├── Pagination.tsx         # Pagination controls
+└── hooks/
+    └── useResponsive.ts   # Device detection
 ```
 
 ---
 
-## Component Specifications
+## Responsive Behavior Summary
 
-### 1. PageTitle Component
+| Component | Desktop | Mobile |
+|-----------|---------|--------|
+| `TabsComponent` | Inline radio buttons | Dropdown selector |
+| `InlineFilters` | Show maxVisible inline, rest in popover | Hidden (use drawer) |
+| `PrimaryAction` | Icon + text button | Icon-only button |
+| `ViewToggle` | Radio button group | Single cycling button |
+| `RowActions` | Inline icons + overflow dropdown | Bottom sheet |
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `title` | string | Page title text |
-| `description` | string? | Optional subtitle |
-| `icon` | ReactNode? | Optional icon |
+---
 
-**Responsive Behavior:**
-- **Desktop**: Renders in action bar left section
-- **Mobile**: Renders in app header (next to hamburger)
+## Components
+
+### 1. PageActionBar
+
+Container for the action bar. Use with `ActionBarLeft` and `ActionBarRight`.
+
+```tsx
+import { PageActionBar, ActionBarLeft, ActionBarRight } from '@/core/components/ActionBar';
+
+<PageActionBar>
+  <ActionBarLeft>
+    <TabsComponent tabs={tabs} activeTab={tab} onChange={setTab} />
+    <InlineFilters filters={filters} values={filterValues} onChange={setFilterValues} />
+  </ActionBarLeft>
+  <ActionBarRight>
+    <PrimaryAction label="Add" icon={<Plus />} onClick={handleAdd} />
+    <ViewToggle views={views} activeView={view} onChange={setView} />
+  </ActionBarRight>
+</PageActionBar>
+```
 
 ---
 
 ### 2. TabsComponent
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `tabs` | Tab[] | Array of tab objects |
-| `activeTab` | string | Current active tab key |
-| `onChange` | (key: string) => void | Tab change handler |
+Responsive tabs with automatic collapse on mobile.
 
-**Tab Object:**
+**Props:**
 ```typescript
+interface TabsComponentProps {
+  tabs: Tab[];
+  activeTab: string;
+  onChange: (key: string) => void;
+}
+
 interface Tab {
   key: string;
   label: string;
   icon?: ReactNode;
-  count?: number;  // Optional badge count
+  count?: number;  // Badge count
 }
 ```
 
-**Responsive Behavior:**
-- **Desktop**: Inline pill buttons
-- **Mobile**: Dropdown selector showing active tab label
+**Responsive:**
+- **Desktop**: Inline pill-style radio buttons
+- **Tablet (>2 tabs)**: Dropdown
+- **Mobile**: Dropdown
+
+```tsx
+<TabsComponent
+  tabs={[
+    { key: 'mine', label: 'My Tickets', count: 5 },
+    { key: 'all', label: 'All Tickets' },
+  ]}
+  activeTab={currentTab}
+  onChange={setCurrentTab}
+/>
+```
 
 ---
 
-### 3. InlineFilters Component
+### 3. InlineFilters
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `filters` | FilterConfig[] | All available filters |
-| `values` | Record<string, any> | Current filter values |
-| `onChange` | (values: Record<string, any>) => void | Value change handler |
-| `maxVisible` | number | Max filters to show inline (default: 2) |
+Filters with overflow popover.
 
-**FilterConfig Object:**
+**Props:**
 ```typescript
+interface InlineFiltersProps {
+  filters: FilterConfig[];
+  values: Record<string, any>;
+  onChange: (values: Record<string, any>) => void;
+  maxVisible?: number;  // Default: 2
+  onClear?: () => void;
+}
+
 interface FilterConfig {
   key: string;
   label: string;
-  type: 'select' | 'text' | 'date' | 'daterange' | 'multiselect';
-  options?: { label: string; value: any }[];  // For select types
+  type: 'select' | 'text' | 'date' | 'daterange' | 'multiselect' | 'search';
+  options?: { label: string; value: any }[];
   placeholder?: string;
-  width?: number;  // Width in pixels
+  width?: number;
 }
 ```
 
-**Responsive Behavior:**
-- **Desktop**: Show up to `maxVisible` filters inline, rest in "More" popover
-- **Mobile**: All filters go to search drawer (component not rendered)
+**Responsive:**
+- **Desktop**: Show up to `maxVisible` inline, rest in popover
+- **Mobile**: Returns `null` (filters go to search drawer)
+
+**Overflow Implementation:**
+```tsx
+// Internal logic
+const visibleFilters = filters.slice(0, maxVisible);
+const overflowFilters = filters.slice(maxVisible);
+const hasOverflow = overflowFilters.length > 0;
+
+// Overflow button opens Popover with remaining filters
+{hasOverflow && (
+  <Popover content={overflowContent} trigger="click">
+    <Button icon={<MoreHorizontal />} />
+  </Popover>
+)}
+```
 
 ---
 
-### 4. PrimaryAction Component
+### 4. PrimaryAction
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `label` | string | Button text (e.g., "Add") |
-| `icon` | ReactNode | Button icon (e.g., Plus) |
-| `onClick` | () => void | Click handler |
-| `loading` | boolean? | Loading state |
-| `disabled` | boolean? | Disabled state |
+Primary action button with optional split dropdown.
 
-**Responsive Behavior:**
-- **Desktop**: Full button with icon + text
-- **Mobile**: Icon-only button (square)
-
----
-
-### 5. ViewToggle Component
-
-| Property | Type | Description |
-|----------|------|-------------|
-| `views` | ViewOption[] | Available view types |
-| `activeView` | string | Current active view |
-| `onChange` | (view: string) => void | View change handler |
-
-**ViewOption Object:**
+**Props:**
 ```typescript
+interface PrimaryActionProps {
+  label: string;
+  icon?: ReactNode;        // Default: <Plus />
+  onClick?: () => void;
+  loading?: boolean;
+  disabled?: boolean;
+  type?: 'primary' | 'default' | 'text';
+  dropdownItems?: MenuItem[];  // For split button
+}
+```
+
+**Modes:**
+1. **Single Button**: Just `label` + `onClick`
+2. **Split Button**: `onClick` + `dropdownItems` (Dropdown.Button)
+3. **Dropdown Only**: Just `dropdownItems` (no `onClick`)
+
+**Responsive:**
+- **Desktop**: Full button with icon + text
+- **Mobile**: Icon-only square button
+
+```tsx
+// Single action
+<PrimaryAction label="Add" onClick={handleAdd} />
+
+// Split button with dropdown
+<PrimaryAction
+  label="Create"
+  onClick={handleCreate}
+  dropdownItems={[
+    { key: 'import', label: 'Import', icon: <Upload />, onClick: handleImport },
+    { key: 'template', label: 'From Template', onClick: handleTemplate },
+  ]}
+/>
+```
+
+---
+
+### 5. ViewToggle
+
+View mode selector.
+
+**Props:**
+```typescript
+interface ViewToggleProps {
+  views: ViewOption[];
+  activeView: string;
+  onChange: (view: string) => void;
+}
+
 interface ViewOption {
-  key: 'table' | 'grid' | 'calendar' | 'kanban' | 'map' | 'gantt';
+  key: 'table' | 'grid' | 'calendar' | 'kanban' | 'map' | 'gantt' | 'list';
   label: string;
   icon: ReactNode;
 }
 ```
 
-**Responsive Behavior:**
-- **If only 1 view**: Hide completely (both desktop and mobile)
-- **Desktop (>1 view)**: Radio button group showing all view icons
-- **Mobile (>1 view)**: Single button showing current view icon, click cycles through views
+**Responsive:**
+- **Only 1 view**: Hidden completely
+- **Desktop (>1 view)**: Radio button group with icons
+- **Mobile (>1 view)**: Single button that cycles through views
+
+```tsx
+<ViewToggle
+  views={[
+    { key: 'table', label: 'Table', icon: <Table size={16} /> },
+    { key: 'grid', label: 'Grid', icon: <Grid size={16} /> },
+  ]}
+  activeView={currentView}
+  onChange={setCurrentView}
+/>
+```
 
 ---
 
-### 6. MoreMenu Component
+### 6. RowActions
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `items` | MenuItem[] | Menu items |
+Row-level actions with overflow handling.
 
-**MenuItem Object:**
+**Props:**
 ```typescript
-interface MenuItem {
-  key: string;
-  label: string;
-  icon?: ReactNode;
-  onClick: () => void;
-  danger?: boolean;  // Red text for destructive actions
-  divider?: boolean; // Show divider before this item
+interface RowActionsProps {
+  items: ActionSheetItem[];
+  title?: string;
+  maxInline?: number;  // Default: 3
 }
-```
 
-**Responsive Behavior:**
-- Same on desktop and mobile (dropdown menu)
-
----
-
-## CSS Classes
-
-```css
-/* Container */
-.page-header { }
-.page-header .action-bar { }
-
-/* Left section */
-.action-bar-left { }
-.action-bar-title { }
-.action-bar-tabs { }
-.action-bar-filters { }
-
-/* Right section */
-.action-bar-right { }
-.action-bar-primary { }
-.action-bar-views { }
-.action-bar-more { }
-
-/* Responsive utilities */
-.desktop-only { }  /* Hidden on mobile */
-.mobile-only { }   /* Hidden on desktop */
-```
-
----
-
-## Usage Examples
-
-### Simple Page (Title + Primary Action)
-```tsx
-<PageActionBar>
-  <PageTitle title="Accounts" />
-  <ActionBarRight>
-    <PrimaryAction label="Add" icon={<Plus />} onClick={handleAdd} />
-    <MoreMenu items={menuItems} />
-  </ActionBarRight>
-</PageActionBar>
-```
-
-### List Page with Tabs and Filters
-```tsx
-<PageActionBar>
-  <TabsComponent
-    tabs={[
-      { key: 'mine', label: 'My Tickets' },
-      { key: 'all', label: 'All Tickets' },
-    ]}
-    activeTab={currentTab}
-    onChange={setCurrentTab}
-  />
-  <InlineFilters
-    filters={filterConfig}
-    values={filterValues}
-    onChange={setFilterValues}
-    maxVisible={2}
-  />
-  <ActionBarRight>
-    <PrimaryAction label="Add" icon={<Plus />} onClick={handleAdd} />
-    <ViewToggle
-      views={availableViews}
-      activeView={currentView}
-      onChange={setCurrentView}
-    />
-    <MoreMenu items={menuItems} />
-  </ActionBarRight>
-</PageActionBar>
-```
-
-### Dashboard (Selector + Actions)
-```tsx
-<PageActionBar>
-  <Select value={currentDashboard} onChange={setDashboard}>
-    {dashboards.map(d => <Option key={d.id}>{d.name}</Option>)}
-  </Select>
-  <ActionBarRight>
-    <Button icon={<RefreshCw />}>Refresh</Button>
-    <PrimaryAction label="Design" icon={<Pencil />} onClick={enterEditMode} />
-  </ActionBarRight>
-</PageActionBar>
-```
-
-### 7. RowActions Component
-
-| Property | Type | Description |
-|----------|------|-------------|
-| `items` | ActionSheetItem[] | Action items |
-| `title` | string? | Action sheet title (mobile) |
-| `trigger` | ReactNode? | Custom trigger element |
-
-**ActionSheetItem Object:**
-```typescript
 interface ActionSheetItem {
   key: string;
   label: string;
@@ -327,62 +264,131 @@ interface ActionSheetItem {
 }
 ```
 
-**Responsive Behavior:**
-- **Desktop**: Dropdown menu on click
-- **Mobile**: Bottom action sheet (native iOS/Android style)
+**Overflow Logic:**
+```tsx
+// If items > maxInline:
+// - Show (maxInline - 1) inline
+// - Rest go in "More" dropdown
 
-### Usage Example (Row Actions):
+const shouldOverflow = items.length > maxInline;
+const inlineItems = shouldOverflow ? items.slice(0, maxInline - 1) : items;
+const overflowItems = shouldOverflow ? items.slice(maxInline - 1) : [];
+```
+
+**Responsive:**
+- **Desktop**: Inline icon buttons + overflow dropdown
+- **Mobile**: Single "⋯" button → Bottom action sheet
+
 ```tsx
 <RowActions
   items={[
-    { key: 'view', label: 'View Details', icon: <Eye size={18} />, onClick: handleView },
-    { key: 'edit', label: 'Edit', icon: <Pencil size={18} />, onClick: handleEdit },
-    { key: 'delete', label: 'Delete', icon: <Trash size={18} />, onClick: handleDelete, danger: true },
+    { key: 'view', label: 'View', icon: <Eye size={16} />, onClick: handleView },
+    { key: 'edit', label: 'Edit', icon: <Pencil size={16} />, onClick: handleEdit },
+    { key: 'delete', label: 'Delete', icon: <Trash size={16} />, onClick: handleDelete, danger: true },
   ]}
+  maxInline={3}
 />
 ```
 
 ---
 
-## File Structure
+## CSS Classes
 
-```
-src/core/components/ActionBar/
-├── index.tsx                 # Main export
-├── types.ts                  # TypeScript interfaces
-├── PageActionBar.tsx         # Container component
-├── PageTitle.tsx             # Title component
-├── TabsComponent.tsx         # Tabs (inline/dropdown)
-├── InlineFilters.tsx         # Desktop inline filters
-├── PrimaryAction.tsx         # Primary action button
-├── ViewToggle.tsx            # View selector
-├── MoreMenu.tsx              # Overflow menu
-├── MobileActionSheet.tsx     # Native-like bottom sheet (mobile)
-├── RowActions.tsx            # Row-level action menu
-└── hooks/
-    └── useResponsive.ts      # Device detection
+```css
+/* Container */
+.page-header { }
+.action-bar { display: flex; justify-content: space-between; }
+
+/* Sections */
+.action-bar-left { display: flex; align-items: center; gap: 12px; }
+.action-bar-right { display: flex; align-items: center; gap: 8px; }
+
+/* Components */
+.action-bar-tabs-desktop { }
+.action-bar-tabs-mobile { }
+.action-bar-filters { }
+.action-bar-view-desktop { }
+.action-bar-view-mobile { }
+.action-bar-primary-split { }
 ```
 
+---
+
+## Complete Example
+
+```tsx
+import {
+  PageActionBar,
+  ActionBarLeft,
+  ActionBarRight,
+  TabsComponent,
+  InlineFilters,
+  PrimaryAction,
+  ViewToggle,
+} from '@/core/components/ActionBar';
+import { Plus, Table, Grid } from 'lucide-react';
+
+const TicketsPage = () => {
+  const [tab, setTab] = useState('mine');
+  const [filters, setFilters] = useState({});
+  const [view, setView] = useState('table');
+
+  return (
+    <>
+      <PageActionBar>
+        <ActionBarLeft>
+          <TabsComponent
+            tabs={[
+              { key: 'mine', label: 'My Tickets', count: 5 },
+              { key: 'all', label: 'All Tickets' },
+            ]}
+            activeTab={tab}
+            onChange={setTab}
+          />
+          <InlineFilters
+            filters={[
+              { key: 'status', label: 'Status', type: 'select', options: statusOptions },
+              { key: 'priority', label: 'Priority', type: 'select', options: priorityOptions },
+              { key: 'search', label: 'Search', type: 'search' },
+            ]}
+            values={filters}
+            onChange={setFilters}
+            maxVisible={2}
+          />
+        </ActionBarLeft>
+        <ActionBarRight>
+          <PrimaryAction label="Create Ticket" icon={<Plus size={18} />} onClick={openCreate} />
+          <ViewToggle
+            views={[
+              { key: 'table', label: 'Table', icon: <Table size={16} /> },
+              { key: 'grid', label: 'Grid', icon: <Grid size={16} /> },
+            ]}
+            activeView={view}
+            onChange={setView}
+          />
+        </ActionBarRight>
+      </PageActionBar>
+
+      {/* Content */}
+    </>
+  );
+};
+```
 
 ---
 
 ## Implementation Checklist
 
-- [x] Create ActionBar component directory
-- [x] Implement PageActionBar container
-- [x] Implement PageTitle with mobile header integration
-- [x] Implement TabsComponent (desktop inline, mobile dropdown)
-- [x] Implement InlineFilters with overflow
-- [x] Update Header to show page title on mobile
-- [x] Implement ViewToggle with responsive logic
-- [x] Implement MoreMenu
-- [x] Add CSS variables for unified layout padding
-- [x] Add action-bar component CSS classes
-- [x] Update DynamicViews to use new components
-- [x] Update static pages (Dashboard, Settings, WelcomeHub, SamplePage) to use new components
+- [x] PageActionBar container with Left/Right sections
+- [x] TabsComponent (desktop inline, mobile/tablet dropdown)
+- [x] InlineFilters with overflow popover
+- [x] PrimaryAction with split button support
+- [x] ViewToggle with cycling on mobile
+- [x] RowActions with maxInline overflow
+- [x] MobileActionSheet for native-like bottom sheet
+- [x] All components use `useDeviceType()` for responsive behavior
 
 ---
 
-
-*Created: 2025-12-22*
-*Applies to: All themes (base layout)*
+*Last Updated: 2025-12-25*
+*Source: `src/core/components/ActionBar/`*
