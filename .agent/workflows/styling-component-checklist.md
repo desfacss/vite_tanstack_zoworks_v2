@@ -6,108 +6,248 @@ description: Definitive agentic checklist for auditing styling across all compon
 
 // turbo-all
 
-This workflow ensures all components strictly adhere to the Zoworks 5-layer architecture. **NO LEAKS ALLOWED.**
+This workflow ensures all components strictly adhere to the Zoworks 5-layer architecture and page-card layout system. **NO LEAKS ALLOWED.**
 
-> **Reference:** [Theme Engine Guide](file:///Users/macbookpro/zo_v2/mini_project/docs/theme_engine.md)
-
----
-
-## 1. Automated "Leak" Audit
-
-Before proceeding, scan the relevant files for anti-patterns:
-
-- [ ] Run: `grep -E "blue-|indigo-|slate-|#([0-9a-fA-F]{3}){1,2}" {filePath}`
-- [ ] If any hardcoded colors are found, they **MUST** be replaced with variables.
-- [ ] Check for hardcoded `border-radius: ...px`. Replace with `var(--tenant-border-radius)`.
+> **References:**
+> - [Theme Engine Guide](file:///docs/frontend/patterns/theme-engine.md)
+> - [Page Layouts](file:///docs/frontend/patterns/page-layouts.md)
 
 ---
 
-## 2. Variable Compliance Check
+## Usage
 
-### Backgrounds
-- [ ] Main backgrounds use `var(--color-bg-primary)`
-- [ ] Cards/Containers use `var(--color-bg-secondary)`
-- [ ] Sidebars/Headers use `var(--color-bg-tertiary)`
+Run this workflow on a specific module or folder:
 
-### Typography
-- [ ] Primary text uses `var(--color-text-primary)`
-- [ ] Secondary text/labels use `var(--color-text-secondary)`
-- [ ] All headers use standard classes: `.text-h1` to `.text-h6`
+```bash
+# Audit a specific module
+/styling-component-checklist src/modules/tickets
 
-### Borders & Radius
-- [ ] Borders use `var(--color-border)`
-- [ ] Border-radius uses `var(--tenant-border-radius)`
+# Audit core components
+/styling-component-checklist src/core/components/DynamicViews
 
----
-
-## 3. Transparency & Effects (RGB)
-
-If the component uses transparency:
-- [ ] **WRONG**: `rgba(0, 163, 255, 0.1)` (Hardcoded blue)
-- [ ] **WRONG**: `bg-blue-50/10` (Tailwind leak)
-- [ ] **CORRECT**: `rgba(var(--color-primary-rgb), 0.1)`
-
-If the component uses shadows:
-- [ ] **CORRECT**: `box-shadow: 0 4px 12px var(--color-shadow)`
+# Audit all pages in a module
+/styling-component-checklist src/modules/workforce/pages
+```
 
 ---
 
-## 4. Preset Synchronization
+## 1. Page Structure Audit (CRITICAL)
 
-Ensure the component's visual behavior aligns with the active preset:
-- [ ] Check the root `data-theme-preset` attribute.
-- [ ] If `preset="neon"`, verify that Layer 4 effects (gradients/glows) are active.
-- [ ] If `preset="base"`, verify that the component uses clean, flat, professional styles.
-- [ ] **NO DRIFT**: Component must not carry "Neon" styles when the preset is "Base".
+**Every page file must follow the page-card layout pattern:**
+
+### Check Layout Mode
+- [ ] Page uses `.page-content` wrapper
+- [ ] Has `.layout-canvas` (multi-card) OR `.layout-record` (single-card)
+- [ ] At least one `.page-card` exists inside `.page-content`
+
+### Check Nesting Rules
+- [ ] **NO nested `.page-card`** — Never `.page-card` inside another `.page-card`
+- [ ] `.ant-card` inside `.page-card` is allowed (plain styling, no animation)
+- [ ] `PageActionBar` sits OUTSIDE `.page-card`, directly in `.page-content`
+
+### Correct Patterns
+
+**Canvas Layout (Multi-Card):**
+```tsx
+<div className="page-content layout-canvas">
+  <PageActionBar>...</PageActionBar>
+  <div className="page-card">Section 1</div>
+  <div className="page-card">Section 2</div>
+</div>
+```
+
+**Record Layout (Single-Card):**
+```tsx
+<div className="page-content layout-record">
+  <PageActionBar>...</PageActionBar>
+  <div className="page-card">
+    <Table ... />
+  </div>
+</div>
+```
 
 ---
 
-## 5. Mode Verification
+## 2. Spacing & Padding Audit
 
-- [ ] **Light Mode**: Contrast is readable (Dark text on light).
-- [ ] **Dark Mode**: Backgrounds are dark (`#0f172a` family), text is light.
-- [ ] **Glow Effects**: Only prominent in Dark Mode.
+Scan for hardcoded padding/margin values:
 
----
+```bash
+grep -rE "padding:\s*[0-9]+px|margin:\s*[0-9]+px" {TARGET} --include="*.tsx" --include="*.css"
+```
 
-## 5. Standard Component Verification
+### Required Variables
 
-- [ ] All primary buttons are `.ant-btn-primary`.
-- [ ] **NO CSS OVERRIDE** for height or padding.
-- [ ] **Lucide Icons ONLY**: No Ant Design icons allowed.
-- [ ] Icon sizes standardized: `size={14}` for buttons, `size={18}` for menus.
-- [ ] **Branding System**: Tenant logos/icons MUST use `<BrandLogo />` or `<BrandIcon />` (from `@/core/components/shared/BrandAsset`). **NO** raw `<img>` tags.
-- [ ] **Sider UX**: Verify `openKeys={collapsed ? [] : openKeys}` in `Sider` to ensure hover popups persist.
+| Purpose | Variable | Default |
+|---------|----------|---------|
+| Page/card padding | `var(--layout-padding)` | 24px |
+| Mobile padding | `var(--layout-padding-mobile)` | 16px |
+| Gaps/gutters | `var(--tenant-gutter)` | 16px |
 
----
-
-## 6. Persistence & Form Audit
-
-- [ ] **Deep Save**: Verify that `form.getFieldsValue(true)` is used in the save handler.
-- [ ] **Loading Feedback**: Verify that async actions (uploads/saves) trigger a `loading` state on the triggering button.
-- [ ] **Unmounted Data**: Ensure fields in collapsed sections or background tabs are correctly captured.
-- [ ] **Reset Integrity**: Verify "Reset to Defaults" strictly uses `THEME_PRESETS` and wipes all local overrides.
+### Checks
+- [ ] No hardcoded `padding: 24px` — Use `var(--layout-padding)`
+- [ ] No hardcoded `gap: 16px` — Use `var(--tenant-gutter)`
+- [ ] Responsive padding uses `--layout-padding-mobile` for mobile
 
 ---
 
-## 7. Responsive Pattern Check
+## 3. Border Radius Audit
+
+```bash
+grep -rE "border-radius:\s*[0-9]+px" {TARGET} --include="*.tsx" --include="*.css"
+```
+
+### Required Variables
+
+| Purpose | Variable | Default |
+|---------|----------|---------|
+| Cards, modals, large containers | `var(--tenant-border-radius)` | 12px |
+| Buttons, inputs, interactive | `var(--tenant-border-radius-interactive)` | 10px |
+
+### Checks
+- [ ] No hardcoded `border-radius: 12px` — Use `var(--tenant-border-radius)`
+- [ ] No hardcoded `border-radius: 8px` on buttons — Use `var(--tenant-border-radius-interactive)`
+
+---
+
+## 4. Typography Audit
+
+```bash
+grep -rE "font-size:\s*[0-9]+px" {TARGET} --include="*.tsx" --include="*.css"
+```
+
+### Typography Scale (All Relative to --tenant-font-size)
+
+| Class | Multiplier | @14px | @16px |
+|-------|------------|-------|-------|
+| `.text-h1` / h1 | 2.285x | 32px | 36.5px |
+| `.text-h2` / h2 | 1.714x | 24px | 27.4px |
+| `.text-h3` / h3 | 1.428x | 20px | 22.8px |
+| `.text-h4` / h4 | 1.285x | 18px | 20.6px |
+| `.text-h5` / h5 | 1.142x | 16px | 18.3px |
+| `.text-h6` / h6 | 1.0x | 14px | 16px |
+| `.text-title` | 1.571x | 22px | 25.1px |
+| `.text-subtitle` | 1.0x | 14px | 16px |
+| `.text-small` | 0.857x | 12px | 13.7px |
+| `p` / body | 1.0x | 14px | 16px |
+
+### Checks
+- [ ] No hardcoded `font-size: 24px` — Use `.text-h2` or `calc(1.714 * var(--tenant-font-size))`
+- [ ] No hardcoded `font-size: 14px` — Use `var(--tenant-font-size)`
+- [ ] No hardcoded `font-size: 12px` — Use `.text-small` or `calc(0.857 * var(--tenant-font-size))`
+
+---
+
+## 5. Color Leak Audit
+
+```bash
+grep -rE "blue-|indigo-|slate-|#([0-9a-fA-F]{3}){1,2}" {TARGET} --include="*.tsx" --include="*.ts"
+```
+
+### Required Variables
+
+| Purpose | Variable |
+|---------|----------|
+| Backgrounds | `var(--color-bg-primary)`, `var(--color-bg-secondary)`, `var(--color-bg-tertiary)` |
+| Text | `var(--color-text-primary)`, `var(--color-text-secondary)` |
+| Borders | `var(--color-border)` |
+| Primary brand | `var(--tenant-primary)` |
+
+### Checks
+- [ ] No Tailwind color classes (`bg-blue-50`)
+- [ ] No hardcoded hex colors (`#ffffff`)
+- [ ] Transparency uses RGB: `rgba(var(--color-primary-rgb), 0.1)`
+
+---
+
+## 6. Icon Compliance
+
+```bash
+grep -r "@ant-design/icons" {TARGET} --include="*.tsx"
+```
+
+- [ ] **Lucide Icons ONLY**: No Ant Design icons allowed
+- [ ] Icon sizes: `size={14}` buttons, `size={18}` menus, `size={20}` header
+
+---
+
+## 7. Branding System
+
+- [ ] **NO raw `<img>` for logos**: Use `<BrandLogo />` or `<BrandIcon />`
+
+---
+
+## 8. Responsive Pattern Check
 
 - [ ] **Tabs**: Inline on desktop, dropdown on mobile
 - [ ] **Filters**: Inline on desktop, drawer on mobile
 - [ ] **Primary Action**: Icon+text on desktop, icon-only on mobile
-- [ ] **View Toggle**: Radio group on desktop, single cycling button on mobile
 
 ---
 
-## 8. Execution Patterns
+## Fixing Patterns
 
-### Replacing a Leak
-When you find a leak like `bg-blue-50`, replace it with:
-`className="... bg-[var(--color-bg-secondary)] border border-[var(--color-border)]"`
+### Hardcoded Padding
+```tsx
+// ❌ WRONG
+<div style={{ padding: '24px' }}>
 
-### Fixing a Primary Button
-Ensure it uses:
-`style={{ backgroundColor: 'var(--color-primary)', borderColor: 'var(--color-primary)' }}` (if not already handled by Layer 3).
+// ✅ CORRECT
+<div style={{ padding: 'var(--layout-padding)' }}>
+```
+
+### Hardcoded Font Size
+```tsx
+// ❌ WRONG
+<span style={{ fontSize: '12px' }}>Small text</span>
+
+// ✅ CORRECT
+<span className="text-small">Small text</span>
+```
+
+### Hardcoded Border Radius
+```tsx
+// ❌ WRONG
+<Card style={{ borderRadius: '12px' }}>
+
+// ✅ CORRECT
+<Card style={{ borderRadius: 'var(--tenant-border-radius)' }}>
+```
+
+---
+
+## Audit Report Template
+
+```markdown
+## Styling Audit: {MODULE_NAME}
+
+**Date**: YYYY-MM-DD
+**Files Audited**: X
+
+### Page Structure
+- [ ] All pages use .page-card
+- [ ] No nested .page-card
+
+### Spacing
+- Hardcoded padding found: X
+- Fixed: X
+
+### Border Radius
+- Hardcoded radius found: X
+- Fixed: X
+
+### Typography
+- Hardcoded font-size found: X
+- Fixed: X
+
+### Color Leaks
+- Found: X
+- Fixed: X
+
+### Icons
+- Ant Design icons found: X
+- Replaced: X
+```
 
 ---
 

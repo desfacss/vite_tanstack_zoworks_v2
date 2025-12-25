@@ -358,6 +358,36 @@ CSS can target presets via data attributes:
 
 ---
 
+## Page Card Layout
+
+Use `.page-card` for animated containers that receive theme-specific effects.
+
+### Structure
+```tsx
+<div className="page-content layout-record">
+  <PageActionBar>...</PageActionBar>
+  <div className="page-card">
+    {/* Content here */}
+  </div>
+</div>
+```
+
+### Theme Layer Separation
+
+| Component | Base Theme | Neon Theme |
+|-----------|------------|------------|
+| `.page-card` | Background, border, animation | Thunderbolt, shimmer |
+| `.ant-card` inside `.page-card` | Plain styling | Subtle bg (no effects) |
+
+### Rules
+1. Every page needs at least one `.page-card`
+2. Never nest `.page-card` inside another `.page-card`
+3. `.ant-card` inside `.page-card` inherits no animation
+
+See [Page Layouts](file:///docs/frontend/patterns/page-layouts.md) for complete documentation.
+
+---
+
 ## Settings Form Best Practices
 
 1. **Deep Save**: Use `form.getFieldsValue(true)` to include unmounted fields

@@ -1,6 +1,149 @@
 # Page Layout Patterns
 
-> Layout components and structure for authenticated pages.
+> Layout components, content modes, and card structure for authenticated pages.
+
+---
+
+## Content Layout Modes
+
+Every page inside `.page-content` MUST use one of these two layout modes:
+
+### Canvas Layout (Multi-Card)
+
+For content pages with multiple sections: settings, dashboards, content pages.
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ .page-content.layout-canvas                                     │
+│ ┌─────────────────────────────────────────────────────────────┐ │
+│ │ .page-card (animated) — "Current Session Context"           │ │
+│ └─────────────────────────────────────────────────────────────┘ │
+│ ┌─────────────────────────────────────────────────────────────┐ │
+│ │ .page-card (animated) — "Development Notes"                 │ │
+│ └─────────────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Usage:**
+```tsx
+<div className="page-content layout-canvas">
+  <PageActionBar>...</PageActionBar>
+  
+  <div className="page-card">
+    <h2>Section Title</h2>
+    <p>Content here...</p>
+  </div>
+  
+  <div className="page-card">
+    <h2>Another Section</h2>
+    <p>More content...</p>
+  </div>
+</div>
+```
+
+---
+
+### Record Layout (Single-Card)
+
+For data-centric pages: tables, lists, grids. One card spans full width.
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ .page-content.layout-record                                     │
+│ ┌─────────────────────────────────────────────────────────────┐ │
+│ │ .page-card (animated) — Table/Grid                          │ │
+│ │   ┌───────────────────────────────────────────────────────┐ │ │
+│ │   │ Table rows (plain — no animation)                     │ │ │
+│ │   └───────────────────────────────────────────────────────┘ │ │
+│ └─────────────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Usage:**
+```tsx
+<div className="page-content layout-record">
+  <PageActionBar>...</PageActionBar>
+  
+  <div className="page-card">
+    <Table dataSource={data} columns={columns} />
+  </div>
+</div>
+```
+
+---
+
+## Core Rules
+
+| Rule | Description |
+|------|-------------|
+| **Every page needs a `.page-card`** | Animated container inside `.page-content` |
+| **`.page-card` owns the animation** | Entrance animation, themed bg, border-radius, padding |
+| **NEVER nest `.page-card`** | No `.page-card` inside another `.page-card` |
+| **`.ant-card` inside `.page-card` is plain** | Inner cards have no animation effects |
+| **Action Bar sits above cards** | Part of `.page-content`, not inside `.page-card` |
+
+---
+
+## CSS Classes Reference
+
+| Class | Purpose | Animation |
+|-------|---------|-----------|
+| `.page-content` | Outer wrapper with side margins | No |
+| `.layout-canvas` | Multi-card layout mode | No |
+| `.layout-record` | Single-card layout mode | No |
+| `.page-card` | **Animated container** with bg, padding, border-radius | **Yes** |
+| `.main-content` | Legacy base class (backward compat) | No |
+| `.content-body` | Inner padding wrapper | No |
+
+---
+
+## Page Card Styling (index.css)
+
+```css
+.page-card {
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--tenant-border-radius, 12px);
+  padding: var(--layout-padding);
+  margin-bottom: var(--tenant-gutter, 16px);
+  position: relative;
+  overflow: hidden;
+  
+  /* Entrance animation */
+  animation: pageCardEntry 0.4s ease-out forwards;
+}
+
+/* Staggered animation for multiple cards */
+.page-card:nth-child(1) { animation-delay: 0s; }
+.page-card:nth-child(2) { animation-delay: 0.08s; }
+.page-card:nth-child(3) { animation-delay: 0.16s; }
+
+/* Prevent nested .ant-card from having animations */
+.page-card .ant-card {
+  animation: none !important;
+}
+```
+
+---
+
+## Theme Integration
+
+### Base Theme
+- `.page-card` uses CSS variables for colors
+- Works in both light and dark modes
+
+### Neon Theme
+```css
+[data-theme-preset="neon"].dark .page-card {
+  /* Thunderbolt animation, neon glow effects */
+}
+
+/* Nested .ant-card inside .page-card - NO neon effects */
+[data-theme-preset="neon"].dark .page-card .ant-card {
+  animation: none !important;
+  /* Subtle styling without thunderbolt */
+}
+```
 
 ---
 
@@ -16,9 +159,9 @@
 │ │          │ ├─────────────────────────────────────────────────┤│
 │ │ [Brand]  │ │                    CONTENT                      ││
 │ │          │ │                                                 ││
-│ │ [Nav]    │ │   .page-content                                 ││
+│ │ [Nav]    │ │   .page-content (.layout-canvas | .layout-record)│
 │ │          │ │   ├── PageActionBar                             ││
-│ │          │ │   └── .main-content                             ││
+│ │          │ │   └── .page-card (animated)                     ││
 │ │          │ │                                                 ││
 │ └──────────┘ └─────────────────────────────────────────────────┘│
 └─────────────────────────────────────────────────────────────────┘
@@ -26,259 +169,37 @@
 
 ---
 
-## File Structure
+## Usage Examples
 
-```
-src/core/components/Layout/
-├── AuthedLayout.tsx            # Main layout wrapper
-├── AuthedLayoutContext.tsx     # Context for page config
-├── AuthGuard.tsx               # Route protection
-├── GlobalSessionWatcher.tsx    # Session management
-├── PublicLayout.tsx            # Unauthenticated layout
-│
-├── Header/
-│   └── index.tsx               # Sticky header with org/location
-├── Sider/
-│   ├── index.tsx               # Fixed sidebar
-│   └── navigation.tsx          # Menu generation
-├── MobileMenu/
-│   └── index.tsx               # Mobile drawer menu
-├── NotificationsDrawer/
-│   └── index.tsx               # Notifications panel
-├── ProfileMenu/
-│   └── index.tsx               # User avatar dropdown
-├── Settings/
-│   └── index.tsx               # Global settings drawer
-└── WelcomeHub/
-    └── index.tsx               # Landing welcome page
-```
-
----
-
-## Key Layout Constants
-
-```typescript
-// src/core/components/Layout/AuthedLayout.tsx
-const SIDER_WIDTH = 240;           // Expanded sidebar
-const COLLAPSED_SIDER_WIDTH = 80;  // Collapsed sidebar
-
-// CSS Variables (index.css)
---header-height: 56px;
---sidebar-width-expanded: 256px;
---layout-padding: 24px;
---layout-padding-mobile: 16px;
-```
-
----
-
-## Sider (Fixed Sidebar)
-
-**Desktop only** — Hidden on mobile.
+### Canvas Layout (Settings Page)
 
 ```tsx
-<Sider
-  collapsed={collapsed}
-  navigationItems={navigationItems}
-/>
+const SettingsPage = () => (
+  <div className="page-content layout-canvas">
+    <PageActionBar>
+      <ActionBarLeft>
+        <PageTitle title="Settings" />
+      </ActionBarLeft>
+    </PageActionBar>
+    
+    <div className="page-card">
+      <h2>Profile Settings</h2>
+      <Form>...</Form>
+    </div>
+    
+    <div className="page-card">
+      <h2>Notification Preferences</h2>
+      <Form>...</Form>
+    </div>
+  </div>
+);
 ```
 
-**Key Features:**
-- **Position**: Fixed left, full viewport height
-- **Collapsed State**: Brand logo → Brand icon
-- **openKeys Management**: Clear on collapse for native hover popups
-- **Ctrl+Click**: Opens route in new tab
+### Record Layout (List Page)
 
 ```tsx
-// Handles Ctrl+Click for new tab
-const handleMenuClick = ({ key, domEvent }) => {
-  if (key.startsWith('/')) {
-    if (domEvent.ctrlKey || domEvent.metaKey) {
-      window.open(key, '_blank');
-    } else {
-      navigate(key);
-    }
-  }
-};
-```
-
----
-
-## Header (Sticky)
-
-**Full width**, adjusts content margin based on sider state.
-
-```tsx
-<Header
-  collapsed={collapsed}
-  setCollapsed={setCollapsed}
-  isMobile={isMobile}
-  unreadCount={unreadCount}
-  setShowNotifications={setShowNotifications}
-  setShowMobileMenu={setShowMobileMenu}
-  showSearch={showSearch}
-  setShowSearch={setShowSearch}
-  pageTitle={getPageTitle()}
-/>
-```
-
-### Desktop vs Mobile Layout
-
-| Element | Desktop | Mobile |
-|---------|---------|--------|
-| Left | Hamburger (toggle sider) | Hamburger (open drawer) + Page Title |
-| Center | — | Location selector (if multiple) |
-| Right | Org selector, Location, Notifications, Settings, Profile | Notifications, Settings, Profile |
-
-### Organization Switching
-
-```typescript
-const handleOrganizationChange = async (orgId: string) => {
-  setIsSwitchingOrg(true);
-  message.loading('Switching...');
-  
-  setOrganization({ id, name });
-  navigate('/dashboard');
-  
-  // Persist preference
-  await supabase.schema('identity').rpc('set_preferred_organization', { new_org_id: orgId });
-  await supabase.auth.updateUser({ data: { org_id: orgId } });
-  
-  await queryClient.invalidateQueries({ queryKey: ['user-session'] });
-};
-```
-
----
-
-## AuthedLayoutContext
-
-Context for pages to inject content into header:
-
-```typescript
-interface AuthedLayoutConfig {
-  searchFilters?: ReactNode;  // Shown in mobile search drawer
-  actionButtons?: {           // Extra header actions
-    icon: ReactNode;
-    tooltip: string;
-    onClick: () => void;
-  }[];
-}
-
-// Usage in page
-const { setConfig, setShowSettings } = useAuthedLayoutConfig();
-
-useEffect(() => {
-  setConfig({ searchFilters: <MyFilters /> });
-}, []);
-```
-
----
-
-## Content Area
-
-### Structure
-
-```tsx
-<Content style={{ flex: 1, overflowY: 'auto' }}>
-  <motion.div
-    key={location.pathname}
-    initial={{ opacity: 0, y: 10 }}
-    animate={{ opacity: 1, y: 0 }}
-    className="page-content"
-  >
-    <Suspense fallback={<LoadingFallback />}>
-      <Outlet />
-    </Suspense>
-  </motion.div>
-</Content>
-```
-
-### Page Content Classes
-
-| Class | Purpose |
-|-------|---------|
-| `.page-content` | Wrapper with side margins |
-| `.page-header` | Action bar container |
-| `.main-content` | White card for content |
-| `.content-body` | Inner padding (20px) |
-
----
-
-## Mobile Components
-
-### MobileMenu (Drawer)
-
-```tsx
-<MobileMenu
-  open={showMobileMenu}
-  onClose={() => setShowMobileMenu(false)}
-  navigationItems={navigationItems}
-/>
-```
-
-### Search Drawer
-
-Injected via context on mobile:
-
-```tsx
-{config.searchFilters && (
-  <Drawer
-    title="Search"
-    placement="right"
-    open={showSearch}
-    onClose={() => setShowSearch(false)}
-  >
-    {config.searchFilters}
-  </Drawer>
-)}
-```
-
----
-
-## Responsive Behavior
-
-| Breakpoint | Sider | Content Margin |
-|------------|-------|----------------|
-| Mobile (<768px) | Hidden (drawer menu) | 0 |
-| Desktop (≥768px) | Fixed left | 240px / 80px |
-
-```typescript
-const contentMarginLeft = useMemo(() => {
-  if (isMobile) return 0;
-  return collapsed ? COLLAPSED_SIDER_WIDTH : SIDER_WIDTH;
-}, [collapsed, isMobile]);
-```
-
----
-
-## Page Layout Modes
-
-### Layout Record (Table View)
-
-```tsx
-<div className="main-content layout-record">
-  {/* Full-width table */}
-</div>
-```
-
-### Layout Canvas (Cards, Forms)
-
-```tsx
-<div className="main-content layout-canvas">
-  {/* Grid of cards or form */}
-</div>
-```
-
----
-
-## Usage Example
-
-### Standard List Page
-
-```tsx
-import { PageActionBar, ActionBarLeft, ActionBarRight } from '@/core/components/ActionBar';
-
 const TicketsPage = () => (
-  <>
+  <div className="page-content layout-record">
     <PageActionBar>
       <ActionBarLeft>
         <TabsComponent tabs={tabs} activeTab={tab} onChange={setTab} />
@@ -289,26 +210,42 @@ const TicketsPage = () => (
       </ActionBarRight>
     </PageActionBar>
     
-    <div className="main-content">
-      <div className="content-body">
-        <DynamicViews entityType="tickets" />
-      </div>
+    <div className="page-card">
+      <DynamicViews entityType="tickets" />
     </div>
-  </>
+  </div>
 );
+```
+
+### Using .ant-card Inside .page-card
+
+```tsx
+<div className="page-card">
+  <h2>Dashboard Widgets</h2>
+  <Row gutter={16}>
+    <Col span={8}>
+      <Card>Widget 1 (plain, no animation)</Card>
+    </Col>
+    <Col span={8}>
+      <Card>Widget 2 (plain, no animation)</Card>
+    </Col>
+  </Row>
+</div>
 ```
 
 ---
 
-## Theme-Specific Overrides
+## File Structure
 
-| Theme | Sider Style | Header Style |
-|-------|-------------|--------------|
-| `base` | White, border | White, border-bottom |
-| `glassmorphism` | Frosted glass | Frosted glass |
-| `corporate` | Dark sidebar | Branded header |
-| `gradient_card` | White | Hero gradient |
-| `neon` | Black | Black with glow |
+```
+src/core/components/Layout/
+├── AuthedLayout.tsx            # Main layout wrapper
+├── AuthedLayoutContext.tsx     # Context for page config
+├── Header/index.tsx            # Sticky header
+├── Sider/index.tsx             # Fixed sidebar
+├── MobileMenu/index.tsx        # Mobile drawer menu
+└── ...
+```
 
 ---
 
@@ -318,13 +255,13 @@ const TicketsPage = () => (
 - [x] Sticky header
 - [x] Organization & location switching
 - [x] Mobile menu drawer
-- [x] Mobile search drawer (via context)
 - [x] Framer Motion page transitions
-- [x] Suspense + LoadingFallback
-- [x] GlobalLoader for org switching
-- [x] Ctrl+Click for new tab navigation
+- [x] `.page-card` with entrance animation
+- [x] Staggered animation for multiple cards
+- [x] Neon theme targets `.page-card` only
+- [x] Nested `.ant-card` effects disabled
 
 ---
 
 *Last Updated: 2025-12-25*
-*Source: `src/core/components/Layout/`*
+*Source: `src/index.css`, `src/core/components/Layout/`*

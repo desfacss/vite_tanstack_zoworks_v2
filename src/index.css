@@ -884,24 +884,36 @@ h6,
   color: var(--color-text);
 }
 
+/* Page/Section Titles - Larger than h1 */
 .text-title,
 .ant-typography.ant-typography-title {
-  font-size: 22px;
+  font-size: calc(1.571 * var(--tenant-font-size, 14px));
+  /* ~22px at 14px base */
   font-weight: 600;
   letter-spacing: -0.01em;
   color: var(--color-text);
 }
 
+/* Subtitles and Secondary Text */
 .text-subtitle,
 .ant-typography-secondary {
-  font-size: 14px;
+  font-size: var(--tenant-font-size, 14px);
   color: var(--color-text-secondary);
   font-weight: 400;
 }
 
+/* Small Text */
+.text-small {
+  font-size: calc(0.857 * var(--tenant-font-size, 14px));
+  /* ~12px at 14px base */
+  color: var(--color-text-secondary);
+  font-weight: 400;
+}
+
+/* Body Text / Paragraphs */
 .ant-typography-p,
 p {
-  font-size: 14px;
+  font-size: var(--tenant-font-size, 14px);
   line-height: 1.6;
   font-weight: 400;
   color: var(--color-text);
@@ -1007,6 +1019,120 @@ p {
 
 .main-content .content-body {
   padding: var(--layout-padding);
+}
+
+/* ===== PAGE CARD (Animated Top-Level Container) =====
+   The primary container for page content sections.
+   
+   RULES:
+   1. Every page must have at least one .page-card
+   2. Never nest .page-card inside another .page-card
+   3. .ant-card inside .page-card gets plain styling (no animation)
+   4. Use with .layout-canvas (multi-card) or .layout-record (single-card)
+   
+   THEME LAYERS:
+   - Base Theme: Background, border, padding, entrance animation
+   - Neon Theme: Adds thunderbolt, shimmer effects (overlay only)
+   ===================================================== */
+
+.page-card {
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--tenant-border-radius, 12px);
+  padding: var(--layout-padding);
+  margin-bottom: var(--tenant-gutter, 16px);
+  position: relative;
+  overflow: hidden;
+  box-sizing: border-box;
+
+  /* Subtle shadow for depth */
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+
+  /* Smooth transitions for hover */
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+
+  /* Base entrance animation */
+  animation: pageCardEntry 0.4s ease-out forwards;
+}
+
+/* Dark mode enhancements */
+.dark .page-card {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Subtle hover effect (base theme) */
+.page-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.dark .page-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  border-color: var(--color-border-hover, var(--color-border));
+}
+
+/* Remove bottom margin on last card */
+.page-card:last-child {
+  margin-bottom: 0;
+}
+
+/* Entrance animation keyframes */
+@keyframes pageCardEntry {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Staggered animation for multiple page-cards */
+.page-card:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.page-card:nth-child(2) {
+  animation-delay: 0.08s;
+}
+
+.page-card:nth-child(3) {
+  animation-delay: 0.16s;
+}
+
+.page-card:nth-child(4) {
+  animation-delay: 0.24s;
+}
+
+.page-card:nth-child(5) {
+  animation-delay: 0.32s;
+}
+
+/* ===== INNER .ant-card STYLING =====
+   Cards inside .page-card are plain containers */
+.page-card .ant-card {
+  animation: none !important;
+  margin-bottom: 16px;
+  /* Use subtle bg to differentiate from parent */
+  background: var(--color-bg-tertiary, var(--color-bg-secondary));
+}
+
+.page-card .ant-card:last-child {
+  margin-bottom: 0;
+}
+
+/* ===== LAYOUT MODE: Record (Single Card) =====
+   When used with .layout-record, page-card behaves as full-width table container */
+.layout-record .page-card {
+  margin-bottom: 0;
+  border-radius: var(--tenant-border-radius, 12px);
+}
+
+/* ===== LAYOUT MODE: Canvas (Multi Card) =====
+   Ensure proper spacing in canvas layout */
+.layout-canvas .page-card {
+  margin-bottom: var(--tenant-gutter, 16px);
 }
 
 /* ===== LIST ITEMS (Base) ===== */
@@ -1954,9 +2080,11 @@ legend {
   backdrop-filter: none !important;
 }
 
-/* Jazzy Card & Content Styling */
-[data-theme-preset="neon"].dark .main-content,
-[data-theme-preset="neon"].dark .ant-card {
+/* Jazzy Card & Content Styling - PAGE CARDS ONLY
+   .page-card = Animated top-level container (gets effects)
+   .ant-card inside .page-card = Plain card (no effects)
+   ================================================== */
+[data-theme-preset="neon"].dark .page-card {
   background: linear-gradient(135deg, rgba(8, 8, 8, 0.98) 0%, rgba(15, 15, 15, 0.95) 100%) !important;
   background-image:
     linear-gradient(90deg, rgba(0, 229, 153, 0.05) 1px, transparent 1px),
@@ -1973,10 +2101,21 @@ legend {
   overflow: hidden;
 }
 
+/* Nested .ant-card inside .page-card - NO neon effects */
+[data-theme-preset="neon"].dark .page-card .ant-card {
+  background: rgba(15, 15, 15, 0.6) !important;
+  border: 1px solid rgba(0, 229, 153, 0.05) !important;
+  box-shadow: none !important;
+}
+
+[data-theme-preset="neon"].dark .page-card .ant-card::before,
+[data-theme-preset="neon"].dark .page-card .ant-card::after {
+  display: none !important;
+}
+
 /* Enhanced Inner Glow on hover */
 /* Electric Thunderbolt: Top Left-to-Right -> Down Right -> Diagonal Vanish to Top */
-[data-theme-preset="neon"].dark .main-content::before,
-[data-theme-preset="neon"].dark .ant-card::before {
+[data-theme-preset="neon"].dark .page-card::before {
   content: '';
   position: absolute;
   width: 140px;
@@ -2043,8 +2182,7 @@ legend {
    Subtle Micro-Shimmer & Hover Glow 
    Starts as shimmer, then allows hover glow 
 */
-[data-theme-preset="neon"].dark .main-content::after,
-[data-theme-preset="neon"].dark .ant-card::after {
+[data-theme-preset="neon"].dark .page-card::after {
   content: '';
   position: absolute;
   top: 0;
@@ -2067,8 +2205,7 @@ legend {
 }
 
 /* Hover state overrides Initial Shimmer logic */
-[data-theme-preset="neon"].dark .main-content:hover::after,
-[data-theme-preset="neon"].dark .ant-card:hover::after {
+[data-theme-preset="neon"].dark .page-card:hover::after {
   animation: none;
   /* Stop shimmer if hovering */
   opacity: 1;

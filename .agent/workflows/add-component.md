@@ -137,12 +137,25 @@ Complete agentic workflow for creating a new component or page in a module, incl
 
 ---
 
-## CSS Variable Standards
+## CSS Variable & Layout Standards
 
-- Use `var(--color-primary)`, `var(--color-bg-primary)` for colors
-- Use `var(--tenant-border-radius)` for custom border radii
+- Use `var(--color-primary)`, `var(--color-bg-secondary)` for colors
+- Use `var(--tenant-border-radius)` for border radii
+- Use `var(--layout-padding)` for padding (not hardcoded px)
+- Use `var(--tenant-gutter)` for gaps
 - Use `.text-h1` to `.text-h6` for headings
-- Use `.layout-canvas` or `.layout-record` for page layout
+- Use `.page-card` for animated containers (required)
+- Use `.layout-canvas` or `.layout-record` on `.page-content`
+
+### Page Structure Template
+```tsx
+<div className="page-content layout-record">
+  <PageActionBar>...</PageActionBar>
+  <div className="page-card">
+    <DynamicViews entityType="{entity}" />
+  </div>
+</div>
+```
 
 ---
 

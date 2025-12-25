@@ -257,17 +257,20 @@ const registeredActions = registry.getActionsForEntity(entityType, 'global');
 
 ---
 
-## Layout Modes
+## Page Card Layout
 
-Two layout modes based on content:
+DynamicViews should be wrapped in a `.page-card` (animated container):
 
 ```tsx
-<div className={`main-content ${
-  viewType === 'tableview' && entities.length > 0 
-    ? 'layout-record'   // Table layout (record-based)
-    : 'layout-canvas'   // Canvas layout (free-form)
-}`}>
+<div className="page-content layout-record">
+  <PageActionBar>...</PageActionBar>
+  <div className="page-card">
+    <DynamicViews entityType="tickets" />
+  </div>
+</div>
 ```
+
+**Note**: The layout mode (`layout-record` or `layout-canvas`) is applied to `.page-content`, and `.page-card` provides the animated container.
 
 ---
 
