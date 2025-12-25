@@ -90,7 +90,16 @@ Ensure the component's visual behavior aligns with the active preset:
 
 ---
 
-## 6. Execution Patterns
+## 7. Responsive Pattern Check
+
+- [ ] **Tabs**: Inline on desktop, dropdown on mobile
+- [ ] **Filters**: Inline on desktop, drawer on mobile
+- [ ] **Primary Action**: Icon+text on desktop, icon-only on mobile
+- [ ] **View Toggle**: Radio group on desktop, single cycling button on mobile
+
+---
+
+## 8. Execution Patterns
 
 ### Replacing a Leak
 When you find a leak like `bg-blue-50`, replace it with:
@@ -102,4 +111,4 @@ Ensure it uses:
 
 ---
 
-*Last Updated: 2025-12-24*
+*Last Updated: 2025-12-25*

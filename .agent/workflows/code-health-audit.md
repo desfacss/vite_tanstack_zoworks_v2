@@ -162,12 +162,28 @@ Template:
 
 ## Verification Checklist
 
-- [ ] All copy files deleted
+- [ ] All copy files archived
 - [ ] No `@ant-design/icons` imports
 - [ ] All modules have required structure
 - [ ] Core has zero module imports
 - [ ] `yarn build` passes
-- [ ] Audit log created at `docs/log/`
+- [ ] Audit log created at `docs/logs/`
+
+---
+
+## Phase 9: Technical Debt Review
+
+- [ ] Check `docs/architecture/technical_debt.md` for critical open items
+- [ ] Review org switch logic (extracted to hook?)
+- [ ] Review unread counts RPC usage
+
+---
+
+## Phase 10: Module Compliance Matrix
+
+- [ ] Check `docs/architecture/verification-checklist.md` for module status
+- [ ] All modules have: `i18n/`, `help/`, `manifest.ts`
+- [ ] Labels extracted for pending modules (wa, contracts, catalog, etc.)
 
 ---
 

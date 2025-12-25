@@ -16,19 +16,19 @@ The `package.json` contains several heavy libraries that may be partially used o
     - **Lucide React**: Ensure we are not bundling the entire icon set (use named imports carefully or use `lucide-react/dynamic`).
     - **Heavy Visuals**: Check usage of `leaflet`, `plotly.js`, `mermaid`. Can these be lazy-loaded?
 - [x] **Utility Libraries**:
-    - **Lodash**: Replace with native ES6+ methods where possible, or ensure only sub-modules are imported.
+    - **Lodash**: ✅ **COMPLETED**. Tree-shaking via specific imports (`lodash/isEqual`, `lodash/keyBy`, etc.).
     - **Moment/DayJS**: ✅ **COMPLETED**. Moment.js removed entirely. Codebase consolidated to Day.js. (~300KB saved gzipped).
 
-### Recent Wins & Metrics (2024-07-29)
+### Recent Wins & Metrics (2025-12-25)
 
 | Asset | Before (Raw) | After (Gzipped) | Notes |
 |---|---|---|---|
-| `vendor-*.js` | 1.2 MB | **384 KB** | ✅ Balanced for stability |
-| `ui-*.js` (Ant Design) | 1.2 MB | **384 KB** | ✅ Balanced for stability |
-| `icons-*.js` | 0 KB | **0 KB** | ✅ Fully tree-shaken (Was 150KB) |
-| `moment.js` | 0 KB | **0 KB** | ✅ Removed entirely |
-| `index-*.js` (main) | 369 KB | 110 KB | ⚖️ Stable |
-| **Total Core** | ~1.6 MB | **~350 KB** | ✅ **Total ~300KB (55%) saved (Gzipped)** |
+| `vendor-*.js` | 164 KB | **52 KB** | ✅ React core only |
+| `ui-*.js` (Ant Design) | 1.3 MB | **~400 KB** | UI framework |
+| `plotly.min-*.js` | 4.8 MB | **Async** | ✅ Dynamic import |
+| `mermaid.core-*.js` | 463 KB | **Async** | ✅ Dynamic import |
+| `index-*.js` (main) | 403 KB | ~120 KB | ⚖️ Stable |
+| **Total Sync Core** | ~1.9 MB | **~600 KB** | ⚖️ Acceptable |
 
 ## 2. Legacy Code & Dead Code Elimination
 

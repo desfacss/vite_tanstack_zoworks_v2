@@ -52,6 +52,7 @@ alias: {
 | Mermaid async import | 463KB out of initial | `ZeroStateContent.tsx`, `MermaidViewer.tsx` |
 | DetailOverview lazy loading | ~820KB reduced | `DetailOverview.tsx` |
 | PWA precache exclusions | N/A | `vite.config.ts` |
+| Lodash tree-shaking | ~70KB (no standalone chunk) | `Dashboard.tsx`, `DashboardCanvas.tsx`, `WidgetRenderers.tsx` |
 
 ---
 
@@ -72,3 +73,4 @@ alias: {
 - [ ] Dynamic import for Leaflet (~151KB) — used only in MapView
 - [ ] Dynamic import for Cytoscape (~432KB) — used via Mermaid
 - [ ] Remove Lodash entirely — replace with native JS alternatives
+- [ ] Plotly partial bundles — load chart-specific modules
