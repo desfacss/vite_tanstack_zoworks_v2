@@ -12,6 +12,15 @@ This workflow ensures all components strictly adhere to the Zoworks 5-layer arch
 > - [Theme Engine Guide](file:///docs/frontend/patterns/theme-engine.md)
 > - [Page Layouts](file:///docs/frontend/patterns/page-layouts.md)
 
+> [!CAUTION]
+> **STYLING SYSTEM IS FROZEN**
+> When auditing pages/components:
+> - ❌ Do NOT modify `index.css` or theme files
+> - ❌ Do NOT add inline styles
+> - ❌ Do NOT alter colors or typography
+> - ✅ Only wrap existing content in correct structure (`.page-content`, `.page-card`)
+> - ✅ Use existing CSS classes only
+
 ---
 
 ## Usage
@@ -31,39 +40,117 @@ Run this workflow on a specific module or folder:
 
 ---
 
-## 1. Page Structure Audit (CRITICAL)
+## 1. Layout Pattern Matching (CRITICAL)
 
-**Every page file must follow the page-card layout pattern:**
+**Match the page to one of 5 documented layout patterns:**
 
-### Check Layout Mode
-- [ ] Page uses `.page-content` wrapper
-- [ ] Has `.layout-canvas` (multi-card) OR `.layout-record` (single-card)
-- [ ] At least one `.page-card` exists inside `.page-content`
+> [!IMPORTANT]
+> Reference: [Layout Patterns](file:///docs/frontend/patterns/page-layouts.md#layout-patterns)
 
-### Check Nesting Rules
-- [ ] **NO nested `.page-card`** — Never `.page-card` inside another `.page-card`
-- [ ] `.ant-card` inside `.page-card` is allowed (plain styling, no animation)
-- [ ] `PageActionBar` sits OUTSIDE `.page-card`, directly in `.page-content`
+### Step 1: Identify Current Structure
 
-### Correct Patterns
+Examine the page and determine what type of content it displays:
+- Dashboard/Analytics with widgets? → **Dashboard Layout**
+- Hero/landing with columns? → **Hero Layout**
+- Table/list of records? → **Table Layout**
+- Grid/kanban of cards? → **Card Grid Layout**
+- Stacked content sections? → **Multi-Card Layout**
 
-**Canvas Layout (Multi-Card):**
+### Step 2: Apply Matching Pattern
+
+| Pattern | Class Combo | When to Use |
+|---------|-------------|-------------|
+| **Dashboard** | `page-card page-card-flush` | Widget grids, analytics |
+| **Hero** | `page-card` (internal grid) | Welcome, onboarding |
+| **Table** | `page-card page-card-flush` | Data tables, lists |
+| **Card Grid** | `page-card page-card-flush` | Kanban, grid views |
+| **Multi-Card** | Multiple `page-card` | Settings, stacked sections |
+
+### Step 3: Wrap Existing Content
+
 ```tsx
+// Before (any old structure)
+<>
+  <PageActionBar>...</PageActionBar>
+  <OldWrapper>
+    <ExistingContent />
+  </OldWrapper>
+</>
+
+// After (matching pattern)
 <div className="page-content layout-canvas">
   <PageActionBar>...</PageActionBar>
-  <div className="page-card">Section 1</div>
-  <div className="page-card">Section 2</div>
+  <div className="page-card page-card-flush">
+    <ExistingContent />  {/* Keep internal structure intact */}
+  </div>
 </div>
 ```
 
-**Record Layout (Single-Card):**
+### Step 4: If No Pattern Matches
+
+If the page doesn't fit any known pattern, **ASK THE USER**:
+
+```markdown
+## Layout Pattern Question
+
+This page doesn't match any documented layout pattern.
+Current structure: [describe what you see]
+
+**Options:**
+1. Dashboard Layout (widget grid, flush padding)
+2. Hero Layout (two-column with internal grid)
+3. Table Layout (single card, flush padding)
+4. Card Grid Layout (grid of item cards)
+5. Multi-Card Layout (stacked sections)
+6. New Pattern (describe what you need)
+
+Which pattern should I apply?
+```
+
+### Consistency Checklist
+
+- [ ] Page wrapped in `.page-content.layout-canvas` or `.page-content.layout-record`
+- [ ] At least one `.page-card` exists
+- [ ] `PageActionBar` sits OUTSIDE `.page-card`
+- [ ] Content aligns to layout padding edges (`--layout-padding`)
+- [ ] No inline styles on `.page-card`
+- [ ] No nested `.page-card` inside another `.page-card`
+
+### Migration Rules (CRITICAL)
+
+> [!IMPORTANT]
+> When migrating pages to `.page-card`:
+> - **ONLY wrap existing content** — don't restructure or redesign
+> - Keep all columns, grids, and internal layouts intact
+> - Don't add inline styles to `.page-card`
+> - Don't remove existing animations (CSS handles it)
+
+**DO THIS:**
 ```tsx
-<div className="page-content layout-record">
+// Before (fragment + old classes)
+<>
+  <PageActionBar>...</PageActionBar>
+  <div className="layout-canvas entry-animate">
+    <div className="content-body">
+      <TwoColumnLayout>...</TwoColumnLayout>  
+    </div>
+  </div>
+</>
+
+// After (page-content + page-card wrapping existing structure)
+<div className="page-content layout-canvas">
   <PageActionBar>...</PageActionBar>
   <div className="page-card">
-    <Table ... />
+    <TwoColumnLayout>...</TwoColumnLayout>  {/* Same internal structure */}
   </div>
 </div>
+```
+
+**DON'T DO THIS:**
+```tsx
+// ❌ Don't restructure internal layout
+// ❌ Don't add inline styles like style={{ background: 'transparent' }}
+// ❌ Don't split existing content into multiple page-cards unless needed
 ```
 
 ---

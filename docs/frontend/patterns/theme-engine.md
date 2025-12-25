@@ -2,6 +2,9 @@
 
 > Tenant-aware theming with light/dark mode support, presets, and CSS variables.
 
+> [!CAUTION]
+> **Styling system is frozen.** Do not modify `index.css`, theme files, or add inline styles when auditing pages.
+
 ---
 
 ## Architecture Overview

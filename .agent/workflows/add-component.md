@@ -139,6 +139,9 @@ Complete agentic workflow for creating a new component or page in a module, incl
 
 ## CSS Variable & Layout Standards
 
+> [!CAUTION]
+> **Styling system is frozen.** Do not modify `index.css` or add inline styles.
+
 - Use `var(--color-primary)`, `var(--color-bg-secondary)` for colors
 - Use `var(--tenant-border-radius)` for border radii
 - Use `var(--layout-padding)` for padding (not hardcoded px)

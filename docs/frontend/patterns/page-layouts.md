@@ -81,6 +81,103 @@ For data-centric pages: tables, lists, grids. One card spans full width.
 | **NEVER nest `.page-card`** | No `.page-card` inside another `.page-card` |
 | **`.ant-card` inside `.page-card` is plain** | Inner cards have no animation effects |
 | **Action Bar sits above cards** | Part of `.page-content`, not inside `.page-card` |
+| **Wrap, don't restructure** | When migrating, only wrap existing content; keep internal layout intact |
+
+> [!CAUTION]
+> **Styling system is frozen.** Do not modify `index.css` or add inline styles when auditing pages.
+
+---
+
+## Layout Patterns
+
+All patterns use the same alignment: content aligns to `.page-content` padding edges (`--layout-padding`).
+
+### 1. Dashboard Layout (Widget Grid)
+
+Full-width grid of widgets with no internal padding.
+
+```tsx
+<div className="page-content layout-canvas">
+  <PageActionBar>...</PageActionBar>
+  <div className="page-card page-card-flush">
+    <DashboardCanvas widgets={...} />
+  </div>
+</div>
+```
+
+**Use for:** Dashboard, Analytics, Widget grids
+
+---
+
+### 2. Hero Layout (Two-Column)
+
+Marketing-style landing with left content + right feature card.
+
+```tsx
+<div className="page-content layout-canvas">
+  <PageActionBar>...</PageActionBar>
+  <div className="page-card">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+      <div>Left content...</div>
+      <div>Right feature card...</div>
+    </div>
+  </div>
+</div>
+```
+
+**Use for:** Welcome page, Onboarding, Landing pages
+
+---
+
+### 3. Table Layout (Data View)
+
+Single card with table/list data.
+
+```tsx
+<div className="page-content layout-record">
+  <PageActionBar>...</PageActionBar>
+  <div className="page-card page-card-flush">
+    <Table dataSource={...} columns={...} />
+  </div>
+</div>
+```
+
+**Use for:** CRM Contacts, Users list, Any table view
+
+---
+
+### 4. Card Grid Layout (Kanban/Grid View)
+
+Grid of individual item cards.
+
+```tsx
+<div className="page-content layout-canvas">
+  <PageActionBar>...</PageActionBar>
+  <div className="page-card page-card-flush">
+    <div className="grid grid-cols-3 gap-4">
+      {items.map(item => <ItemCard key={item.id} />)}
+    </div>
+  </div>
+</div>
+```
+
+**Use for:** Service Assets, Kanban boards, Grid views
+
+---
+
+### 5. Multi-Card Layout (Stacked Sections)
+
+Multiple section cards stacked vertically.
+
+```tsx
+<div className="page-content layout-canvas">
+  <PageActionBar>...</PageActionBar>
+  <div className="page-card">Section 1...</div>
+  <div className="page-card">Section 2...</div>
+</div>
+```
+
+**Use for:** Sample page, Settings, Profile pages
 
 ---
 
@@ -92,6 +189,7 @@ For data-centric pages: tables, lists, grids. One card spans full width.
 | `.layout-canvas` | Multi-card layout mode | No |
 | `.layout-record` | Single-card layout mode | No |
 | `.page-card` | **Animated container** with bg, padding, border-radius | **Yes** |
+| `.page-card-flush` | Page-card variant with no internal padding (for dashboards/grids) | **Yes** |
 | `.main-content` | Legacy base class (backward compat) | No |
 | `.content-body` | Inner padding wrapper | No |
 

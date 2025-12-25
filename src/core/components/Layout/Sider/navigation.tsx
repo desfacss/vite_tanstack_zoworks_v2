@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   Home,
   Users,
@@ -9,6 +8,7 @@ import {
   Briefcase,
   LayoutGrid,
   BarChart3,
+  LayoutDashboard,
   List,
   Car,
   Building,
@@ -37,7 +37,7 @@ import menuConfig from '@/config/menuConfig.json';
 // Icon mapping based on logical association using Lucide Icons
 const iconMap: Record<string, React.ReactNode> = {
   home: <Home size={18} />,
-  dashboard: <Home size={18} />,
+  dashboard: <LayoutDashboard size={18} />,
   users: <Users size={18} />,
   organizations: <Building2 size={18} />,
   subscriptions: <CreditCard size={18} />,

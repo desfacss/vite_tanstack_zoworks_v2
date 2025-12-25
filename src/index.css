@@ -1075,6 +1075,11 @@ p {
   margin-bottom: 0;
 }
 
+/* Flush variant: No internal padding for dashboard/grid layouts */
+.page-card-flush {
+  padding: 0;
+}
+
 /* Entrance animation keyframes */
 @keyframes pageCardEntry {
   from {

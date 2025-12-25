@@ -215,7 +215,7 @@ const DashboardPage: React.FC = () => {
   }
 
   return (
-    <>
+    <div className="page-content layout-canvas">
       {/* Page Header - Action Bar */}
       <PageActionBar>
         <ActionBarLeft>
@@ -286,24 +286,21 @@ const DashboardPage: React.FC = () => {
         </ActionBarRight>
       </PageActionBar>
 
-
-      {/* Main Content Area - Canvas layout (individual cards) */}
-      <div className="layout-canvas entry-animate">
-        <div className="content-body entry-animate-container">
-          {currentDashboard ? (
-            <DashboardCanvas
-              widgets={currentDashboard.widgets || []}
-              widgetData={widgetData}
-              widgetDefinitions={widgetDefinitions}
-              isEditMode={isEditMode}
-              onLayoutChange={handleLayoutChange}
-              onRemoveWidget={removeWidget}
-              onEditWidget={(w) => console.log(w)}
-            />
-          ) : (
-            <Empty description={t('common.message.no_dashboard_selected')} className="mt-20" />
-          )}
-        </div>
+      {/* Main Content Area - Canvas layout */}
+      <div className="page-card page-card-flush">
+        {currentDashboard ? (
+          <DashboardCanvas
+            widgets={currentDashboard.widgets || []}
+            widgetData={widgetData}
+            widgetDefinitions={widgetDefinitions}
+            isEditMode={isEditMode}
+            onLayoutChange={handleLayoutChange}
+            onRemoveWidget={removeWidget}
+            onEditWidget={(w) => console.log(w)}
+          />
+        ) : (
+          <Empty description={t('common.message.no_dashboard_selected')} className="mt-20" />
+        )}
       </div>
 
       <Drawer
@@ -334,7 +331,7 @@ const DashboardPage: React.FC = () => {
           ))}
         </div>
       </Drawer>
-    </>
+    </div>
   );
 
 };

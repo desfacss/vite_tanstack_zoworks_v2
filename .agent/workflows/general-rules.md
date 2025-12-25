@@ -19,6 +19,15 @@ description: General rules and constraints for all agent workflows
 - **Manual testing**: User will test manually or give specific permission
 - **Screenshots**: Never capture screenshots without explicit permission
 
+### 🔒 Frozen Styling System
+**Do NOT modify the styling system when auditing pages/components.**
+
+- ❌ Do NOT modify `index.css` or theme files
+- ❌ Do NOT add inline styles (e.g., `style={{ color: 'red' }}`)
+- ❌ Do NOT alter colors, typography, or CSS variables
+- ✅ Only wrap existing content in correct structure (`.page-content`, `.page-card`)
+- ✅ Use existing CSS classes only
+
 ### Build Verification Only
 ```bash
 # Good - terminal verification
