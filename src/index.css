@@ -17,6 +17,13 @@
   /* Header height */
   --header-height: 56px;
 
+  /* Derived: Header icon/avatar size = header-height / 2 */
+  --header-icon-size: calc(var(--header-height) / 2);
+
+  /* Derived: Offset to make icons flush with container edge on mobile */
+  /* This accounts for button padding when icons need to appear flush */
+  --header-icon-offset: calc(var(--header-icon-size) - var(--layout-padding-mobile));
+
   /* Sidebar widths */
   --sidebar-width-collapsed: 80px;
   --sidebar-width-expanded: 240px;
@@ -1117,6 +1124,129 @@ p {
 
 .page-card:nth-child(5) {
   animation-delay: 0.32s;
+}
+
+/* ===== MOBILE RESPONSIVE PADDING =====
+   Reduce padding on mobile to maximize content area.
+   Prevents padding accumulation from nested containers. */
+@media (max-width: 768px) {
+
+  /* Reduce outer page padding on mobile */
+  .page-content {
+    padding: 0 var(--layout-padding-mobile);
+  }
+
+  /* Reduce inner card padding on mobile */
+  .page-card {
+    padding: var(--layout-padding-mobile);
+    margin-bottom: 12px;
+  }
+
+  /* Grid variant uses smaller padding on mobile */
+  .page-card-grid {
+    padding: 12px;
+  }
+
+  /* Nested cards inside page-card: minimal padding to avoid accumulation */
+  .page-card .page-card {
+    padding: 0 !important;
+    margin-bottom: 8px;
+    border: none;
+  }
+}
+
+/* Even smaller screens: minimize chrome, maximize content */
+@media (max-width: 480px) {
+  .page-content {
+    padding: 0 8px;
+  }
+
+  .page-card {
+    padding: 12px;
+    border-radius: 8px;
+  }
+
+  .page-card-grid {
+    padding: 8px;
+  }
+}
+
+/* ===== HEADER ICON ALIGNMENT (Base Theme) =====
+   Minimal fixes for icon vertical alignment.
+   Does NOT override header layout structure. */
+
+/* Header buttons: ensure icons are vertically centered */
+.ant-layout-header .ant-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Badge in header: vertical alignment */
+.ant-layout-header .ant-badge {
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Header right-side icons: 0.5x gutter spacing (min 8px) + vertical alignment
+   Uses global --tenant-gutter from ThemeRegistry.ts */
+.ant-layout-header .ant-space {
+  gap: max(calc(var(--tenant-gutter, 16px) * 0.5), 8px) !important;
+  align-items: center !important;
+}
+
+/* Unified header icon button - uses derived --header-icon-size variable
+   Apply via className="header-icon-btn" to any Button in the header
+   Width/height scale with header height and can be overridden with Tailwind */
+.header-icon-btn {
+  min-width: var(--header-icon-size);
+  min-height: var(--header-icon-size);
+  padding: 0 !important;
+  border: none !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0;
+}
+
+/* ===== MOBILE ACTION SHEET STYLING =====
+   Uses base CSS variables for automatic light/dark support. */
+.ant-modal-content,
+.ant-drawer-content {
+  background: var(--color-bg-primary) !important;
+  color: var(--color-text) !important;
+}
+
+/* Dark mode: Action sheet / bottom sheet */
+.dark .ant-modal-content,
+.dark .ant-drawer-content {
+  background: var(--color-bg-secondary) !important;
+  border-color: var(--color-border) !important;
+}
+
+/* Action list items in mobile sheets */
+.dark .ant-modal-content .ant-list-item,
+.dark .ant-drawer-content .ant-list-item,
+.dark .ant-modal-content button,
+.dark .ant-drawer-content button:not(.ant-btn-primary) {
+  color: var(--color-text) !important;
+  background: transparent !important;
+}
+
+/* Destructive actions */
+.dark .ant-modal-content .text-red-500,
+.dark .ant-drawer-content .text-red-500,
+.dark [class*="delete"],
+.dark [class*="Delete"] {
+  color: #ef4444 !important;
+}
+
+/* Cancel button in action sheets */
+.dark .ant-modal-content .ant-btn-default,
+.dark .ant-drawer-content .ant-btn-default {
+  background: var(--color-bg-tertiary) !important;
+  color: var(--color-text) !important;
+  border-color: var(--color-border) !important;
 }
 
 /* ===== INNER .ant-card STYLING =====
@@ -2687,7 +2817,7 @@ legend {
   }
 
   20% {
-    opacity: 0.15;
+    opacity: 0.1
   }
 
   50% {

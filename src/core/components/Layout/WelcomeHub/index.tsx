@@ -148,7 +148,7 @@ export const WelcomeHub: React.FC = () => {
 
                             <div className={`relative p-8 md:p-12 rounded-[var(--tenant-border-radius,12px)] border backdrop-blur-2xl transition-all duration-500
                                 ${isDarkMode
-                                    ? 'bg-slate-950/40 border-slate-800/50 shadow-2xl'
+                                    ? 'bg-[var(--color-bg-secondary)] border-[var(--color-border)]'
                                     : 'bg-white/80 border-slate-200/50 shadow-xl'}`}
                                 style={{ boxShadow: isDarkMode ? '0 25px 50px -12px rgba(var(--color-primary-rgb), 0.15)' : undefined }}>
                                 <h2 className="text-h2 mb-10">
@@ -159,7 +159,7 @@ export const WelcomeHub: React.FC = () => {
                                     {features.map((feature, i) => (
                                         <div key={i} className="flex gap-6 group cursor-default">
                                             <div className={`flex-shrink-0 w-14 h-14 rounded-[var(--tenant-border-radius-interactive,8px)] flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:rotate-3 shadow-sm
-                                                ${isDarkMode ? 'bg-slate-900 border border-slate-800' : 'bg-slate-50 border border-slate-100'}`}>
+                                                ${isDarkMode ? 'bg-[var(--color-bg-primary)] border border-[var(--color-border)]' : 'bg-slate-50 border border-slate-100'}`}>
                                                 {feature.icon}
                                             </div>
                                             <div className="space-y-1.5 py-1">

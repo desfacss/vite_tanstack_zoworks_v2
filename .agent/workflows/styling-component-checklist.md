@@ -6,20 +6,88 @@ description: Definitive agentic checklist for auditing styling across all compon
 
 // turbo-all
 
-This workflow ensures all components strictly adhere to the Zoworks 5-layer architecture and page-card layout system. **NO LEAKS ALLOWED.**
+This workflow ensures all components strictly adhere to the Zoworks styling system. **NO HARDCODED VALUES. NO STYLE LEAKS.**
 
 > **References:**
 > - [Theme Engine Guide](file:///docs/frontend/patterns/theme-engine.md)
 > - [Page Layouts](file:///docs/frontend/patterns/page-layouts.md)
+> - [Layout Reference](file:///docs/frontend/patterns/layout-reference.md)
 
-> [!CAUTION]
-> **STYLING SYSTEM IS FROZEN**
-> When auditing pages/components:
-> - ❌ Do NOT modify `index.css` or theme files
-> - ❌ Do NOT add inline styles
-> - ❌ Do NOT alter colors or typography
-> - ✅ Only wrap existing content in correct structure (`.page-content`, `.page-card`)
-> - ✅ Use existing CSS classes only
+---
+
+## Styling Fix Priority Order (FOLLOW THIS HIERARCHY)
+
+> [!IMPORTANT]
+> When diagnosing or fixing any styling issue, **follow this order strictly**. Each level builds on the previous.
+
+```mermaid
+flowchart TD
+    A[1. IDENTIFY: Find hardcoded styles] --> B{Removing fixes issue?}
+    B -->|Yes| C[Done - Use CSS variable]
+    B -->|No| D[2. STRUCTURE: Is layout correct?]
+    D --> E{Wrong wrapper/container?}
+    E -->|Yes| F[Fix structure first]
+    E -->|No| G[3. BASE THEME: Is variable missing?]
+    G --> H{Need new CSS variable?}
+    H -->|Yes| I[Add to :root in index.css]
+    H -->|No| J[4. RESPONSIVE: Using CSS not JS?]
+    J --> K{Using isMobile JS check?}
+    K -->|Yes| L[Replace with Tailwind responsive]
+    K -->|No| M[5. RELATED COMPONENTS: Consistency?]
+    M --> N{Siblings styled differently?}
+    N -->|Yes| O[Align to existing pattern]
+    N -->|No| P[6. COMPONENT STYLES: Minimal inline?]
+    P --> Q{Can use CSS var inline?}
+    Q -->|Yes| R[Add style with var reference]
+    Q -->|No| S[7. THEME-SPECIFIC: Last resort]
+    S --> T[Add to theme section in CSS]
+```
+
+### Level 1: Remove Hardcoded Styles First
+**Before anything else**, search for and remove hardcoded values:
+```bash
+grep -rE "padding:\s*[0-9]+px|margin:\s*[0-9]+px|width:\s*[0-9]+px|height:\s*[0-9]+px" {TARGET}
+grep -rE "size=\{[0-9]+\}|max-w-\[[0-9]+px\]|-m[lrtbxy]-[0-9]" {TARGET}
+```
+- Does removing the hardcoded value fix the issue? → **Done**
+- If not, proceed to Level 2
+
+### Level 2: Correct Structure
+- Is the component using the correct layout wrapper? (`.page-content`, `.page-card`)
+- Is the flex/grid structure correct?
+- Is the container handling padding, not the element?
+
+### Level 3: Correct Base Theme
+- Is there a CSS variable for this value? If not, should there be?
+- Derived values should use `calc()` with base variables
+- Example: `--header-icon-size: calc(var(--header-height) / 2)`
+
+### Level 4: Use Responsive CSS (Not JavaScript)
+- ❌ Avoid: `{isMobile && <Component />}`
+- ✅ Prefer: `className="md:hidden"` (CSS-based responsive)
+- JS device detection is for behavior, CSS is for visibility/sizing
+
+### Level 5: Align Related Components
+- Are sibling/related components styled consistently?
+- Use same spacing, sizing, alignment patterns
+- Example: Hamburger and Profile avatar should have matching offsets
+
+### Level 6: Minimal Component Dynamic Styles
+- If base CSS fixes don't cover the case, add **minimal** inline styles in the component
+- Must use CSS variables, not hardcoded values:
+  ```tsx
+  // ✅ Good: Uses CSS variable
+  style={{ marginLeft: 'calc(-1 * var(--header-icon-offset))' }}
+  
+  // ❌ Bad: Hardcoded value
+  style={{ marginLeft: '-12px' }}
+  ```
+- Keep component-specific styles to an absolute minimum
+
+### Level 7: Theme-Specific (Absolute Last Resort)
+- Only if the issue is genuinely theme-specific (light vs dark mode)
+- Always support both modes when adding theme rules
+- Add to the appropriate section in `index.css`
 
 ---
 
@@ -197,7 +265,59 @@ grep -rE "border-radius:\s*[0-9]+px" {TARGET} --include="*.tsx" --include="*.css
 
 ---
 
-## 4. Typography Audit
+## 4. Sizing & Proportional Relationships
+
+> [!IMPORTANT]
+> **AVOID HARDCODED PIXEL VALUES** — Use CSS variables and derived calculations for all sizing.
+
+### Principles
+
+1. **Derive from Base Variables**
+   - Avoid: `size={28}`, `width="32px"`, `max-width: 80px`
+   - Use: `var(--header-icon-size)`, `calc(var(--header-height) / 2)`
+
+2. **Proportional Relationships**
+   - Icon/avatar size should relate to container height (e.g., `container-height / 2`)
+   - Offsets should derive from the values they're offsetting
+   - Example: `--header-icon-offset: calc(var(--header-icon-size) - var(--layout-padding-mobile))`
+
+3. **Responsive Container Padding**
+   - Use Tailwind responsive classes for padding: `px-4 md:px-6`
+   - Or use CSS variable with media query handling
+
+4. **Edge Flush Alignment**
+   - When an element needs to appear flush with container edge (ignoring its internal padding), use negative margins derived from variables
+   - Example: `marginLeft: 'calc(-1 * var(--header-icon-offset))'`
+
+5. **Container vs Element Responsibility**
+   - **Container**: handles external padding/margins (layout-level spacing)
+   - **Element**: handles internal sizing (icon size, avatar size)
+   - Don't mix these responsibilities
+
+### Available Sizing Variables
+
+```css
+:root {
+  /* Base */
+  --layout-padding: 24px;           /* Desktop */
+  --layout-padding-mobile: 16px;    /* Mobile */
+  --header-height: 56px;
+
+  /* Derived */
+  --header-icon-size: calc(var(--header-height) / 2);  /* 28px */
+  --header-icon-offset: calc(var(--header-icon-size) - var(--layout-padding-mobile));  /* 12px */
+}
+```
+
+### Checks
+- [ ] No hardcoded pixel values for sizes that should scale
+- [ ] Proportional sizes use `calc()` with base variables
+- [ ] Responsive padding uses Tailwind classes or media queries
+- [ ] Edge alignment offsets derive from the values they offset
+
+---
+
+## 5. Typography Audit
 
 ```bash
 grep -rE "font-size:\s*[0-9]+px" {TARGET} --include="*.tsx" --include="*.css"
@@ -225,7 +345,7 @@ grep -rE "font-size:\s*[0-9]+px" {TARGET} --include="*.tsx" --include="*.css"
 
 ---
 
-## 5. Color Leak Audit
+## 6. Color Leak Audit
 
 ```bash
 grep -rE "blue-|indigo-|slate-|#([0-9a-fA-F]{3}){1,2}" {TARGET} --include="*.tsx" --include="*.ts"
@@ -247,7 +367,7 @@ grep -rE "blue-|indigo-|slate-|#([0-9a-fA-F]{3}){1,2}" {TARGET} --include="*.tsx
 
 ---
 
-## 6. Icon Compliance
+## 7. Icon Compliance
 
 ```bash
 grep -r "@ant-design/icons" {TARGET} --include="*.tsx"
@@ -258,17 +378,69 @@ grep -r "@ant-design/icons" {TARGET} --include="*.tsx"
 
 ---
 
-## 7. Branding System
+## 8. Branding System
 
 - [ ] **NO raw `<img>` for logos**: Use `<BrandLogo />` or `<BrandIcon />`
 
 ---
 
-## 8. Responsive Pattern Check
+## 9. Responsive Pattern Check
 
 - [ ] **Tabs**: Inline on desktop, dropdown on mobile
 - [ ] **Filters**: Inline on desktop, drawer on mobile
 - [ ] **Primary Action**: Icon+text on desktop, icon-only on mobile
+
+---
+
+## 9. Drawer & Modal Settings
+
+```bash
+grep -rE "mask=\{?false" {TARGET} --include="*.tsx"
+```
+
+### Checks
+- [ ] **All Drawers have mask**: No `mask={false}` unless explicitly intended (e.g., non-blocking info panel)
+- [ ] **Modal mask**: Ensure modals darken background consistently
+
+### Common Issues
+```tsx
+// ❌ WRONG - Background not darkened
+<Drawer mask={false} ...>
+
+// ✅ CORRECT - Background darkens properly
+<Drawer mask={true} ...>
+// or simply omit mask prop (defaults to true)
+<Drawer ...>
+```
+
+---
+
+## 10. Dark Mode Color Consistency
+
+```bash
+grep -rE "bg-slate-|border-slate-|text-slate-" {TARGET} --include="*.tsx"
+```
+
+### Checks
+- [ ] **No hardcoded slate colors in dark mode**: Use CSS variables instead
+- [ ] **Conditional dark mode classes use variables**: `isDarkMode ? 'bg-[var(--color-bg-secondary)]' : ...`
+
+### Common Issues
+```tsx
+// ❌ WRONG - Hardcoded Tailwind colors conflict with theme
+${isDarkMode ? 'bg-slate-950/40 border-slate-800' : ...}
+
+// ✅ CORRECT - Uses CSS variables that respect theme
+${isDarkMode ? 'bg-[var(--color-bg-secondary)] border-[var(--color-border)]' : ...}
+```
+
+### Color Variable Reference (Neon Dark Theme)
+| Variable | Color | Usage |
+|----------|-------|-------|
+| `--color-bg-primary` | `#061612` | Darkest surfaces |
+| `--color-bg-secondary` | `#0a1f1a` | Cards, panels |
+| `--color-bg-tertiary` | `#0d2920` | Elevated surfaces |
+| `--color-border` | `rgba(255,255,255,0.1)` | Borders |
 
 ---
 

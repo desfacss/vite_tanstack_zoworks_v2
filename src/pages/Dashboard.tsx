@@ -308,7 +308,7 @@ const DashboardPage: React.FC = () => {
         placement="right"
         open={isEditMode && isLibraryOpen}
         onClose={() => setIsLibraryOpen(false)}
-        mask={false}
+        mask={true}
         width={320}
       >
         <div className="space-y-3">

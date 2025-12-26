@@ -97,11 +97,25 @@ This creates the **alignment zone** — all content (Action Bar, Page Card) alig
 
 ## CSS Variables
 
+### Base Variables
+
 | Variable | Default | Purpose |
 |----------|---------|---------|
-| `--layout-padding` | `24px` | Side padding for `.page-content` |
+| `--layout-padding` | `24px` | Desktop side padding for containers |
+| `--layout-padding-mobile` | `16px` | Mobile side padding for containers |
+| `--header-height` | `56px` | Height of the main header |
 | `--tenant-gutter` | `16px` | Gap between `.page-card` elements |
 | `--tenant-border-radius` | `12px` | Border radius for cards |
+
+### Derived Variables (Auto-Calculated)
+
+| Variable | Calculation | Result | Purpose |
+|----------|-------------|--------|---------|
+| `--header-icon-size` | `header-height / 2` | `28px` | Icon/avatar size in header |
+| `--header-icon-offset` | `icon-size - mobile-padding` | `12px` | Edge-flush alignment offset |
+
+> [!TIP]
+> **Derived variables scale automatically** — if you change `--header-height` from 56px to 64px, `--header-icon-size` becomes 32px automatically.
 
 ---
 

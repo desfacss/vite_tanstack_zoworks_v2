@@ -15,12 +15,12 @@ import { useAuthStore } from '@/core/lib/store';
 import { supabase } from '../../../lib/supabase';
 import { useTranslation } from 'react-i18next';
 import { useAuthedLayoutConfig } from '../AuthedLayoutContext';
-import { ProfileIdentity, ProfileAvatar } from '../Profile/index';
+import { ProfileAvatar } from '../Profile/index';
 
-export const ProfileMenu: React.FC<{ isMobile?: boolean }> = ({ isMobile }) => {
+export const ProfileMenu: React.FC = () => {
   const navigate = useNavigate();
   // Get setIsLoggingOut from store
-  const { clearUserSession, setIsLoggingOut } = useAuthStore();
+  const { user, clearUserSession, setIsLoggingOut } = useAuthStore();
   const queryClient = useQueryClient();
   const { setShowSettings } = useAuthedLayoutConfig();
 
@@ -69,14 +69,24 @@ export const ProfileMenu: React.FC<{ isMobile?: boolean }> = ({ isMobile }) => {
     <Dropdown menu={menuItems as any} placement="bottomRight" trigger={['click']}>
       <Button
         type="text"
-        className="flex items-center gap-0 p-0 hover:bg-transparent"
-        style={{ height: 'var(--header-height)', padding: '0 8px' }}
+        className="header-icon-btn !w-auto !h-auto"
       >
-        <div className="hidden md:flex">
-          <ProfileIdentity showName={true} size={32} />
+        {/* Desktop: Avatar + Name */}
+        <div className="hidden md:flex items-center gap-2">
+          {/* Avatar sized to header-icon-size */}
+          <div style={{ width: 'var(--header-icon-size)', height: 'var(--header-icon-size)' }}>
+            <ProfileAvatar size={28} className="!w-full !h-full" />
+          </div>
+          <span className="text-sm font-medium max-w-20 truncate">
+            {user?.name || 'User'}
+          </span>
         </div>
-        <div className="flex md:hidden items-center justify-center">
-          <ProfileAvatar size={32} />
+        {/* Mobile: Avatar only - offset to balance with hamburger */}
+        <div
+          className="flex md:hidden items-center justify-center"
+          style={{ marginRight: 'calc(-1 * var(--header-icon-offset))' }}
+        >
+          <ProfileAvatar size={28} />
         </div>
       </Button>
     </Dropdown>

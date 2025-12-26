@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Layout, Button, Space, Drawer, Select, Badge, message } from 'antd';
+import { Layout, Button, Drawer, Select, Badge, message } from 'antd';
 import { Menu, Search, Settings, Bell } from 'lucide-react';
 import { useIsFetching, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
@@ -187,10 +187,8 @@ export const Header: React.FC<HeaderProps> = ({
 
   return (
     <AntHeader
-      className="sticky top-0 z-50 bg-[var(--color-background)] border-b border-[var(--color-border)]"
+      className="sticky top-0 z-50 bg-[var(--color-background)] border-b border-[var(--color-border)] px-4 md:px-6"
       style={{
-        paddingRight: `var(--layout-padding)`,
-        paddingLeft: `var(--layout-padding)`,
         height: 'var(--header-height)',
         width: '100%',
       }}
@@ -203,20 +201,13 @@ export const Header: React.FC<HeaderProps> = ({
             type="text"
             icon={<Menu size={20} />}
             onClick={() => (isMobile ? setShowMobileMenu(true) : setCollapsed(!collapsed))}
-            className="flex-shrink-0 flex items-center justify-center p-0"
-            style={{
-              width: 32,
-              height: 32,
-              marginLeft: -6,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}
+            className="header-icon-btn"
+            style={isMobile ? { marginLeft: 'calc(-1 * var(--header-icon-offset))' } : undefined}
           />
 
-          {/* Page title - shows on MOBILE only in the header */}
-          {isMobile && pageTitle && (
-            <span className="text-base font-semibold whitespace-nowrap truncate max-w-[160px] ml-1">
+          {/* Page title - shows when sidebar is not visible (small screens) */}
+          {pageTitle && (
+            <span className="text-base font-semibold whitespace-nowrap truncate max-w-[160px] md:hidden">
               {pageTitle}
             </span>
           )}
@@ -241,63 +232,56 @@ export const Header: React.FC<HeaderProps> = ({
         )}
 
 
-        {/* Right side: Icons */}
-        <Space size={isMobile ? 4 : 8} className="flex-shrink-0">
-          {/* Organization selector - desktop only */}
-          {!isMobile && organizationOptions.length > 1 && (
-            <Select
-              placeholder={t('common.label.organization')}
-              value={organization?.id}
-              onChange={handleOrganizationChange}
-              loading={loadingOrgLocs}
-              style={{ width: 180 }}
-              options={organizationOptions}
-              disabled={loadingOrgLocs}
-            />
+        {/* Right side: Properly grouped containers */}
+        <div className="flex items-center gap-4 flex-shrink-0">
+
+          {/* Group 1: Dropdowns (desktop only) */}
+          {!isMobile && (organizationOptions.length > 1 || currentLocations.length > 1) && (
+            <div className="flex items-center gap-2">
+              {organizationOptions.length > 1 && (
+                <Select
+                  placeholder={t('common.label.organization')}
+                  value={organization?.id}
+                  onChange={handleOrganizationChange}
+                  loading={loadingOrgLocs}
+                  style={{ width: 140 }}
+                  options={organizationOptions}
+                  disabled={loadingOrgLocs}
+                  size="small"
+                />
+              )}
+              {currentLocations.length > 1 && (
+                <Select
+                  placeholder={t('common.label.location')}
+                  value={location?.id}
+                  onChange={handleLocationChange}
+                  loading={loadingOrgLocs}
+                  style={{ width: 120 }}
+                  options={currentLocations}
+                  disabled={loadingOrgLocs}
+                  size="small"
+                />
+              )}
+            </div>
           )}
 
-          {/* Location selector - desktop only */}
-          {!isMobile && currentLocations.length > 1 && (
-            <Select
-              placeholder={t('common.label.location')}
-              value={location?.id}
-              onChange={handleLocationChange}
-              loading={loadingOrgLocs}
-              style={{ width: 140 }}
-              options={currentLocations}
-              disabled={loadingOrgLocs}
-            />
-          )}
+          {/* Group 2: Icon Buttons */}
+          <div className="flex items-center gap-1">
+            {/* Search - mobile only */}
+            {isMobile && config.searchFilters && (
+              <Button type="text" icon={<Search size={20} />} onClick={() => setShowSearch(true)} className="header-icon-btn" />
+            )}
+            {/* Notifications */}
+            <Badge count={unreadCount} size="small" offset={[-4, 4]}>
+              <Button type="text" icon={<Bell size={20} />} onClick={() => setShowNotifications(true)} className="header-icon-btn" />
+            </Badge>
+            {/* Settings */}
+            <Button type="text" icon={<Settings size={20} />} onClick={() => setGlobalShowSettings(true)} className="header-icon-btn" />
+          </div>
 
-          {/* Search - mobile only (opens drawer) */}
-          {isMobile && config.searchFilters && (
-            <Button type="text" icon={<Search size={20} />} onClick={() => setShowSearch(true)} />
-          )}
-
-          {/* Notifications */}
-          <Button
-            type="text"
-            className="flex items-center justify-center p-0"
-            icon={
-              <Badge
-                count={unreadCount}
-                size="small"
-                offset={[6, 0]}
-                style={{ verticalAlign: 'middle' }}
-              >
-                <Bell size={20} style={{ verticalAlign: 'middle' }} />
-              </Badge>
-            }
-            onClick={() => setShowNotifications(true)}
-          />
-
-
-          {/* Settings */}
-          <Button type="text" icon={<Settings size={20} />} onClick={() => setGlobalShowSettings(true)} />
-
-          {/* Profile */}
-          <ProfileMenu isMobile={isMobile} />
-        </Space>
+          {/* Group 3: Profile */}
+          <ProfileMenu />
+        </div>
       </div>
 
       {isMobile && (
