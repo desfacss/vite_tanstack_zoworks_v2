@@ -31,6 +31,7 @@
   /* Derived: Edge button offset - aligns icon visually with container edge
      Offset = (target size - icon visual size) / 2 */
   --edge-icon-offset: calc((var(--interactive-target-size) - 20px) / 2);
+  --edge-avatar-offset: calc((var(--interactive-target-size) - 28px) / 2);
 
   /* Sidebar widths */
   --sidebar-width-collapsed: 80px;
@@ -39,13 +40,12 @@
 
 /* ===== Core Layout & Utility Classes ===== */
 
-/* Page Layouts */
+/* Page Layouts - desktop padding by default, mobile uses media query below */
 .page-container {
-  padding: var(--layout-padding);
+  padding: var(--layout-padding-desktop);
   flex: 1 1 0%;
   overflow: auto;
   gap: var(--tenant-gutter, 1rem);
-  /* Use gutter for flex gaps if any */
 }
 
 
@@ -56,6 +56,19 @@
   justify-content: space-between;
   align-items: flex-start;
   gap: 1rem;
+}
+
+/* Response padding for sticky header - matches --layout-padding-mobile/desktop */
+.header-responsive-padding {
+  padding-left: var(--layout-padding-desktop) !important;
+  padding-right: var(--layout-padding-desktop) !important;
+}
+
+@media (max-width: 768px) {
+  .header-responsive-padding {
+    padding-left: var(--layout-padding-mobile) !important;
+    padding-right: var(--layout-padding-mobile) !important;
+  }
 }
 
 @media (min-width: 768px) {
@@ -1054,7 +1067,7 @@ p {
   background: var(--color-bg-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--tenant-border-radius, 12px);
-  padding: var(--layout-padding);
+  padding: var(--layout-padding-desktop);
   margin-bottom: var(--tenant-gutter, 16px);
   position: relative;
   overflow: hidden;
@@ -1134,12 +1147,13 @@ p {
   animation-delay: 0.32s;
 }
 
-/* ===== MOBILE RESPONSIVE PADDING =====
-   Reduce padding on mobile to maximize content area.
-   Prevents padding accumulation from nested containers. */
 @media (max-width: 768px) {
 
-  /* Reduce outer page padding on mobile */
+  /* Reduce outer page padding on mobile - matches header px-4 */
+  .page-container {
+    padding: var(--layout-padding-mobile);
+  }
+
   .page-content {
     padding: 0 var(--layout-padding-mobile);
   }
@@ -1147,12 +1161,12 @@ p {
   /* Reduce inner card padding on mobile */
   .page-card {
     padding: var(--layout-padding-mobile);
-    margin-bottom: 12px;
+    margin-bottom: 16px;
   }
 
-  /* Grid variant uses smaller padding on mobile */
+  /* Grid variant uses slightly smaller padding on mobile but not too tight */
   .page-card-grid {
-    padding: 12px;
+    padding: 16px;
   }
 
   /* Nested cards inside page-card: minimal padding to avoid accumulation */
@@ -1163,21 +1177,7 @@ p {
   }
 }
 
-/* Even smaller screens: minimize chrome, maximize content */
-@media (max-width: 480px) {
-  .page-content {
-    padding: 0 8px;
-  }
 
-  .page-card {
-    padding: 12px;
-    border-radius: 8px;
-  }
-
-  .page-card-grid {
-    padding: 8px;
-  }
-}
 
 /* ===== HEADER ICON ALIGNMENT (Base Theme) =====
    Minimal fixes for icon vertical alignment.
@@ -1230,6 +1230,10 @@ p {
 @media (max-width: 767px) {
   .header-icon-btn.edge-right {
     margin-right: calc(-1 * var(--edge-icon-offset));
+  }
+
+  .header-icon-btn.edge-right-avatar {
+    margin-right: calc(-1 * var(--edge-avatar-offset));
   }
 }
 
@@ -1289,6 +1293,7 @@ p {
 /* ===== LAYOUT MODE: Record (Single Card) =====
    When used with .layout-record, page-card behaves as full-width table container */
 .layout-record .page-card {
+  padding: 0 !important;
   margin-bottom: 0;
   border-radius: var(--tenant-border-radius, 12px);
 }
@@ -1654,7 +1659,13 @@ p {
   border: none !important;
   height: var(--header-height) !important;
   line-height: var(--header-height) !important;
-  padding: 0 var(--layout-padding) !important;
+  padding: 0 var(--layout-padding-desktop) !important;
+}
+
+@media (max-width: 768px) {
+  [data-theme-layout="gradient-card"] .ant-layout-header {
+    padding: 0 var(--layout-padding-mobile) !important;
+  }
 }
 
 
@@ -1718,8 +1729,14 @@ p {
 /* ===== PAGE CONTENT WRAPPER ===== */
 [data-theme-layout="gradient-card"] .page-content {
   width: 100%;
-  padding: 0 var(--layout-margin);
+  padding: 0 var(--layout-padding-desktop);
   box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+  [data-theme-layout="gradient-card"] .page-content {
+    padding: 0 var(--layout-padding-mobile);
+  }
 }
 
 /* ===== PAGE HEADER ===== */
@@ -1988,7 +2005,13 @@ legend {
   color: #ffffff !important;
   border: none !important;
   height: var(--header-height) !important;
-  padding: 0 var(--layout-padding) !important;
+  padding: 0 var(--layout-padding-desktop) !important;
+}
+
+@media (max-width: 768px) {
+  [data-hero-header="true"] .ant-layout-header {
+    padding: 0 var(--layout-padding-mobile) !important;
+  }
 }
 
 
@@ -2190,24 +2213,29 @@ legend {
 
 /* Override base dark colors with bottle green for neon theme */
 [data-theme-preset="neon"].dark {
-  --color-bg-primary: #061612;
-  /* Bottle green - darkest */
-  --color-bg-secondary: #0a1f1a;
-  /* Bottle green - dark */
-  --color-bg-tertiary: #0d2920;
-  /* Bottle green - medium */
-  --color-bg-primary-rgb: 6, 22, 18;
+  --color-bg-primary: #04120e;
+  /* Balanced deep green-black */
+  --color-bg-secondary: #071d17;
+  /* Slightly lighter dark green */
+  --color-bg-tertiary: #0a2820;
+  /* Highlights & Drawer */
+  --color-bg-primary-rgb: 4, 18, 14;
 }
 
 /* Base Layout Overrides - Immersive Startup Pattern */
 [data-theme-preset="neon"].dark .ant-layout {
-  background: #061612 !important;
+  background: #04120e !important;
   position: relative;
   overflow: hidden;
   background-image:
-    radial-gradient(circle at 20% -10%, rgba(var(--color-primary-rgb), 0.2) 0%, transparent 40%),
-    radial-gradient(circle at 80% 10%, rgba(0, 229, 153, 0.1) 0%, transparent 50%),
-    linear-gradient(180deg, #061612 0%, #0a1f1a 100%) !important;
+
+    /* radial-gradient(circle at 20% -10%, rgba(var(--color-primary-rgb), 0.15) 0%, transparent 40%),
+    radial-gradient(circle at 80% 10%, rgba(0, 229, 153, 0.05) 0%, transparent 50%),
+     */
+
+    radial-gradient(circle at 20% -10%, rgba(var(--color-primary-rgb), 0.3) 0%, transparent 40%),
+    radial-gradient(circle at 80% 10%, rgba(var(--color-primary-rgb), 0.1) 0%, transparent 50%),
+    linear-gradient(180deg, #04120e 0%, #071d17 100%) !important;
   background-size: 100% 100% !important;
   background-attachment: fixed !important;
 }
@@ -2235,7 +2263,7 @@ legend {
 */
 
 [data-theme-preset="neon"].dark .ant-layout-sider {
-  background: rgba(6, 22, 18, 0.85) !important;
+  background: rgba(7, 29, 23, 0.85) !important;
   backdrop-filter: blur(30px);
   border-right: 1px solid var(--neon-border) !important;
 }
@@ -2252,24 +2280,35 @@ legend {
    .ant-card inside .page-card = Plain card (no effects)
    ================================================== */
 [data-theme-preset="neon"].dark .page-card {
-  background: linear-gradient(135deg, rgba(10, 31, 26, 0.98) 0%, rgba(15, 40, 33, 0.95) 100%) !important;
+  background: linear-gradient(135deg, rgba(7, 29, 23, 0.98) 0%, rgba(10, 40, 32, 0.95) 100%) !important;
   background-image: linear-gradient(90deg, rgba(var(--color-primary-rgb), 0.06) 1px, transparent 1px),
     linear-gradient(180deg, rgba(var(--color-primary-rgb), 0.06) 1px, transparent 1px),
-    linear-gradient(135deg, rgba(10, 31, 26, 0.98) 0%, rgba(15, 40, 33, 0.95) 100%) !important;
+    linear-gradient(135deg, rgba(7, 29, 23, 0.98) 0%, rgba(10, 40, 32, 0.95) 100%) !important;
   background-size: 16px 16px, 16px 16px, 100% 100% !important;
   backdrop-filter: blur(25px);
   border: 1px solid rgba(var(--color-primary-rgb), 0.15) !important;
   box-shadow:
     0 10px 40px rgba(0, 0, 0, 0.8),
     inset 0 0 50px rgba(var(--color-primary-rgb), 0.03) !important;
-  transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1) !important;
   position: relative;
   overflow: hidden;
 }
 
+/* Card Data Visibility - Key/Value pairs */
+[data-theme-preset="neon"].dark .page-card strong,
+[data-theme-preset="neon"].dark .page-card b {
+  color: var(--neon-primary) !important;
+  /* Make keys/labels in cards pop with neon color */
+  opacity: 0.9;
+}
+
+[data-theme-preset="neon"].dark .page-card .ant-typography {
+  color: rgba(255, 255, 255, 0.95) !important;
+}
+
 /* Nested .ant-card inside .page-card - DARKER for readability (matches table) */
 [data-theme-preset="neon"].dark .page-card .ant-card {
-  background: #061612 !important;
+  background: #0d2820 !important;
   /* Darkest, matches table bg */
   border: 1px solid rgba(0, 229, 153, 0.15) !important;
   box-shadow: none !important;
@@ -2282,13 +2321,13 @@ legend {
 }
 
 [data-theme-preset="neon"].dark .dashboard-canvas>.react-grid-layout>div {
-  background: #061612 !important;
+  background: #0d2820 !important;
   /* Matches grid cards */
   border: 1px solid rgba(0, 229, 153, 0.15) !important;
 }
 
 [data-theme-preset="neon"].dark .dashboard-canvas>.react-grid-layout>div>div:first-child {
-  background: #061612 !important;
+  background: #0d2820 !important;
   /* Widget header */
   border-color: rgba(0, 229, 153, 0.1) !important;
 }
@@ -2442,6 +2481,21 @@ legend {
   transform: translateY(-2px);
 }
 
+/* Secondary Buttons - subtle "glass" look for visibility */
+[data-theme-preset="neon"].dark .ant-btn-default,
+[data-theme-preset="neon"].dark .ant-btn-dashed {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  color: #ffffff !important;
+}
+
+[data-theme-preset="neon"].dark .ant-btn-default:hover,
+[data-theme-preset="neon"].dark .ant-btn-dashed:hover {
+  border-color: var(--neon-primary) !important;
+  color: var(--neon-primary) !important;
+  background: rgba(var(--color-primary-rgb, 0, 229, 153), 0.08) !important;
+}
+
 /* Fancy Scrollbar for Neon */
 [data-theme-preset="neon"].dark ::-webkit-scrollbar-thumb {
   background: var(--neon-border) !important;
@@ -2471,19 +2525,48 @@ legend {
   color: var(--neon-primary) !important;
 }
 
-/* Input Fields - High Contrast */
+/* Input Fields - High Contrast & Visibility */
 [data-theme-preset="neon"].dark .ant-input,
 [data-theme-preset="neon"].dark .ant-select-selector,
-[data-theme-preset="neon"].dark .ant-input-number {
-  background: var(--color-bg-secondary) !important;
-  border: 1px solid var(--color-border) !important;
+[data-theme-preset="neon"].dark .ant-input-number,
+[data-theme-preset="neon"].dark .ant-picker {
+  background: #11332a !important;
+  /* Slightly lighter to create "well" effect */
+  border: 1px solid rgba(var(--color-primary-rgb), 0.2) !important;
+  /* Subtle primary border */
   color: #ffffff !important;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+}
+
+[data-theme-preset="neon"].dark .ant-input::placeholder,
+[data-theme-preset="neon"].dark .ant-select-selection-placeholder {
+  color: rgba(255, 255, 255, 0.45) !important;
+  /* Brighter placeholders */
 }
 
 [data-theme-preset="neon"].dark .ant-input:focus,
 [data-theme-preset="neon"].dark .ant-select-focused .ant-select-selector {
   border-color: var(--neon-primary) !important;
-  box-shadow: 0 0 0 2px rgba(var(--color-primary-rgb), 0.15) !important;
+  box-shadow: 0 0 0 2px rgba(var(--color-primary-rgb), 0.25),
+    inset 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+  background: #153d33 !important;
+  /* Slightly brighter on focus */
+}
+
+/* Select/Input Icons */
+[data-theme-preset="neon"].dark .ant-select-arrow,
+[data-theme-preset="neon"].dark .ant-select-clear,
+[data-theme-preset="neon"].dark .ant-input-suffix .anticon {
+  color: rgba(255, 255, 255, 0.45) !important;
+}
+
+/* Form Labels - Max Visibility */
+[data-theme-preset="neon"].dark .ant-form-item-label>label {
+  color: rgba(255, 255, 255, 0.85) !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  font-size: 11px !important;
 }
 
 /* Status dots - Glow effect */
@@ -2591,13 +2674,16 @@ legend {
   color: var(--neon-primary) !important;
 }
 
-/* Drawer - LIGHTER than background to appear on top (dark mode principle) */
+/* Drawer - Standing out with dual corner glows and neon edge */
 [data-theme-preset="neon"].dark .ant-drawer-content {
-  background: #0d2920 !important;
-  /* Lighter bottle green = appears on top */
+  background-color: #0d2820 !important;
+  background-image:
+    radial-gradient(circle at 0% 0%, rgba(var(--color-primary-rgb), 0.3) 0%, transparent 30%),
+    radial-gradient(circle at 100% 100%, rgba(var(--color-primary-rgb), 0.2) 0%, transparent 30%) !important;
   box-shadow:
-    -4px 0 40px rgba(0, 0, 0, 0.5),
-    -1px 0 0 rgba(0, 229, 153, 0.2) !important;
+    -15px 0 60px rgba(0, 0, 0, 0.95),
+    inset 1px 1px 0 rgba(var(--color-primary-rgb), 0.15) !important;
+  border-left: 1px solid rgba(var(--color-primary-rgb), 0.4) !important;
 }
 
 [data-theme-preset="neon"].dark .ant-drawer-header {

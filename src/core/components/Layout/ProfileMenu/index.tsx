@@ -74,7 +74,7 @@ export const ProfileMenu: React.FC = () => {
       */}
       <Button
         type="text"
-        className="header-icon-btn edge-right md:!w-auto md:!h-auto md:!max-w-none"
+        className="header-icon-btn edge-right-avatar md:!w-auto md:!h-auto md:!max-w-none"
       >
         {/* Desktop: Avatar + Name */}
         <div className="hidden md:flex items-center gap-2">

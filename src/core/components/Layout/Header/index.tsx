@@ -187,7 +187,7 @@ export const Header: React.FC<HeaderProps> = ({
 
   return (
     <AntHeader
-      className="sticky top-0 z-50 bg-[var(--color-background)] border-b border-[var(--color-border)] px-4 md:px-6"
+      className="sticky top-0 z-50 bg-[var(--color-background)] border-b border-[var(--color-border)] header-responsive-padding"
       style={{
         height: 'var(--header-height)',
         width: '100%',
@@ -232,7 +232,7 @@ export const Header: React.FC<HeaderProps> = ({
 
 
         {/* Right side: Properly grouped containers */}
-        <div className="flex items-center gap-4 flex-shrink-0">
+        <div className="flex items-center gap-0 md:gap-4 flex-shrink-0">
 
           {/* Group 1: Dropdowns (desktop only) */}
           {!isMobile && (organizationOptions.length > 1 || currentLocations.length > 1) && (

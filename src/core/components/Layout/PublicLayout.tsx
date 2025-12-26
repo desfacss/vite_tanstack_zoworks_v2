@@ -104,7 +104,7 @@ const PublicLayout = () => {
     // Use Ant Design's Layout component for overall structure
     <Layout className="min-h-screen bg-[var(--color-background)]">
       {/* Header section */}
-      <Header className="flex justify-between items-center px-4 bg-[var(--color-background)] border-b border-[var(--color-border)] sticky top-0 z-10 w-full"> {/* Added sticky header */}
+      <Header className="flex justify-between items-center bg-[var(--color-background)] border-b border-[var(--color-border)] sticky top-0 z-10 w-full header-responsive-padding" style={{ padding: 0 }}> {/* Added sticky header and responsive padding */}
         {/* Logo */}
         <div className="text-2xl font-bold text-[var(--color-text)]">
           <Link to="/" className="hover:text-[var(--color-primary)]">zoworks.ai</Link>
@@ -141,7 +141,7 @@ const PublicLayout = () => {
       </Header>
 
       {/* Main content area where child routes are rendered */}
-      <Content className="flex-1 bg-[var(--color-background-secondary)] p-4 md:p-6"> {/* Added padding */}
+      <Content className="flex-1 bg-[var(--color-background-secondary)] page-container"> {/* Standardized padding via page-container */}
         {/* Animate page transitions */}
         <motion.div
           key={location.pathname} // Add key for route transition animation
