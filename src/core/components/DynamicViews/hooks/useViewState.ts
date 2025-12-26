@@ -10,12 +10,13 @@ export const useViewState = (
 ) => {
   // 1. Get the action from the store (stable reference)
   const setViewPreferences = useAuthStore(state => state.setViewPreferences);
-  // **2. Select only the necessary preference value for comparison**
-  const persistedViewType = useAuthStore(state => 
-    state.viewPreferences[viewKey]?.viewType
-  );
-  // **3. Select the current user ID for the setViewPreferences action**
+  // **2. Select the current user ID for the setViewPreferences action**
   const userId = useAuthStore(state => state.user?.id);
+  // **3. Select only the necessary preference value for comparison - using correct nested structure**
+  const persistedViewType = useAuthStore(state => {
+    const uid = state.user?.id;
+    return uid ? state.viewPreferences[uid]?.[viewKey]?.viewType : undefined;
+  });
 
   // 4. Determine the initial state
   const [viewType, setViewType] = useState<ViewType>(() => {

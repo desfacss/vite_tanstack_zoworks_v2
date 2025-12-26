@@ -1120,16 +1120,17 @@ const DynamicViews: React.FC<DynamicViewsProps> = ({
   const entities = tableData?.data || [];
 
   // --- Global Filters ---
+  const userId = user?.id || 'anonymous';
   const initialFilters = useMemo(() => ({
     ...propDefaultFilters,
-    ...viewPreferences[entityType]?.filters,
+    ...(viewPreferences[userId]?.[entityType]?.filters || {}),
     ...customFilters.reduce((acc, field) => {
       if (field.defaultValue) {
         acc[field.name] = field.defaultValue;
       }
       return acc;
     }, {}),
-  }), [propDefaultFilters, viewPreferences, customFilters, entityType]);
+  }), [propDefaultFilters, viewPreferences, customFilters, entityType, userId]);
 
   const globalFiltersElement = useMemo(() => (
     <GlobalFilters

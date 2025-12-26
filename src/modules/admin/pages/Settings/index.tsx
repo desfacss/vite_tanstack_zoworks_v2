@@ -9,6 +9,9 @@ import LeaveTypes from './LeaveTypes';
 import SettingsWorkforce from './SettingsWorkforce';
 import { useAuthStore } from '@/core/lib/store';
 import Roles from './Roles';
+import RolesManagement from './RolesManagement';
+import Users from './Users';
+import Teams from './Teams';
 import EntityConfig from './EntityConfigForm';
 import MermaidViewer from './MermaidViewer';
 import GoogleDocViewer from './GoogleDocViewer';
@@ -39,7 +42,22 @@ const Settings: React.FC = () => {
       children: <Organization />,
     },
     {
-      label: 'Roles',
+      label: 'Users',
+      key: '1.6',
+      children: <Users />,
+    },
+    {
+      label: 'Teams',
+      key: '1.7',
+      children: <Teams />,
+    },
+    {
+      label: 'Roles Management',
+      key: '1.8',
+      children: <RolesManagement />,
+    },
+    {
+      label: 'Roles (DynamicViews)',
       key: '2',
       children: <Roles />,
     },
@@ -94,3 +112,4 @@ const Settings: React.FC = () => {
 };
 
 export default Settings;
+
