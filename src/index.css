@@ -24,6 +24,14 @@
   /* This accounts for button padding when icons need to appear flush */
   --header-icon-offset: calc(var(--header-icon-size) - var(--layout-padding-mobile));
 
+  /* Interactive target size - consistent across all devices
+     44px meets Apple HIG (touch) and provides good mouse hover area */
+  --interactive-target-size: 44px;
+
+  /* Derived: Edge button offset - aligns icon visually with container edge
+     Offset = (target size - icon visual size) / 2 */
+  --edge-icon-offset: calc((var(--interactive-target-size) - 20px) / 2);
+
   /* Sidebar widths */
   --sidebar-width-collapsed: 80px;
   --sidebar-width-expanded: 240px;
@@ -1195,18 +1203,34 @@ p {
   align-items: center !important;
 }
 
-/* Unified header icon button - uses derived --header-icon-size variable
+/* Unified header icon button - consistent interactive targets
    Apply via className="header-icon-btn" to any Button in the header
-   Width/height scale with header height and can be overridden with Tailwind */
+   Button is 44px for hit area, icon inside stays visually small (20px) */
 .header-icon-btn {
-  min-width: var(--header-icon-size);
-  min-height: var(--header-icon-size);
+  width: var(--interactive-target-size) !important;
+  height: var(--interactive-target-size) !important;
+  min-width: var(--interactive-target-size) !important;
+  min-height: var(--interactive-target-size) !important;
   padding: 0 !important;
   border: none !important;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
   flex-shrink: 0;
+}
+
+/* Edge alignment: Pull first/last buttons flush with container edge
+   The 44px target has ~12px internal padding; offset aligns the ICON with edge */
+.header-icon-btn.edge-left {
+  margin-left: calc(-1 * var(--edge-icon-offset));
+}
+
+/* edge-right only on mobile (when button is fixed 44px) 
+   On desktop, button may be auto-width for name, so no offset needed */
+@media (max-width: 767px) {
+  .header-icon-btn.edge-right {
+    margin-right: calc(-1 * var(--edge-icon-offset));
+  }
 }
 
 /* ===== MOBILE ACTION SHEET STYLING =====

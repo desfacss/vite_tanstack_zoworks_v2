@@ -67,13 +67,17 @@ export const ProfileMenu: React.FC = () => {
 
   return (
     <Dropdown menu={menuItems as any} placement="bottomRight" trigger={['click']}>
+      {/* 
+        Profile button structure:
+        - Mobile: Fixed header-icon-size button with right offset for flush alignment
+        - Desktop: Auto-width button with avatar + name
+      */}
       <Button
         type="text"
-        className="header-icon-btn !w-auto !h-auto"
+        className="header-icon-btn edge-right md:!w-auto md:!h-auto md:!max-w-none"
       >
         {/* Desktop: Avatar + Name */}
         <div className="hidden md:flex items-center gap-2">
-          {/* Avatar sized to header-icon-size */}
           <div style={{ width: 'var(--header-icon-size)', height: 'var(--header-icon-size)' }}>
             <ProfileAvatar size={28} className="!w-full !h-full" />
           </div>
@@ -81,11 +85,8 @@ export const ProfileMenu: React.FC = () => {
             {user?.name || 'User'}
           </span>
         </div>
-        {/* Mobile: Avatar only - offset to balance with hamburger */}
-        <div
-          className="flex md:hidden items-center justify-center"
-          style={{ marginRight: 'calc(-1 * var(--header-icon-offset))' }}
-        >
+        {/* Mobile: Avatar only */}
+        <div className="flex md:hidden items-center justify-center">
           <ProfileAvatar size={28} />
         </div>
       </Button>

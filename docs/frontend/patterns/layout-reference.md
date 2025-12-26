@@ -111,11 +111,13 @@ This creates the **alignment zone** — all content (Action Bar, Page Card) alig
 
 | Variable | Calculation | Result | Purpose |
 |----------|-------------|--------|---------|
-| `--header-icon-size` | `header-height / 2` | `28px` | Icon/avatar size in header |
-| `--header-icon-offset` | `icon-size - mobile-padding` | `12px` | Edge-flush alignment offset |
+| `--header-icon-size` | `header-height / 2` | `28px` | Icon/avatar visual size in header |
+| `--header-icon-offset` | `icon-size - mobile-padding` | `12px` | Legacy edge-flush alignment offset |
+| `--interactive-target-size` | Fixed | `44px` | Consistent hit area (touch + mouse hover) |
+| `--edge-icon-offset` | `(target-size - 20px) / 2` | `12px` | Negative margin for edge button alignment |
 
 > [!TIP]
-> **Derived variables scale automatically** — if you change `--header-height` from 56px to 64px, `--header-icon-size` becomes 32px automatically.
+> **Interactive targets vs visual icons:** The button container is 44px for consistent hit area. Use `.edge-left` or `.edge-right` classes on first/last buttons to align icons with container edges.
 
 ---
 

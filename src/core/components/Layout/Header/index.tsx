@@ -201,8 +201,7 @@ export const Header: React.FC<HeaderProps> = ({
             type="text"
             icon={<Menu size={20} />}
             onClick={() => (isMobile ? setShowMobileMenu(true) : setCollapsed(!collapsed))}
-            className="header-icon-btn"
-            style={isMobile ? { marginLeft: 'calc(-1 * var(--header-icon-offset))' } : undefined}
+            className="header-icon-btn edge-left"
           />
 
           {/* Page title - shows when sidebar is not visible (small screens) */}
@@ -265,8 +264,8 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
           )}
 
-          {/* Group 2: Icon Buttons */}
-          <div className="flex items-center gap-1">
+          {/* Group 2: Icon Buttons - 44px targets provide natural spacing */}
+          <div className="flex items-center">
             {/* Search - mobile only */}
             {isMobile && config.searchFilters && (
               <Button type="text" icon={<Search size={20} />} onClick={() => setShowSearch(true)} className="header-icon-btn" />

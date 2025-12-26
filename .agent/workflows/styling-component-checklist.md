@@ -15,6 +15,185 @@ This workflow ensures all components strictly adhere to the Zoworks styling syst
 
 ---
 
+## ⚠️ CRITICAL: Pre-Fix Analysis Rules
+
+> [!CAUTION]
+> **BEFORE making any styling fix**, follow these rules. Violating them creates inconsistent, fragile CSS that breaks across the app.
+
+### Rule 1: Impact Analysis First
+
+**Before writing any code**, check what other components/pages will be affected:
+
+```bash
+# Find all usages of the class/component you're about to modify
+grep -r "header-icon-btn" src/ --include="*.tsx" --include="*.css"
+
+# Check related components in the same directory
+ls -la src/core/components/Layout/
+
+# Find similar patterns elsewhere
+grep -r "margin.*-.*offset" src/ --include="*.css"
+```
+
+**Checklist:**
+- [ ] Identified ALL pages/components using the affected class
+- [ ] Verified the fix improves ALL usages, not just the current one
+- [ ] Tested at multiple breakpoints before AND after
+- [ ] Documented which files are affected in the commit
+
+### Rule 2: Never Fix Named Elements (Use Positional Selectors)
+
+**❌ NEVER target specific elements by name:**
+```css
+/* BAD - Targets hamburger icon by name */
+.hamburger-button { margin-left: -12px; }
+
+/* BAD - Targets profile specifically */
+.profile-avatar { margin-right: -12px; }
+```
+
+**✅ ALWAYS use positional selectors:**
+```css
+/* GOOD - First icon in header gets left offset */
+.header-icons > :first-child { margin-left: ... }
+
+/* GOOD - Last element in header group */
+.header-icons > :last-child { margin-right: ... }
+
+/* GOOD - Any header icon button (generic class) */
+.header-icon-btn { ... }
+```
+
+**Why:** Named selectors break when elements are reordered, renamed, or new ones added. Positional selectors describe the ROLE, not the IDENTITY.
+
+### Rule 3: Use Global Variables & Multiples
+
+**All values must derive from base variables:**
+
+| Base Variable | Derived Values |
+|---------------|----------------|
+| `--header-height: 56px` | `calc(var(--header-height) / 2)` → icon size |
+| `--layout-padding: 24px` | `calc(var(--layout-padding) * 0.5)` → tight spacing |
+| `--tenant-gutter: 16px` | `calc(var(--tenant-gutter) * 2)` → double spacing |
+
+**❌ NEVER:**
+```css
+width: 28px;          /* Magic number */
+margin-left: -12px;   /* Where did 12 come from? */
+gap: 8px;             /* Arbitrary value */
+```
+
+**✅ ALWAYS:**
+```css
+width: var(--header-icon-size);                           /* Derived from header-height */
+margin-left: calc(-1 * var(--header-icon-offset));        /* Calculable from variables */
+gap: calc(var(--tenant-gutter) * 0.5);                    /* Multiple of base gutter */
+```
+
+### Rule 4: Responsive-First Approach
+
+**Design for mobile, enhance for desktop:**
+
+```css
+/* Mobile-first: Base styles apply to mobile */
+.header-icon-btn {
+  width: var(--header-icon-size);
+  height: var(--header-icon-size);
+}
+
+/* Desktop enhancement: Override only what changes */
+@media (min-width: 768px) {
+  .header-icon-btn {
+    /* Only add desktop-specific changes */
+  }
+}
+```
+
+**Responsive checklist:**
+- [ ] Default (no media query) = mobile
+- [ ] Use Tailwind responsive prefixes: `md:` for tablet+, `lg:` for desktop+
+- [ ] CSS media queries use `min-width` (mobile-first)
+- [ ] Test at: 375px, 768px, 1024px, 1440px
+
+### Rule 5: Container Handles Spacing, Elements Handle Sizing
+
+**Clear separation of responsibilities:**
+
+| Responsibility | Owner | Examples |
+|----------------|-------|----------|
+| Outer margins | Container | `.header { padding: ... }` |
+| Element spacing | Container | `.header { gap: ... }` |
+| Element size | Element | `.header-icon-btn { width: ... }` |
+| Internal alignment | Element | `.header-icon-btn { display: flex; align-items: center }` |
+
+**❌ DON'T mix responsibilities:**
+```tsx
+<Button style={{ marginLeft: '16px' }}>  {/* Element adding spacing = bad */}
+```
+
+**✅ DO separate them:**
+```tsx
+<div className="flex gap-4">            {/* Container handles gaps */}
+  <Button className="header-icon-btn" /> {/* Button only handles its own sizing */}
+</div>
+```
+
+### Rule 6: Fix Globally, Verify Everywhere
+
+**After making a fix:**
+1. Check ALL affected components (from Rule 1 analysis)
+2. Test in both light AND dark modes
+3. Test at ALL breakpoints (mobile, tablet, desktop)
+4. If the fix breaks something else, the fix is wrong — go back to analysis
+
+```bash
+# After any CSS change, verify related components
+yarn dev
+# Then manually check: /welcome, /dashboard, /inbox, /settings
+```
+
+### Rule 7: Interactive Target Requirements
+
+> [!IMPORTANT]
+> All interactive elements must have consistent hit areas across ALL devices (touch AND mouse).
+
+**Minimum requirements:**
+- **Hit area size**: 44x44px minimum (Apple HIG / consistent hover)
+- **Icon buttons**: If icon is 20-28px, button container should be 44px
+- **Edge alignment**: First/last buttons use negative margins to align icons with container edges
+
+**Available variables:**
+```css
+:root {
+  --header-icon-size: 28px;              /* Visual icon/avatar size */
+  --interactive-target-size: 44px;       /* Consistent hit area across devices */
+  --edge-icon-offset: calc((var(--interactive-target-size) - 20px) / 2);  /* 12px offset for flush alignment */
+}
+```
+
+**Edge alignment pattern:**
+```css
+/* Pull edge buttons flush with container edge */
+.header-icon-btn.edge-left {
+  margin-left: calc(-1 * var(--edge-icon-offset));
+}
+
+/* Mobile only - desktop profile uses auto-width for name */
+@media (max-width: 767px) {
+  .header-icon-btn.edge-right {
+    margin-right: calc(-1 * var(--edge-icon-offset));
+  }
+}
+```
+
+**Interactive target checklist:**
+- [ ] All icon buttons use `--interactive-target-size` (44px)
+- [ ] Edge buttons use `.edge-left` / `.edge-right` for flush alignment
+- [ ] Same hit area on mobile AND desktop
+- [ ] Test hover state on desktop, tap on mobile
+
+---
+
 ## Styling Fix Priority Order (FOLLOW THIS HIERARCHY)
 
 > [!IMPORTANT]
@@ -510,4 +689,4 @@ ${isDarkMode ? 'bg-[var(--color-bg-secondary)] border-[var(--color-border)]' : .
 
 ---
 
-*Last Updated: 2025-12-25*
+*Last Updated: 2025-12-26*
