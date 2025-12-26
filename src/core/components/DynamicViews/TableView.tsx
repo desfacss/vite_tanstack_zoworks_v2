@@ -118,7 +118,7 @@ const TableView: React.FC<TableViewProps> = ({
           }
           const content = (value !== null && value !== undefined && value !== '') ? value : '-';
           if (field.fieldPath === firstDisplayFieldPath && content !== '-') {
-            return <span className="font-semibold" style={{ color: 'var(--tenant-primary)', whiteSpace: 'nowrap' }}>{content}</span>
+            return <span className="font-semibold display-id-text" style={{ color: 'var(--tenant-primary)', whiteSpace: 'nowrap' }}>{content}</span>
           }
           return content;
         },

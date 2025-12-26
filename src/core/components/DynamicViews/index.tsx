@@ -704,7 +704,7 @@
 
 
 import React, { useState, useEffect, Suspense, useRef, useMemo } from 'react';
-import { Space, Radio, Card, message, Tooltip, Typography, Dropdown, Button } from 'antd';
+import { Radio, Card, message, Tooltip, Typography, Button } from 'antd';
 import {
   Table,
   LayoutGrid,
@@ -714,7 +714,6 @@ import {
   Info,
   MapPin,
   LayoutDashboard,
-  Menu,
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabase';
@@ -1423,8 +1422,10 @@ const DynamicViews: React.FC<DynamicViewsProps> = ({
         <ActionBarLeft>
           {renderTabs()}
         </ActionBarLeft>
-        <ActionBarRight>
+        <div className="action-bar-center hidden lg:block">
           {!!isTopLevel && isDesktop && globalFiltersElement}
+        </div>
+        <ActionBarRight>
           {globalActionsElement}
           {renderViewSelector()}
         </ActionBarRight>

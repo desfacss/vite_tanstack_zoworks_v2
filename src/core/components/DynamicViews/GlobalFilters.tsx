@@ -60,7 +60,7 @@ const GlobalFilters: React.FC<GlobalFiltersProps> = ({
     setVisibleColumns,
 }) => {
     const [form] = Form.useForm();
-    const { data } = useViewConfigEnhanced(entityType, entitySchema || 'public', false);
+    const { data } = useViewConfigEnhanced(entityType, entitySchema || 'public');
     useTranslation();
     const { organization, location } = useAuthStore();
     const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200);
@@ -281,17 +281,17 @@ const GlobalFilters: React.FC<GlobalFiltersProps> = ({
                             MAX_VISIBLE = 2;
                         }
 
-                        const visibleFields = filteredFields.slice(0, MAX_VISIBLE);
-                        const overflowFields = filteredFields.slice(MAX_VISIBLE);
+                        const visibleFields = windowWidth < 768 ? filteredFields.slice(0, 1) : filteredFields.slice(0, MAX_VISIBLE);
+                        const overflowFields = windowWidth < 768 ? filteredFields.slice(1) : filteredFields.slice(MAX_VISIBLE);
 
                         return (
                             <>
-                                {visibleFields.map((field) => (
+                                {visibleFields.map((field, index) => (
                                     <Form.Item
                                         key={field.name}
                                         name={field.name}
                                         label={<span className="text-[11px] font-medium uppercase tracking-wider text-slate-500 md:hidden">{field.label}</span>}
-                                        className="mb-0 min-w-[160px]"
+                                        className={`mb-0 ${index === 0 ? 'flex-1 min-w-[200px]' : 'min-w-[160px]'} max-w-[400px]`}
                                     >
                                         {field.type === 'text' && (
                                             <Input
