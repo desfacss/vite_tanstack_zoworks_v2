@@ -35,6 +35,15 @@
         "key": "settings",
         "submoduleKey": "admin-settings"
       }
+    ],
+    "wa": [
+      {
+        "filePath": "src/modules/wa/pages/InboxPage.tsx",
+        "routePath": "/wa/inbox",
+        "translationKey": "inbox",
+        "key": "inbox",
+        "submoduleKey": "wa-inbox"
+      }
     ]
   },
   "root": [

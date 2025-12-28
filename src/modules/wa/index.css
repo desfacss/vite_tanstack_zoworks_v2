@@ -1,0 +1,154 @@
+/* WhatsApp Module - Minimal Custom Styles */
+/* Only styles that cannot be achieved with Ant Design theme tokens */
+
+/* ============================================
+   INBOX LAYOUT - Two Column (Outlook-style)
+   ============================================ */
+
+/* Conversation list panel */
+.wa-inbox-conversations {
+    height: 100%;
+    overflow-y: auto;
+    background: var(--ant-color-bg-container);
+}
+
+/* Chat area panel */
+.wa-inbox-chat {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+}
+
+/* Chat messages area - WhatsApp-style background */
+.wa-chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    background: var(--wa-chat-bg, #e5ddd5);
+    /* Classic WhatsApp pattern overlay - subtle */
+    background-image:
+        url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+
+/* Dark mode chat background */
+[data-theme="dark"] .wa-chat-messages,
+.ant-layout[style*="colorBgLayout: #000"] .wa-chat-messages {
+    --wa-chat-bg: #0b141a;
+    background-color: #0b141a;
+    background-image:
+        url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.02'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+
+/* ============================================
+   CONVERSATION LIST ITEMS
+   ============================================ */
+
+.wa-conversation-item {
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.wa-conversation-item:hover {
+    background-color: var(--ant-color-fill-secondary);
+}
+
+.wa-conversation-item.selected {
+    background-color: var(--ant-color-primary-bg);
+}
+
+/* ============================================
+   MESSAGE BUBBLES
+   ============================================ */
+
+.wa-message-bubble {
+    max-width: 85%;
+    min-width: 100px;
+    padding: 6px 7px 8px 9px;
+    border-radius: 7.5px;
+    box-shadow: 0 1px 0.5px rgba(11, 20, 26, 0.13);
+    word-wrap: break-word;
+}
+
+/* Sent messages (right side, green) */
+.wa-message-bubble.sent {
+    background-color: #E7FFDB;
+    border-top-right-radius: 0;
+    margin-left: auto;
+}
+
+/* Received messages (left side, white) */
+.wa-message-bubble.received {
+    background-color: #FFFFFF;
+    border-top-left-radius: 0;
+    margin-right: auto;
+}
+
+/* Dark mode message bubbles */
+[data-theme="dark"] .wa-message-bubble.sent {
+    background-color: #005c4b;
+    color: #e9edef;
+}
+
+[data-theme="dark"] .wa-message-bubble.received {
+    background-color: #202c33;
+    color: #e9edef;
+}
+
+/* ============================================
+   INPUT AREA
+   ============================================ */
+
+.wa-input-area {
+    padding: 12px;
+    background: var(--ant-color-bg-container);
+    border-top: 1px solid var(--ant-color-border-secondary);
+}
+
+.wa-input-field {
+    flex: 1;
+    background: var(--ant-color-bg-elevated);
+    border-radius: 24px;
+    padding: 6px 12px;
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+}
+
+/* Dark mode input */
+[data-theme="dark"] .wa-input-field {
+    background: #2a3942;
+}
+
+/* ============================================
+   EMPTY STATE
+   ============================================ */
+
+.wa-empty-chat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    background: var(--ant-color-bg-layout);
+    color: var(--ant-color-text-secondary);
+}
+
+/* ============================================
+   SCROLLBAR STYLING
+   ============================================ */
+
+.wa-inbox-conversations::-webkit-scrollbar,
+.wa-chat-messages::-webkit-scrollbar {
+    width: 6px;
+}
+
+.wa-inbox-conversations::-webkit-scrollbar-thumb,
+.wa-chat-messages::-webkit-scrollbar-thumb {
+    background-color: var(--ant-color-border);
+    border-radius: 3px;
+}
+
+.wa-inbox-conversations::-webkit-scrollbar-track,
+.wa-chat-messages::-webkit-scrollbar-track {
+    background: transparent;
+}

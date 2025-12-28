@@ -143,6 +143,35 @@ export const THEME_PRESETS: Record<string, Partial<TenantThemeConfig> & { descri
             inputBg: '#111111',         // Dark input fields
             textColor: '#ffffff',
         }
+    },
+
+    // WhatsApp - Authentic WhatsApp design language (inspired by zo_waCRM)
+    whatsapp: {
+        borderRadius: 8,
+        baseFontSize: 14,
+        containerPadding: 16,
+        preset: 'whatsapp',
+        description: 'Authentic WhatsApp design with signature green',
+        light: {
+            primaryColor: '#25D366',    // WhatsApp Green (signature)
+            secondaryColor: '#008069',  // WhatsApp Teal
+            cardBg: '#ffffff',
+            layoutBg: '#f0f2f5',        // WhatsApp light gray background
+            headerBg: '#008069',        // WhatsApp Teal header
+            siderBg: '#ffffff',
+            inputBg: '#f0f2f5',
+            textColor: 'rgba(0, 0, 0, 0.88)',
+        },
+        dark: {
+            primaryColor: '#25D366',    // WhatsApp Green
+            secondaryColor: '#00564a',  // WhatsApp Teal Dark
+            cardBg: '#1f1f1f',
+            layoutBg: '#0b141a',        // WhatsApp dark chat background
+            headerBg: '#1f2c34',        // WhatsApp dark header
+            siderBg: '#111b21',         // WhatsApp dark sidebar
+            inputBg: '#2a3942',         // WhatsApp dark input
+            textColor: '#e9edef',
+        }
     }
 };
 
