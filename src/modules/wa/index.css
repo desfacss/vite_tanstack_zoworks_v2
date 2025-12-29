@@ -1,42 +1,172 @@
-/* WhatsApp Module - Minimal Custom Styles */
-/* Only styles that cannot be achieved with Ant Design theme tokens */
+/* WhatsApp Module - Styles from zo_waCRM scoped to WA module */
+/* These styles ONLY apply to elements inside .wa-inbox-page */
 
 /* ============================================
-   INBOX LAYOUT - Two Column (Outlook-style)
+   INBOX PAGE CONTAINER
    ============================================ */
 
-/* Conversation list panel */
-.wa-inbox-conversations {
-    height: 100%;
-    overflow-y: auto;
-    background: var(--ant-color-bg-container);
+/* Full height container - uses CSS variables from main app */
+/* Works with AuthedLayout which provides the content area */
+.wa-inbox-page {
+    height: calc(100vh - var(--header-height, 56px));
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    overflow: hidden;
+    background: var(--ant-color-bg-container, #fff);
 }
 
-/* Chat area panel */
-.wa-inbox-chat {
+/* CRITICAL: Prevent AuthedLayout Content from scrolling */
+/* The parent motion.div and ant-layout-content wrappers must not scroll */
+.wa-inbox-page,
+.wa-inbox-page>.ant-app {
+    /* These ensure the container takes full remaining height */
+    min-height: 0;
+    max-height: calc(100vh - var(--header-height, 56px));
+}
+
+/* Override the parent containers to not scroll - use :has() selector */
+/* This targets the AuthedLayout Content wrapper that contains the inbox */
+.ant-layout-content:has(.wa-inbox-page) {
+    overflow: hidden !important;
+    height: calc(100vh - var(--header-height, 56px)) !important;
+    max-height: calc(100vh - var(--header-height, 56px)) !important;
+}
+
+/* Target the motion.div wrapper from AuthedLayout */
+.ant-layout-content>div:has(.wa-inbox-page) {
+    overflow: hidden !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    max-height: 100% !important;
+}
+
+/* Ensure Layout fills completely */
+.wa-inbox-page .ant-layout {
+    height: 100% !important;
+    flex: 1;
+    display: flex;
+    flex-direction: row;
+    overflow: hidden;
+}
+
+/* App wrapper shouldn't interfere */
+.wa-inbox-page .ant-app {
+    height: 100%;
+    width: 100%;
+    display: flex;
+    flex: 1;
+}
+
+/* ============================================
+   LEFT PANEL - Conversation List
+   ============================================ */
+
+.wa-conversations-panel {
+    width: 380px;
+    min-width: 300px;
+    max-width: 450px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid var(--ant-color-border-secondary, #f0f0f0);
+    background: var(--ant-color-bg-container, #fff);
+    overflow: hidden;
+}
+
+.wa-inbox-conversations {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+/* ============================================
+   RIGHT PANEL - Chat Area
+   ============================================ */
+
+.wa-chat-panel {
+    flex: 1;
     display: flex;
     flex-direction: column;
     height: 100%;
-    min-height: 0;
+    min-width: 0;
+    overflow: hidden;
+    background: var(--ant-color-bg-container, #fff);
 }
 
-/* Chat messages area - WhatsApp-style background */
+/* Chat Header - Fixed at top */
+.wa-chat-header {
+    flex-shrink: 0;
+    padding: 12px 16px;
+    background: var(--ant-color-bg-elevated, #fafafa);
+    border-bottom: 1px solid var(--ant-color-border-secondary, #f0f0f0);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 10;
+}
+
+/* Chat Messages - Scrollable with WhatsApp background */
 .wa-chat-messages {
     flex: 1;
     overflow-y: auto;
-    background: var(--wa-chat-bg, #e5ddd5);
-    /* Classic WhatsApp pattern overlay - subtle */
-    background-image:
-        url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    overflow-x: hidden;
+    padding: 16px;
+    min-height: 0;
+    /* WhatsApp light mode background */
+    background-color: #e5ddd5;
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
 }
 
 /* Dark mode chat background */
 [data-theme="dark"] .wa-chat-messages,
-.ant-layout[style*="colorBgLayout: #000"] .wa-chat-messages {
-    --wa-chat-bg: #0b141a;
+.dark .wa-chat-messages {
     background-color: #0b141a;
-    background-image:
-        url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.02'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+
+/* Chat Input - Fixed at bottom */
+.wa-chat-input {
+    flex-shrink: 0;
+    padding: 10px 16px;
+    background: var(--ant-color-bg-container, #fff);
+    border-top: 1px solid var(--ant-color-border-secondary, #f0f0f0);
+}
+
+/* ============================================
+   CHAT BUBBLES - From zo_waCRM
+   ============================================ */
+
+.chat-bubble {
+    max-width: 65%;
+    padding: 8px 12px;
+    border-radius: 12px;
+    word-wrap: break-word;
+}
+
+.chat-bubble-sent {
+    background-color: #dcf8c6;
+    border-bottom-right-radius: 4px;
+    margin-left: auto;
+}
+
+.chat-bubble-received {
+    background-color: #ffffff;
+    border-bottom-left-radius: 4px;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+}
+
+/* Dark mode bubbles */
+[data-theme="dark"] .chat-bubble-sent,
+.dark .chat-bubble-sent {
+    background-color: #005c4b;
+    color: #e9edef;
+}
+
+[data-theme="dark"] .chat-bubble-received,
+.dark .chat-bubble-received {
+    background-color: #202c33;
+    color: #e9edef;
 }
 
 /* ============================================
@@ -49,74 +179,11 @@
 }
 
 .wa-conversation-item:hover {
-    background-color: var(--ant-color-fill-secondary);
+    background-color: var(--ant-color-fill-secondary, #f5f5f5);
 }
 
 .wa-conversation-item.selected {
-    background-color: var(--ant-color-primary-bg);
-}
-
-/* ============================================
-   MESSAGE BUBBLES
-   ============================================ */
-
-.wa-message-bubble {
-    max-width: 85%;
-    min-width: 100px;
-    padding: 6px 7px 8px 9px;
-    border-radius: 7.5px;
-    box-shadow: 0 1px 0.5px rgba(11, 20, 26, 0.13);
-    word-wrap: break-word;
-}
-
-/* Sent messages (right side, green) */
-.wa-message-bubble.sent {
-    background-color: #E7FFDB;
-    border-top-right-radius: 0;
-    margin-left: auto;
-}
-
-/* Received messages (left side, white) */
-.wa-message-bubble.received {
-    background-color: #FFFFFF;
-    border-top-left-radius: 0;
-    margin-right: auto;
-}
-
-/* Dark mode message bubbles */
-[data-theme="dark"] .wa-message-bubble.sent {
-    background-color: #005c4b;
-    color: #e9edef;
-}
-
-[data-theme="dark"] .wa-message-bubble.received {
-    background-color: #202c33;
-    color: #e9edef;
-}
-
-/* ============================================
-   INPUT AREA
-   ============================================ */
-
-.wa-input-area {
-    padding: 12px;
-    background: var(--ant-color-bg-container);
-    border-top: 1px solid var(--ant-color-border-secondary);
-}
-
-.wa-input-field {
-    flex: 1;
-    background: var(--ant-color-bg-elevated);
-    border-radius: 24px;
-    padding: 6px 12px;
-    min-height: 40px;
-    display: flex;
-    align-items: center;
-}
-
-/* Dark mode input */
-[data-theme="dark"] .wa-input-field {
-    background: #2a3942;
+    background-color: var(--ant-color-primary-bg, #e6f7ff);
 }
 
 /* ============================================
@@ -124,13 +191,13 @@
    ============================================ */
 
 .wa-empty-chat {
+    flex: 1;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    height: 100%;
-    background: var(--ant-color-bg-layout);
-    color: var(--ant-color-text-secondary);
+    background: var(--ant-color-bg-layout, #f5f5f5);
+    color: var(--ant-color-text-secondary, #999);
 }
 
 /* ============================================
@@ -144,11 +211,122 @@
 
 .wa-inbox-conversations::-webkit-scrollbar-thumb,
 .wa-chat-messages::-webkit-scrollbar-thumb {
-    background-color: var(--ant-color-border);
+    background: rgba(0, 0, 0, 0.15);
     border-radius: 3px;
+}
+
+.wa-inbox-conversations::-webkit-scrollbar-thumb:hover,
+.wa-chat-messages::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.25);
 }
 
 .wa-inbox-conversations::-webkit-scrollbar-track,
 .wa-chat-messages::-webkit-scrollbar-track {
     background: transparent;
+}
+
+/* Dark mode scrollbar */
+[data-theme="dark"] .wa-inbox-conversations::-webkit-scrollbar-thumb,
+[data-theme="dark"] .wa-chat-messages::-webkit-scrollbar-thumb,
+.dark .wa-inbox-conversations::-webkit-scrollbar-thumb,
+.dark .wa-chat-messages::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+/* ============================================
+   STATUS INDICATORS - From zo_waCRM
+   ============================================ */
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.status-online {
+    background-color: #52c41a;
+}
+
+.status-away {
+    background-color: #faad14;
+}
+
+.status-offline {
+    background-color: #d9d9d9;
+}
+
+/* ============================================
+   MESSAGE STATUS - From zo_waCRM
+   ============================================ */
+
+.message-status {
+    font-size: 12px;
+    margin-left: 4px;
+}
+
+.message-status-sent {
+    color: #8696a0;
+}
+
+.message-status-delivered {
+    color: #8696a0;
+}
+
+.message-status-read {
+    color: #53bdeb;
+}
+
+/* ============================================
+   TYPING INDICATOR - From zo_waCRM
+   ============================================ */
+
+.typing-indicator {
+    display: flex;
+    gap: 4px;
+    padding: 8px 12px;
+}
+
+.typing-dot {
+    width: 8px;
+    height: 8px;
+    background-color: #8696a0;
+    border-radius: 50%;
+    animation: typingBounce 1.4s infinite ease-in-out both;
+}
+
+.typing-dot:nth-child(1) {
+    animation-delay: -0.32s;
+}
+
+.typing-dot:nth-child(2) {
+    animation-delay: -0.16s;
+}
+
+.typing-dot:nth-child(3) {
+    animation-delay: 0;
+}
+
+@keyframes typingBounce {
+
+    0%,
+    80%,
+    100% {
+        transform: scale(0.6);
+    }
+
+    40% {
+        transform: scale(1);
+    }
+}
+
+/* ============================================
+   MOBILE RESPONSIVE
+   ============================================ */
+
+@media (max-width: 768px) {
+    .wa-conversations-panel {
+        width: 100%;
+        max-width: none;
+    }
 }

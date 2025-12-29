@@ -395,217 +395,210 @@ const InboxPage: React.FC = () => {
     // Mobile: Show only chat when conversation selected
     if (isMobile && selectedConversationId) {
         return (
-            <App>
-                <Layout style={{ height: '100%', background: token.colorBgContainer }}>
-                    {/* Chat Header */}
-                    <div style={{
-                        padding: '12px 16px',
-                        background: token.colorBgElevated,
-                        borderBottom: `1px solid ${token.colorBorderSecondary}`,
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 12
-                    }}>
-                        <Button
-                            type="text"
-                            icon={<ArrowLeft size={20} />}
-                            onClick={() => setSelectedConversationId(null)}
-                        />
-                        <Avatar src={selectedConversation?.participant_avatar} icon={<User size={16} />}>
-                            {selectedConversation?.participant_name[0]}
-                        </Avatar>
-                        <div style={{ flex: 1 }}>
-                            <Text strong>{selectedConversation?.participant_name}</Text>
-                            <br />
-                            <Text type="secondary" style={{ fontSize: 12 }}>
-                                {selectedConversation?.status}
-                            </Text>
-                        </div>
-                        <Dropdown menu={{ items: actionMenuItems }} trigger={['click']}>
-                            <Button type="text" icon={<MoreVertical size={20} />} />
-                        </Dropdown>
-                    </div>
-
-                    {/* Messages */}
-                    <Content className="wa-chat-messages" style={{ padding: '16px 0' }}>
-                        {isLoadingMessages ? (
-                            <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}>
-                                <Spin />
+            <div className="wa-inbox-page">
+                <App>
+                    <Layout style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                        {/* Chat Header */}
+                        <div style={{
+                            padding: '12px 16px',
+                            background: token.colorBgElevated,
+                            borderBottom: `1px solid ${token.colorBorderSecondary}`,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 12
+                        }}>
+                            <Button
+                                type="text"
+                                icon={<ArrowLeft size={20} />}
+                                onClick={() => setSelectedConversationId(null)}
+                            />
+                            <Avatar src={selectedConversation?.participant_avatar} icon={<User size={16} />}>
+                                {selectedConversation?.participant_name[0]}
+                            </Avatar>
+                            <div style={{ flex: 1 }}>
+                                <Text strong>{selectedConversation?.participant_name}</Text>
+                                <br />
+                                <Text type="secondary" style={{ fontSize: 12 }}>
+                                    {selectedConversation?.status}
+                                </Text>
                             </div>
-                        ) : messagesData.length === 0 ? (
-                            <Empty description="No messages yet" style={{ marginTop: 40 }} />
-                        ) : (
-                            messagesData.map((msg: any) => (
-                                <MessageBubble key={msg.id} message={msg} />
-                            ))
-                        )}
-                        <div ref={messagesEndRef} />
-                    </Content>
+                            <Dropdown menu={{ items: actionMenuItems }} trigger={['click']}>
+                                <Button type="text" icon={<MoreVertical size={20} />} />
+                            </Dropdown>
+                        </div>
 
-                    {/* Message Input */}
-                    <MessageInputArea
-                        value={messageInput}
-                        onChange={setMessageInput}
-                        onSend={handleSendMessage}
-                        onAttach={handleAttach}
-                        onTemplateClick={() => { }}
-                        pendingAttachment={pendingAttachment}
-                        onClearAttachment={() => setPendingAttachment(null)}
-                        isMobile={true}
-                    />
-                </Layout>
-            </App>
+                        {/* Messages */}
+                        <Content className="wa-chat-messages" style={{ padding: '16px 0' }}>
+                            {isLoadingMessages ? (
+                                <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}>
+                                    <Spin />
+                                </div>
+                            ) : messagesData.length === 0 ? (
+                                <Empty description="No messages yet" style={{ marginTop: 40 }} />
+                            ) : (
+                                messagesData.map((msg: any) => (
+                                    <MessageBubble key={msg.id} message={msg} />
+                                ))
+                            )}
+                            <div ref={messagesEndRef} />
+                        </Content>
+
+                        {/* Message Input */}
+                        <MessageInputArea
+                            value={messageInput}
+                            onChange={setMessageInput}
+                            onSend={handleSendMessage}
+                            onAttach={handleAttach}
+                            onTemplateClick={() => { }}
+                            pendingAttachment={pendingAttachment}
+                            onClearAttachment={() => setPendingAttachment(null)}
+                            isMobile={true}
+                        />
+                    </Layout>
+                </App>
+            </div>
         );
     }
 
     return (
-        <App>
-            <Layout style={{ height: '100%', display: 'flex', flexDirection: 'row', background: token.colorBgContainer }}>
-                {/* Conversation List - Left Panel */}
-                <div style={{
-                    width: isMobile ? '100%' : 380,
-                    borderRight: `1px solid ${token.colorBorderSecondary}`,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    background: token.colorBgContainer
-                }}>
-                    {/* Search */}
-                    <div style={{ padding: 16 }}>
-                        <Input
-                            placeholder="Search conversations..."
-                            prefix={<Search size={16} style={{ color: token.colorTextSecondary }} />}
-                            value={searchValue}
-                            onChange={(e) => {
-                                setSearchValue(e.target.value);
-                                setFilters({ ...filters, search: e.target.value });
-                            }}
-                            style={{ borderRadius: 8 }}
-                        />
-                    </div>
-
-                    {/* Tabs */}
-                    <Tabs
-                        items={tabItems}
-                        activeKey={filters.status || 'all'}
-                        onChange={(key) => setFilters({ ...filters, status: key === 'all' ? undefined : key })}
-                        style={{ padding: '0 16px' }}
-                    />
-
-                    {/* Conversation List */}
-                    <div className="wa-inbox-conversations">
-                        {isLoadingConversations ? (
-                            <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}>
-                                <Spin />
-                            </div>
-                        ) : conversationsData.length === 0 ? (
-                            <Empty description="No conversations" style={{ marginTop: 40 }} />
-                        ) : (
-                            <List
-                                dataSource={conversationsData}
-                                renderItem={(conversation: Conversation) => (
-                                    <ConversationItem
-                                        key={conversation.id}
-                                        conversation={conversation}
-                                        isSelected={conversation.id === selectedConversationId}
-                                        onClick={() => setSelectedConversationId(conversation.id)}
-                                    />
-                                )}
+        <div className="wa-inbox-page">
+            <App>
+                <Layout style={{ flex: 1, display: 'flex', flexDirection: 'row' }}>
+                    {/* Conversation List - Left Panel */}
+                    <div className="wa-conversations-panel" style={{ width: isMobile ? '100%' : undefined }}>
+                        {/* Search */}
+                        <div style={{ padding: 16 }}>
+                            <Input
+                                placeholder="Search conversations..."
+                                prefix={<Search size={16} style={{ color: token.colorTextSecondary }} />}
+                                value={searchValue}
+                                onChange={(e) => {
+                                    setSearchValue(e.target.value);
+                                    setFilters({ ...filters, search: e.target.value });
+                                }}
+                                style={{ borderRadius: 8 }}
                             />
-                        )}
-                    </div>
-                </div>
+                        </div>
 
-                {/* Chat Area - Right Panel (Desktop only) */}
-                {!isMobile && (
-                    <Layout style={{ flex: 1, background: token.colorBgContainer }}>
-                        {selectedConversationId ? (
-                            <>
-                                {/* Chat Header */}
-                                <div style={{
-                                    padding: '12px 16px',
-                                    background: token.colorBgElevated,
-                                    borderBottom: `1px solid ${token.colorBorderSecondary}`,
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'space-between'
-                                }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                                        <Avatar src={selectedConversation?.participant_avatar} icon={<User size={16} />}>
-                                            {selectedConversation?.participant_name[0]}
-                                        </Avatar>
-                                        <div>
-                                            <Text strong>{selectedConversation?.participant_name}</Text>
-                                            <br />
-                                            <Text type="secondary" style={{ fontSize: 12 }}>
-                                                {selectedConversation?.participant_phone}
-                                            </Text>
-                                        </div>
-                                    </div>
-                                    <Space>
-                                        <Tooltip title="Contact Info">
-                                            <Button
-                                                type="text"
-                                                icon={<User size={18} />}
-                                                onClick={toggleContactPanel}
-                                            />
-                                        </Tooltip>
-                                        <Dropdown menu={{ items: actionMenuItems }} trigger={['click']}>
-                                            <Button type="text" icon={<MoreVertical size={18} />} />
-                                        </Dropdown>
-                                    </Space>
+                        {/* Tabs */}
+                        <Tabs
+                            items={tabItems}
+                            activeKey={filters.status || 'all'}
+                            onChange={(key) => setFilters({ ...filters, status: key === 'all' ? undefined : key })}
+                            style={{ padding: '0 16px' }}
+                        />
+
+                        {/* Conversation List */}
+                        <div className="wa-inbox-conversations">
+                            {isLoadingConversations ? (
+                                <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}>
+                                    <Spin />
                                 </div>
-
-                                {/* Messages */}
-                                <Content className="wa-chat-messages" style={{ padding: '16px 0' }}>
-                                    {isLoadingMessages ? (
-                                        <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}>
-                                            <Spin />
-                                        </div>
-                                    ) : messagesData.length === 0 ? (
-                                        <Empty description="No messages yet" style={{ marginTop: 40 }} />
-                                    ) : (
-                                        messagesData.map((msg: any) => (
-                                            <MessageBubble key={msg.id} message={msg} />
-                                        ))
+                            ) : conversationsData.length === 0 ? (
+                                <Empty description="No conversations" style={{ marginTop: 40 }} />
+                            ) : (
+                                <List
+                                    dataSource={conversationsData}
+                                    renderItem={(conversation: Conversation) => (
+                                        <ConversationItem
+                                            key={conversation.id}
+                                            conversation={conversation}
+                                            isSelected={conversation.id === selectedConversationId}
+                                            onClick={() => setSelectedConversationId(conversation.id)}
+                                        />
                                     )}
-                                    <div ref={messagesEndRef} />
-                                </Content>
-
-                                {/* Message Input */}
-                                <MessageInputArea
-                                    value={messageInput}
-                                    onChange={setMessageInput}
-                                    onSend={handleSendMessage}
-                                    onAttach={handleAttach}
-                                    onTemplateClick={() => { }}
-                                    pendingAttachment={pendingAttachment}
-                                    onClearAttachment={() => setPendingAttachment(null)}
                                 />
-                            </>
-                        ) : (
-                            <div className="wa-empty-chat">
-                                <Empty
-                                    image={<MessageCircle size={64} style={{ color: token.colorTextSecondary }} />}
-                                    description={
-                                        <Text type="secondary">Select a conversation to start messaging</Text>
-                                    }
-                                />
-                            </div>
-                        )}
-                    </Layout>
-                )}
+                            )}
+                        </div>
+                    </div>
 
-                {/* Contact Details Panel */}
-                <ContactDetailsPanel
-                    conversationId={selectedConversationId}
-                    visible={isContactPanelVisible}
-                    onClose={() => setIsContactPanelVisible(false)}
-                    assigneeId={selectedConversation?.assignee_id}
-                    onAssign={(agentId) => assignConversation(agentId)}
-                    teamMembers={teamMembers}
-                />
-            </Layout>
-        </App>
+                    {/* Chat Area - Right Panel (Desktop only) */}
+                    {!isMobile && (
+                        <div className="wa-chat-panel">
+                            {selectedConversationId ? (
+                                <>
+                                    {/* Chat Header - Fixed */}
+                                    <div className="wa-chat-header">
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                                            <Avatar src={selectedConversation?.participant_avatar} icon={<User size={16} />}>
+                                                {selectedConversation?.participant_name[0]}
+                                            </Avatar>
+                                            <div>
+                                                <Text strong>{selectedConversation?.participant_name}</Text>
+                                                <br />
+                                                <Text type="secondary" style={{ fontSize: 12 }}>
+                                                    {selectedConversation?.participant_phone}
+                                                </Text>
+                                            </div>
+                                        </div>
+                                        <Space>
+                                            <Tooltip title="Contact Info">
+                                                <Button
+                                                    type="text"
+                                                    icon={<User size={18} />}
+                                                    onClick={toggleContactPanel}
+                                                />
+                                            </Tooltip>
+                                            <Dropdown menu={{ items: actionMenuItems }} trigger={['click']}>
+                                                <Button type="text" icon={<MoreVertical size={18} />} />
+                                            </Dropdown>
+                                        </Space>
+                                    </div>
+
+                                    {/* Messages - Scrollable with WA background */}
+                                    <div className="wa-chat-messages">
+                                        {isLoadingMessages ? (
+                                            <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}>
+                                                <Spin />
+                                            </div>
+                                        ) : messagesData.length === 0 ? (
+                                            <Empty description="No messages yet" style={{ marginTop: 40 }} />
+                                        ) : (
+                                            messagesData.map((msg: any) => (
+                                                <MessageBubble key={msg.id} message={msg} />
+                                            ))
+                                        )}
+                                        <div ref={messagesEndRef} />
+                                    </div>
+
+                                    {/* Message Input - Fixed at bottom */}
+                                    <div className="wa-chat-input">
+                                        <MessageInputArea
+                                            value={messageInput}
+                                            onChange={setMessageInput}
+                                            onSend={handleSendMessage}
+                                            onAttach={handleAttach}
+                                            onTemplateClick={() => { }}
+                                            pendingAttachment={pendingAttachment}
+                                            onClearAttachment={() => setPendingAttachment(null)}
+                                        />
+                                    </div>
+                                </>
+                            ) : (
+                                <div className="wa-empty-chat">
+                                    <Empty
+                                        image={<MessageCircle size={64} style={{ color: token.colorTextSecondary }} />}
+                                        description={
+                                            <Text type="secondary">Select a conversation to start messaging</Text>
+                                        }
+                                    />
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Contact Details Panel */}
+                    <ContactDetailsPanel
+                        conversationId={selectedConversationId}
+                        visible={isContactPanelVisible}
+                        onClose={() => setIsContactPanelVisible(false)}
+                        assigneeId={selectedConversation?.assignee_id}
+                        onAssign={(agentId) => assignConversation(agentId)}
+                        teamMembers={teamMembers}
+                    />
+                </Layout>
+            </App>
+        </div>
     );
 };
 
