@@ -26,22 +26,25 @@ interface ConfigData {
 interface metadataItem {
   key: string;
   display_name: string;
+  foreign_key?: {
+    source_table: string;
+    display_column: string;
+  };
 }
 
 interface TableViewConfigProps {
   configData: ConfigData;
   onSave?: (data: ConfigData) => void;
-  availableColumns: any[];
+  availableColumns?: any[];
   metadata?: metadataItem[];
+  entitySchema?: string;
 }
 
 const TableViewConfig: React.FC<TableViewConfigProps> = ({
   configData,
   onSave,
-  availableColumns,
   metadata,
 }) => {
-  useEffect
   const [fields, setFields] = useState<Field[]>(configData?.fields || []);
   const [actions, setActions] = useState<{
     row: Action[];
@@ -96,24 +99,26 @@ const TableViewConfig: React.FC<TableViewConfigProps> = ({
   };
 
   const handleFieldChange = (index: number, key: keyof Field, value: string) => {
-  const updatedFields = [...fields];
-  if (key === 'fieldPath') {
-    const selectedColumn = metadata?.find(col => col?.key === value);
-    if (selectedColumn) {
-      updatedFields[index].fieldName = selectedColumn.display_name;
-      // Check if the selected column has a foreign_key
-      updatedFields[index].fieldPath = selectedColumn.foreign_key
-        ? `${value}_name`
-        : value;
-    } else {
+    const updatedFields = [...fields];
+    if (key === 'fieldPath') {
+      const selectedColumn = metadata?.find(col => col?.key === value);
+      if (selectedColumn) {
+        updatedFields[index].fieldName = selectedColumn.display_name;
+        // Check if the selected column has a foreign_key
+        updatedFields[index].fieldPath = selectedColumn.foreign_key
+          ? `${value}_name`
+          : value;
+      } else {
+        updatedFields[index].fieldName = value;
+        updatedFields[index].fieldPath = value;
+      }
+    } else if (key === 'fieldName') {
       updatedFields[index].fieldName = value;
-      updatedFields[index].fieldPath = value;
+    } else if (key === 'order') {
+      updatedFields[index].order = parseInt(value, 10) || 0;
     }
-  } else {
-    updatedFields[index][key] = value;
-  }
-  setFields(updatedFields);
-};
+    setFields(updatedFields);
+  };
 
   const handleRemoveField = (index: number) => {
     const updatedFields = fields.filter((_, i) => i !== index);
@@ -257,7 +262,7 @@ const TableViewConfig: React.FC<TableViewConfigProps> = ({
 
   return (
     <>
-    {metadata?.length>0?(<div>
+    {(metadata?.length ?? 0) > 0 ? (<div>
       <h2>Table View Configuration</h2>
        <Title level={4}>Fields </Title>
       <Table

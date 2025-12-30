@@ -28,7 +28,6 @@ import ViewSuggestionModal from './ViewSuggestionModal';
 import DisplayIdConfig from './DisplayIdConfig';
 import { ThunderboltOutlined, ReloadOutlined, DeleteOutlined } from '@ant-design/icons';
 
-const { TabPane } = Tabs;
 const { Option } = Select;
 
 interface YViewConfig {
@@ -172,42 +171,59 @@ const YViewConfigManager: React.FC = () => {
     
     setDeleteLoading(true);
     const errors: string[] = [];
+    const successfulDeletes: string[] = [];
     
     try {
-      // Delete from view_configs first (foreign key dependency)
-      if (deleteFromTables.view_configs) {
-        const { error } = await supabase
-          .schema('core')
-          .from('view_configs')
-          .delete()
-          .eq('entity_id', entityId);
-        if (error) errors.push(`view_configs: ${error.message}`);
-      }
-      
-      // Delete from metrics
-      if (deleteFromTables.metrics) {
-        const { error } = await supabase
-          .schema('core')
-          .from('metrics')
-          .delete()
-          .eq('entity_id', entityId);
-        if (error) errors.push(`metrics: ${error.message}`);
-      }
-      
-      // Delete from entities last (parent table)
+      // If entities is selected, just delete from entities 
+      // The ON DELETE CASCADE will automatically handle view_configs and metrics
       if (deleteFromTables.entities) {
         const { error } = await supabase
           .schema('core')
           .from('entities')
           .delete()
           .eq('id', entityId);
-        if (error) errors.push(`entities: ${error.message}`);
+        
+        if (error) {
+          errors.push(`entities: ${error.message}`);
+        } else {
+          // CASCADE will handle these automatically
+          successfulDeletes.push('entities');
+          if (deleteFromTables.view_configs) successfulDeletes.push('view_configs (cascade)');
+          if (deleteFromTables.metrics) successfulDeletes.push('metrics (cascade)');
+        }
+      } else {
+        // Only manually delete from child tables if entities is NOT being deleted
+        if (deleteFromTables.view_configs) {
+          const { error } = await supabase
+            .schema('core')
+            .from('view_configs')
+            .delete()
+            .eq('entity_id', entityId);
+          if (error) {
+            errors.push(`view_configs: ${error.message}`);
+          } else {
+            successfulDeletes.push('view_configs');
+          }
+        }
+        
+        if (deleteFromTables.metrics) {
+          const { error } = await supabase
+            .schema('core')
+            .from('metrics')
+            .delete()
+            .eq('entity_id', entityId);
+          if (error) {
+            errors.push(`metrics: ${error.message}`);
+          } else {
+            successfulDeletes.push('metrics');
+          }
+        }
       }
       
       if (errors.length > 0) {
         message.error(`Deletion errors: ${errors.join(', ')}`);
       } else {
-        message.success(`Successfully deleted from ${tablesToDelete.join(', ')}`);
+        message.success(`Successfully deleted from: ${successfulDeletes.join(', ')}`);
         // Reset selection
         setSelectedConfig(null);
         setSelectedRow(null);
@@ -678,39 +694,41 @@ const YViewConfigManager: React.FC = () => {
           <Button type="primary" onClick={handleAddNew}>
             Add New
           </Button>
-          <Tooltip title={selectedConfig ? 'Generate view configurations from metadata' : 'Select an entity first'}>
-            <Button
-              type="primary"
-              ghost
-              icon={<ThunderboltOutlined />}
-              onClick={handleGenerateViews}
-              loading={generateLoading}
-              // disabled={!selectedConfig || !selectedConfig.metadata || !selectedConfig.v_metadata }
-            >
-              Generate Views
-            </Button>
-          </Tooltip>
-          {selectedConfig?.tableview?.fields?.length > 0 && (
-            <Tooltip title="Regenerate and overwrite existing configurations">
-              <Button
-                icon={<ReloadOutlined />}
-                onClick={handleGenerateViews}
-                loading={generateLoading}
-              >
-                Regenerate
-              </Button>
-            </Tooltip>
+          {selectedConfig && (
+            <>
+              <Tooltip title="Generate view configurations from metadata">
+                <Button
+                  type="primary"
+                  ghost
+                  icon={<ThunderboltOutlined />}
+                  onClick={handleGenerateViews}
+                  loading={generateLoading}
+                >
+                  Generate Views
+                </Button>
+              </Tooltip>
+              {selectedConfig?.tableview?.fields?.length > 0 && (
+                <Tooltip title="Regenerate and overwrite existing configurations">
+                  <Button
+                    icon={<ReloadOutlined />}
+                    onClick={handleGenerateViews}
+                    loading={generateLoading}
+                  >
+                    Regenerate
+                  </Button>
+                </Tooltip>
+              )}
+              <Tooltip title="Delete entity and its configurations">
+                <Button
+                  danger
+                  icon={<DeleteOutlined />}
+                  onClick={handleDeleteEntity}
+                >
+                  Delete
+                </Button>
+              </Tooltip>
+            </>
           )}
-          <Tooltip title={selectedConfig ? 'Delete entity and its configurations' : 'Select an entity first'}>
-            <Button
-              danger
-              icon={<DeleteOutlined />}
-              onClick={handleDeleteEntity}
-              disabled={!selectedConfig}
-            >
-              Delete
-            </Button>
-          </Tooltip>
         </Space>
         <Select
           placeholder="Select Schema"
@@ -808,90 +826,139 @@ const YViewConfigManager: React.FC = () => {
         </Select>
       </div>
 
-      <Tabs activeKey={activeTab} onChange={setActiveTab}>
-        <TabPane tab="Metadata" key="metadata">
-          <Metadata
-            entityType={selectedConfig?.entity_type}
-            entitySchema={selectedSchema} // Pass entity_schema
-            entityMetadata={selectedConfig?.metadata || []}
-            fetchConfigs={fetchConfigs}
-          />
-        </TabPane>
-        <TabPane tab="View Metadata" key="metadatav">
-          <MetadataV
-            entityType={selectedConfig?.entity_type}
-            entitySchema={selectedSchema} // Pass entity_schema
-            entityMetadata={selectedConfig?.v_metadata || []}
-            fetchConfigs={fetchConfigs}
-          />
-        </TabPane>
-        <TabPane tab="Display Id" key="DisplayIdConfig">
-          <DisplayIdConfig
-            entityType={selectedConfig?.entity_type}
-            entitySchema={selectedSchema} // Pass entity_schema
-            entityMetadata={selectedConfig?.metadata || []}
-          />
-        </TabPane>
-        <TabPane tab="Stages (Metrics)" key="stages">
-          <StagesConfig
-            configData={selectedConfig?.x_stages}
-            // onSave={(updatedData) => handleSave('stages', updatedData)}
-            onSave={(updatedData) => handleSave('stages', updatedData)}
-          />
-        </TabPane>
-        <TabPane tab="View Config" key="viewConfig">
-          {renderTabContent('viewConfig')}
-        </TabPane>
-        <TabPane tab="Table View" key="tableview">
-          {renderTabContent('tableview')}
-        </TabPane>
-        <TabPane tab="Grid View" key="gridview">
-          {renderTabContent('gridview')}
-        </TabPane>
-        <TabPane tab="Kanban View" key="kanbanview">
-          {renderTabContent('kanbanview')}
-        </TabPane>
-        <TabPane tab="Details View" key="detailview">
-          {renderTabContent('detailview')}
-        </TabPane>
-        <TabPane tab="Details Overview" key="details_overview">
-          {renderTabContent('details_overview')}
-        </TabPane>
-        {/* <TabPane tab="Form Config" key="formConfig">
-          <FormConfigEditor
-            entityType={selectedConfig?.entity_type}
-            jsonSchema={selectedConfig?.data_schema}
-          />
-        </TabPane> */}
-        <TabPane tab="Workflow Config" key="workflowConfig">
-          <WorkflowConfigEditor
-            workflowConfiguration={selectedWorkflowConfiguration}
-            entityType={selectedConfig?.entity_type}
-          />
-        </TabPane>
-            <TabPane tab="Global Access" key="global_access">
-               {renderTabContent('global_access')}
-             </TabPane>
-        {/* <TabPane tab="Query Builder" key="queryBuilder">
-          <QueryBuilderComponent entityType={selectedConfig?.entity_type} masterObject={selectedConfig?.metadata} />
-        </TabPane> */}
-        <TabPane tab="Organization Profile" key="organizationProfile">
-          <OrganizationProfileSettings />
-        </TabPane>
-        <TabPane tab="Form Builder" key="form_builder">
-          <FormBuilder
-            masterObjectInit={selectedConfig?.metadata}
-            entitySchema={`${selectedSchema}.${selectedConfig?.entity_type}`}
-            // fetchConfigs={fetchConfigs}
-          />
-        </TabPane>
-        <TabPane tab="Gantt View" key="ganttview">
-          {renderTabContent('ganttview')}
-        </TabPane>
-        <TabPane tab="Calendar View" key="calendarview">
-          {renderTabContent('calendarview')}
-        </TabPane>
-      </Tabs>
+      {selectedConfig ? (
+        <Tabs 
+          activeKey={activeTab} 
+          onChange={setActiveTab}
+          items={[
+            {
+              key: 'viewConfig',
+              label: 'View Config',
+              children: renderTabContent('viewConfig'),
+            },
+            {
+              key: 'metadata',
+              label: 'Metadata',
+              children: (
+                <Metadata
+                  entityType={selectedConfig?.entity_type}
+                  entitySchema={selectedSchema}
+                  entityMetadata={selectedConfig?.metadata || []}
+                  fetchConfigs={fetchConfigs}
+                />
+              ),
+            },
+            {
+              key: 'tableview',
+              label: 'Table View',
+              children: renderTabContent('tableview'),
+            },
+            {
+              key: 'gridview',
+              label: 'Grid View',
+              children: renderTabContent('gridview'),
+            },
+            {
+              key: 'view',
+              label: 'View',
+              children: (
+                <DynamicViews
+                  entityType={selectedConfig?.entity_type || ''}
+                  entitySchema={selectedSchema || undefined}
+                />
+              ),
+            },
+            {
+              key: 'detailview',
+              label: 'Detail View',
+              children: renderTabContent('detailview'),
+            },
+            {
+              key: 'details_overview',
+              label: 'Details Overview',
+              children: renderTabContent('details_overview'),
+            },
+            {
+              key: 'form_builder',
+              label: 'Form Builder',
+              children: (
+                <FormBuilder
+                  masterObjectInit={selectedConfig?.metadata}
+                  entitySchema={selectedConfig?.entity_schema && selectedConfig?.entity_type 
+                    ? `${selectedConfig.entity_schema}.${selectedConfig.entity_type}` 
+                    : undefined}
+                />
+              ),
+            },
+            {
+              key: 'kanbanview',
+              label: 'Kanban View',
+              children: renderTabContent('kanbanview'),
+            },
+            {
+              key: 'ganttview',
+              label: 'Gantt View',
+              children: renderTabContent('ganttview'),
+            },
+            {
+              key: 'calendarview',
+              label: 'Calendar View',
+              children: renderTabContent('calendarview'),
+            },
+            {
+              key: 'organizationProfile',
+              label: 'Profile Config',
+              children: <OrganizationProfileSettings />,
+            },
+            {
+              key: 'stages',
+              label: 'Stages',
+              children: (
+                <StagesConfig
+                  configData={selectedConfig?.x_stages}
+                  onSave={(updatedData) => handleSave('stages', updatedData)}
+                />
+              ),
+            },
+            {
+              key: 'workflowConfig',
+              label: 'Workflow Config',
+              children: (
+                <WorkflowConfigEditor
+                  workflowConfiguration={selectedWorkflowConfiguration}
+                  entityType={selectedConfig?.entity_type}
+                />
+              ),
+            },
+            {
+              key: 'global_access',
+              label: 'Global Access',
+              children: renderTabContent('global_access'),
+            },
+            {
+              key: 'id_config',
+              label: 'ID Config',
+              children: (
+                <DisplayIdConfig
+                  entityType={selectedConfig?.entity_type || ''}
+                  entitySchema={selectedSchema || ''}
+                />
+              ),
+            },
+          ]}
+        />
+      ) : (
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          height: '300px',
+          color: '#888',
+          fontSize: '16px'
+        }}>
+          Please select a schema and entity to configure
+        </div>
+      )}
       <Modal
         title="Add New Configuration"
         open={isModalVisible}

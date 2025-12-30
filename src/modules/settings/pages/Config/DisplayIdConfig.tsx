@@ -14,6 +14,7 @@ interface DisplayIdConfigProps {
 
 interface IdConfig {
   prefix: string;
+  separator: string;
   counter_padding: number;
   template_string: string;
   start_number: number;
@@ -24,6 +25,7 @@ const DisplayIdConfig: React.FC<DisplayIdConfigProps> = ({ entityType, entitySch
   const [loading, setLoading] = useState(false);
   const [config, setConfig] = useState<IdConfig>({
     prefix: '',
+    separator: '-',
     counter_padding: 4,
     template_string: '',
     start_number: 1,
@@ -98,6 +100,7 @@ const DisplayIdConfig: React.FC<DisplayIdConfigProps> = ({ entityType, entitySch
 
   const generatePreview = () => {
     const today = new Date();
+    const separator = config.separator || '-';
     const tokens: Record<string, string> = {
       '{YYYY}': today.getFullYear().toString(),
       '{YY}': today.getFullYear().toString().slice(-2),
@@ -110,24 +113,40 @@ const DisplayIdConfig: React.FC<DisplayIdConfigProps> = ({ entityType, entitySch
       }), {})
     };
 
-    let preview = config.template_string || '';
+    // Start with prefix if available
+    let preview = config.prefix ? config.prefix.toUpperCase() + separator : '';
     
-    // Replace tokens
+    // Add template string with tokens replaced
+    let templatePart = config.template_string || '';
     Object.entries(tokens).forEach(([token, value]) => {
-      preview = preview.replace(new RegExp(token, 'g'), value);
+      templatePart = templatePart.replace(new RegExp(token.replace(/[{}]/g, '\\$&'), 'g'), value);
     });
+    preview += templatePart;
 
     // Add counter
     const counter = config.start_number.toString().padStart(config.counter_padding, '0');
-    preview += (preview ? '-' : '') + counter;
+    preview += (preview ? separator : '') + counter;
 
     setPreviewId(preview);
   };
   
-  const handleTemplateSelect = (selectedTemplate: string) => {
-      form.setFieldsValue({ template_string: selectedTemplate });
-      setConfig(prev => ({ ...prev, template_string: selectedTemplate }));
-      setIsTemplateModalVisible(false);
+  const handleTemplateSelect = (selectedToken: string) => {
+      // Append the token to the existing template string with separator
+      const currentTemplate = config.template_string || '';
+      const separator = config.separator || '-';
+      
+      let newTemplate: string;
+      if (currentTemplate.trim()) {
+        // Append token with separator
+        newTemplate = `${currentTemplate}${separator}${selectedToken}`;
+      } else {
+        // First token, no separator needed
+        newTemplate = selectedToken;
+      }
+      
+      form.setFieldsValue({ template_string: newTemplate });
+      setConfig(prev => ({ ...prev, template_string: newTemplate }));
+      // Keep the modal open so user can add more tokens
   };
 
   return (
@@ -162,19 +181,62 @@ const DisplayIdConfig: React.FC<DisplayIdConfigProps> = ({ entityType, entitySch
             </Col>
 
             <Col span={24}>
-              <Form.Item label="Format Template" tooltip="Use tokens to construct the dynamic part of the ID">
+              <Form.Item label="Format Template" tooltip="Use tokens to construct the dynamic part of the ID. Click 'Insert Token' to add multiple tokens.">
                 <Space.Compact style={{ width: '100%' }}>
+                    <Form.Item
+                        name="separator"
+                        noStyle
+                    >
+                        <Select 
+                          style={{ width: 70 }} 
+                          onChange={(newSep) => {
+                            const oldSep = config.separator || '-';
+                            const currentTemplate = config.template_string || '';
+                            
+                            // Only replace separators that are BETWEEN tokens (outside of curly braces)
+                            // Use regex to match separator only when followed by { or preceded by }
+                            // Pattern: }oldSep{ or }oldSep at end, or oldSep{ at start
+                            let updatedTemplate = currentTemplate;
+                            
+                            // Replace }{sep}{ patterns (between two tokens)
+                            const betweenTokensRegex = new RegExp(`\\}\\${oldSep}\\{`, 'g');
+                            updatedTemplate = updatedTemplate.replace(betweenTokensRegex, `}${newSep}{`);
+                            
+                            form.setFieldsValue({ template_string: updatedTemplate });
+                            setConfig(prev => ({ 
+                              ...prev, 
+                              separator: newSep,
+                              template_string: updatedTemplate
+                            }));
+                          }}
+                        >
+                          <Option value="-">-</Option>
+                          <Option value="_">_</Option>
+                          <Option value="/">/</Option>
+                          <Option value=".">.</Option>
+                        </Select>
+                    </Form.Item>
                     <Form.Item
                         name="template_string"
                         noStyle
                     >
                         <Input 
-                            placeholder="e.g., INV-{YYYY}-{MM}" 
+                            placeholder="e.g., {PREFIX}{YYYY}{MM}" 
+                            style={{ flex: 1 }}
                             onChange={(e) => setConfig(prev => ({ ...prev, template_string: e.target.value }))}
                         />
                     </Form.Item>
                     <Button 
+                        onClick={() => {
+                          form.setFieldsValue({ template_string: '' });
+                          setConfig(prev => ({ ...prev, template_string: '' }));
+                        }}
+                    >
+                        Clear
+                    </Button>
+                    <Button 
                         icon={<SwapOutlined />} 
+                        type="primary"
                         onClick={() => setIsTemplateModalVisible(true)}
                     >
                         Insert Token

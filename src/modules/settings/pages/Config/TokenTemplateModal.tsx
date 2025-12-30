@@ -22,7 +22,6 @@ import {
 import { supabase } from '@/core/lib/supabase';
 
 const { Option } = Select;
-const { TabPane } = Tabs;
 
 const META_CONFIG_KEY = 'display_id_tokens';
 
@@ -304,127 +303,146 @@ const TokenTemplateModal: React.FC<TokenTemplateModalProps> = ({
       title="Manage Token Templates"
       open={visible}
       onCancel={onClose}
-      width={900}
+      width={950}
       footer={null}
+      styles={{ body: { padding: '16px 24px' } }}
     >
-      <Tabs activeKey={activeTab} onChange={setActiveTab}>
-        {/* Lookup Tokens Tab */}
-        <TabPane tab="Lookup Tokens" key="lookup">
-          <Form
-            form={lookupForm}
-            layout="inline"
-            onFinish={handleSaveLookup}
-            style={{ marginBottom: 16 }}
-          >
-            <Form.Item name="name" rules={[{ required: true }]} style={{ width: 100 }}>
-              <Input placeholder="Name" />
-            </Form.Item>
-            <Form.Item name="label" rules={[{ required: true }]} style={{ width: 120 }}>
-              <Input placeholder="Label" />
-            </Form.Item>
-            <Form.Item name="entity_field" rules={[{ required: true }]} style={{ width: 120 }}>
-              <Input placeholder="entity_field" />
-            </Form.Item>
-            <Form.Item name="lookup_schema" rules={[{ required: true }]} style={{ width: 90 }}>
-              <Input placeholder="schema" />
-            </Form.Item>
-            <Form.Item name="lookup_table" rules={[{ required: true }]} style={{ width: 110 }}>
-              <Input placeholder="table" />
-            </Form.Item>
-            <Form.Item name="lookup_value_field" rules={[{ required: true }]} style={{ width: 100 }}>
-              <Input placeholder="value_field" />
-            </Form.Item>
-            <Button type="primary" htmlType="submit" loading={saving} icon={<SaveOutlined />}>
-              {editingLookup ? 'Update' : 'Add'}
-            </Button>
-            {editingLookup && (
-              <Button onClick={() => { setEditingLookup(null); lookupForm.resetFields(); }}>
-                Cancel
-              </Button>
-            )}
-          </Form>
-          <Table
-            dataSource={templates.lookup}
-            columns={lookupColumns}
-            rowKey="name"
-            size="small"
-            loading={loading}
-            pagination={false}
-          />
-        </TabPane>
-
-        {/* Date Parts Tab */}
-        <TabPane tab="Date Tokens" key="date_part">
-          <Form
-            form={datePartForm}
-            layout="inline"
-            onFinish={handleSaveDatePart}
-            style={{ marginBottom: 16 }}
-          >
-            <Form.Item name="name" rules={[{ required: true }]} style={{ width: 120 }}>
-              <Input placeholder="Token Name" />
-            </Form.Item>
-            <Form.Item name="label" rules={[{ required: true }]} style={{ width: 150 }}>
-              <Input placeholder="Label" />
-            </Form.Item>
-            <Form.Item name="date_format" rules={[{ required: true }]} style={{ width: 150 }}>
-              <Select placeholder="Date Format">
-                <Option value="YYYY">YYYY (2025)</Option>
-                <Option value="YY">YY (25)</Option>
-                <Option value="YYYYMM">YYYYMM (202512)</Option>
-                <Option value="YYYYMMDD">YYYYMMDD</Option>
-                <Option value="MM">MM (12)</Option>
-                <Option value="DD">DD (17)</Option>
-              </Select>
-            </Form.Item>
-            <Button type="primary" htmlType="submit" loading={saving} icon={<SaveOutlined />}>
-              {editingDatePart ? 'Update' : 'Add'}
-            </Button>
-            {editingDatePart && (
-              <Button onClick={() => { setEditingDatePart(null); datePartForm.resetFields(); }}>
-                Cancel
-              </Button>
-            )}
-          </Form>
-          <Table
-            dataSource={templates.date_part}
-            columns={datePartColumns}
-            rowKey="name"
-            size="small"
-            loading={loading}
-            pagination={false}
-          />
-        </TabPane>
-
-        {/* Prefixes Tab */}
-        <TabPane tab="Prefixes" key="prefixes">
-          <Space style={{ marginBottom: 16 }}>
-            <Input
-              placeholder="New prefix (e.g., AST)"
-              value={newPrefix}
-              onChange={e => setNewPrefix(e.target.value.toUpperCase())}
-              style={{ width: 150 }}
-              onPressEnter={handleAddPrefix}
-            />
-            <Button type="primary" onClick={handleAddPrefix} loading={saving} icon={<PlusOutlined />}>
-              Add
-            </Button>
-          </Space>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-            {templates.prefixes.map(prefix => (
-              <Tag
-                key={prefix}
-                closable
-                onClose={() => handleDeletePrefix(prefix)}
-                style={{ fontSize: 14, padding: '4px 8px' }}
-              >
-                {prefix}
-              </Tag>
-            ))}
-            {templates.prefixes.length === 0 && <Empty description="No prefixes" />}
-          </div>
-        </TabPane>
-      </Tabs>
+      <Tabs 
+        activeKey={activeTab} 
+        onChange={setActiveTab}
+        items={[
+          {
+            key: 'lookup',
+            label: 'Lookup Tokens',
+            children: (
+              <>
+                <Form
+                  form={lookupForm}
+                  layout="inline"
+                  onFinish={handleSaveLookup}
+                  style={{ marginBottom: 16, display: 'flex', flexWrap: 'wrap', gap: '8px' }}
+                >
+                  <Form.Item name="name" rules={[{ required: true }]} style={{ marginBottom: 0, width: 80 }}>
+                    <Input placeholder="Name" size="small" />
+                  </Form.Item>
+                  <Form.Item name="label" rules={[{ required: true }]} style={{ marginBottom: 0, width: 100 }}>
+                    <Input placeholder="Label" size="small" />
+                  </Form.Item>
+                  <Form.Item name="entity_field" rules={[{ required: true }]} style={{ marginBottom: 0, width: 110 }}>
+                    <Input placeholder="entity_field" size="small" />
+                  </Form.Item>
+                  <Form.Item name="lookup_schema" style={{ marginBottom: 0, width: 80 }}>
+                    <Input placeholder="schema" size="small" />
+                  </Form.Item>
+                  <Form.Item name="lookup_table" rules={[{ required: true }]} style={{ marginBottom: 0, width: 130 }}>
+                    <Input placeholder="table" size="small" />
+                  </Form.Item>
+                  <Form.Item name="lookup_value_field" rules={[{ required: true }]} style={{ marginBottom: 0, width: 90 }}>
+                    <Input placeholder="value_field" size="small" />
+                  </Form.Item>
+                  <Button type="primary" htmlType="submit" loading={saving} icon={<SaveOutlined />} size="small">
+                    {editingLookup ? 'Update' : 'Add'}
+                  </Button>
+                  {editingLookup && (
+                    <Button size="small" onClick={() => { setEditingLookup(null); lookupForm.resetFields(); }}>
+                      Cancel
+                    </Button>
+                  )}
+                </Form>
+                <Table
+                  dataSource={templates.lookup}
+                  columns={lookupColumns}
+                  rowKey="name"
+                  size="small"
+                  loading={loading}
+                  pagination={false}
+                  scroll={{ x: true }}
+                />
+              </>
+            ),
+          },
+          {
+            key: 'date_part',
+            label: 'Date Tokens',
+            children: (
+              <>
+                <Form
+                  form={datePartForm}
+                  layout="inline"
+                  onFinish={handleSaveDatePart}
+                  style={{ marginBottom: 16, display: 'flex', gap: '8px' }}
+                >
+                  <Form.Item name="name" rules={[{ required: true }]} style={{ marginBottom: 0, width: 120 }}>
+                    <Input placeholder="Token Name" size="small" />
+                  </Form.Item>
+                  <Form.Item name="label" rules={[{ required: true }]} style={{ marginBottom: 0, width: 150 }}>
+                    <Input placeholder="Label" size="small" />
+                  </Form.Item>
+                  <Form.Item name="date_format" rules={[{ required: true }]} style={{ marginBottom: 0, width: 150 }}>
+                    <Select placeholder="Date Format" size="small">
+                      <Option value="YYYY">YYYY (2025)</Option>
+                      <Option value="YY">YY (25)</Option>
+                      <Option value="YYYYMM">YYYYMM (202512)</Option>
+                      <Option value="YYYYMMDD">YYYYMMDD</Option>
+                      <Option value="MM">MM (12)</Option>
+                      <Option value="DD">DD (17)</Option>
+                    </Select>
+                  </Form.Item>
+                  <Button type="primary" htmlType="submit" loading={saving} icon={<SaveOutlined />} size="small">
+                    {editingDatePart ? 'Update' : 'Add'}
+                  </Button>
+                  {editingDatePart && (
+                    <Button size="small" onClick={() => { setEditingDatePart(null); datePartForm.resetFields(); }}>
+                      Cancel
+                    </Button>
+                  )}
+                </Form>
+                <Table
+                  dataSource={templates.date_part}
+                  columns={datePartColumns}
+                  rowKey="name"
+                  size="small"
+                  loading={loading}
+                  pagination={false}
+                />
+              </>
+            ),
+          },
+          {
+            key: 'prefixes',
+            label: 'Prefixes',
+            children: (
+              <>
+                <Space style={{ marginBottom: 16 }}>
+                  <Input
+                    placeholder="New prefix (e.g., AST)"
+                    value={newPrefix}
+                    onChange={e => setNewPrefix(e.target.value.toUpperCase())}
+                    style={{ width: 150 }}
+                    onPressEnter={handleAddPrefix}
+                  />
+                  <Button type="primary" onClick={handleAddPrefix} loading={saving} icon={<PlusOutlined />}>
+                    Add
+                  </Button>
+                </Space>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                  {templates.prefixes.map(prefix => (
+                    <Tag
+                      key={prefix}
+                      closable
+                      onClose={() => handleDeletePrefix(prefix)}
+                      style={{ fontSize: 14, padding: '4px 8px' }}
+                    >
+                      {prefix}
+                    </Tag>
+                  ))}
+                  {templates.prefixes.length === 0 && <Empty description="No prefixes" />}
+                </div>
+              </>
+            ),
+          },
+        ]}
+      />
     </Modal>
   );
 };

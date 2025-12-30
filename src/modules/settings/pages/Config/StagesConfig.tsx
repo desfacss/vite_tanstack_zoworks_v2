@@ -19,8 +19,16 @@ const StagesConfig: React.FC<StagesConfigProps> = ({ configData, onSave }) => {
   const [stages, setStages] = useState<Stage[]>([]);
 
   useEffect(() => {
+    // Handle configData being an object, array, or undefined
+    let stagesArray: Stage[] = [];
+    if (Array.isArray(configData)) {
+      stagesArray = configData;
+    } else if (configData && typeof configData === 'object') {
+      // If it's an object with a stages property
+      stagesArray = Array.isArray((configData as any).stages) ? (configData as any).stages : [];
+    }
     // Sort stages by ordinal when loading
-    const sortedStages = [...(configData || [])].sort((a, b) => a.ordinal - b.ordinal);
+    const sortedStages = [...stagesArray].sort((a, b) => (a.ordinal || 0) - (b.ordinal || 0));
     setStages(sortedStages);
   }, [configData]);
 

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { Card, Button, Input, Select, Switch, Drawer, Row, Col, message, Modal } from 'antd';
+import { Card, Button, Input, Select, Switch, Drawer, Row, Col, message, Modal, Space } from 'antd';
 import { ThunderboltOutlined } from '@ant-design/icons';
 import { widgetConfigs } from './widgets';
 import AceEditor from 'react-ace';
@@ -9,7 +9,7 @@ import AceEditor from 'react-ace';
 // import 'ace-builds/src-noconflict/worker-json';
 import { supabase } from '@/core/lib/supabase';
 import { useAuthStore } from '@/core/lib/store';
-// import DynamicForm from '../../../common/DynamicForm'; // TODO: Update this import if needed or verify location
+import DynamicForm from '@/core/components/DynamicForm';
 import PageManager from './PageManager'; 
 import FormGenerator from '../FormGenerator';
 
@@ -832,16 +832,66 @@ console.log("iud6",uiSchema);
              </Space>
           </div>
            
-           {/* Replaced DynamicForm with JSON preview for now as component is not yet fully migrated or linked */}
-           <Card title="Preview">
-               <div style={{ maxHeight: '600px', overflow: 'auto' }}>
-                 <p>Form Preview Placeholder</p>
-                 <pre>{JSON.stringify({ dataSchema, uiSchema }, null, 2)}</pre>
+           {/* JSON Schema Editors */}
+           <Card 
+             title="Schema Editor"
+             extra={
+               <Space>
+                 <Button onClick={() => setIsPageManagerVisible(true)} type="default" size="small">
+                   Manage Pages
+                 </Button>
+                 <Button onClick={() => setIsDrawerVisible(true)} type="primary" size="small">
+                   Show Form
+                 </Button>
+               </Space>
+             }
+           >
+               <div style={{ display: 'flex', gap: '16px' }}>
+                 <div style={{ flex: 1 }}>
+                   <h4 style={{ marginBottom: '8px' }}>Data Schema:</h4>
+                   <AceEditor
+                     mode="json"
+                     theme="monokai"
+                     value={JSON.stringify(dataSchema, null, 2)}
+                     onChange={(value) => {
+                       try {
+                         const parsedSchema = JSON.parse(value);
+                         setDataSchema(parsedSchema);
+                       } catch (error) {
+                         // Invalid JSON, don't update
+                       }
+                     }}
+                     editorProps={{ $blockScrolling: true }}
+                     setOptions={{
+                       tabSize: 2,
+                       useSoftTabs: true,
+                     }}
+                     style={{ width: '100%', height: '500px' }}
+                   />
+                 </div>
+                 <div style={{ flex: 1 }}>
+                   <h4 style={{ marginBottom: '8px' }}>UI Schema:</h4>
+                   <AceEditor
+                     mode="json"
+                     theme="monokai"
+                     value={JSON.stringify(uiSchema, null, 2)}
+                     onChange={(value) => {
+                       try {
+                         const parsedSchema = JSON.parse(value);
+                         setUiSchema(parsedSchema);
+                       } catch (error) {
+                         // Invalid JSON, don't update
+                       }
+                     }}
+                     editorProps={{ $blockScrolling: true }}
+                     setOptions={{
+                       tabSize: 2,
+                       useSoftTabs: true,
+                     }}
+                     style={{ width: '100%', height: '500px' }}
+                   />
+                 </div>
                </div>
-               
-               <Button type="primary" onClick={onFinish} style={{ marginTop: 16 }}>
-                 Save Form Configuration
-               </Button>
            </Card>
         </Col>
       </Row>
@@ -859,6 +909,21 @@ console.log("iud6",uiSchema);
           onChange={(e) => setSaveFormName(e.target.value)}
         />
       </Modal>
+      
+      {/* Form Preview Drawer */}
+      <Drawer 
+        width="50%" 
+        title="Form Preview" 
+        open={isDrawerVisible} 
+        onClose={() => setIsDrawerVisible(false)} 
+        footer={null}
+      >
+        <DynamicForm
+          formData={initData}
+          schemas={{ data_schema: dataSchema, ui_schema: uiSchema }}
+          onFinish={onFinish}
+        />
+      </Drawer>
       
       {/* Page Manager Modal */}
       <PageManager
