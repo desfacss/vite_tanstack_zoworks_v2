@@ -4,10 +4,7 @@ import { Table, Input, Button, Typography, Select, message, Row, Col, InputNumbe
 import { supabase } from '@/lib/supabase'; // Updated path for supabase config
 import { useAuthStore } from '@/core/lib/store'; // Updated path to get session/user
 import dayjs from 'dayjs'
-import { generateEmailData, sendEmail } from '@/core/components/shared/email';
-// NOTE: Assuming you will create/port these common utilities or replace them
-// import { generateEmailData, sendEmail } from 'components/common/SendEmail'; 
-// import { generateEmailData, sendEmail } from '@/utils/emailUtils'; // Placeholder for email utilities
+import { generateEmailData, sendEmail } from '@/services/email';
 import './timesheet.css'; // Keep or move this CSS
 
 const { Option } = Select;

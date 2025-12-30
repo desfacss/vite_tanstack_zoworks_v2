@@ -463,7 +463,7 @@ import dayjs from 'dayjs';
 import { useAuthStore } from '@/core/lib/store';
 
 // Optional: Uncomment when email sending is implemented
-import { sendEmail } from '@/core/components/shared/email';
+import { sendEmail } from '@/services/email';
 
 const { Title, Text } = Typography;
 const { Panel } = Collapse;

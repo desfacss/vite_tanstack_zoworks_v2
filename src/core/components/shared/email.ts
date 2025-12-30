@@ -91,7 +91,11 @@
 import { notification } from 'antd';
 import { useAuthStore } from "@/core/lib/store";
 
-// Define the Email interface for type safety
+// Re-export from centralized services for backward compatibility
+export { sendEmail as sendEmailService, type Email } from '@/services/email';
+export { generateEmailData as generateEmailDataService, type EmailType, type EmailAction, type EmailDetails } from '@/services/email';
+
+// Define the Email interface for type safety (keeping for backward compatibility)
 interface Email {
   from: string;
   to: string | string[];
@@ -110,12 +114,12 @@ interface ErrorResponse {
   message?: string;
 }
 
-// Environment variables interface
-interface EnvConfig {
-  VITE_SUPABASE_BASE_URL?: string;
-  VITE_SUPABASE_ANON_KEY?: string;
-}
+// Note: Types imported from services for backward compatibility
 
+/**
+ * @deprecated Use `import { sendEmail } from '@/services/email'` instead
+ * This wrapper maintains backward compatibility with UI notifications
+ */
 export const sendEmail = async (emails: Email[]): Promise<any> => {
   try {
     if (!Array.isArray(emails) || emails.length === 0) {
@@ -127,10 +131,9 @@ export const sendEmail = async (emails: Email[]): Promise<any> => {
       return;
     }
 
-    const env: EnvConfig = import.meta.env;
-    const supabaseUrl = env.VITE_SUPABASE_URL || 'https://qpoxasghnbrrwmnxzyqk.supabase.co';
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://qpoxasghnbrrwmnxzyqk.supabase.co';
     const supabaseFunctionUrl = `${supabaseUrl}/functions/v1/send_email`;
-    const supabaseApiKey = env.VITE_SUPABASE_ANON_KEY;
+    const supabaseApiKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
     
     const response = await fetch(supabaseFunctionUrl, {
       method: 'POST',
@@ -174,13 +177,24 @@ export const sendEmail = async (emails: Email[]): Promise<any> => {
   }
 };
 
-export const generateEmailData = (type, action, details) => {
+type EmailType = 'timesheet' | 'leave application' | 'expenses claim';
+type EmailAction = 'Submitted' | 'Approved' | 'Rejected';
+interface EmailDetails {
+    username?: string;
+    approverUsername?: string;
+    approverEmail?: string;
+    hrEmails?: string[];
+    userEmail?: string;
+    applicationDate?: string;
+    comment?: string;
+}
+
+export const generateEmailData = (type: EmailType, action: EmailAction, details: EmailDetails) => {
     const { appSettings } = useAuthStore.getState();
     const {
         username, approverUsername,
-        approverEmail, hrEmails, userEmail,
+        approverEmail, userEmail,
         applicationDate,
-        // submittedTime, reviewedTime,
         comment,
     } = details;
 
