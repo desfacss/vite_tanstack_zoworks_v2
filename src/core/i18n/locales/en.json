@@ -57,7 +57,12 @@
         "page_not_found": "Page Not Found",
         "coming_soon": "Coming Soon",
         "data_error": "Data Error",
-        "vs_last_period": "vs. last period"
+        "vs_last_period": "vs. last period",
+        "workforce": "Workforce",
+        "leaves": "Leaves",
+        "timesheets": "Timesheets",
+        "expenses": "Expenses",
+        "teams": "Teams"
       },
       "action": {
         "save": "Save",

@@ -76,6 +76,11 @@ export async function register(
   });
 
   registry.registerDetailComponent({
+    id: 'leave_application',
+    component: () => import('./components/Leaves'),
+  });
+
+  registry.registerDetailComponent({
     id: 'timesheet',
     component: () => import('./components/Timesheet'),
   });

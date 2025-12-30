@@ -35,6 +35,11 @@ const Settings = lazy(() => import('../pages/core/UserSetting'));
 const WaInbox = lazy(() => import('@/modules/wa/pages/InboxPage'));
 const SettingsConfig = lazy(() => import('@/modules/settings/pages/Config'));
 
+// Workforce pages
+const WorkforceLeaves = lazy(() => import('@/modules/workforce/pages/Leaves'));
+const WorkforceTimesheets = lazy(() => import('@/modules/workforce/pages/Timesheets'));
+const WorkforceExpenses = lazy(() => import('@/modules/workforce/pages/Expenses'));
+
 const generateNavItems = (t: (key: string) => string) => {
     // For mini-project, we return a static set of nav items
     // In the full app, this would be dynamically generated based on permissions
@@ -125,6 +130,11 @@ export const AppRoutes: FC = () => {
                         {/* WhatsApp - Inbox */}
                         <Route path="/wa/inbox" element={<WaInbox />} />
                         <Route path="/settings/config" element={<SettingsConfig />} />
+
+                        {/* Workforce */}
+                        <Route path="/workforce/leaves" element={<WorkforceLeaves />} />
+                        <Route path="/workforce/timesheets" element={<WorkforceTimesheets />} />
+                        <Route path="/workforce/expenses" element={<WorkforceExpenses />} />
 
                         {/* Admin - Settings */}
                         <Route path="/admin/settings" element={<AdminSettings />} />

@@ -53,6 +53,29 @@
         "key": "config",
         "submoduleKey": "settings-config"
       }
+    ],
+    "workforce": [
+      {
+        "filePath": "src/modules/workforce/pages/Leaves.tsx",
+        "routePath": "/workforce/leaves",
+        "translationKey": "leaves",
+        "key": "leaves",
+        "submoduleKey": "workforce-leaves"
+      },
+      {
+        "filePath": "src/modules/workforce/pages/Timesheets.tsx",
+        "routePath": "/workforce/timesheets",
+        "translationKey": "timesheets",
+        "key": "timesheets",
+        "submoduleKey": "workforce-timesheets"
+      },
+      {
+        "filePath": "src/modules/workforce/pages/Expenses.tsx",
+        "routePath": "/workforce/expenses",
+        "translationKey": "expenses",
+        "key": "expenses",
+        "submoduleKey": "workforce-expenses"
+      }
     ]
   },
   "root": [
