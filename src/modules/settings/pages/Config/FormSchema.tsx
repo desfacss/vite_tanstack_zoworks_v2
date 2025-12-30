@@ -1,0 +1,140 @@
+import React, { useState, useEffect } from 'react';
+import { Table, Button, Input, Select, Space, Row, Col } from 'antd';
+import { PlusOutlined, DeleteOutlined, UpOutlined, DownOutlined } from '@ant-design/icons';
+
+const { Option } = Select;
+
+interface FormSchemaProps {
+    initialData: any[];
+    onSave: (data: any[]) => void;
+}
+
+const FormSchema: React.FC<FormSchemaProps> = ({ initialData, onSave }) => {
+    const [data, setData] = useState<any[]>(initialData || []);
+
+    useEffect(() => {
+        if (initialData) {
+            setData(initialData);
+        }
+    }, [initialData]);
+
+    const handleAddField = () => {
+        setData([
+            ...data,
+            { field_type: 'string', field_name: '', sequence: data?.length + 1 },
+        ]);
+    };
+
+    const handleFieldChange = (index: number, key: string, value: any) => {
+        const updatedData = [...data];
+        updatedData[index][key] = value;
+        setData(updatedData);
+    };
+
+    const handleRemoveField = (index: number) => {
+        const updatedData = data?.filter((_, i) => i !== index);
+        setData(updatedData.map((item, i) => ({ ...item, sequence: i + 1 })));
+    };
+
+    const moveField = (index: number, direction: number) => {
+        const newData = [...data];
+        const [movedField] = newData.splice(index, 1);
+        newData.splice(index + direction, 0, movedField);
+        setData(newData.map((item, i) => ({ ...item, sequence: i + 1 })));
+    };
+
+    const handleSaveConfig = () => {
+        onSave(data);
+        console.log("payload", data)
+    };
+
+    const columns = [
+        {
+            title: 'Sequence',
+            dataIndex: 'sequence',
+            key: 'sequence',
+        },
+        {
+            title: 'Field Type',
+            dataIndex: 'field_type',
+            key: 'field_type',
+            render: (text: string, record: any, index: number) => (
+                <Select
+                    value={record.field_type}
+                    onChange={(value) => handleFieldChange(index, 'field_type', value)}
+                    style={{ width: '100%' }}
+                >
+                    <Option value="numeric">Numeric</Option>
+                    <Option value="boolean">Boolean</Option>
+                    <Option value="string">String</Option>
+                </Select>
+            ),
+        },
+        {
+            title: 'Field Name',
+            dataIndex: 'field_name',
+            key: 'field_name',
+            render: (text: string, record: any, index: number) => (
+                <Input
+                    value={record.field_name}
+                    onChange={(e) => handleFieldChange(index, 'field_name', e.target.value)}
+                />
+            ),
+        },
+        {
+            title: 'Actions',
+            key: 'actions',
+            render: (_: any, __: any, index: number) => (
+                <Space>
+                    <Button
+                        icon={<UpOutlined />}
+                        onClick={() => moveField(index, -1)}
+                        disabled={index === 0}
+                    />
+                    <Button
+                        icon={<DownOutlined />}
+                        onClick={() => moveField(index, 1)}
+                        disabled={index === data?.length - 1}
+                    />
+                    <Button
+                        icon={<DeleteOutlined />}
+                        danger
+                        onClick={() => handleRemoveField(index)}
+                    />
+                </Space>
+            ),
+        },
+    ];
+
+    return (
+        <div>
+            <h2>CRUD Table Configuration</h2>
+            {data && <Table
+                dataSource={data}
+                columns={columns}
+                rowKey="sequence"
+                pagination={false}
+                style={{ marginBottom: '20px' }}
+            />}
+
+            <Button
+                type="dashed"
+                icon={<PlusOutlined />}
+                onClick={handleAddField}
+                style={{ marginBottom: '20px' }}
+            >
+                Add Field
+            </Button>
+
+            <Row justify="end">
+                <Col>
+                    <Button type="primary" onClick={handleSaveConfig}>
+                        Save Configuration
+                    </Button>
+                </Col>
+            </Row>
+        </div>
+    );
+};
+
+export default FormSchema;

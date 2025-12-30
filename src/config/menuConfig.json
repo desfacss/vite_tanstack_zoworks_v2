@@ -44,6 +44,15 @@
         "key": "inbox",
         "submoduleKey": "wa-inbox"
       }
+    ],
+    "settings": [
+      {
+        "filePath": "src/modules/settings/pages/Config/index.tsx",
+        "routePath": "/settings/config",
+        "translationKey": "config",
+        "key": "config",
+        "submoduleKey": "settings-config"
+      }
     ]
   },
   "root": [
