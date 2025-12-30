@@ -33,6 +33,7 @@ const AdminSettings = lazy(() => import('@/modules/admin/pages/Settings'));
 const Profile = lazy(() => import('../pages/core/Profile'));
 const Settings = lazy(() => import('../pages/core/UserSetting'));
 const WaInbox = lazy(() => import('@/modules/wa/pages/InboxPage'));
+const SettingsConfig = lazy(() => import('@/modules/settings/pages/Config'));
 
 const generateNavItems = (t: (key: string) => string) => {
     // For mini-project, we return a static set of nav items
@@ -123,6 +124,7 @@ export const AppRoutes: FC = () => {
 
                         {/* WhatsApp - Inbox */}
                         <Route path="/wa/inbox" element={<WaInbox />} />
+                        <Route path="/settings/config" element={<SettingsConfig />} />
 
                         {/* Admin - Settings */}
                         <Route path="/admin/settings" element={<AdminSettings />} />
