@@ -63,12 +63,15 @@ const RowActions: React.FC<RowActionsProps> = ({
     const schemaName = parts.length === 2 ? parts[0] : 'public';
     const tableName = parts.length === 2 ? parts[1] : relatedTable.name;
 
-    const { data, error }: { data: any[] | null; error: any } = await supabase
+    // Using explicit any to avoid TypeScript deep type instantiation error with dynamic schema/table
+    const result = await (supabase as any)
       .schema(schemaName)
       .from(tableName)
       .select('*')
       .eq(relatedTable?.fk_column || 'project_id', projectId)
       .eq('organization_id', organization.id);
+    
+    const { data, error } = result as { data: any[] | null; error: any };
 
     if (error) {
       console.error('Error fetching related data:', error.message);
@@ -241,27 +244,58 @@ const RowActions: React.FC<RowActionsProps> = ({
   }, [actions, entityType, hasAccess, contextStack.length, viewConfig]);
 
   const actionItems = useMemo(() => {
-    const items: any[] = [];
+    const inlineItems: any[] = [];
+    const overflowItems: any[] = [];
 
-    // 1. Built-in actions
+    // Check if there's a registered edit action for this entity
+    const registeredEditAction = filteredActions.registered.find(a => a.id.toLowerCase().includes('edit'));
+
+    // 1. Built-in actions - separate into inline (Edit, Details, Delete) and overflow (Clone)
     filteredActions.builtIn.forEach(a => {
-      if (a.name === 'Edit') items.push({ key: 'edit', label: 'Edit', icon: <Edit2 size={16} />, onClick: () => a.form && handleEdit(a.form) });
-      if (a.name === 'Delete') items.push({ key: 'delete', label: 'Delete', icon: <Trash2 size={16} />, danger: true, onClick: () => setDeleteRecord(record) });
-      if (a.name === 'Details') items.push({ key: 'details', label: 'Details', icon: <Eye size={16} />, onClick: handleDetails });
-      if (a.name === 'Clone') items.push({ key: 'clone', label: 'Clone', icon: <Copy size={16} />, onClick: () => a.form && handleClone(a.form) });
+      if (a.name === 'Edit') {
+        // If there's a registered edit component, use that instead of form-based edit
+        if (registeredEditAction) {
+          inlineItems.push({
+            key: 'edit',
+            label: 'Edit',
+            icon: <Edit2 size={16} />,
+            onClick: () => handleRegistryActionClick(registeredEditAction.id)
+          });
+        } else if (a.form) {
+          // Fall back to form-based edit
+          inlineItems.push({
+            key: 'edit',
+            label: 'Edit',
+            icon: <Edit2 size={16} />,
+            onClick: () => handleEdit(a.form!)
+          });
+        }
+      }
+      if (a.name === 'Details') {
+        inlineItems.push({ key: 'details', label: 'Details', icon: <Eye size={16} />, onClick: handleDetails });
+      }
+      if (a.name === 'Delete') {
+        inlineItems.push({ key: 'delete', label: 'Delete', icon: <Trash2 size={16} />, danger: true, onClick: () => setDeleteRecord(record) });
+      }
+      if (a.name === 'Clone') {
+        overflowItems.push({ key: 'clone', label: 'Clone', icon: <Copy size={16} />, onClick: () => a.form && handleClone(a.form) });
+      }
     });
 
-    // 2. Registered actions
-    filteredActions.registered.forEach(a => {
-      items.push({
-        key: a.id,
-        label: typeof a.label === 'function' ? (a.label as any)((s: any) => s) : a.label,
-        icon: (a as any).icon || <Edit2 size={16} />,
-        onClick: () => handleRegistryActionClick(a.id)
+    // 2. Non-edit registered actions go to overflow (edit action is already handled above)
+    filteredActions.registered
+      .filter(a => !a.id.toLowerCase().includes('edit'))
+      .forEach(a => {
+        overflowItems.push({
+          key: a.id,
+          label: typeof a.label === 'function' ? (a.label as any)((s: any) => s) : a.label,
+          icon: (a as any).icon || <Edit2 size={16} />,
+          onClick: () => handleRegistryActionClick(a.id)
+        });
       });
-    });
 
-    return items;
+    // Return inline items first, then overflow - maxInline=4 will show all 3 inline + More if overflow exists
+    return [...inlineItems, ...overflowItems];
   }, [filteredActions, record, handleRegistryActionClick]);
 
   const isLegacyPath = !!(formName && legacyComponentMap[formName]);
@@ -272,7 +306,7 @@ const RowActions: React.FC<RowActionsProps> = ({
       <div className="flex items-center justify-end">
         <RowActionsStandard
           items={actionItems}
-          maxInline={3} // Shows 2 + More
+          maxInline={4} // Shows Edit, Details, Delete inline + More if overflow exists
         />
       </div>
 

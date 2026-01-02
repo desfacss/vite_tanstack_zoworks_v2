@@ -1156,11 +1156,16 @@ const DynamicViews: React.FC<DynamicViewsProps> = ({
     />
   ), [entities, entityType, JSON.stringify(propDefaultFilters), searchConfig, JSON.stringify(initialFilters), allDisplayableColumns, visibleColumns, filterValues]);
 
+  // Store globalFilters in a ref to avoid infinite loops in cleanup effect
+  const globalFiltersRef = useRef(globalFiltersElement);
+  globalFiltersRef.current = globalFiltersElement;
+  
   useEffect(() => {
     if (detailView) return;
-    setConfig({ searchFilters: globalFiltersElement });
+    setConfig({ searchFilters: globalFiltersRef.current });
     return () => setConfig({ searchFilters: undefined });
-  }, [detailView, setConfig, globalFiltersElement]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [detailView, setConfig]);
 
   useEffect(() => {
     const preferencesToSave: any = {

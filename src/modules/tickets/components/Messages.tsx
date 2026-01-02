@@ -466,7 +466,6 @@ import { useAuthStore } from '@/core/lib/store';
 import { sendEmail } from '@/services/email';
 
 const { Title, Text } = Typography;
-const { Panel } = Collapse;
 const { TextArea } = Input;
 
 // ===================================================================================
@@ -510,7 +509,7 @@ const Ticket: React.FC<TicketProps> = ({ data, entityId }) => {
   const [error, setError] = useState<string | null>(null);
   const [replyContent, setReplyContent] = useState<string>('');
   const [sending, setSending] = useState<boolean>(false);
-  const supportEmail = appSettings?.emailOverrides?.email || appSettings?.email?.[0];
+  const supportEmail = (appSettings as any)?.emailOverrides?.email || (appSettings as any)?.email?.[0];
   useEffect(() => {
     if (!ticketId) {
       setError('No ticket ID provided.');
@@ -536,14 +535,14 @@ const Ticket: React.FC<TicketProps> = ({ data, entityId }) => {
         if (!parsedTicketData) throw new Error('Ticket not found.');
         setTicketDetails(parsedTicketData);
 
-        // Fetch dynamic support email
-        if (parsedTicketData.organization_id && parsedTicketData.location_id) {
-          const { data: orgData } = await supabase.schema('identity').from('organizations').select('app_settings').eq('id', parsedTicketData.organization_id).single();
-          const { data: locData } = await supabase.schema('identity').from('locations').select('app_settings').eq('id', parsedTicketData.location_id).single();
-          const locEmail = locData?.app_settings?.emailOverrides?.fromAddress;
-          const orgEmail = orgData?.app_settings?.channels?.email?.defaults?.fromAddress;
-          // setSupportEmail(locEmail || orgEmail || 'support@vkbs.zoworks.com');
-        }
+        // Fetch dynamic support email - currently disabled, using default from appSettings
+        // if (parsedTicketData.organization_id && parsedTicketData.location_id) {
+        //   const { data: orgData } = await supabase.schema('identity').from('organizations').select('app_settings').eq('id', parsedTicketData.organization_id).single();
+        //   const { data: locData } = await supabase.schema('identity').from('locations').select('app_settings').eq('id', parsedTicketData.location_id).single();
+        //   const locEmail = locData?.app_settings?.emailOverrides?.fromAddress;
+        //   const orgEmail = orgData?.app_settings?.channels?.email?.defaults?.fromAddress;
+        //   // setSupportEmail(locEmail || orgEmail || 'support@vkbs.zoworks.com');
+        // }
 
         // Fetch messages
         if (parsedTicketData.conversation_id) {
@@ -638,8 +637,8 @@ const Ticket: React.FC<TicketProps> = ({ data, entityId }) => {
     key: message.id,
     label: (
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Text strong><MailOutlined style={{ marginRight: '8px' }} />From: {Array.isArray(message.from_email) ? message.from_email.join(', ') : message.from_email || 'Unknown'}</Text>
-        <Text type="secondary"><ClockCircleOutlined style={{ marginRight: '8px' }} />{dayjs(message.timestamp).format('MMM DD, YYYY HH:mm')}</Text>
+        <Text strong><Mail size={14} style={{ marginRight: '8px' }} />From: {Array.isArray(message.from_email) ? message.from_email.join(', ') : message.from_email || 'Unknown'}</Text>
+        <Text type="secondary"><Clock size={14} style={{ marginRight: '8px' }} />{dayjs(message.timestamp).format('MMM DD, YYYY HH:mm')}</Text>
       </div>
     ),
     children: (
