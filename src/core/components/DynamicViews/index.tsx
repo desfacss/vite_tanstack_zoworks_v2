@@ -929,7 +929,6 @@ const DynamicViews: React.FC<DynamicViewsProps> = ({
     setHasMore(false);
   };
 
-  const topLevelViews = ['tableview', 'gridview'];
   const restrictedViews = ['kanbanview', 'ganttview', 'calendarview', 'mapview', 'dashboardview'];
   const filteredAvailableViews = useMemo(() => {
     if (isTopLevel) {
@@ -1137,7 +1136,6 @@ const DynamicViews: React.FC<DynamicViewsProps> = ({
       entities={entities}
       entityType={entityType}
       entitySchema={entitySchema}
-      defaultFilters={propDefaultFilters}
       searchConfig={searchConfig}
       initialFilters={initialFilters}
       onFilterChange={(newFilters) => {
@@ -1311,7 +1309,7 @@ const DynamicViews: React.FC<DynamicViewsProps> = ({
     return (
       <TabsComponent
         tabs={tabOptions.map(t => ({ key: t.key, label: t.label }))}
-        activeTab={currentTab}
+        activeTab={currentTab || tabOptions[0]?.key || ''}
         onChange={handleTabChange}
       />
     );
@@ -1385,7 +1383,7 @@ const DynamicViews: React.FC<DynamicViewsProps> = ({
                 <ViewComponent
                   entityType={entityType}
                   entitySchema={entitySchema}
-                  viewConfig={viewConfig}
+                  viewConfig={viewConfig as any}
                   config={config}
                   formConfig={schema}
                   data={entities}
@@ -1466,7 +1464,7 @@ const DynamicViews: React.FC<DynamicViewsProps> = ({
                 <ViewComponent
                   entityType={entityType}
                   entitySchema={entitySchema}
-                  viewConfig={viewConfig}
+                  viewConfig={viewConfig as any}
                   config={config}
                   formConfig={schema}
                   data={entities}
