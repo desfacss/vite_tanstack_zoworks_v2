@@ -187,6 +187,7 @@ const KanbanView: React.FC<KanbanViewProps> = ({
 
     let fieldPath: string | undefined;
     let processedLanes: BoardLane[] = [];
+    const defaultColors = ['#e6f7ff', '#fff7e6', '#f6ffed', '#fff1f0', '#f9f0ff', '#e6fffb', '#fffbe6'];
 
     if (groupByType?.startsWith('workflow_')) {
       // Logic for grouping by dynamic_workflow_definitions
@@ -197,25 +198,53 @@ const KanbanView: React.FC<KanbanViewProps> = ({
         processedLanes = workflow.definitions?.stages?.map((stage: any, index: number) => ({
           id: stage.id,       // Internal ID for grouping/filtering (e.g., "NEW_TICKET")
           title: stage.name,   // Display title for the lane (e.g., "New Ticket")
-          color: stage.color || '#f0f0f0',
+          color: stage.color || defaultColors[index % defaultColors.length],
           cards: [], // Cards will be filled below
-        })).sort((a, b) => a.sequence - b.sequence) || []; // Ensure lanes are sorted
+        })).sort((a: any, b: any) => a.sequence - b.sequence) || []; // Ensure lanes are sorted
       }
     } else {
-      // Logic for grouping by viewConfig.kanbanview.types (existing logic)
-      const selectedType = viewConfig?.kanbanview?.types[groupByType];
+      // Logic for grouping by viewConfig.kanbanview.types (object format)
+      const selectedType = viewConfig?.kanbanview?.types?.[groupByType];
       if (selectedType) {
         fieldPath = selectedType?.fieldPath;
-        processedLanes = selectedType?.lanes?.sort((a: LaneConfigItem, b: LaneConfigItem) => a.sequence - b.sequence).map((laneConfig: LaneConfigItem) => ({
-          id: laneConfig?.name,    // Use 'name' as ID for compatibility with old config
-          title: laneConfig?.name, // Use 'name' as title for display
-          color: laneConfig?.color,
-          cards: [], // Cards will be filled below
-        })) || [];
+        const configuredLanes = selectedType?.lanes;
+        
+        // Check if lanes are defined and not empty
+        if (configuredLanes && Array.isArray(configuredLanes) && configuredLanes.length > 0) {
+          // Use configured lanes from view_config
+          processedLanes = configuredLanes
+            .sort((a: LaneConfigItem, b: LaneConfigItem) => a.sequence - b.sequence)
+            .map((laneConfig: LaneConfigItem) => ({
+              id: laneConfig?.name,
+              title: laneConfig?.name,
+              color: laneConfig?.color || '#f0f0f0',
+              cards: [],
+            }));
+        } else {
+          // Auto-generate lanes from unique values in data (fallback when no lanes configured)
+          const uniqueValues = [...new Set(data.map(item => item[fieldPath!]).filter(Boolean))];
+          processedLanes = uniqueValues.map((value, index) => ({
+            id: value as string,
+            title: value as string,
+            color: defaultColors[index % defaultColors.length],
+            cards: [],
+          }));
+        }
       }
     }
 
-    if (!fieldPath || !processedLanes.length) {
+    // If no lanes could be determined but we have fieldPath, try auto-generating from data
+    if (fieldPath && processedLanes.length === 0 && data.length > 0) {
+      const uniqueValues = [...new Set(data.map(item => item[fieldPath!]).filter(Boolean))];
+      processedLanes = uniqueValues.map((value, index) => ({
+        id: value as string,
+        title: value as string,
+        color: defaultColors[index % defaultColors.length],
+        cards: [],
+      }));
+    }
+
+    if (!fieldPath || processedLanes.length === 0) {
       setBoardData({});
       return;
     }
