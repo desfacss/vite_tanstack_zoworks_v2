@@ -92,7 +92,7 @@ const DashboardPage: React.FC = () => {
     if (currentDashboard?.widgets && !isEmpty(widgetDefinitions)) {
       fetchMetricData(currentDashboard.widgets);
     }
-  }, [currentDashboard?.id, widgetDefinitions, location]);
+  }, [currentDashboard?.id, widgetDefinitions, location, fetchMetricData]);
 
   // 3. Layout Handler
   const handleLayoutChange = (allLayouts: any) => {

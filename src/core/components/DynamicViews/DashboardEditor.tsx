@@ -82,7 +82,7 @@ const DashboardEditor: React.FC<DashboardEditorProps> = ({ dashboard, onClose })
 
 
         try {
-            await supabase.rpc('core_save_user_dashboard_v2', {
+            await supabase.schema('analytics').rpc('core_save_user_dashboard_v2', {
                 p_user_id: user.id,
                 p_organization_id: organization.id,
                 p_name: values.name,

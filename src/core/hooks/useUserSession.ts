@@ -560,6 +560,7 @@ const fetchUserSessionData = async ({ queryKey }: QueryFunctionContext<UserSessi
   const { data: rpcData, error: rpcError } = await supabase
     .schema('identity')
     .rpc('jwt_get_user_session', { p_organization_id: targetOrgId });
+    console.log('qq-jwt_get_user_session', rpcData);
 
   if (rpcError || !rpcData) throw new Error(rpcError?.message || 'RPC No Data');
 

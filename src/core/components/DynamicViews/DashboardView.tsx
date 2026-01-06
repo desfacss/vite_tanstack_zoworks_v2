@@ -48,7 +48,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({ entitySchema, entityType,
       }
 
       try {
-        const { data, error } = await supabase.rpc('core_get_user_dashboard_v2', {
+        const { data, error } = await supabase.schema('analytics').rpc('core_get_user_dashboard_v2', {
           p_user_id: user.id,
           p_organization_id: organization.id,
           p_entity_full_name: fullEntityTableName,
@@ -159,7 +159,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({ entitySchema, entityType,
 
     message.loading('Saving dashboard...', 0);
     try {
-      const { data, error } = await supabase.rpc('core_save_user_dashboard_v2', {
+      const { data, error } = await supabase.schema('analytics').rpc('core_save_user_dashboard_v2', {
         p_user_id: user.id,
         p_organization_id: organization.id,
         p_name: currentDashboardName,
