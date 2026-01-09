@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Select, Button, Form, Table, message, Input, Popconfirm, Checkbox, Card, Typography, Dropdown, Space, Tag } from 'antd';
+import { Select, Button, Form, Table, message, Input, Popconfirm, Checkbox, Card, Typography, Dropdown, Space, Tag, Alert } from 'antd';
 import { DeleteOutlined, DownOutlined, ApartmentOutlined } from '@ant-design/icons';
 import { supabase } from '@/core/lib/supabase';
 import _ from 'lodash'; 
@@ -86,6 +86,10 @@ interface MetadataProps {
   entityType: string;
   entitySchema: string;
   fetchConfigs: () => void; // Callback to refresh parent component list
+  // NEW: Logical variant awareness
+  isLogicalVariant?: boolean;
+  baseSourceName?: string;
+  partitionFilter?: string;
 }
 
 // --- HELPER FUNCTION ---
@@ -101,7 +105,14 @@ const toSentenceCase = (str: string) => {
 };
 
 // --- MAIN COMPONENT ---
-const Metadata: React.FC<MetadataProps> = ({ entityType, entitySchema, fetchConfigs }) => {
+const Metadata: React.FC<MetadataProps> = ({ 
+  entityType, 
+  entitySchema, 
+  fetchConfigs,
+  isLogicalVariant = false,
+  baseSourceName,
+  partitionFilter,
+}) => {
   // State for columns displayed in the UI tables
   const [displayColumns, setDisplayColumns] = useState<DisplayColumn[]>([]);
   // Loading state
@@ -115,7 +126,7 @@ const Metadata: React.FC<MetadataProps> = ({ entityType, entitySchema, fetchConf
   const [visibleKeys, setVisibleKeys] = useState<string[]>([
     'key', 'display_name', 'type', 'semantic_type_sub_type',
     'source_table', 'source_column', 'display_column', 'action',
-    'semantic_type_default_aggregation','is_searchable','is_displayable','is_mandatory','is_virtual','is_template','order'
+    'semantic_type_default_aggregation','is_searchable','is_displayable','is_mandatory','is_virtual','is_template','is_visible','order'
   ]);
 
   // --- Static Options for Select dropdowns ---
@@ -496,6 +507,14 @@ const Metadata: React.FC<MetadataProps> = ({ entityType, entitySchema, fetchConf
     { title: 'Template', key: 'is_template', width: 90, align: 'center' as 'center',
       render: (_: any, record: DisplayColumn) => (<Form.Item name={[record.key, 'is_template']} valuePropName="checked" noStyle><Checkbox /></Form.Item>)
     },
+    // NEW: is_visible column for logical variants - controls if column appears in the view
+    { title: 'Visible', key: 'is_visible', width: 80, align: 'center' as 'center',
+      render: (_: any, record: DisplayColumn) => (
+        <Form.Item name={[record.key, 'is_visible']} valuePropName="checked" noStyle>
+          <Checkbox defaultChecked />
+        </Form.Item>
+      )
+    },
     { title: 'Order', key: 'order', width: 150,
       render: (_: any, record: DisplayColumn) => (<Form.Item name={[record.key, 'order']} noStyle><Input placeholder="a,b,c" disabled={formValues[record.key]?.semantic_type_sub_type !== 'ordinal'} /></Form.Item>)
     },
@@ -559,7 +578,27 @@ const Metadata: React.FC<MetadataProps> = ({ entityType, entitySchema, fetchConf
         entity_schema={entitySchema} 
         entity_type={entityType} 
       />
-        {/* Column Visibility Dropdown Button */}
+      
+      {/* Logical Variant Info Banner */}
+      {isLogicalVariant && (
+        <Alert
+          message={`Logical Variant of ${baseSourceName || 'base table'}`}
+          description={
+            <div>
+              <div><strong>Base Table:</strong> {baseSourceName}</div>
+              {partitionFilter && (
+                <div><strong>Partition Filter:</strong> <Tag color="blue">{partitionFilter}</Tag></div>
+              )}
+              <div style={{ marginTop: 8, fontSize: 12, color: '#666' }}>
+                Use the "Visible" checkbox to control which columns appear in this variant's view.
+              </div>
+            </div>
+          }
+          type="info"
+          showIcon
+          style={{ marginBottom: 16 }}
+        />
+      )}
         <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'flex-end' }}>
             <Dropdown overlay={columnMenu} trigger={['click']}>
                 <Button>

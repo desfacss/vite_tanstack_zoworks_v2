@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Tabs, Button, message, Select, Input, Modal, Space, Tooltip, Checkbox } from 'antd';
+import { Tabs, Button, message, Select, Input, Modal, Space, Tooltip, Checkbox, Tag } from 'antd';
 import Form from '@rjsf/antd';
 import { RJSFSchema } from '@rjsf/utils';
 import validator from '@rjsf/validator-ajv8';
@@ -26,6 +26,7 @@ import GanttViewConfig from './GanttViewConfig';
 import CalendarViewConfig from './CalendarViewConfig';
 import ViewSuggestionModal from './ViewSuggestionModal';
 import DisplayIdConfig from './DisplayIdConfig';
+import EntityRegistrationWizard from './EntityRegistrationWizard';
 import { ThunderboltOutlined, ReloadOutlined, DeleteOutlined } from '@ant-design/icons';
 
 const { Option } = Select;
@@ -33,7 +34,16 @@ const { Option } = Select;
 interface YViewConfig {
   id: string;
   entity_type: string;
-  entity_schema?: string; // Add entity_schema to the interface
+  entity_schema?: string;
+  // NEW: Logical-First entity fields
+  base_source_name?: string | null;  // Physical table for variants (e.g., 'external.contacts')
+  is_logical_variant?: boolean;      // true if this is a custom slice of another table
+  rules?: {
+    logic?: {
+      partition_filter?: string;     // SQL WHERE clause fragment
+    };
+  };
+  // Existing fields
   master_object?: any;
   master_data_schema?: RJSFSchema;
   ui_schema?: any;
@@ -62,9 +72,8 @@ const YViewConfigManager: React.FC = () => {
   const [selectedRow, setSelectedRow] = useState<string | null>(null);
   const [selectedSchema, setSelectedSchema] = useState<string | null>(null); // New state for entity_schema
   const [schemaOptions, setSchemaOptions] = useState<string[]>([]); // New state for unique schemas
-  const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
-  const [newEntityType, setNewEntityType] = useState<string>('');
-  const [newEntitySchema, setNewEntitySchema] = useState<string>(''); // New state for entity_schema input
+  // Entity Registration Wizard state (replaces old simple modal)
+  const [wizardVisible, setWizardVisible] = useState<boolean>(false);
   
   // View generation state
   const [generateLoading, setGenerateLoading] = useState<boolean>(false);
@@ -82,67 +91,9 @@ const YViewConfigManager: React.FC = () => {
 
   const { organization, setOrganization, user, setUser } = useAuthStore();
 
+  // Open the Entity Registration Wizard
   const handleAddNew = () => {
-    setIsModalVisible(true);
-  };
-
-  const handleModalOk = async () => {
-    try {
-        if (!newEntityType || !newEntitySchema) {
-            message.error('Entity type and schema cannot be empty');
-            return;
-        }
-
-        // 1. Insert into core.entities first to get the new entity_id
-        const { data: entityData, error: entityError } = await supabase
-            .schema('core').from('entities')
-            .insert([{ entity_type: newEntityType, entity_schema: newEntitySchema,metadata:[] }])
-            .select();
-
-        if (entityError) throw entityError;
-
-        const newEntityId = entityData[0].id;
-
-        // 2. Insert a corresponding record into core.view_configs using the new entity_id
-        const { error: viewConfigError } = await supabase
-            .schema('core').from('view_configs')
-            .insert([{
-                entity_id: newEntityId,
-                entity_type: `${newEntitySchema}.${newEntityType}`, // Denormalized column
-                // Set initial empty JSONB objects for views
-                general: {},
-                tableview: {},
-                // ... and so on for all view types
-              }]);
-              console.log("j2");
-
-        // 3. Insert a corresponding record into core.metrics using the new entity_id
-        const { error: metricsError } = await supabase
-            .schema('core').from('metrics')
-            .insert([{
-                entity_id: newEntityId,
-                entity_type: `${newEntitySchema}.${newEntityType}`,
-                metrics: {},
-            }]);
-
-        if (viewConfigError || metricsError) {
-             throw new Error("Failed to create all related records.");
-        }
-
-        message.success('New configuration added successfully');
-        setNewEntityType('');
-        setNewEntitySchema('');
-        setIsModalVisible(false);
-        fetchConfigs();
-    } catch (error) {
-        message.error('Failed to add new configuration');
-    }
-};
-
-  const handleModalCancel = () => {
-    setIsModalVisible(false);
-    setNewEntityType('');
-    setNewEntitySchema('');
+    setWizardVisible(true);
   };
 
   // Delete entity handlers
@@ -369,6 +320,10 @@ const YViewConfigManager: React.FC = () => {
                 id: entity.id, // Use the new entity ID
                 entity_type: entity.entity_type,
                 entity_schema: entity.entity_schema,
+                // NEW: Logical-First entity fields
+                base_source_name: entity.base_source_name || null,
+                is_logical_variant: entity.is_logical_variant || false,
+                rules: entity.rules || null,
                 // Flag to indicate if this entity needs view_configs/metrics setup
                 _needsSetup: !viewConfig,
                 // Map fields from new tables to old YViewConfig structure (use defaults if missing)
@@ -391,7 +346,7 @@ const YViewConfigManager: React.FC = () => {
         }); // No longer filtering out entities without view_configs
         console.log("cd", consolidatedData);
         setConfigs(consolidatedData);
-        const uniqueSchemas = [...new Set(entities.map(item => item.entity_schema).filter(Boolean))];
+        const uniqueSchemas = [...new Set(entities.map(item => item.entity_schema).filter(Boolean))].sort();
         setSchemaOptions(uniqueSchemas);
 
         if (selectedConfig) {
@@ -815,12 +770,29 @@ const YViewConfigManager: React.FC = () => {
             setSelectedWorkflowConfiguration(selectedWorkflowConfiguration || null);
           }}
           value={selectedRow}
+          optionLabelProp="label"
         >
           {configs
             .filter((config) => config.entity_schema === selectedSchema) // Filter by schema
             .map((config) => (
-              <Option key={config.id} value={config.id}>
-                {config.entity_type}
+              <Option 
+                key={config.id} 
+                value={config.id}
+                label={config.entity_type}
+              >
+                <Space>
+                  <span>{config.entity_type}</span>
+                  {config.is_logical_variant ? (
+                    <Tag color="purple" style={{ marginLeft: 4, fontSize: 10 }}>Variant</Tag>
+                  ) : (
+                    <Tag color="green" style={{ marginLeft: 4, fontSize: 10 }}>Physical</Tag>
+                  )}
+                  {config.base_source_name && (
+                    <span style={{ color: '#888', fontSize: 11 }}>
+                      (from {config.base_source_name.split('.').pop()})
+                    </span>
+                  )}
+                </Space>
               </Option>
             ))}
         </Select>
@@ -845,6 +817,10 @@ const YViewConfigManager: React.FC = () => {
                   entitySchema={selectedSchema}
                   entityMetadata={selectedConfig?.metadata || []}
                   fetchConfigs={fetchConfigs}
+                  // NEW: Logical variant awareness
+                  isLogicalVariant={selectedConfig?.is_logical_variant || false}
+                  baseSourceName={selectedConfig?.base_source_name || undefined}
+                  partitionFilter={selectedConfig?.rules?.logic?.partition_filter}
                 />
               ),
             },
@@ -959,34 +935,21 @@ const YViewConfigManager: React.FC = () => {
           Please select a schema and entity to configure
         </div>
       )}
-      <Modal
-        title="Add New Configuration"
-        open={isModalVisible}
-        onOk={handleModalOk}
-        onCancel={handleModalCancel}
-      >
-        <div style={{ marginBottom: '16px' }}>
-            <label style={{ display: 'block', marginBottom: '8px' }}>Entity Schema:</label>
-            <Input
-                placeholder="Enter entity schema (e.g., external)"
-                value={newEntitySchema}
-                onChange={(e) => setNewEntitySchema(e.target.value)}
-            />
-        </div>
-        <div>
-            <label style={{ display: 'block', marginBottom: '8px' }}>Entity Type:</label>
-            <Input
-                placeholder="Enter entity type (e.g., contacts)"
-                value={newEntityType}
-                onChange={(e) => setNewEntityType(e.target.value)}
-            />
-        </div>
-      </Modal>
+      {/* Entity Registration Wizard */}
+      <EntityRegistrationWizard
+        visible={wizardVisible}
+        onClose={() => setWizardVisible(false)}
+        onSuccess={() => {
+          setWizardVisible(false);
+          fetchConfigs();
+        }}
+        existingSchemas={schemaOptions}
+      />
 
       {/* Suggestion Modal */}
       <ViewSuggestionModal
          visible={suggestionModalVisible}
-         onCancel={() => setSuggestionModalVisible(false)}
+         onClose={() => setSuggestionModalVisible(false)}
          suggestedConfigs={suggestedConfigs}
          onApplyAll={handleApplyAllSuggestions}
          onApplySelected={handleApplySelectedViews}
