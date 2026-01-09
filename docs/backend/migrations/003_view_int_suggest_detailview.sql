@@ -72,6 +72,18 @@ BEGIN
         IF (v_field->>'key') = ANY(v_excluded_keys) THEN
             CONTINUE;
         END IF;
+
+        -- ═══════════════════════════════════════════════════════════════════════
+        -- LINKED COLUMN LOGIC: Skip "xxx_id" if "xxx" exists
+        -- ═══════════════════════════════════════════════════════════════════════
+        IF (v_field->>'key') LIKE '%\_id' ESCAPE '\' THEN
+            IF EXISTS (
+                SELECT 1 FROM jsonb_array_elements(p_v_metadata) f 
+                WHERE f->>'key' = substring(v_field->>'key' from 1 for length(v_field->>'key') - 3)
+            ) THEN
+                CONTINUE;
+            END IF;
+        END IF;
         
         -- Skip non-displayable fields
         IF NOT COALESCE((v_field->>'is_displayable')::BOOLEAN, true) THEN

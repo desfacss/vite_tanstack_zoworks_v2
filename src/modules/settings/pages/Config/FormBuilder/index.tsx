@@ -385,7 +385,7 @@ useEffect(() => {
         upsertData.id = selectedForm.id;
       }
       const { data, error } = await supabase
-        .from('forms')
+        .schema('core').from('forms')
         .upsert([upsertData]);
 
       if (error) throw error;
@@ -411,7 +411,7 @@ useEffect(() => {
   const fetchForms = async () => {
     try {
       const { data, error } = await supabase
-        .from('forms')
+        .schema('core').from('forms')
         .select('id, name, data_schema, ui_schema, data_config')
         .order('name', { ascending: true });
       if (error) throw error;

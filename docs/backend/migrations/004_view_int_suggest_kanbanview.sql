@@ -106,23 +106,41 @@ BEGIN
         LIMIT 1;
     END IF;
     
-    -- Find description field
+    -- Find description field (prefer non-_id)
     SELECT f->>'key' INTO v_description_field
     FROM jsonb_array_elements(p_v_metadata) f
-    WHERE (f->>'key') ILIKE '%description%' 
-       OR (f->>'key') ILIKE '%summary%'
-       OR (f->>'key') ILIKE '%notes%'
+    WHERE (
+        (f->>'key') ILIKE '%description%' 
+        OR (f->>'key') ILIKE '%summary%'
+        OR (f->>'key') ILIKE '%notes%'
+    )
+    AND NOT (
+        (f->>'key') LIKE '%\_id' ESCAPE '\' 
+        AND EXISTS (
+            SELECT 1 FROM jsonb_array_elements(p_v_metadata) f2 
+            WHERE f2->>'key' = substring(f->>'key' from 1 for length(f->>'key') - 3)
+        )
+    )
     LIMIT 1;
     
-    -- Find assignee field (FK to users)
+    -- Find assignee field (FK to users, prefer non-_id)
     SELECT f->>'key' INTO v_assignee_field
     FROM jsonb_array_elements(p_v_metadata) f
-    WHERE f->'foreign_key' IS NOT NULL
-      AND (
-          (f->'foreign_key'->>'source_table') ILIKE '%users%'
-          OR (f->>'key') ILIKE '%assigned%'
-          OR (f->>'key') ILIKE '%owner%'
-      )
+    WHERE (
+        f->'foreign_key' IS NOT NULL
+        AND (
+            (f->'foreign_key'->>'source_table') ILIKE '%users%'
+            OR (f->>'key') ILIKE '%assigned%'
+            OR (f->>'key') ILIKE '%owner%'
+        )
+    )
+    AND NOT (
+        (f->>'key') LIKE '%\_id' ESCAPE '\' 
+        AND EXISTS (
+            SELECT 1 FROM jsonb_array_elements(p_v_metadata) f2 
+            WHERE f2->>'key' = substring(f->>'key' from 1 for length(f->>'key') - 3)
+        )
+    )
     LIMIT 1;
     
     -- Find due date field

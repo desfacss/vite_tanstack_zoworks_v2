@@ -82,15 +82,15 @@ const TaskForm: React.FC<TaskFormProps> = ({ parentEditItem, entityType, editIte
           taskTypesRes
         ] = await Promise.all([
           supabase.schema('identity').from('users').select('id, name'),
-          supabase.schema('organization').from('enums').select('id, value').eq('value_type', 'priority'),
-          supabase.schema('organization').from('enums').select('id, value').eq('value_type', 'task_outcome'),
-          supabase.schema('organization').from('enums').select('id, value').eq('value_type', 'task_activity_type'),
+          supabase.schema('core').from('enums').select('id, value').eq('value_type', 'priority'),
+          supabase.schema('core').from('enums').select('id, value').eq('value_type', 'task_outcome'),
+          supabase.schema('core').from('enums').select('id, value').eq('value_type', 'task_activity_type'),
           supabase.schema('public').from('tickets').select('id, display_id, subject, details, account_id, location_id, asset_id, field_agent_id'),
           supabase.schema('public').from('projects').select('id, name'),
           supabase.schema('organization').from('tasks').select('id, name'),
           supabase.schema('organization').from('resources').select('id, name').neq('type', 'User'),
-          supabase.schema('organization').from('enums').select('id, value').eq('value_type', 'task_origin'),
-          supabase.schema('organization').from('enums').select('id, value').eq('value_type', 'task_type')
+          supabase.schema('core').from('enums').select('id, value').eq('value_type', 'task_origin'),
+          supabase.schema('core').from('enums').select('id, value').eq('value_type', 'task_type')
         ]);
         
         const manualOrigin = originsRes?.data?.find(item => item.value === 'Manual');

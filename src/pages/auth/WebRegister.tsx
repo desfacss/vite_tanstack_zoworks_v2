@@ -44,7 +44,7 @@ const WebRegister: React.FC = () => {
 
   const getForms = async () => {
     const { data, error } = await supabase
-      .from('forms')
+      .schema('core').from('forms')
       .select('*')
       .eq('name', 'web_admin_registration_form')
       .single();

@@ -142,6 +142,14 @@ BEGIN
           AND (f->>'key') != COALESCE(v_tags_field, '')
           AND (f->>'key') != COALESCE(v_badge_field, '')
           AND (f->>'type') != 'jsonb'
+          -- LINKED COLUMN LOGIC: Skip "xxx_id" if "xxx" exists
+          AND NOT (
+              (f->>'key') LIKE '%\_id' ESCAPE '\' 
+              AND EXISTS (
+                  SELECT 1 FROM jsonb_array_elements(p_v_metadata) f2 
+                  WHERE f2->>'key' = substring(f->>'key' from 1 for length(f->>'key') - 3)
+              )
+          )
         ORDER BY 
             COALESCE((f->>'is_mandatory')::BOOLEAN, false) DESC,
             COALESCE((f->>'is_searchable')::BOOLEAN, false) DESC

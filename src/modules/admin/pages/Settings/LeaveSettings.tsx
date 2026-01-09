@@ -52,7 +52,7 @@ const LeaveSettings: React.FC = () => {
 
   const getForms = async () => {
     const { data, error } = await supabase
-      .from('forms')
+      .schema('core').from('forms')
       .select('*')
       .eq('name', 'leaves_add_edit_form')
       .single();

@@ -220,7 +220,7 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket_id, asset_id, onSuccess 
 
         // Fetch priorities (Assuming organization.enums is correct)
         const { data: priorityData, error: priorityError } = await supabase
-          .schema('organization')
+          .schema('core')
           .from('enums')
           .select('id, value, display_order')
           .eq('value_type', 'priority')

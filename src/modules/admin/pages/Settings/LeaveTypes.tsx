@@ -52,7 +52,7 @@ const LeaveTypes: React.FC = () => {
     setLoading(true);
     try {
       const { data, error } = await supabase
-        .from('enums')
+        .schema('core').from('enums')
         .select('options')
         .eq('name', 'types_crud')
         .eq('organization_id', organization?.id);

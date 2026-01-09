@@ -36,7 +36,7 @@ export const useFormConfig = (formName: string) => {
       }
 
       const { data, error } = await supabase
-        .from('forms')
+        .schema('core').from('forms')
         .select('*')
         .eq('name', formName)
         .single();

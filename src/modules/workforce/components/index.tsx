@@ -111,7 +111,7 @@ const TeamUsers: React.FC<TeamUsersProps> = ({ selectedTeamId }) => {
 
   const getForms = async () => {
     const { data, error } = await supabase
-      .from('forms')
+      .schema('core').from('forms')
       .select('*')
       .eq('name', 'user_add_edit_form')
       .single();
