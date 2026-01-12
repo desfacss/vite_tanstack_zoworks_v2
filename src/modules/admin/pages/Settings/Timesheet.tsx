@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Form, Button, Select, Switch, InputNumber, Collapse, message, Divider } from 'antd';
+import { Form, Button, Select, Switch, InputNumber, Collapse, Divider, App } from 'antd';
 import { supabase } from '@/core/lib/supabase';
 import { useAuthStore } from '@/core/lib/store';
 
@@ -29,6 +29,7 @@ interface TimesheetSettingsData {
 const TimesheetSettings: React.FC = () => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState<boolean>(false);
+  const { message } = App.useApp();
   const { organization } = useAuthStore();
 
   const fetchSettings = async () => {

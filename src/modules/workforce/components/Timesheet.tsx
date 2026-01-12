@@ -210,7 +210,7 @@
 // // //             if (editItem?.id) {
 // // //                 const { error: deleteError } = await supabase
 // // //                     .schema('workforce')
-// // //                     .from('timesheet_entries')
+// // //                     .from('timesheet_items')
 // // //                     .delete()
 // // //                     .eq('timesheet_id', timesheetId);
 // // //                 if (deleteError) throw deleteError;
@@ -233,7 +233,7 @@
 // // //             if (entriesToInsert.length > 0) {
 // // //                 const { error: entriesError } = await supabase
 // // //                     .schema('workforce')
-// // //                     .from('timesheet_entries')
+// // //                     .from('timesheet_items')
 // // //                     .insert(entriesToInsert);
 // // //                 if (entriesError) throw entriesError;
 // // //             }
@@ -334,7 +334,6 @@ import {
     Button, 
     Typography, 
     Select, 
-    message, 
     Row, 
     Col, 
     InputNumber, 
@@ -342,11 +341,11 @@ import {
     Radio,
     Popover,
     Space,
-    Form
+    Form,
+    App
 } from 'antd';
-// DEV NOTE: Mocking imports for Canvas environment
-// import { supabase } from '@/lib/supabase';
-// import { useAuthStore } from '@/core/lib/store';
+import { supabase } from '@/core/lib/supabase';
+import { useAuthStore } from '@/core/lib/store';
 import dayjs from 'dayjs';
 import weekday from 'dayjs/plugin/weekday';
 // import './timesheet.css'; 
@@ -356,30 +355,7 @@ dayjs.extend(weekday);
 const { Option } = Select;
 const { Title, Text } = Typography;
 
-// --- MOCKED DEPENDENCIES ---
 
-// Mock Supabase client
-const supabase = {
-    schema: () => supabase,
-    from: () => ({
-        upsert: () => ({ select: () => ({ single: () => Promise.resolve({ data: { id: 'ts-mock-id' }, error: null }) }) }),
-        delete: () => ({ eq: () => Promise.resolve({ error: null }) }),
-        insert: () => Promise.resolve({ error: null }),
-        select: () => Promise.resolve({ data: [{id: 'proj-1', name: 'Project Apollo'}, {id: 'proj-2', name: 'Project Zeus'}], error: null })
-    }),
-    rpc: () => Promise.resolve({ 
-        data: [{id: 'proj-1', name: 'Project Apollo'}, {id: 'proj-2', name: 'Project Zeus'}, {id: 'proj-3', name: 'Project Phoenix'}], 
-        error: null 
-    })
-};
-
-// Mock AuthStore hook
-const useAuthStore = () => ({
-    user: {
-        id: 'user-123',
-        organization_id: 'org-456'
-    }
-});
 
 
 // --- CONFIGURATION ---
@@ -621,6 +597,7 @@ const Timesheet: React.FC<TimesheetProps> = ({ editItem, onFinish, viewMode = fa
     const [columnTotals, setColumnTotals] = useState<Map<string, number>>(new Map());
     const [grandTotal, setGrandTotal] = useState<number>(0);
     const [loading, setLoading] = useState(false);
+    const { message } = App.useApp();
     const { user } = useAuthStore();
 
     // --- DATA FETCHING ---
@@ -633,7 +610,7 @@ const Timesheet: React.FC<TimesheetProps> = ({ editItem, onFinish, viewMode = fa
                 setAllProjects(data || []);
             } catch (error: any) {
                 console.warn("RPC get_projects_for_user not found or failed, falling back to public.projects table.");
-                const { data: tableErrorData, error: tableError } = await supabase.from('projects').select('id, name');
+                const { data: tableErrorData, error: tableError } = await supabase.schema('blueprint').from('projects').select('id, name');
                 if (tableError) {
                     console.error('Error fetching projects from table:', tableError);
                     message.error('Failed to fetch projects.');
@@ -700,11 +677,11 @@ const Timesheet: React.FC<TimesheetProps> = ({ editItem, onFinish, viewMode = fa
 
     // --- DATA LOADING (EDIT/VIEW MODE) ---
     useEffect(() => {
-        if (editItem?.timesheet_entries && allProjects.length > 0) {
+        if (editItem?.timesheet_items && allProjects.length > 0) {
             
             const projectMap = new Map<string, ProjectRow>();
             
-            editItem.timesheet_entries.forEach((entry: any) => {
+            editItem.timesheet_items.forEach((entry: any) => {
                 let projectRow = projectMap.get(entry.project_id);
 
                 if (!projectRow) {
@@ -794,7 +771,7 @@ const Timesheet: React.FC<TimesheetProps> = ({ editItem, onFinish, viewMode = fa
 
     const handleAddProject = (projectId: string) => {
         if (timesheetData.find(row => row.project_id === projectId)) {
-            message.warn('Project is already in the timesheet.');
+            message.warning('Project is already in the timesheet.');
             return;
         }
 
@@ -840,10 +817,12 @@ const Timesheet: React.FC<TimesheetProps> = ({ editItem, onFinish, viewMode = fa
      * @description Saves timesheet and entries, ensuring dates are correct.
      */
     const handleSubmit = async (status: 'Draft' | 'Submitted') => {
+        console.log("uk",user);
         if (!user?.id) { message.error('User is not authenticated.'); return; }
         if (timesheetData.length === 0) { message.error('Cannot submit an empty timesheet. Please add a project.'); return; }
         if (grandTotal === 0) { message.error('Cannot submit a timesheet with no hours. Please log your time.'); return; }
         
+        console.log(`Submitting timesheet with status: ${status}`);
         setLoading(true);
 
         try {
@@ -854,13 +833,15 @@ const Timesheet: React.FC<TimesheetProps> = ({ editItem, onFinish, viewMode = fa
             const timesheetPayload = {
                 id: editItem?.id,
                 user_id: user.id,
-                organization_id: user.pref_organization_id,
+                organization_id: (user as any).pref_organization_id || user.organization_id,
                 timesheet_date: firstDate.format('YYYY-MM-DD'),
                 last_date: lastDate.format('YYYY-MM-DD'),
                 timesheet_type: settings.type,
                 total_hours: grandTotal,
                 stage_id: status,
             };
+
+            console.log('Timesheet Payload:', timesheetPayload);
 
             const { data: sheetData, error: sheetError } = await supabase
                 .schema('workforce')
@@ -869,16 +850,25 @@ const Timesheet: React.FC<TimesheetProps> = ({ editItem, onFinish, viewMode = fa
                 .select()
                 .single();
 
-            if (sheetError) throw sheetError;
+            if (sheetError) {
+                console.error('Supabase Timesheet Upsert Error:', sheetError);
+                throw sheetError;
+            }
+            
+            console.log('Supabase Timesheet Upsert Success:', sheetData);
             const timesheetId = sheetData.id;
 
             if (editItem?.id) {
+                console.log('Deleting existing entries for timesheet:', timesheetId);
                 const { error: deleteError } = await supabase
                     .schema('workforce')
-                    .from('timesheet_entries')
+                    .from('timesheet_items')
                     .delete()
                     .eq('timesheet_id', timesheetId);
-                if (deleteError) throw deleteError;
+                if (deleteError) {
+                    console.error('Supabase Entry Delete Error:', deleteError);
+                    throw deleteError;
+                }
             }
 
             const entriesToInsert: any[] = [];
@@ -889,7 +879,7 @@ const Timesheet: React.FC<TimesheetProps> = ({ editItem, onFinish, viewMode = fa
                         entriesToInsert.push({
                             timesheet_id: timesheetId,
                             project_id: row.project_id,
-                            organization_id: user.pref_organization_id,
+                            organization_id: (user as any).pref_organization_id || user.organization_id,
                             entry_date: date.key, 
                             hours_worked: entry.hours,
                             description: entry.description || null,
@@ -899,16 +889,22 @@ const Timesheet: React.FC<TimesheetProps> = ({ editItem, onFinish, viewMode = fa
                 });
             });
 
+            console.log('Entries to insert:', entriesToInsert);
+
             if (entriesToInsert.length > 0) {
                 const { error: entriesError } = await supabase
                     .schema('workforce')
-                    .from('timesheet_entries')
+                    .from('timesheet_items')
                     .insert(entriesToInsert);
-                if (entriesError) throw entriesError;
+                if (entriesError) {
+                    console.error('Supabase Entry Insert Error:', entriesError);
+                    throw entriesError;
+                }
+                console.log('Supabase Entry Insert Success');
             }
 
             message.success(`Timesheet ${status.toLowerCase()} successfully.`);
-            onFinish();
+            onFinish?.();
         } catch (error: any)
         {
             console.error('Submission Error:', error);

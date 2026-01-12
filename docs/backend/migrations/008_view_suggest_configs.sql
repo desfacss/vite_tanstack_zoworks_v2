@@ -96,11 +96,11 @@ BEGIN
     -- ═══════════════════════════════════════════════════════════════════════════
     
     -- TableView (always generated)
-    v_tableview := core.view_int_suggest_tableview(v_entity_metadata, 10);
+    v_tableview := core.view_int_suggest_tableview(v_entity_metadata, v_entity.entity_type, 10);
     v_available_views := array_append(v_available_views, 'tableview');
     
     -- GridView (always generated)
-    v_gridview := core.view_int_suggest_gridview(v_entity_metadata);
+    v_gridview := core.view_int_suggest_gridview(v_entity_metadata, v_entity.entity_type);
     v_available_views := array_append(v_available_views, 'gridview');
     
     -- DetailView (always generated)
@@ -151,7 +151,13 @@ BEGIN
     v_result := jsonb_build_object(
         'general', jsonb_build_object(
             'default_view', v_default_view,
-            'available_views', to_jsonb(v_available_views)
+            'available_views', to_jsonb(v_available_views),
+            'global_actions', jsonb_build_array(
+                jsonb_build_object(
+                    'label', 'New',
+                    'form', v_entity.entity_type || '_form'
+                )
+            )
         ),
         'tableview', v_tableview,
         'gridview', v_gridview,

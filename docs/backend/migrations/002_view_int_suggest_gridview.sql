@@ -6,7 +6,8 @@
    ═══════════════════════════════════════════════════════════════════════════════ */
 
 CREATE OR REPLACE FUNCTION core.view_int_suggest_gridview(
-    p_v_metadata JSONB
+    p_v_metadata JSONB,
+    p_entity_name TEXT DEFAULT NULL
 )
 RETURNS JSONB
 LANGUAGE plpgsql
@@ -197,6 +198,14 @@ BEGIN
             'cardsPerRow', 3,
             'cardSize', 'medium'
         ),
+        'actions', jsonb_build_object(
+            'row', jsonb_build_array(
+                jsonb_build_object('name', 'Edit', 'form', COALESCE(p_entity_name, 'entity') || '_form'),
+                jsonb_build_object('name', 'Details', 'form', ''),
+                jsonb_build_object('name', 'Delete', 'form', '')
+            ),
+            'bulk', '[]'::JSONB
+        ),
         'showFeatures', '["search", "pagination"]'::JSONB
     );
 END;
@@ -218,10 +227,13 @@ DECLARE
     ]'::JSONB;
     v_result JSONB;
 BEGIN
-    v_result := core.view_int_suggest_gridview(v_sample_metadata);
+    v_result := core.view_int_suggest_gridview(v_sample_metadata, 'test_entity');
     
     ASSERT v_result IS NOT NULL, 'Result should not be null';
     ASSERT v_result->'cardFields' IS NOT NULL, 'Should have cardFields';
+    ASSERT v_result->'actions'->'row' IS NOT NULL, 'Should have row actions';
+    ASSERT (v_result->'actions'->'row'->0->>'name') = 'Edit', 'First action should be Edit';
+    ASSERT (v_result->'actions'->'row'->0->>'form') = 'test_entity_form', 'Edit form should use entity name';
     ASSERT (v_result->'cardFields'->>'title') = 'name', 'Title should be name';
     ASSERT (v_result->'cardFields'->>'tags') = 'tags', 'Tags should be detected';
     ASSERT (v_result->'cardFields'->>'badge') = 'stage_id', 'Badge should be stage_id';

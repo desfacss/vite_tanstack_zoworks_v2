@@ -7,6 +7,7 @@
 
 CREATE OR REPLACE FUNCTION core.view_int_suggest_tableview(
     p_v_metadata JSONB,
+    p_entity_name TEXT DEFAULT NULL,
     p_max_columns INTEGER DEFAULT 10
 )
 RETURNS JSONB
@@ -187,7 +188,11 @@ BEGIN
         'defaultSort', v_default_sort,
         'showFeatures', v_show_features,
         'actions', jsonb_build_object(
-            'row', '[]'::JSONB,
+            'row', jsonb_build_array(
+                jsonb_build_object('name', 'Edit', 'form', COALESCE(p_entity_name, 'entity') || '_form'),
+                jsonb_build_object('name', 'Details', 'form', ''),
+                jsonb_build_object('name', 'Delete', 'form', '')
+            ),
             'bulk', '[]'::JSONB
         ),
         'exportOptions', '["csv", "excel"]'::JSONB
@@ -214,11 +219,14 @@ DECLARE
     ]'::JSONB;
     v_result JSONB;
 BEGIN
-    v_result := core.view_int_suggest_tableview(v_sample_metadata, 10);
+    v_result := core.view_int_suggest_tableview(v_sample_metadata, 'test_entity', 10);
     
     -- Assertions
     ASSERT v_result IS NOT NULL, 'Result should not be null';
     ASSERT v_result->'fields' IS NOT NULL, 'Should have fields array';
+    ASSERT v_result->'actions'->'row' IS NOT NULL, 'Should have row actions';
+    ASSERT (v_result->'actions'->'row'->0->>'name') = 'Edit', 'First action should be Edit';
+    ASSERT (v_result->'actions'->'row'->0->>'form') = 'test_entity_form', 'Edit form should use entity name';
     
     -- Verify linked column logic (client_id should be skipped if client exists, but project_id stays if no project)
     -- We need to add samples for this in the test metadata
