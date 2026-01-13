@@ -677,15 +677,23 @@ const Timesheet: React.FC<TimesheetProps> = ({ editItem, onFinish, viewMode = fa
 
     // --- DATA LOADING (EDIT/VIEW MODE) ---
     useEffect(() => {
-        if (editItem?.timesheet_items && allProjects.length > 0) {
-            
+        console.log('[Timesheet] useEffect LOAD triggered:', { 
+            hasItems: !!editItem?.timesheet_items, 
+            itemCount: editItem?.timesheet_items?.length,
+            projectsCount: allProjects.length 
+        });
+
+        if (editItem?.timesheet_items) {
+            console.log('[Timesheet] Starting data transformation...');
             const projectMap = new Map<string, ProjectRow>();
             
             editItem.timesheet_items.forEach((entry: any) => {
+                console.log('[Timesheet] Mapping entry:', entry);
                 let projectRow = projectMap.get(entry.project_id);
 
                 if (!projectRow) {
-                    const projectName = allProjects.find(p => p.id === entry.project_id)?.name || 'Unknown Project';
+                    const project = allProjects.find(p => p.id === entry.project_id);
+                    const projectName = project?.name || 'Unknown Project';
                     projectRow = {
                         key: entry.project_id,
                         project_id: entry.project_id,
@@ -696,13 +704,19 @@ const Timesheet: React.FC<TimesheetProps> = ({ editItem, onFinish, viewMode = fa
                 }
 
                 const dateKey = dayjs(entry.entry_date).format('YYYY-MM-DD');
+                // Ensure hours is treated as a number
+                const hoursVal = typeof entry.hours_worked === 'string' ? parseFloat(entry.hours_worked) : (entry.hours_worked || 0);
+                
                 projectRow[dateKey] = {
-                    hours: entry.hours_worked,
+                    hours: hoursVal,
                     description: entry.description,
                 };
+                console.log(`[Timesheet] Assigned ${hoursVal} to ${dateKey} for row ${projectRow.project_name}`);
             });
 
             const loadedData = Array.from(projectMap.values());
+            console.log('[Timesheet] Transformation complete. Rows:', loadedData.length);
+            
             loadedData.forEach(row => {
                 row.total = dynamicDates.reduce((sum, date) => {
                     const entry = row[date.key] as TimesheetEntry;
@@ -711,6 +725,8 @@ const Timesheet: React.FC<TimesheetProps> = ({ editItem, onFinish, viewMode = fa
             });
             
             setTimesheetData(loadedData);
+        } else {
+            console.log('[Timesheet] No items found in editItem to load.');
         }
     }, [editItem, allProjects, dynamicDates]);
 
@@ -843,12 +859,27 @@ const Timesheet: React.FC<TimesheetProps> = ({ editItem, onFinish, viewMode = fa
 
             console.log('Timesheet Payload:', timesheetPayload);
 
-            const { data: sheetData, error: sheetError } = await supabase
-                .schema('workforce')
-                .from('timesheets')
-                .upsert(timesheetPayload)
-                .select()
-                .single();
+            let sheetResult;
+            if (editItem?.id) {
+                console.log('Updating existing timesheet:', editItem.id);
+                sheetResult = await supabase
+                    .schema('workforce')
+                    .from('timesheets')
+                    .update(timesheetPayload)
+                    .eq('id', editItem.id)
+                    .select()
+                    .single();
+            } else {
+                console.log('Inserting new timesheet');
+                sheetResult = await supabase
+                    .schema('workforce')
+                    .from('timesheets')
+                    .insert(timesheetPayload)
+                    .select()
+                    .single();
+            }
+
+            const { data: sheetData, error: sheetError } = sheetResult;
 
             if (sheetError) {
                 console.error('Supabase Timesheet Upsert Error:', sheetError);
@@ -1035,8 +1066,8 @@ const Timesheet: React.FC<TimesheetProps> = ({ editItem, onFinish, viewMode = fa
                         <Select
                             placeholder="Add a project to log time..."
                             style={{ width: 300 }}
-                            onSelect={handleAddProject}
-                            value={null}
+                            onSelect={(val: any) => handleAddProject(val)}
+                            value={undefined}
                             loading={allProjects.length === 0}
                         >
                             {allProjects.map(p => (
@@ -1069,8 +1100,8 @@ const Timesheet: React.FC<TimesheetProps> = ({ editItem, onFinish, viewMode = fa
                 rowKey="key"
                 loading={loading}
                 summary={() => (
-                    <Table.Summary.Row style={{ background: '#fafafa', textAlign: 'right' }}>
-                        <Table.Summary.Cell index={0} style={{ textAlign: 'left' }}>
+                    <Table.Summary.Row style={{ background: '#fafafa' }}>
+                        <Table.Summary.Cell index={0} align="left">
                             <Text strong>Total</Text>
                         </Table.Summary.Cell>
                         
@@ -1080,7 +1111,7 @@ const Timesheet: React.FC<TimesheetProps> = ({ editItem, onFinish, viewMode = fa
                                 <Table.Summary.Cell 
                                     key={date.key} 
                                     index={index + 1} 
-                                    style={{ textAlign: 'center' }}
+                                    align="center"
                                     className={isWeekend ? 'weekend-column' : ''}
                                 >
                                     <Text strong>
@@ -1090,7 +1121,7 @@ const Timesheet: React.FC<TimesheetProps> = ({ editItem, onFinish, viewMode = fa
                             );
                         })}
 
-                        <Table.Summary.Cell index={-1}>
+                        <Table.Summary.Cell index={-1} align="right">
                             <Text strong>{grandTotal.toFixed(2)}</Text>
                         </Table.Summary.Cell>
                     </Table.Summary.Row>

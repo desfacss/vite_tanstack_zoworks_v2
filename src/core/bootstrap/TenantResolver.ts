@@ -290,7 +290,7 @@ function getEmergencyDefaults(subdomain: string): TenantConfig {
         subdomain,
         organization_id: '',
         organization_name: 'Zoworks',
-        enabled_modules: ['core', 'tickets'],
+        enabled_modules: ['core', 'tickets', 'workforce', 'crm', 'external', 'wa', 'settings'],
         module_config: {},
         theme_config: {
             mode: 'light',

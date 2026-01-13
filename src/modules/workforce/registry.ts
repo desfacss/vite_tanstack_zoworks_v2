@@ -50,16 +50,45 @@ export async function register(
   // 4. Register Tabs for 'projects' or 'tasks' for timesheets
   const subModules = config.sub_modules || {};
   if (subModules.timesheets !== false) {  // Default enabled
+    console.log('[Workforce] Registering timesheets tab and actions');
+    
+    const timesheetEntityTypes = ['timesheets', 'workforce.timesheets', 'timesheet'];
+
     registry.registerTab({
       id: 'timesheets',
-      entityTypes: ['projects', 'tasks'],
+      entityTypes: timesheetEntityTypes,
       label: 'workforce:nav.timesheets',
       component: () => import('./components/Timesheet'),
       order: 20,
     });
+
+    registry.registerAction({
+      id: 'timesheet-edit',
+      entityTypes: timesheetEntityTypes,
+      position: 'row',
+      label: 'Edit',
+      component: () => import('./components/Times'),
+    });
+    console.log('[Workforce] ✓ Timesheets registered for:', timesheetEntityTypes);
+  } else {
+    console.log('[Workforce] Skipping timesheets registration (disabled)');
   }
 
-  // 5. Register Agent Activity Report
+  // 5. Register Expenses Actions
+  if (subModules.expenses !== false) {
+    const expenseEntityTypes = ['expense_sheets', 'workforce.expense_sheets', 'expense_sheet'];
+    
+    registry.registerAction({
+      id: 'expense-edit',
+      entityTypes: expenseEntityTypes,
+      position: 'row',
+      label: 'Edit',
+      component: () => import('./components/Expenses'),
+    });
+    console.log('[Workforce] ✓ Expenses registered for:', expenseEntityTypes);
+  }
+
+  // 6. Register Agent Activity Report
   registry.registerTab({
     id: 'agent-activity-report',
     entityTypes: ['users'],

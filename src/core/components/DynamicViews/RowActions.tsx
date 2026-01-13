@@ -110,7 +110,7 @@ const RowActions: React.FC<RowActionsProps> = ({
       };
       const relatedTable = config?.details?.related_table;
 
-      const { data, error } = await supabase.schema('analytics').rpc('core_upsert_data_v8', {
+      const { data, error } = await (supabase as any).schema('analytics').rpc('core_upsert_data_v8', {
         table_name: viewConfig?.entity_type || entityType,
         data: dataPayload,
         id: record.id,
@@ -133,11 +133,76 @@ const RowActions: React.FC<RowActionsProps> = ({
     onError: (error: any) => message.error(error.message || 'Failed to update ' + entityType),
   });
 
+  const fetchFullRecord = useCallback(async (recordId: string) => {
+    try {
+      // Prioritize explicit select, fallback to basic items for timesheets and expenses
+      let selectStr = viewConfig?.general?.select;
+      const isTimesheet = entityType.toLowerCase().includes('timesheet') || (viewConfig?.entity_type || '').toLowerCase().includes('timesheet');
+      const isExpense = entityType.toLowerCase().includes('expense_sheet') || (viewConfig?.entity_type || '').toLowerCase().includes('expense_sheet');
+
+      if (!selectStr && isTimesheet) {
+         selectStr = '*, timesheet_items(*)';
+      } else if (!selectStr && isExpense) {
+         selectStr = '*, expense_sheet_items(*)';
+      }
+      selectStr = selectStr || '*';
+
+      const parts = (viewConfig?.entity_type || entityType).split('.');
+      const schemaName = parts.length === 2 ? parts[0] : 'public';
+      const tableName = parts.length === 2 ? parts[1] : entityType;
+
+      console.log(`[RowActions] Fetching full record for ${entityType}:`, { schemaName, tableName, selectStr });
+
+      const { data, error } = await (supabase as any)
+        .schema(schemaName)
+        .from(tableName)
+        .select(selectStr)
+        .eq('id', recordId)
+        .single();
+
+      if (error) {
+          console.error(`[RowActions] Fetch failed for ${tableName}:`, error);
+          throw error;
+      }
+      console.log(`[RowActions] Fetch SUCCESS for ${tableName}:`, data);
+      return data;
+    } catch (error) {
+      console.warn('[RowActions] Failed to fetch full record, using basic record:', error);
+      return record;
+    }
+  }, [entityType, viewConfig, record]);
+
   const handleEdit = async (form: string) => {
+    // Fetch full record if we have a special select string OR it's a timesheet/expense
+    let latestRecord = record;
+    const isTimesheet = (entityType || '').toLowerCase().includes('timesheet') || (viewConfig?.entity_type || '').toLowerCase().includes('timesheet');
+    const isExpense = (entityType || '').toLowerCase().includes('expense_sheet') || (viewConfig?.entity_type || '').toLowerCase().includes('expense_sheet');
+    
+    if (viewConfig?.general?.select || isTimesheet || isExpense) {
+      latestRecord = await fetchFullRecord(record.id);
+      setEnhancedRecord(latestRecord);
+    }
+
+    // 1. Check if this is a registry action ID (check entity first, then global)
+    let registeredAction = registry.getActionsForEntity(entityType, 'row').find(a => a.id === form)
+      || (registry as any).getActionById?.(form);
+      
+    // EXTRA FALLBACK: If form is 'timesheet-edit' but ID is just 'timesheet' (registered as detail component sometimes)
+    if (!registeredAction && form === 'timesheet-edit') {
+       registeredAction = (registry as any).getActionById?.('timesheet-edit') || (registry as any).getActionById?.('timesheet');
+    }
+
+    console.log('[RowActions] Resulting registeredAction:', registeredAction);
+
+    if (registeredAction) {
+      handleRegistryActionClick(registeredAction.id, latestRecord);
+      return;
+    }
+
     setFormName(form);
     setCurrentAction('Edit');
 
-    // Check if this is a component path (starts with ../ or ./)
+    // 2. Check if this is a component path (starts with ../ or ./)
     const isComponentPath = form.startsWith('../') || form.startsWith('./');
 
     if (isComponentPath) {
@@ -158,7 +223,7 @@ const RowActions: React.FC<RowActionsProps> = ({
           const Component = await allModules[modulePath]() as any;
           setLoadedActionComponent(() => Component.default || Component);
           setActiveRegistryActionId(`component-${form}`);
-          setEnhancedRecord(record);
+          setEnhancedRecord(latestRecord);
           return;
         }
       } catch (error) {
@@ -173,12 +238,10 @@ const RowActions: React.FC<RowActionsProps> = ({
     }
 
     const relatedTable = config?.details?.related_table;
-    let updatedRecord = { ...record };
     if (relatedTable?.name && relatedTable?.key) {
       const relatedData = await fetchRelatedData(record.id);
-      updatedRecord = { ...record, [relatedTable.key]: relatedData.length > 0 ? relatedData : undefined };
+      setEnhancedRecord({ ...latestRecord, [relatedTable.key]: relatedData.length > 0 ? relatedData : undefined });
     }
-    setEnhancedRecord(updatedRecord);
     setIsDrawerVisible(true);
   };
 
@@ -197,15 +260,33 @@ const RowActions: React.FC<RowActionsProps> = ({
     setContextId(newContextId);
   };
 
-  const handleRegistryActionClick = useCallback(async (actionId: string) => {
-    const action = registry.getActionsForEntity(entityType, 'row').find(a => a.id === actionId);
+  const handleRegistryActionClick = useCallback(async (actionId: string, customRecord?: any) => {
+    // Check entity specific list first, then global registry
+    const action = registry.getActionsForEntity(entityType, 'row').find(a => a.id === actionId)
+      || (registry as any).getActionById?.(actionId);
+
     if (action) {
+      // 1. If no custom record provided OR the record is shallow (no items for timesheet/expense), fetch the full one
+      let latestRecord = customRecord;
+      const isTimesheet = (entityType || '').toLowerCase().includes('timesheet') || (viewConfig?.entity_type || '').toLowerCase().includes('timesheet');
+      const isExpense = (entityType || '').toLowerCase().includes('expense_sheet') || (viewConfig?.entity_type || '').toLowerCase().includes('expense_sheet');
+      
+      const isShallow = (isTimesheet && !latestRecord?.timesheet_items) || (isExpense && !latestRecord?.expense_sheet_items);
+
+      if ((!latestRecord || isShallow) && record?.id) {
+         latestRecord = await fetchFullRecord(record.id);
+      }
+
       const Component = await action.component();
       setLoadedActionComponent(() => Component.default || Component);
       setActiveRegistryActionId(actionId);
       setCurrentAction('Registry');
+      
+      if (latestRecord) {
+        setEnhancedRecord(latestRecord);
+      }
     }
-  }, [entityType]);
+  }, [entityType, record?.id, fetchFullRecord]);
 
   const handleDeleteConfirm = () => {
     Modal.confirm({
@@ -246,23 +327,27 @@ const RowActions: React.FC<RowActionsProps> = ({
   const actionItems = useMemo(() => {
     const inlineItems: any[] = [];
     const overflowItems: any[] = [];
-
-    // Check if there's a registered edit action for this entity
-    const registeredEditAction = filteredActions.registered.find(a => a.id.toLowerCase().includes('edit'));
+    const handledRegistryIds = new Set<string>();
 
     // 1. Built-in actions - separate into inline (Edit, Details, Delete) and overflow (Clone)
     filteredActions.builtIn.forEach(a => {
       if (a.name === 'Edit') {
-        // If there's a registered edit component, use that instead of form-based edit
-        if (registeredEditAction) {
+        // If a form field is provided, check if it matches a registered action ID for this entity
+        const registeredAction = a.form ? (
+          filteredActions.registered.find(reg => reg.id === a.form) 
+          || (registry as any).getActionById?.(a.form)
+        ) : null;
+
+        if (registeredAction) {
+          handledRegistryIds.add(registeredAction.id);
           inlineItems.push({
             key: 'edit',
             label: 'Edit',
             icon: <Edit2 size={16} />,
-            onClick: () => handleRegistryActionClick(registeredEditAction.id)
+            onClick: () => handleRegistryActionClick(registeredAction.id)
           });
         } else if (a.form) {
-          // Fall back to form-based edit
+          // Fall back to form-based edit (either custom component path lookup or DynamicForm schema)
           inlineItems.push({
             key: 'edit',
             label: 'Edit',
@@ -282,9 +367,9 @@ const RowActions: React.FC<RowActionsProps> = ({
       }
     });
 
-    // 2. Non-edit registered actions go to overflow (edit action is already handled above)
+    // 2. Remaining registered actions - only those not already used as handlers for built-in actions
     filteredActions.registered
-      .filter(a => !a.id.toLowerCase().includes('edit'))
+      .filter(a => !handledRegistryIds.has(a.id))
       .forEach(a => {
         overflowItems.push({
           key: a.id,
@@ -294,7 +379,7 @@ const RowActions: React.FC<RowActionsProps> = ({
         });
       });
 
-    // Return inline items first, then overflow - maxInline=4 will show all 3 inline + More if overflow exists
+    // Return inline items first, then overflow - maxInline=4 will show all inline + More if overflow exists
     return [...inlineItems, ...overflowItems];
   }, [filteredActions, record, handleRegistryActionClick]);
 
@@ -336,7 +421,7 @@ const RowActions: React.FC<RowActionsProps> = ({
 
       {/* Registry Action Drawer */}
       <Drawer
-        title="Action"
+        title={(activeRegistryActionId?.toLowerCase().includes('edit') ? 'Edit ' : 'Action ') + (record?.name || record?.id || '')}
         open={!!activeRegistryActionId}
         onClose={() => { setActiveRegistryActionId(null); setLoadedActionComponent(null); }}
         width={window.innerWidth <= 768 ? '100%' : '50%'}
@@ -344,7 +429,7 @@ const RowActions: React.FC<RowActionsProps> = ({
         {LoadedActionComponent && (
           <Suspense fallback={<Spin />}>
             <LoadedActionComponent
-              record={record}
+              record={enhancedRecord}
               onClose={() => { setActiveRegistryActionId(null); setLoadedActionComponent(null); }}
             />
           </Suspense>

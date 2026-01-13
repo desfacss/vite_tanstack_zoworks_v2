@@ -1046,12 +1046,27 @@ const TimesheetProjects: React.FC<TimesheetProps> = ({ editItem, onFinish, viewM
 
             console.log('Timesheet Payload:', timesheetPayload);
 
-            const { data: sheetData, error: sheetError } = await supabase
-                .schema('workforce')
-                .from('timesheets')
-                .upsert(timesheetPayload)
-                .select()
-                .single();
+            let sheetResult;
+            if (editItem?.id) {
+                console.log('Updating existing timesheet (Projects view):', editItem.id);
+                sheetResult = await supabase
+                    .schema('workforce')
+                    .from('timesheets')
+                    .update(timesheetPayload)
+                    .eq('id', editItem.id)
+                    .select()
+                    .single();
+            } else {
+                console.log('Inserting new timesheet (Projects view)');
+                sheetResult = await supabase
+                    .schema('workforce')
+                    .from('timesheets')
+                    .insert(timesheetPayload)
+                    .select()
+                    .single();
+            }
+
+            const { data: sheetData, error: sheetError } = sheetResult;
 
             if (sheetError) {
                 console.error('Supabase Timesheet Upsert Error:', sheetError);
@@ -1183,16 +1198,26 @@ const TimesheetProjects: React.FC<TimesheetProps> = ({ editItem, onFinish, viewM
                     return (day === 0 || day === 6) ? 'weekend-row' : '';
                 }}
                 summary={() => (
-                    <Table.Summary.Row style={{ background: '#fafafa', textAlign: 'right' }}>
-                        <Table.Summary.Cell index={0} style={{ textAlign: 'left' }}><Text strong>Total</Text></Table.Summary.Cell>
+                    <Table.Summary.Row style={{ background: '#fafafa' }}>
+                        <Table.Summary.Cell index={0} align="left">
+                            <Text strong>Total</Text>
+                        </Table.Summary.Cell>
+                        
                         {selectedProjects.map((proj, index) => (
-                            <Table.Summary.Cell key={proj.id} index={index + 1} style={{ textAlign: 'center' }}>
+                            <Table.Summary.Cell 
+                                key={proj.id} 
+                                index={index + 1} 
+                                align="center"
+                            >
                                 <Text strong>
                                     {timesheetData.reduce((sum, row) => sum + ((row[proj.id] as TimesheetEntry)?.hours || 0), 0).toFixed(2)}
                                 </Text>
                             </Table.Summary.Cell>
                         ))}
-                        <Table.Summary.Cell index={-1}><Text strong>{grandTotal.toFixed(2)}</Text></Table.Summary.Cell>
+
+                        <Table.Summary.Cell index={-1} align="right">
+                            <Text strong>{grandTotal.toFixed(2)}</Text>
+                        </Table.Summary.Cell>
                     </Table.Summary.Row>
                 )}
             />

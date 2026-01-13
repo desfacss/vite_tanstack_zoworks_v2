@@ -11,7 +11,7 @@ const { Option } = Select;
 
 interface ExpensesheetProps {
     editItem?: any;
-    onFinish: () => void; // Success callback to close the drawer
+    onFinish?: () => void; // Success callback to close the drawer
     viewMode?: boolean; // For viewing a submitted/approved sheet
 }
 
@@ -68,14 +68,14 @@ const Expensesheet: React.FC<ExpensesheetProps> = ({ editItem, onFinish, viewMod
                 console.warn('RPC get_projects_with_allocation_v3 not found. Falling back to public.projects.');
 
                 // Fallback: Fetch directly from public.projects
-                const tableResult = await supabase.from('projects').select('id, name');
+                const tableResult = await supabase.schema('blueprint').from('projects').select('id, name');
                 data = tableResult.data;
                 error = tableResult.error;
             }
         } catch (e) {
             console.error('Error during RPC call, attempting fallback:', e);
             // Fallback: Fetch directly from public.projects if the whole RPC call fails
-            const tableResult = await supabase.from('projects').select('id, name');
+            const tableResult = await supabase.schema('blueprint').from('projects').select('id, name');
             data = tableResult.data;
             error = tableResult.error;
         }
@@ -97,101 +97,55 @@ const Expensesheet: React.FC<ExpensesheetProps> = ({ editItem, onFinish, viewMod
             console.log("dz", fetchedTypes);
             setTypes(fetchedTypes);
 
-            // --- IMPORTANT: Data Normalization for Edit Mode ---
-            // Normalize the editItem.details keys to match the generated dataKeys
-            if (editItem?.details && fetchedTypes.length > 0) {
-                const normalizedData = editItem.details.map((row: any) => {
-                    const newRow: any = { ...row };
-                    // For each expense type found, check if a value exists in the row
-                    // If it does, and the key needs normalizing (e.g., if the stored key 
-                    // is different from the generated one), move the value to the correct key.
-
-                    // To be safe and address the potential issue with special characters in keys 
-                    // (like 'misc(exc.vat)' in your example), we iterate over the *existing* // keys in the row and try to map them to the *expected* generated keys.
-
-                    const generatedKeysMap: Record<string, string> = fetchedTypes.reduce((acc, type) => {
-                        acc[type.name] = generateDataKey(type.name);
-                        return acc;
-                    }, {});
-
-                    // First, create a reverse map from the generated key back to the original database key
-                    const reverseKeyMap: Record<string, string> = {};
-                    for (const type of fetchedTypes) {
-                        const generatedKey = generateDataKey(type.name);
-                        // Check if the original row has a key that is similar to the generated one
-                        // This is a heuristic and might need adjustment based on how keys are stored.
-                        // Based on your example, the stored keys are NOT simply the generated ones.
-                        // We must rely on the assumption that the *column title* (type.name) 
-                        // is the source of truth, but the database *stored* keys are inconsistent 
-                        // with the generateDataKey() logic.
-
-                        // We will rely on the fact that 'data' will be a mapping of the generated keys to their values.
-                        // The existing row keys are the *old* keys. We need to find the correct *new* key for each.
-                        // Since we don't know the full original type names, we will use a best-guess or
-                        // a simple key-mapping if the `editItem.details` keys are stable database column names.
-
-                        // Let's assume the database keys in `editItem.details` are the stable ones 
-                        // and we need to map them to the generated keys for the Ant Design Table.
-                        // NOTE: If the type names exactly match the database column names *before* the 
-                        // lowercase/replace, this logic is safer.
-
-                        // Since we can't reliably reverse-engineer the original type name from the database 
-                        // key like 'misc(exc.vat)', we'll stick to the core logic: the data *must* use 
-                        // the generated key.
-
-                        // New approach: Iterate over ALL row keys and try to map them to a generated key.
-                        for (const key in row) {
-                            if (Object.prototype.hasOwnProperty.call(row, key) && key !== 'key' && key !== 'date' && key !== 'description' && key !== 'total') {
-                                // Find the type whose generated key is the closest match, or whose name matches the key.
-                                const matchingType = fetchedTypes.find(type => generateDataKey(type.name) === key || type.name === key || generateDataKey(type.name) === generateDataKey(key));
-
-                                if (matchingType) {
-                                    const expectedGeneratedKey = generateDataKey(matchingType.name);
-                                    if (key !== expectedGeneratedKey) {
-                                        // Move value from old key to new generated key
-                                        newRow[expectedGeneratedKey] = newRow[key];
-                                        delete newRow[key]; // Clean up the old key
-                                    }
-                                } else {
-                                    // This is the CRITICAL fix for keys like 'misc(exc.vat)'.
-                                    // We need to check if the row key itself is a type name or a generated key for a type.
-                                    const typeByRowKey = fetchedTypes.find(t => t.name === key || generateDataKey(t.name) === key);
-                                    if (typeByRowKey) {
-                                        const expectedKey = generateDataKey(typeByRowKey.name);
-                                        if (key !== expectedKey) {
-                                            newRow[expectedKey] = newRow[key];
-                                            delete newRow[key];
-                                        }
-                                    } else {
-                                        // The provided `editItem` has keys like "misc(exc.vat)" which are NOT
-                                        // the generated keys. We must manually map them if they are constant.
-                                        // Assuming your `expense_type` names are (for example): 
-                                        // "Misc (exc. VAT)", "Accommodation (exc. VAT)", "Business Ent Client (exc. VAT)"
-                                        // And the *generated keys* are:
-                                        // "miscexc.vat", "accommodationexc.vat", "businessentclientexc.vat"
-
-                                        // Let's stick to the generated key logic:
-                                        // 'misc(exc.vat)' in the editItem is an *old* database column name.
-                                        // 'miscexcvat' is the *new* generated key.
-                                        // We need to map 'misc(exc.vat)' to 'miscexcvat' based on what the type name is.
-
-                                        // Since we don't know the exact type name for 'misc(exc.vat)', 
-                                        // we'll use a direct mapping for the *most likely* case.
-                                        const typeForOldKey = fetchedTypes.find(t => t.name.toLowerCase().includes('misc') && t.name.toLowerCase().includes('vat'));
-                                        if (typeForOldKey) {
-                                            const correctKey = generateDataKey(typeForOldKey.name);
-                                            if (row[key] !== undefined && correctKey !== key) {
-                                                newRow[correctKey] = newRow[key];
-                                                delete newRow[key];
-                                            }
-                                        }
-
-                                    }
-                                }
-                            }
-                        }
+            // --- NEW: Relational Data Normalization ---
+            if (editItem?.expense_sheet_items && fetchedTypes.length > 0) {
+                console.log("[Expensesheet] Mapping relational items:", editItem.expense_sheet_items);
+                const rowMap = new Map<string, any>();
+                
+                editItem.expense_sheet_items.forEach((item: any) => {
+                    const rowKey = `${item.item_date}_${item.description}`;
+                    let row = rowMap.get(rowKey);
+                    
+                    if (!row) {
+                        row = {
+                            key: rowKey,
+                            date: item.item_date,
+                            description: item.description,
+                            total: 0
+                        };
+                        rowMap.set(rowKey, row);
                     }
-
+                    
+                    const type = fetchedTypes.find(t => t.id === item.expense_type_id);
+                    if (type) {
+                        const dataKey = generateDataKey(type.name);
+                        row[dataKey] = item.amount;
+                        row.total = (row.total || 0) + (item.amount || 0);
+                    }
+                });
+                
+                const loadedData = Array.from(rowMap.values());
+                console.log("[Expensesheet] Loaded relational data:", loadedData);
+                setData(loadedData);
+            }
+            // --- Legacy: Data Normalization for Edit Mode ---
+            else if (editItem?.details && fetchedTypes.length > 0) {
+                const normalizedData = editItem.details.map((row: any) => {
+                    // ... existing normalization logic ...
+                    const newRow: any = { ...row };
+                    
+                    fetchedTypes.forEach(type => {
+                        const expectedKey = generateDataKey(type.name);
+                        // Find if any key in the old row matches this type
+                        for (const key in row) {
+                           if (key === expectedKey) continue;
+                           const typeByKey = fetchedTypes.find(t => t.name === key || generateDataKey(t.name) === key);
+                           if (typeByKey && generateDataKey(typeByKey.name) === expectedKey) {
+                               newRow[expectedKey] = row[key];
+                               delete newRow[key];
+                           }
+                        }
+                    });
                     return newRow;
                 });
                 setData(normalizedData);
@@ -397,11 +351,23 @@ const Expensesheet: React.FC<ExpensesheetProps> = ({ editItem, onFinish, viewMod
             };
 
             // 1. Insert or Update the main expense_sheet record
-            const { data: sheetData, error: sheetError } = await supabase.schema('workforce')
-                .from('expense_sheets')
-                .upsert(expenseSheetPayload)
-                .select()
-                .single();
+            let sheetResult;
+            if (editItem?.id) {
+                sheetResult = await supabase.schema('workforce')
+                    .from('expense_sheets')
+                    .update(expenseSheetPayload)
+                    .eq('id', editItem.id)
+                    .select()
+                    .single();
+            } else {
+                sheetResult = await supabase.schema('workforce')
+                    .from('expense_sheets')
+                    .insert(expenseSheetPayload)
+                    .select()
+                    .single();
+            }
+
+            const { data: sheetData, error: sheetError } = sheetResult;
 
             if (sheetError) {
                 throw new Error(`Failed to save expense sheet: ${sheetError.message}`);
@@ -459,7 +425,7 @@ const Expensesheet: React.FC<ExpensesheetProps> = ({ editItem, onFinish, viewMod
             await processAndSubmit();
 
             message.success(status === 'Draft' ? 'Expenses Claim Saved.' : 'Expenses Claim Submitted.');
-            onFinish(); // Close drawer on success
+            onFinish?.(); // Close drawer on success
         } catch (error: any) {
             console.error("Submission Error:", error);
             message.error(error.message || `Failed to ${status === 'Draft' ? 'save' : 'submit'} Expenses Claim`);
@@ -498,7 +464,10 @@ const Expensesheet: React.FC<ExpensesheetProps> = ({ editItem, onFinish, viewMod
     }
 
     // Hide action buttons if the claim is already submitted/approved/rejected
-    const showActions = !viewMode && editItem?.status !== 'Submitted' && editItem?.status !== 'Approved' && editItem?.status !== 'Rejected';
+    const isDraft = editItem?.status === 'Draft' || editItem?.stage_id === 'Draft';
+    const isRejected = editItem?.status === 'Rejected' || editItem?.stage_id === 'Rejected';
+    const isNew = !editItem;
+    const showActions = !viewMode && (isNew || isDraft || isRejected);
 
     return (
         <>

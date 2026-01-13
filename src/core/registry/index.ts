@@ -79,6 +79,15 @@ class AppRegistry {
     getViewType(id: string): ViewTypeDefinition | undefined {
         return this.viewTypes.get(id);
     }
+
+    // New helper to get any action by ID (useful for custom overrides)
+    getActionById(id: string): ActionDefinition | undefined {
+        for (const actions of this.actions.values()) {
+            const found = actions.find(a => a.id === id);
+            if (found) return found;
+        }
+        return undefined;
+    }
 }
 
 export const registry = new AppRegistry();
