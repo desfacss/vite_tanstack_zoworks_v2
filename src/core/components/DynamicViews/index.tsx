@@ -1085,7 +1085,7 @@ const DynamicViews: React.FC<DynamicViewsProps> = ({
       };
 
       // 🚀 UPDATED RPC CALL NAME
-      const { data, error } = await supabase.schema('core').rpc('api_fetch_entity_records', {
+      const { data, error } = await supabase.schema('core').rpc('api_fetch_entity_records_rls', {
         config: rpcConfig,
       });
 
@@ -1157,7 +1157,7 @@ const DynamicViews: React.FC<DynamicViewsProps> = ({
   // Store globalFilters in a ref to avoid infinite loops in cleanup effect
   const globalFiltersRef = useRef(globalFiltersElement);
   globalFiltersRef.current = globalFiltersElement;
-  
+
   useEffect(() => {
     if (detailView) return;
     setConfig({ searchFilters: globalFiltersRef.current });

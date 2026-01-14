@@ -13,8 +13,7 @@ const LeavesPage: React.FC = () => {
       label: 'My Leaves',
       condition: { field: 'user_id', value: user?.id },
     },
-    // Team Leaves tab - only shown if user has subordinates (from session RPC)
-    ((user as any)?.subordinates && {
+    {
       key: '2',
       label: 'Team Leaves',
       queryConfig: {
@@ -22,8 +21,8 @@ const LeavesPage: React.FC = () => {
         manager_id: user?.id,
         current_time: new Date(),
       }
-    })
-  ].filter(Boolean);
+    }
+  ];
 
   return (
     <div className="page-content layout-record">
