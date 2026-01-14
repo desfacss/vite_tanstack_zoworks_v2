@@ -70,7 +70,7 @@ const RowActions: React.FC<RowActionsProps> = ({
       .select('*')
       .eq(relatedTable?.fk_column || 'project_id', projectId)
       .eq('organization_id', organization.id);
-    
+
     const { data, error } = result as { data: any[] | null; error: any };
 
     if (error) {
@@ -141,9 +141,9 @@ const RowActions: React.FC<RowActionsProps> = ({
       const isExpense = entityType.toLowerCase().includes('expense_sheet') || (viewConfig?.entity_type || '').toLowerCase().includes('expense_sheet');
 
       if (!selectStr && isTimesheet) {
-         selectStr = '*, timesheet_items(*)';
+        selectStr = '*, timesheet_items(*)';
       } else if (!selectStr && isExpense) {
-         selectStr = '*, expense_sheet_items(*)';
+        selectStr = '*, expense_sheet_items(*)';
       }
       selectStr = selectStr || '*';
 
@@ -161,8 +161,8 @@ const RowActions: React.FC<RowActionsProps> = ({
         .single();
 
       if (error) {
-          console.error(`[RowActions] Fetch failed for ${tableName}:`, error);
-          throw error;
+        console.error(`[RowActions] Fetch failed for ${tableName}:`, error);
+        throw error;
       }
       console.log(`[RowActions] Fetch SUCCESS for ${tableName}:`, data);
       return data;
@@ -177,22 +177,34 @@ const RowActions: React.FC<RowActionsProps> = ({
     let latestRecord = record;
     const isTimesheet = (entityType || '').toLowerCase().includes('timesheet') || (viewConfig?.entity_type || '').toLowerCase().includes('timesheet');
     const isExpense = (entityType || '').toLowerCase().includes('expense_sheet') || (viewConfig?.entity_type || '').toLowerCase().includes('expense_sheet');
-    
+
     if (viewConfig?.general?.select || isTimesheet || isExpense) {
       latestRecord = await fetchFullRecord(record.id);
       setEnhancedRecord(latestRecord);
     }
 
     // 1. Check if this is a registry action ID (check entity first, then global)
-    let registeredAction = registry.getActionsForEntity(entityType, 'row').find(a => a.id === form)
-      || (registry as any).getActionById?.(form);
-      
-    // EXTRA FALLBACK: If form is 'timesheet-edit' but ID is just 'timesheet' (registered as detail component sometimes)
-    if (!registeredAction && form === 'timesheet-edit') {
-       registeredAction = (registry as any).getActionById?.('timesheet-edit') || (registry as any).getActionById?.('timesheet');
+    // Try fuzzy match for common ID patterns
+    const normalizedForm = form.toLowerCase();
+    const possibleIds = [
+      form,
+      normalizedForm,
+      normalizedForm.replace(/_/g, '-'),
+      normalizedForm.replace(/-/g, '_'),
+      `${normalizedForm}-edit`,
+      `${normalizedForm.replace(/_/g, '-')}-edit`,
+      normalizedForm.replace('-edit', ''),
+      normalizedForm.replace('_edit', '')
+    ];
+
+    let registeredAction = null;
+    for (const id of possibleIds) {
+      registeredAction = registry.getActionsForEntity(entityType, 'row').find(a => a.id === id)
+        || (registry as any).getActionById?.(id);
+      if (registeredAction) break;
     }
 
-    console.log('[RowActions] Resulting registeredAction:', registeredAction);
+    console.log('[RowActions] Fuzzy matching for form:', form, 'Result:', registeredAction?.id);
 
     if (registeredAction) {
       handleRegistryActionClick(registeredAction.id, latestRecord);
@@ -270,18 +282,18 @@ const RowActions: React.FC<RowActionsProps> = ({
       let latestRecord = customRecord;
       const isTimesheet = (entityType || '').toLowerCase().includes('timesheet') || (viewConfig?.entity_type || '').toLowerCase().includes('timesheet');
       const isExpense = (entityType || '').toLowerCase().includes('expense_sheet') || (viewConfig?.entity_type || '').toLowerCase().includes('expense_sheet');
-      
+
       const isShallow = (isTimesheet && !latestRecord?.timesheet_items) || (isExpense && !latestRecord?.expense_sheet_items);
 
       if ((!latestRecord || isShallow) && record?.id) {
-         latestRecord = await fetchFullRecord(record.id);
+        latestRecord = await fetchFullRecord(record.id);
       }
 
       const Component = await action.component();
       setLoadedActionComponent(() => Component.default || Component);
       setActiveRegistryActionId(actionId);
       setCurrentAction('Registry');
-      
+
       if (latestRecord) {
         setEnhancedRecord(latestRecord);
       }
@@ -314,8 +326,8 @@ const RowActions: React.FC<RowActionsProps> = ({
       if (a.name === 'Edit') return hasAccess('edit');
       if (a.name === 'Delete') return hasAccess('delete');
       if (a.name === 'Clone') return hasAccess('edit');
-      if (a.name === 'Details') {
-        return contextStack.length < 2 && hasAccess('details') && viewConfig?.detailview;
+      if (a.name === 'Details' || a.name === 'View') {
+        return contextStack.length < 2 && hasAccess('details') && (viewConfig?.detailview || viewConfig?.detail_view);
       }
       return false;
     });
@@ -334,7 +346,7 @@ const RowActions: React.FC<RowActionsProps> = ({
       if (a.name === 'Edit') {
         // If a form field is provided, check if it matches a registered action ID for this entity
         const registeredAction = a.form ? (
-          filteredActions.registered.find(reg => reg.id === a.form) 
+          filteredActions.registered.find(reg => reg.id === a.form)
           || (registry as any).getActionById?.(a.form)
         ) : null;
 
@@ -356,8 +368,13 @@ const RowActions: React.FC<RowActionsProps> = ({
           });
         }
       }
-      if (a.name === 'Details') {
-        inlineItems.push({ key: 'details', label: 'Details', icon: <Eye size={16} />, onClick: handleDetails });
+      if (a.name === 'Details' || a.name === 'View') {
+        inlineItems.push({
+          key: 'details',
+          label: a.name,
+          icon: <Eye size={16} />,
+          onClick: handleDetails
+        });
       }
       if (a.name === 'Delete') {
         inlineItems.push({ key: 'delete', label: 'Delete', icon: <Trash2 size={16} />, danger: true, onClick: () => setDeleteRecord(record) });

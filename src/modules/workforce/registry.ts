@@ -47,12 +47,11 @@ export async function register(
     order: 10,
   });
 
-  // 4. Register Tabs for 'projects' or 'tasks' for timesheets
-  const subModules = config.sub_modules || {};
-  if (subModules.timesheets !== false) {  // Default enabled
+  // 4. Register Timesheets Actions
+  if (subModules.timesheets !== false) {
     console.log('[Workforce] Registering timesheets tab and actions');
-    
-    const timesheetEntityTypes = ['timesheets', 'workforce.timesheets', 'timesheet'];
+
+    const timesheetEntityTypes = ['timesheets', 'workforce.timesheets', 'timesheet', 'timesheet_items'];
 
     registry.registerTab({
       id: 'timesheets',
@@ -69,15 +68,21 @@ export async function register(
       label: 'Edit',
       component: () => import('./components/Times'),
     });
-    console.log('[Workforce] ✓ Timesheets registered for:', timesheetEntityTypes);
-  } else {
-    console.log('[Workforce] Skipping timesheets registration (disabled)');
+    // Add alias for 'timesheet' if form name in DB is just 'timesheet'
+    registry.registerAction({
+      id: 'timesheet',
+      entityTypes: timesheetEntityTypes,
+      position: 'row',
+      label: 'Edit',
+      component: () => import('./components/Times'),
+    });
+    console.log('[Workforce] ✓ Timesheets registered');
   }
 
   // 5. Register Expenses Actions
   if (subModules.expenses !== false) {
-    const expenseEntityTypes = ['expense_sheets', 'workforce.expense_sheets', 'expense_sheet'];
-    
+    const expenseEntityTypes = ['expense_sheets', 'workforce.expense_sheets', 'expense_sheet', 'expense_sheet_items'];
+
     registry.registerAction({
       id: 'expense-edit',
       entityTypes: expenseEntityTypes,
@@ -85,7 +90,31 @@ export async function register(
       label: 'Edit',
       component: () => import('./components/Expenses'),
     });
-    console.log('[Workforce] ✓ Expenses registered for:', expenseEntityTypes);
+    // Alias to match potentially shorter form names in DB
+    registry.registerAction({
+      id: 'expense_sheet',
+      entityTypes: expenseEntityTypes,
+      position: 'row',
+      label: 'Edit',
+      component: () => import('./components/Expenses'),
+    });
+    console.log('[Workforce] ✓ Expenses registered');
+  }
+
+  // 6. Register Leaves Actions
+  if (subModules.leaves !== false) {
+    const leaveEntityTypes = ['leave_applications', 'workforce.leave_applications', 'leave_application'];
+
+    // Note: If no specialized Leave component exists, we'll let it fallback to DynamicForm
+    // or we can register a placeholder if we find one later.
+    // For now, let's at least register a tab if needed for users.
+    registry.registerTab({
+      id: 'leaves',
+      entityTypes: leaveEntityTypes,
+      label: 'workforce:nav.leaves',
+      component: () => import('./components/Leaves'),
+      order: 15,
+    });
   }
 
   // 6. Register Agent Activity Report
