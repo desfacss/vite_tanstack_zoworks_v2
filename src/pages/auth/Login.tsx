@@ -28,6 +28,13 @@ const Login = () => {
   const [searchParams] = useSearchParams();
   const [form] = Form.useForm();
 
+  // Helper for sequential logging
+  const devLog = (step: string, text: string, data?: any) => {
+    if (import.meta.env.VITE_APP_ENV === 'development') {
+      console.log(`%c[Flow] ${step}: ${text}`, 'color: #1890ff; font-weight: bold;', data || '');
+    }
+  };
+
   // Get redirect URL from query params (used when redirected from tenant subdomain)
   const redirectTo = searchParams.get('redirect');
 
@@ -111,8 +118,21 @@ const Login = () => {
    * Handle organization selection
    */
   const handleOrgSelect = async (org: UserOrganization) => {
+    devLog('005', 'Organization selected', org.name);
     setSelectingOrg(true);
     console.log(`[Login] User selected org: ${org.name} (${org.subdomain})`);
+
+    // 006: SET PREFERRED ORG & REFRESH SESSION
+    devLog('006', 'Setting preferred organization in backend', org.id);
+    try {
+      await supabase.schema('identity').rpc('set_preferred_organization', { new_org_id: org.id });
+      
+      devLog('007', 'Refreshing session to update JWT claims');
+      await supabase.auth.refreshSession();
+    } catch (err) {
+      console.error('[Login] Failed to set preferred org or refresh session:', err);
+      // Continue anyway, it might work if already set or if RLS is not too strict yet
+    }
 
     // Update the store with selected org
     setOrganization({
@@ -124,11 +144,12 @@ const Login = () => {
     // Small delay to let store update
     await new Promise(resolve => setTimeout(resolve, 100));
 
+    devLog('008', 'Redirecting to dashboard');
     handlePostLoginRedirect({ ...org, subdomain: org.subdomain || undefined });
   };
 
   const handleLogin = async (values: any) => {
-    console.log('>>> [LoginPage] Attempting login...');
+    devLog('001', 'Attempting login');
     setLoading(true);
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -139,10 +160,11 @@ const Login = () => {
       if (error) throw error;
 
       if (data.session) {
-        console.log('>>> [LoginPage] Login API Success.');
+        devLog('002', 'Login API Success');
         message.success(t('core.auth.message.login_success'));
 
         // Step 1: Fetch user's organizations list (no org param required)
+        devLog('003', 'Fetching user organizations list');
         const { data: orgsData, error: orgsError } = await supabase
           .schema('identity')
           .rpc('get_my_organizations');
@@ -151,6 +173,8 @@ const Login = () => {
           console.error('[Login] Failed to fetch organizations:', orgsError);
           throw orgsError;
         }
+
+        devLog('004', 'Organizations fetched', orgsData?.length);
 
         const userOrgs: UserOrganization[] = (orgsData || []).map((org: any) => ({
           id: org.organization_id,

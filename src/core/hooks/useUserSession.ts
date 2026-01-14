@@ -557,6 +557,11 @@ const fetchUserSessionData = async ({ queryKey }: QueryFunctionContext<UserSessi
   );
 
   // 3. RPC Call
+  if (!targetOrgId) {
+    console.warn('[Flow] jwt_get_user_session skipped: targetOrgId is missing');
+    throw new Error('Target Organization ID is required for session hydration');
+  }
+
   const { data: rpcData, error: rpcError } = await supabase
     .schema('identity')
     .rpc('jwt_get_user_session', { p_organization_id: targetOrgId });
