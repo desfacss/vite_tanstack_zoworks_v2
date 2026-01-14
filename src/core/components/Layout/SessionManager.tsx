@@ -1932,9 +1932,11 @@ export const SessionManager = () => {
     }
 
     if (isError && error) {
+      console.error('[SessionManager] Session fetch failed:', error.message);
       setAuthError(error.message);
+      setInitialized(true); // <--- CRITICAL: Allow app to proceed (to login or error state) instead of hanging
     }
-  }, [isSuccess, isError, data, setSession, clearUserSession, error, organization?.id, isLoggingOut, setAuthError, isStale]);
+  }, [isSuccess, isError, data, setSession, clearUserSession, error, organization?.id, isLoggingOut, setAuthError, isStale, setInitialized]);
 
   // --- Effect 3: Watch and Apply Theme Configuration ---
   // Theme is fully driven by database - apply organization's theme_config directly

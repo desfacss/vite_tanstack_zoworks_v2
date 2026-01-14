@@ -191,6 +191,29 @@ const Login = () => {
           return;
         }
 
+        // --- NEW: AUTO-SELECT PREFERRED ORG ---
+        devLog('004a', 'Checking for preferred organization');
+        const { data: userData, error: userError } = await supabase
+          .schema('identity')
+          .from('users')
+          .select('pref_organization_id')
+          .eq('auth_id', data.user.id)
+          .single();
+
+        if (userError) {
+          console.warn('[Login] Could not fetch preferred org:', userError);
+        }
+
+        const prefOrgId = userData?.pref_organization_id;
+        if (prefOrgId) {
+          const matchingOrg = userOrgs.find(o => o.id === prefOrgId);
+          if (matchingOrg) {
+            devLog('004b', 'Auto-selecting preferred workspace', matchingOrg.name);
+            await handleOrgSelect(matchingOrg);
+            return; // Exit handleLogin early
+          }
+        }
+
         if (userOrgs.length === 1) {
           // Single org - redirect immediately
           await handleOrgSelect(userOrgs[0]);
