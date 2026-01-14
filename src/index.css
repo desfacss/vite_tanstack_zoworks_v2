@@ -36,16 +36,32 @@
   /* Sidebar widths */
   --sidebar-width-collapsed: 80px;
   --sidebar-width-expanded: 240px;
+
+  /* Header interactive element hover - unified across all header elements */
+  --header-hover-bg: rgba(0, 0, 0, 0.06);
+  --header-hover-radius: var(--tenant-border-radius, 12px);
+  --header-transition: all 0.2s ease;
+}
+
+/* Dark theme header hover - must override the light theme value */
+.dark,
+[data-theme="dark"] {
+  --header-hover-bg: rgba(255, 255, 255, 0.1);
 }
 
 /* ===== Core Layout & Utility Classes ===== */
 
 /* Page Layouts - desktop padding by default, mobile uses media query below */
 .page-container {
-  padding: var(--layout-padding-desktop);
+  padding: 0 var(--layout-padding-desktop) var(--layout-padding-desktop);
   flex: 1 1 0%;
   overflow: auto;
-  gap: var(--tenant-gutter, 1rem);
+}
+
+@media (max-width: 1023px) {
+  .page-container {
+    padding: 0 var(--layout-padding-mobile) var(--layout-padding-mobile);
+  }
 }
 
 
@@ -58,13 +74,14 @@
   gap: 1rem;
 }
 
-/* Response padding for sticky header - matches --layout-padding-mobile/desktop */
+/* Responsive padding for sticky header - matches --layout-padding-mobile/desktop
+   Updated to use 1024px breakpoint to match Option B layout logic. */
 .header-responsive-padding {
   padding-left: var(--layout-padding-desktop) !important;
   padding-right: var(--layout-padding-desktop) !important;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1023px) {
   .header-responsive-padding {
     padding-left: var(--layout-padding-mobile) !important;
     padding-right: var(--layout-padding-mobile) !important;
@@ -296,6 +313,10 @@
   background: #ffffff !important;
   border-bottom: 1px solid rgba(4, 40, 32, 0.05) !important;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+  /* Ensure header stays on top */
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 100 !important;
 }
 
 [data-theme-preset="neon"]:not(.dark) .page-card {
@@ -1213,10 +1234,7 @@ p {
 
 @media (max-width: 768px) {
 
-  /* Reduce outer page padding on mobile - matches header px-4 */
-  .page-container {
-    padding: var(--layout-padding-mobile);
-  }
+  /* page-container padding handled globally at top of file */
 
   .page-content {
     padding: 0 var(--layout-padding-mobile);
@@ -1243,9 +1261,16 @@ p {
 
 
 
-/* ===== HEADER ICON ALIGNMENT (Base Theme) =====
-   Minimal fixes for icon vertical alignment.
-   Does NOT override header layout structure. */
+/* Global Header Stickiness
+   Ensures header stays at top across all themes.
+   Uses a solid background (or frosted glass) to avoid content overlap. */
+.ant-layout-header {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 100 !important;
+  background: var(--color-bg-primary) !important;
+  backdrop-filter: blur(20px);
+}
 
 /* Header buttons: ensure icons are vertically centered */
 .ant-layout-header .ant-btn {
@@ -1281,6 +1306,448 @@ p {
   align-items: center !important;
   justify-content: center !important;
   flex-shrink: 0;
+}
+
+/* Edge alignment: pulls buttons/profiles so icons are flush with the visual container edge.
+   Subtracts the internal hit-area padding from the visual icon. */
+.edge-left {
+  margin-left: calc(var(--edge-icon-offset) * -1) !important;
+}
+
+.edge-right {
+  margin-right: calc(var(--edge-avatar-offset) * -1) !important;
+}
+
+/* For simple icons on the right */
+.edge-right-icon {
+  margin-right: calc(var(--edge-icon-offset) * -1) !important;
+}
+
+/* Enhanced header icon button with background (adaptive-crm style)
+   Apply via className="header-icon-styled" */
+.header-icon-styled,
+.ant-btn.header-icon-styled {
+  width: var(--interactive-target-size) !important;
+  height: var(--interactive-target-size) !important;
+  min-width: var(--interactive-target-size) !important;
+  min-height: var(--interactive-target-size) !important;
+  padding: 0 !important;
+  border: none !important;
+  border-radius: var(--header-hover-radius) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0;
+  position: relative;
+  background: transparent !important;
+  color: var(--color-text-secondary) !important;
+  transition: var(--header-transition) !important;
+}
+
+.header-icon-styled:hover,
+.ant-btn.header-icon-styled:hover,
+.ant-btn.header-icon-styled:focus,
+.ant-btn-text.header-icon-styled:hover {
+  background: var(--header-hover-bg) !important;
+  color: var(--color-text-primary) !important;
+}
+
+.header-icon-styled:active,
+.ant-btn.header-icon-styled:active {
+  transform: scale(0.98);
+}
+
+.header-icon-styled.active {
+  background: rgba(var(--color-primary-rgb), 0.15) !important;
+  color: var(--color-primary) !important;
+}
+
+/* Blue pulsing activity indicator */
+.header-icon-styled.has-activity::after {
+  content: '';
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 8px;
+  height: 8px;
+  background: #00bcd4;
+  border-radius: 50%;
+  animation: activity-pulse 2s ease-in-out infinite;
+  box-shadow: 0 0 0 2px var(--color-bg-primary);
+}
+
+@keyframes activity-pulse {
+
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.6;
+    transform: scale(0.9);
+  }
+}
+
+/* Notification badge styling */
+.header-icon-styled .ant-badge-count {
+  box-shadow: 0 0 0 2px var(--color-bg-primary);
+  background: #ff4d4f;
+  font-size: 11px;
+  font-weight: 600;
+  min-width: 18px;
+  height: 18px;
+  line-height: 18px;
+  padding: 0 5px;
+}
+
+/* Notification badge pulse animation */
+.header-icon-styled .ant-badge-count {
+  animation: badge-pulse 2s infinite;
+}
+
+@keyframes badge-pulse {
+
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+/* Header profile section with name and role */
+.header-profile-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: var(--header-hover-radius);
+  cursor: pointer;
+  transition: var(--header-transition);
+  background: transparent;
+}
+
+.header-profile-section:hover {
+  background: var(--header-hover-bg);
+}
+
+.header-profile-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: right;
+}
+
+.header-profile-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  line-height: 1.3;
+  max-width: 120px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.header-profile-role {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  line-height: 1.3;
+}
+
+/* Header icon group with gaps */
+.header-icon-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Header vertical divider/separator */
+.header-divider {
+  width: 1px;
+  height: 24px;
+  background: var(--color-border, rgba(0, 0, 0, 0.1));
+  margin: 0;
+  /* No margin on desktop */
+  flex-shrink: 0;
+}
+
+/* Add small margin on mobile only */
+@media (max-width: 767px) {
+  .header-divider {
+    margin: 0 2px;
+  }
+}
+
+/* Organization Switcher - adaptive-crm style (borderless) */
+.org-switcher {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: var(--header-hover-radius);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: var(--header-transition);
+}
+
+.org-switcher:hover {
+  background: var(--header-hover-bg);
+}
+
+.org-switcher-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: rgba(var(--color-primary-rgb), 0.1);
+  color: var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.org-switcher-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  flex: 1;
+  min-width: 0;
+}
+
+.org-switcher-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.org-switcher-type {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--color-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.org-switcher-arrow {
+  color: var(--color-text-tertiary);
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.org-switcher:hover .org-switcher-arrow {
+  color: var(--color-text-secondary);
+}
+
+/* ============================================
+   SIDEBAR TOGGLE BUTTON
+   ============================================ */
+.sidebar-toggle-btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: var(--header-hover-radius, 8px);
+  background: transparent;
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+  transition: var(--header-transition);
+  flex-shrink: 0;
+}
+
+.sidebar-toggle-btn:hover {
+  background: var(--header-hover-bg);
+  color: var(--color-text-primary);
+}
+
+/* Align sider menu submenu arrows with the hamburger toggle */
+.ant-layout-sider .ant-menu-inline .ant-menu-submenu-arrow {
+  right: var(--layout-padding, 24px);
+}
+
+/* Ensure menu items have consistent right padding to match header */
+.ant-layout-sider .ant-menu-inline .ant-menu-item,
+.ant-layout-sider .ant-menu-inline .ant-menu-submenu-title {
+  padding-right: var(--layout-padding, 24px) !important;
+}
+
+/* ============================================
+   MOBILE BOTTOM NAVIGATION
+   ============================================
+   Fixed bottom tab bar for mobile/tablet navigation.
+   Shows on screens < 1024px.
+   ============================================ */
+.mobile-bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 64px;
+  background: var(--color-bg-primary);
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding-bottom: env(safe-area-inset-bottom, 0);
+  z-index: 1000;
+}
+
+.mobile-bottom-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px 12px;
+  text-decoration: none;
+  color: var(--color-text-tertiary);
+  font-size: 10px;
+  font-weight: 500;
+  min-width: 56px;
+  border-radius: 8px;
+  transition: var(--header-transition);
+}
+
+.mobile-bottom-nav-item:hover {
+  color: var(--color-text-secondary);
+}
+
+.mobile-bottom-nav-item.active {
+  color: var(--color-primary);
+}
+
+.mobile-bottom-nav-item.active svg {
+  color: var(--color-primary);
+}
+
+.mobile-bottom-nav-item svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* ============================================
+   MOBILE ACTION SHEET
+   ============================================
+   Native iOS/Android-style bottom action sheet.
+   Use for context menus on mobile instead of dropdowns.
+   ============================================ */
+
+.mobile-action-sheet .ant-drawer-content-wrapper {
+  border-radius: 16px 16px 0 0 !important;
+}
+
+.mobile-action-sheet .ant-drawer-content {
+  border-radius: 16px 16px 0 0;
+  background: var(--color-bg-primary);
+}
+
+.action-sheet-container {
+  padding: 8px 16px 24px;
+  padding-bottom: max(24px, env(safe-area-inset-bottom));
+}
+
+.action-sheet-handle {
+  display: flex;
+  justify-content: center;
+  padding: 8px 0 16px;
+}
+
+.action-sheet-handle-bar {
+  width: 36px;
+  height: 4px;
+  background: var(--color-border);
+  border-radius: 2px;
+}
+
+.action-sheet-title {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-tertiary);
+  padding: 0 8px 12px;
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: 8px;
+}
+
+.action-sheet-items {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.action-sheet-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  padding: 14px 16px;
+  border: none;
+  background: transparent;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: left;
+}
+
+.action-sheet-item:hover,
+.action-sheet-item:active {
+  background: var(--color-bg-secondary);
+}
+
+.action-sheet-item-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-secondary);
+}
+
+.action-sheet-item-label {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+.action-sheet-item.danger .action-sheet-item-icon,
+.action-sheet-item.danger .action-sheet-item-label {
+  color: #ff4d4f;
+}
+
+.action-sheet-divider {
+  height: 1px;
+  background: var(--color-border);
+  margin: 8px 0;
+}
+
+.action-sheet-cancel {
+  width: 100%;
+  padding: 14px 16px;
+  margin-top: 12px;
+  border: none;
+  background: var(--color-bg-secondary);
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.action-sheet-cancel:hover,
+.action-sheet-cancel:active {
+  background: var(--color-bg-tertiary);
 }
 
 /* Edge alignment: Pull first/last buttons flush with container edge
@@ -2333,10 +2800,15 @@ legend {
 }
 
 [data-theme-preset="neon"].dark .ant-layout-header {
-  background: transparent !important;
-  border-bottom: none !important;
-  box-shadow: none !important;
-  backdrop-filter: none !important;
+  /* Solid background with blur for neon effect - prevents content overlap */
+  background: rgba(7, 29, 23, 0.95) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border-bottom: 1px solid var(--neon-border) !important;
+  /* Ensure header stays on top */
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 100 !important;
 }
 
 /* Jazzy Card & Content Styling - PAGE CARDS ONLY
@@ -3396,4 +3868,758 @@ legend {
 .global-filters-form .ant-input::placeholder {
   color: var(--color-text-secondary) !important;
   opacity: 0.6 !important;
+}
+
+/* ============================================
+   ENHANCED KANBAN STYLING
+   ============================================
+   Premium kanban board styles inspired by modern CRM designs.
+   Uses CSS variables for full tenant theming support.
+   ============================================ */
+
+/* Kanban Lane Container */
+.kanban-lane {
+  background: var(--color-bg-secondary);
+  border-radius: var(--tenant-border-radius, 12px);
+  padding: var(--layout-padding-mobile);
+  min-height: 500px;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.2s ease;
+}
+
+@media (min-width: 768px) {
+  .kanban-lane {
+    padding: var(--layout-padding-desktop);
+  }
+}
+
+/* Lane Header with stage indicator */
+.kanban-lane-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.kanban-lane-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Stage color indicator dot */
+.kanban-stage-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* Lane title */
+.kanban-lane-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+/* Lane count badge */
+.kanban-lane-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 600;
+  background: rgba(var(--color-primary-rgb), 0.1);
+  color: var(--color-primary);
+}
+
+/* Lane value summary */
+.kanban-lane-value {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+/* Lane content area */
+.kanban-lane-content {
+  flex: 1;
+  min-height: 100px;
+  overflow-y: auto;
+}
+
+/* Kanban Card with hover lift */
+.kanban-card {
+  background: var(--color-bg-primary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--tenant-border-radius, 8px);
+  padding: 12px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.kanban-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+  border-color: rgba(var(--color-primary-rgb), 0.3);
+}
+
+.dark .kanban-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.kanban-card:last-child {
+  margin-bottom: 0;
+}
+
+/* Card title */
+.kanban-card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--color-text-primary);
+  margin-bottom: 4px;
+}
+
+/* Card description */
+.kanban-card-description {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+
+/* Card footer/meta */
+.kanban-card-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--color-text-tertiary);
+}
+
+/* Mobile horizontal scroll for kanban */
+.kanban-mobile-scroll {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  padding-bottom: 16px;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+
+.kanban-mobile-scroll>* {
+  scroll-snap-align: start;
+  flex-shrink: 0;
+  width: 85%;
+}
+
+@media (min-width: 768px) {
+  .kanban-mobile-scroll>* {
+    width: 300px;
+  }
+}
+
+/* Empty lane placeholder */
+.kanban-empty-lane {
+  border: 2px dashed var(--color-border);
+  border-radius: var(--tenant-border-radius, 8px);
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-tertiary);
+  font-size: 13px;
+  font-style: italic;
+}
+
+/* ============================================
+   ENHANCED TABLE STYLING
+   ============================================
+   Premium table headers with uppercase tracking.
+   Uses CSS variables for tenant theming support.
+   ============================================ */
+
+/* CRM-style table header */
+.crm-table-header th,
+.crm-table-header .ant-table-cell {
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  color: var(--color-text-secondary) !important;
+  background: var(--color-bg-secondary) !important;
+  border-bottom: 1px solid var(--color-border) !important;
+  padding: 12px 16px !important;
+}
+
+/* Apply to ant-table directly with class */
+.enhanced-table .ant-table-thead>tr>th {
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  color: var(--color-text-secondary) !important;
+  background: var(--color-bg-secondary) !important;
+}
+
+/* Enhanced table row hover */
+.enhanced-table .ant-table-tbody>tr:hover>td {
+  background: rgba(var(--color-primary-rgb), 0.04) !important;
+}
+
+/* Table container with rounded corners */
+.table-container-rounded {
+  background: var(--color-bg-primary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--tenant-border-radius, 12px);
+  overflow: hidden;
+}
+
+.table-container-rounded .ant-table {
+  border-radius: 0 !important;
+}
+
+/* ============================================
+   STATUS BADGES
+   ============================================
+   Semantic status badges using tenant colors.
+   ============================================ */
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.status-badge-active,
+.status-badge-success,
+.status-badge-won {
+  background: rgba(82, 196, 26, 0.1);
+  color: #52c41a;
+}
+
+.dark .status-badge-active,
+.dark .status-badge-success,
+.dark .status-badge-won {
+  background: rgba(82, 196, 26, 0.2);
+  color: #73d13d;
+}
+
+.status-badge-pending,
+.status-badge-warning,
+.status-badge-in-progress {
+  background: rgba(250, 173, 20, 0.1);
+  color: #d48806;
+}
+
+.dark .status-badge-pending,
+.dark .status-badge-warning,
+.dark .status-badge-in-progress {
+  background: rgba(250, 173, 20, 0.2);
+  color: #ffc53d;
+}
+
+.status-badge-inactive,
+.status-badge-muted,
+.status-badge-draft {
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-tertiary);
+}
+
+.status-badge-error,
+.status-badge-danger,
+.status-badge-lost {
+  background: rgba(255, 77, 79, 0.1);
+  color: #cf1322;
+}
+
+.dark .status-badge-error,
+.dark .status-badge-danger,
+.dark .status-badge-lost {
+  background: rgba(255, 77, 79, 0.2);
+  color: #ff7875;
+}
+
+/* Primary-colored badge (uses tenant primary) */
+.status-badge-primary {
+  background: rgba(var(--color-primary-rgb), 0.1);
+  color: var(--color-primary);
+}
+
+/* ============================================
+   AI EFFECTS
+   ============================================
+   Glow and animation effects for AI-related UI.
+   Uses tenant primary color for theming.
+   ============================================ */
+
+/* AI glow effect */
+.ai-glow {
+  box-shadow: 0 0 20px rgba(var(--color-primary-rgb), 0.4),
+    0 0 40px rgba(var(--color-primary-rgb), 0.2);
+}
+
+/* Subtle AI glow for smaller elements */
+.ai-glow-subtle {
+  box-shadow: 0 0 10px rgba(var(--color-primary-rgb), 0.3);
+}
+
+/* AI pulse indicator */
+.ai-pulse {
+  position: relative;
+}
+
+.ai-pulse::after {
+  content: '';
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  animation: ai-pulse-animation 2s ease-in-out infinite;
+}
+
+@keyframes ai-pulse-animation {
+
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.5;
+    transform: scale(1.2);
+  }
+}
+
+/* AI active state (e.g., for AI mode indicator) */
+.ai-active-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: var(--tenant-border-radius, 8px);
+  background: rgba(var(--color-primary-rgb), 0.1);
+  border: 1px solid rgba(var(--color-primary-rgb), 0.3);
+  font-size: 13px;
+  color: var(--color-primary);
+}
+
+/* Pulsing dot for AI active state */
+.ai-active-dot {
+  position: relative;
+  width: 8px;
+  height: 8px;
+}
+
+.ai-active-dot::before,
+.ai-active-dot::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: var(--color-primary);
+}
+
+.ai-active-dot::before {
+  animation: ai-dot-ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+  opacity: 0.75;
+}
+
+@keyframes ai-dot-ping {
+
+  75%,
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+/* ============================================
+   CARD HOVER EFFECTS
+   ============================================
+   Reusable hover lift effect for cards.
+   ============================================ */
+
+.hover-lift {
+  transition: all 0.2s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.dark .hover-lift:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Subtle lift for smaller items */
+.hover-lift-subtle {
+  transition: all 0.2s ease;
+}
+
+.hover-lift-subtle:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* ============================================
+   NAV ITEM ENHANCEMENTS
+   ============================================
+   Smooth hover animations for navigation items.
+   ============================================ */
+
+.nav-item-enhanced {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  border-radius: var(--tenant-border-radius, 8px);
+  color: var(--color-text-secondary);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.nav-item-enhanced:hover {
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+  transform: translateX(4px);
+}
+
+.nav-item-enhanced.active {
+  background: rgba(var(--color-primary-rgb), 0.1);
+  color: var(--color-primary);
+}
+
+.nav-item-enhanced.active:hover {
+  transform: translateX(0);
+}
+
+/* ============================================
+   ENHANCED KANBAN VIEW STYLES
+   ============================================
+   Rich card design inspired by adaptive-crm.
+   Includes: value display, progress bars, 
+   priority badges, lane totals, assignee avatars.
+   ============================================ */
+
+/* Lane Header with colored dot and totals */
+.kanban-lane-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.kanban-lane-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.kanban-lane-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.kanban-lane-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.kanban-lane-count {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  background: rgba(0, 0, 0, 0.04);
+  padding: 2px 8px;
+  border-radius: 10px;
+  margin-left: 4px;
+}
+
+.kanban-lane-total {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+/* Rich Card Styling */
+.kanban-card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.kanban-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  border-color: rgba(var(--color-primary-rgb), 0.2);
+}
+
+/* Card Title Row */
+.kanban-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.kanban-card-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  line-height: 1.4;
+  flex: 1;
+  margin: 0;
+}
+
+.kanban-card-subtitle {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  margin-top: 2px;
+}
+
+.kanban-card-icon {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-tertiary);
+}
+
+.kanban-card-icon.warning {
+  color: #faad14;
+}
+
+.kanban-card-icon.success {
+  color: #52c41a;
+}
+
+/* Value Row */
+.kanban-card-value-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 12px 0;
+}
+
+.kanban-card-value {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.kanban-card-value::before {
+  content: '$';
+  margin-right: 2px;
+}
+
+/* Priority Badge */
+.kanban-priority-badge {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+.kanban-priority-badge.high {
+  background: #fff1f0;
+  color: #ff4d4f;
+}
+
+.kanban-priority-badge.medium {
+  background: #e6f7ff;
+  color: #1890ff;
+}
+
+.kanban-priority-badge.low {
+  background: #f6ffed;
+  color: #52c41a;
+}
+
+.kanban-priority-badge.urgent {
+  background: #fff2e8;
+  color: #fa541c;
+}
+
+/* Progress Bar */
+.kanban-card-progress {
+  margin: 12px 0;
+}
+
+.kanban-card-progress-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.kanban-card-progress-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--color-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.kanban-card-progress-value {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.kanban-card-progress-bar {
+  height: 6px;
+  background: rgba(0, 0, 0, 0.06);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.kanban-card-progress-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.kanban-card-progress-fill.low {
+  background: #ff4d4f;
+}
+
+.kanban-card-progress-fill.medium {
+  background: #1890ff;
+}
+
+.kanban-card-progress-fill.high {
+  background: #52c41a;
+}
+
+/* Card Footer */
+.kanban-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.kanban-card-assignee {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+.kanban-card-assignee-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(var(--color-primary-rgb), 0.1);
+  color: var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.kanban-card-action {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-primary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.kanban-card-action:hover {
+  opacity: 0.8;
+}
+
+/* Tags/Labels */
+.kanban-card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.kanban-card-tag {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.04);
+  color: var(--color-text-secondary);
+}
+
+/* Summary Header (Total, Weighted) */
+.kanban-summary-header {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  margin-bottom: 16px;
+}
+
+.kanban-summary-total {
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+/* Dark theme adjustments */
+.dark .kanban-card,
+[data-theme="dark"] .kanban-card {
+  background: var(--color-bg-secondary);
+  border-color: var(--color-border);
+}
+
+.dark .kanban-lane-count,
+[data-theme="dark"] .kanban-lane-count {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.dark .kanban-card-progress-bar,
+[data-theme="dark"] .kanban-card-progress-bar {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.dark .kanban-card-tag,
+[data-theme="dark"] .kanban-card-tag {
+  background: rgba(255, 255, 255, 0.08);
 }

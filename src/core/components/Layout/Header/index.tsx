@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Layout, Button, Drawer, Select, Badge, message } from 'antd';
-import { Menu, Search, Settings, Bell } from 'lucide-react';
+import { Layout, Button, Drawer, Select, message, Dropdown } from 'antd';
+import { Menu, Search, Settings, Bell, Building, ChevronDown } from 'lucide-react';
 import { useIsFetching, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
@@ -22,8 +22,6 @@ interface UserOrgLocationData {
 }
 
 interface HeaderProps {
-  collapsed: boolean;
-  setCollapsed: (collapsed: boolean) => void;
   isMobile: boolean;
   unreadCount: number;
   setShowNotifications: (show: boolean) => void;
@@ -34,8 +32,6 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({
-  collapsed,
-  setCollapsed,
   isMobile,
   unreadCount,
   setShowNotifications,
@@ -195,18 +191,21 @@ export const Header: React.FC<HeaderProps> = ({
     >
       <div className="flex justify-between items-center h-full">
 
-        {/* Left side: Hamburger/Toggle + Page Title */}
+        {/* Left side: Hamburger (mobile only) + Page Title */}
         <div className="flex items-center gap-2 shrink-0 overflow-hidden min-w-0">
-          <Button
-            type="text"
-            icon={<Menu size={20} />}
-            onClick={() => (isMobile ? setShowMobileMenu(true) : setCollapsed(!collapsed))}
-            className="header-icon-btn edge-left"
-          />
+          {/* Hamburger menu - mobile only (desktop uses sidebar toggle) */}
+          {isMobile && (
+            <Button
+              type="text"
+              icon={<Menu size={20} />}
+              onClick={() => setShowMobileMenu(true)}
+              className="header-icon-btn edge-left"
+            />
+          )}
 
-          {/* Page title - shows when sidebar is not visible (small screens) */}
+          {/* Page title - shows when sidebar is not visible (small screens < 1024px) */}
           {pageTitle && (
-            <span className="text-base font-semibold whitespace-nowrap truncate max-w-[160px] md:hidden">
+            <span className="text-base font-semibold whitespace-nowrap truncate max-w-[160px]">
               {pageTitle}
             </span>
           )}
@@ -234,52 +233,101 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Right side: Properly grouped containers */}
         <div className="flex items-center gap-0 md:gap-4 flex-shrink-0">
 
-          {/* Group 1: Dropdowns (desktop only) */}
-          {!isMobile && (organizationOptions.length > 1 || currentLocations.length > 1) && (
-            <div className="flex items-center gap-2">
-              {organizationOptions.length > 1 && (
-                <Select
-                  placeholder={t('common.label.organization')}
-                  value={organization?.id}
-                  onChange={handleOrganizationChange}
-                  loading={loadingOrgLocs}
-                  style={{ width: 140 }}
-                  options={organizationOptions}
-                  disabled={loadingOrgLocs}
-                  size="small"
-                />
-              )}
-              {currentLocations.length > 1 && (
-                <Select
-                  placeholder={t('common.label.location')}
-                  value={location?.id}
-                  onChange={handleLocationChange}
-                  loading={loadingOrgLocs}
-                  style={{ width: 120 }}
-                  options={currentLocations}
-                  disabled={loadingOrgLocs}
-                  size="small"
-                />
-              )}
-            </div>
+          {/* Group 1: Organization Switcher (desktop only) */}
+          {!isMobile && organizationOptions.length > 1 && (
+            <Dropdown
+              menu={{
+                items: userOrgLocations.map(org => ({
+                  key: org.organization_id,
+                  label: (
+                    <div className="flex items-center gap-3 py-1">
+                      <div className="org-switcher-icon">
+                        <Building size={16} />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="font-semibold">{org.organization_name}</span>
+                        <span className="text-xs" style={{ color: 'var(--color-text-tertiary)' }}>
+                          {org.roles?.join(', ')}
+                        </span>
+                      </div>
+                    </div>
+                  ),
+                  onClick: () => handleOrganizationChange(org.organization_id),
+                })),
+              }}
+              trigger={['click']}
+              placement="bottomLeft"
+            >
+              <div className="org-switcher">
+                <div className="org-switcher-icon">
+                  <Building size={18} />
+                </div>
+                <div className="org-switcher-text">
+                  <span className="org-switcher-name">{organization?.name || 'Select Org'}</span>
+                  {currentLocations.length > 1 && (
+                    <span className="org-switcher-type">{location?.name || 'Location'}</span>
+                  )}
+                </div>
+                <ChevronDown size={16} className="org-switcher-arrow" />
+              </div>
+            </Dropdown>
           )}
 
-          {/* Group 2: Icon Buttons - 44px targets provide natural spacing */}
-          <div className="flex items-center">
+          {/* Separator between org/loc and icons */}
+          <div className="header-divider" />
+
+          {/* Group 2: Icon Buttons - Styled with backgrounds */}
+          <div className="header-icon-group">
             {/* Search - mobile only */}
             {isMobile && config.searchFilters && (
-              <Button type="text" icon={<Search size={20} />} onClick={() => setShowSearch(true)} className="header-icon-btn" />
+              <Button type="text" icon={<Search size={20} />} onClick={() => setShowSearch(true)} className="header-icon-styled" />
             )}
-            {/* Notifications */}
-            <Badge count={unreadCount} size="small" offset={[-4, 4]}>
-              <Button type="text" icon={<Bell size={20} />} onClick={() => setShowNotifications(true)} className="header-icon-btn" />
-            </Badge>
-            {/* Settings */}
-            <Button type="text" icon={<Settings size={20} />} onClick={() => setGlobalShowSettings(true)} className="header-icon-btn" />
+            {/* Notifications - count badge at top-right corner */}
+            <Button
+              type="text"
+              onClick={() => setShowNotifications(true)}
+              className="header-icon-styled"
+              style={{ position: 'relative' }}
+            >
+              <Bell size={20} style={{ color: 'var(--color-text-secondary)' }} />
+              {(unreadCount || 3) > 0 && (
+                <span style={{
+                  position: 'absolute',
+                  top: '4px',
+                  right: '4px',
+                  minWidth: '18px',
+                  height: '18px',
+                  borderRadius: '9px',
+                  background: 'var(--color-primary)',
+                  color: '#fff',
+                  fontSize: '11px',
+                  fontWeight: 600,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '0 4px'
+                }}>
+                  {(unreadCount || 3) > 99 ? '99+' : (unreadCount || 3)}
+                </span>
+              )}
+            </Button>
+            {/* Settings - with activity indicator */}
+            <Button
+              type="text"
+              onClick={() => setGlobalShowSettings(true)}
+              className="header-icon-styled has-activity"
+            >
+              <Settings size={20} style={{ color: 'var(--color-text-secondary)' }} />
+            </Button>
           </div>
 
+          {/* Separator between icons and profile */}
+          <div className="header-divider" />
+
           {/* Group 3: Profile */}
-          <ProfileMenu />
+          <div className="edge-right">
+            <ProfileMenu />
+          </div>
         </div>
       </div>
 

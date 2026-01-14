@@ -502,7 +502,7 @@ const Ticket: React.FC<TicketProps> = ({ data, entityId }) => {
   const { notification } = App.useApp(); // Use context-aware notifications
   const { user, organization } = useAuthStore();
   const ticketId = data?.id || entityId;  // Use data.id or entityId fallback
-  const appSettings =organization?.app_settings;
+  const appSettings = organization?.app_settings;
   const [messages, setMessages] = useState<Message[]>([]);
   const [ticketDetails, setTicketDetails] = useState<TicketDetails | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -642,7 +642,7 @@ const Ticket: React.FC<TicketProps> = ({ data, entityId }) => {
       </div>
     ),
     children: (
-      <Card bordered={false}>
+      <Card variant="borderless">
         <Text strong>To: </Text><Text>{Array.isArray(message.to_email) ? message.to_email.join(', ') : message.to_email || 'Unknown'}</Text><br />
         {message.cc_emails && message.cc_emails.length > 0 && (<><br /><Text strong>CC: </Text><Text>{message.cc_emails.join(', ')}</Text></>)}<br />
         <Text strong>Message: </Text>

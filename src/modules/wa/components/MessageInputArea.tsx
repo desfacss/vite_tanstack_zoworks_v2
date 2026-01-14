@@ -99,10 +99,12 @@ export const MessageInputArea: React.FC<MessageInputAreaProps> = ({
         return [];
     };
 
+    const isDarkMode = token.colorBgLayout !== '#ffffff' && token.colorBgLayout !== '#f8faf9' && token.colorBgLayout !== '#fafafa';
+
     return (
         <div style={{
             padding: 12,
-            background: token.colorBgLayout === '#000000' ? '#1e2329' : '#f0f0f0',
+            background: isDarkMode ? token.colorFillTertiary : '#f0f0f0',
             borderTop: `1px solid ${token.colorBorderSecondary}`,
             borderRadius: isBulk ? 8 : 0
         }}>
@@ -278,7 +280,7 @@ export const MessageInputArea: React.FC<MessageInputAreaProps> = ({
                 {/* Message Input */}
                 <div style={{
                     padding: isMobile ? '6px 8px' : '10px 16px',
-                    background: token.colorBgLayout === '#000000' ? '#1e2329' : '#f0f0f0',
+                    background: isDarkMode ? token.colorFillTertiary : '#f0f0f0',
                     borderTop: isMobile ? `1px solid ${token.colorBorderSecondary}` : 'none',
                     display: 'flex',
                     alignItems: 'center',
@@ -288,11 +290,11 @@ export const MessageInputArea: React.FC<MessageInputAreaProps> = ({
                     width: '100%',
                     borderRadius: isBulk ? 8 : 0
                 }}>
-                    {isMobile && <Button type="text" icon={<Plus size={24} style={{ color: '#54656f' }} />} onClick={() => imageInputRef.current?.click()} />}
+                    {isMobile && <Button type="text" icon={<Plus size={24} style={{ color: token.colorTextSecondary }} />} onClick={() => imageInputRef.current?.click()} />}
 
                     <div style={{
                         flex: 1,
-                        background: token.colorBgLayout === '#000000' ? '#2a3942' : 'white',
+                        background: token.colorBgContainer,
                         borderRadius: 24,
                         padding: '6px 12px',
                         display: 'flex',

@@ -32,6 +32,7 @@ import {
     useResponsive,
 } from '../hooks';
 import type { Conversation } from '../types';
+import { useAuthedLayoutConfig } from '@/core/components/Layout/AuthedLayoutContext';
 
 dayjs.extend(relativeTime);
 
@@ -296,9 +297,24 @@ const InboxPage: React.FC = () => {
 
     const [isContactPanelVisible, setIsContactPanelVisible] = useState(false);
     const [filters, setFilters] = useState<any>({});
+    const { setConfig } = useAuthedLayoutConfig();
+    const { isMobile } = useResponsive();
 
     const { token } = theme.useToken();
     const messagesEndRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        // Enable fullScreen mode when a conversation is selected
+        // This hides header, sider, and padding for an immersive chat experience
+        if (selectedConversationId) {
+            setConfig({ fullScreen: true });
+        } else {
+            setConfig({ fullScreen: false });
+        }
+
+        // Ensure it's shown again when leaving the page
+        return () => setConfig({ fullScreen: false });
+    }, [selectedConversationId, setConfig]);
 
     const { organization } = useAuthStore();
     useEffect(() => {
@@ -329,7 +345,6 @@ const InboxPage: React.FC = () => {
     }, [conversationsData, selectedConversationId, setSelectedConversationId]);
 
     const selectedConversation = conversationsData.find((c: Conversation) => c.id === selectedConversationId);
-    const { isMobile } = useResponsive();
 
     const sendMessage = useSendMessage(selectedConversationId);
 

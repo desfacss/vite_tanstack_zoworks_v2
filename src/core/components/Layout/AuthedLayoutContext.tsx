@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, ReactNode } from 'react';
 interface AuthedLayoutConfig {
   searchFilters?: ReactNode;
   actionButtons?: { icon: ReactNode; tooltip: string; onClick: () => void }[];
+  fullScreen?: boolean;
 }
 
 const AuthedLayoutContext = createContext<{

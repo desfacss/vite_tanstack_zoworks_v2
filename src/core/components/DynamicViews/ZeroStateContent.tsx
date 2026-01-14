@@ -253,7 +253,7 @@ export const ZeroStateContent: React.FC<ZeroStateContentProps> = ({
             {globalFiltersElement}
 
             {/* 2. Main Content Card (The Rich Container) */}
-            <Card bordered={false} className="shadow-2xl bg-[var(--color-component-background)] rounded-xl p-4">
+            <Card variant="borderless" className="shadow-2xl bg-[var(--color-component-background)] rounded-xl p-4">
                 <Empty
                     image={hasActiveFilters ? Empty.PRESENTED_IMAGE_DEFAULT : <FileText size={48} className="text-primary" />}
                     description={

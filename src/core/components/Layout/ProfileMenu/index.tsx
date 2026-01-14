@@ -1,5 +1,5 @@
-import React from 'react';
-import { Dropdown, Button } from 'antd';
+import React, { useState } from 'react';
+import { Dropdown, Avatar } from 'antd';
 import {
   User,
   Settings,
@@ -15,27 +15,36 @@ import { useAuthStore } from '@/core/lib/store';
 import { supabase } from '../../../lib/supabase';
 import { useTranslation } from 'react-i18next';
 import { useAuthedLayoutConfig } from '../AuthedLayoutContext';
-import { ProfileAvatar } from '../Profile/index';
+import { MobileActionSheet, type ActionSheetItem } from '../../shared/MobileActionSheet';
+
+// Simple mobile detection hook
+const useIsMobile = () => {
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  React.useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  return isMobile;
+};
 
 export const ProfileMenu: React.FC = () => {
   const navigate = useNavigate();
-  // Get setIsLoggingOut from store
-  const { user, clearUserSession, setIsLoggingOut } = useAuthStore();
+  const isMobile = useIsMobile();
+  const [showActionSheet, setShowActionSheet] = useState(false);
+
+  const { user, organization, clearUserSession, setIsLoggingOut } = useAuthStore();
   const queryClient = useQueryClient();
   const { setShowSettings } = useAuthedLayoutConfig();
-
   const { t } = useTranslation();
 
   const handleLogout = async () => {
-    // 1. Set Guard: Prevents SessionManager from accepting new data
     setIsLoggingOut(true);
-
-    // 2. Stop React Query: Cancel any in-flight fetches immediately
     console.log('>>> [ProfileMenu] Cancelling queries & Logging out...');
     await queryClient.cancelQueries();
     queryClient.clear();
-
-    // 3. Clear Store
     clearUserSession();
 
     try {
@@ -44,11 +53,11 @@ export const ProfileMenu: React.FC = () => {
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
-      // 4. Force Navigation
       navigate('/login', { replace: true });
     }
   };
 
+  // Menu items for Desktop Dropdown
   const menuItems = {
     items: [
       { key: 'profile', label: t('common.label.profile'), icon: <User size={16} />, onClick: () => navigate('/profile') },
@@ -65,31 +74,73 @@ export const ProfileMenu: React.FC = () => {
     ],
   };
 
+  // Action sheet items for Mobile
+  const actionSheetItems: ActionSheetItem[] = [
+    { key: 'profile', label: t('common.label.profile'), icon: <User size={20} />, onClick: () => navigate('/profile') },
+    { key: 'settings', label: t('common.label.settings'), icon: <Settings size={20} />, onClick: () => setShowSettings(true) },
+    { key: 'billing', label: t('common.label.billing'), icon: <CreditCard size={20} />, onClick: () => navigate('/billing') },
+    { key: 'divider1', label: '' },
+    { key: 'organization', label: t('common.label.organization_settings'), icon: <Building size={20} />, onClick: () => navigate('/settings?tab=organization') },
+    { key: 'team', label: t('common.label.management'), icon: <User size={20} />, onClick: () => navigate('/settings?tab=team') },
+    { key: 'divider2', label: '' },
+    { key: 'help', label: t('common.label.help_support'), icon: <HelpCircle size={20} />, onClick: () => window.open('https://help.zoworks.com', '_blank') },
+    { key: 'docs', label: t('common.label.documentation'), icon: <FileText size={20} />, onClick: () => window.open('https://docs.zoworks.com', '_blank') },
+    { key: 'divider3', label: '' },
+    { key: 'logout', label: t('core.auth.action.sign_out'), icon: <LogOut size={20} />, danger: true, onClick: handleLogout },
+  ];
+
+  const avatarElement = (
+    <Avatar
+      size={32}
+      style={{
+        background: 'var(--color-primary)',
+        color: '#ffffff',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontSize: '1rem',
+        fontWeight: 600,
+        cursor: 'pointer',
+      }}
+    >
+      {user?.name ? user.name.charAt(0).toUpperCase() : '?'}
+    </Avatar>
+  );
+
+  // Mobile: Avatar only + Action Sheet
+  if (isMobile) {
+    return (
+      <>
+        <div
+          className="header-profile-section"
+          onClick={() => setShowActionSheet(true)}
+        >
+          {avatarElement}
+        </div>
+        <MobileActionSheet
+          open={showActionSheet}
+          onClose={() => setShowActionSheet(false)}
+          items={actionSheetItems}
+          title={user?.name || 'Account'}
+        />
+      </>
+    );
+  }
+
+  // Desktop: Dropdown with name + role + avatar
   return (
     <Dropdown menu={menuItems as any} placement="bottomRight" trigger={['click']}>
-      {/* 
-        Profile button structure:
-        - Mobile: Fixed header-icon-size button with right offset for flush alignment
-        - Desktop: Auto-width button with avatar + name
-      */}
-      <Button
-        type="text"
-        className="header-icon-btn edge-right-avatar md:!w-auto md:!h-auto md:!max-w-none"
-      >
-        {/* Desktop: Avatar + Name */}
-        <div className="hidden md:flex items-center gap-2">
-          <div style={{ width: 'var(--header-icon-size)', height: 'var(--header-icon-size)' }}>
-            <ProfileAvatar size={28} className="!w-full !h-full" />
-          </div>
-          <span className="text-sm font-medium max-w-20 truncate">
+      <div className="header-profile-section">
+        <div className="header-profile-info">
+          <span className="header-profile-name">
             {user?.name || 'User'}
           </span>
+          <span className="header-profile-role">
+            {organization?.name || 'Member'}
+          </span>
         </div>
-        {/* Mobile: Avatar only */}
-        <div className="flex md:hidden items-center justify-center">
-          <ProfileAvatar size={28} />
-        </div>
-      </Button>
+        {avatarElement}
+      </div>
     </Dropdown>
   );
 };

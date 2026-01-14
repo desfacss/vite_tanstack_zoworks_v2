@@ -9,6 +9,7 @@ import { Header } from './Header';
 import { Sider } from './Sider';
 import { NotificationsDrawer } from './NotificationsDrawer';
 import { MobileMenu } from './MobileMenu';
+import { MobileBottomNav } from './MobileBottomNav';
 import { Settings } from './Settings';
 import { useAuthStore } from '@/core/lib/store';
 import { supabase } from '../../lib/supabase';
@@ -35,11 +36,12 @@ export const AuthedLayout: FC = () => {
   const location = useLocation();
   // const navigate = useNavigate();
   const { t } = useTranslation();
-  const { organization, user, navigationItems } = useAuthStore();
+  const { organization, user, navigationItems, mobilePreferences } = useAuthStore();
   const { config, showSettings, setShowSettings } = useAuthedLayoutConfig();
 
   const deviceType = useDeviceType();
-  const isMobile = deviceType === 'mobile';
+  // For layout purposes, treat tablet like mobile (hide sidebar below 1024px)
+  const isMobile = deviceType !== 'desktop';
 
   // Memoize bottomNavItems to prevent recalculation
   // const bottomNavItems = useMemo(() => {
@@ -110,14 +112,20 @@ export const AuthedLayout: FC = () => {
     return collapsed ? COLLAPSED_SIDER_WIDTH : SIDER_WIDTH;
   }, [collapsed, isMobile]);
 
+  // Determine if app chrome elements should be hidden
+  const isFullScreen = useMemo(() => !!config.fullScreen, [config.fullScreen]);
+  const isBottomNavHidden = useMemo(() => {
+    return isFullScreen || location.pathname.startsWith('/wa/');
+  }, [isFullScreen, location.pathname]);
 
   return (
     <Layout className="min-h-screen" style={{ background: 'var(--tenant-layout-bg)' }}>
       <GlobalLoader />
       {/* <ContextDebug /> */}
-      {!isMobile && (
+      {!isMobile && !isFullScreen && (
         <Sider
           collapsed={collapsed}
+          onToggle={() => setCollapsed(!collapsed)}
           navigationItems={navigationItems}
         />
       )}
@@ -125,7 +133,7 @@ export const AuthedLayout: FC = () => {
       <Layout
         className="bg-transparent"
         style={{
-          marginLeft: isMobile ? 0 : contentMarginLeft,
+          marginLeft: isMobile || isFullScreen ? 0 : contentMarginLeft,
           transition: 'margin-left 0.2s cubic-bezier(0.2, 0, 0, 1)',
           minHeight: '100vh',
           display: 'flex',
@@ -133,33 +141,34 @@ export const AuthedLayout: FC = () => {
         }}
       >
 
-        {/* Header - now positioned after sider on desktop */}
-        <Header
-          collapsed={collapsed}
-          setCollapsed={setCollapsed}
-          isMobile={isMobile}
-          unreadCount={unreadCount}
-          setShowNotifications={setShowNotifications}
-          setShowMobileMenu={setShowMobileMenu}
-          showSearch={showSearch}
-          setShowSearch={setShowSearch}
-          pageTitle={getPageTitle()}
-        />
+        {/* Header - Hidden in fullScreen mode */}
+        {!isFullScreen && (
+          <Header
+            isMobile={isMobile}
+            unreadCount={unreadCount}
+            setShowNotifications={setShowNotifications}
+            setShowMobileMenu={setShowMobileMenu}
+            showSearch={showSearch}
+            setShowSearch={setShowSearch}
+            pageTitle={getPageTitle()}
+          />
+        )}
 
         {/* Main content area - now scrollable container */}
         <Content
-          className="m-0 p-0 bg-transparent"
+          className={isFullScreen ? "m-0 p-0 bg-transparent" : "page-container m-0 bg-transparent"}
           style={{
             flex: 1,
             overflowY: 'auto',
             overflowX: 'hidden',
-            position: 'relative'
+            position: 'relative',
+            paddingBottom: isMobile && mobilePreferences?.bottomNavEnabled && !isBottomNavHidden ? '80px' : 0, // Account for mobile bottom nav
           }}
         >
           <motion.div
             key={location.pathname}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
             transition={{ duration: 0.3 }}
             style={{ minHeight: '100%', display: 'flex', flexDirection: 'column', flex: 1 }}
           >
@@ -224,6 +233,9 @@ export const AuthedLayout: FC = () => {
         open={showSettings}
         onClose={() => setShowSettings(false)}
       />
+
+      {/* Mobile Bottom Navigation - Hidden in fullScreen mode or module override */}
+      {isMobile && !isBottomNavHidden && <MobileBottomNav />}
     </Layout>
   );
 };

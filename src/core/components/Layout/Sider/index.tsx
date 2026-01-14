@@ -3,15 +3,17 @@ import { Layout, Menu } from 'antd';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/core/lib/store';
 import { BrandLogo, BrandIcon } from '@/core/components/shared/BrandAsset';
+import { Menu as MenuIcon } from 'lucide-react';
 
 const { Sider: AntSider } = Layout;
 
 interface SiderProps {
   collapsed: boolean;
+  onToggle?: () => void;
   navigationItems?: any[];
 }
 
-export const Sider: React.FC<SiderProps> = ({ collapsed, navigationItems: propNavigationItems }) => {
+export const Sider: React.FC<SiderProps> = ({ collapsed, onToggle, navigationItems: propNavigationItems }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { navigationItems: storeNavigationItems } = useAuthStore();
@@ -77,10 +79,10 @@ export const Sider: React.FC<SiderProps> = ({ collapsed, navigationItems: propNa
     >
       {/* Sider header - aligned with app header */}
       <div
-        className="flex items-center gap-3 overflow-hidden border-b border-[var(--color-border)]"
+        className="flex items-center justify-between overflow-hidden border-b border-[var(--color-border)]"
         style={{
           minHeight: 'var(--header-height, 56px)',
-          padding: `0 var(--layout-padding, 24px)`, // Sync with global layout padding
+          padding: `0 ${collapsed ? '0' : 'var(--layout-padding, 24px)'}`,
         }}
       >
         {!collapsed ? (
@@ -88,11 +90,25 @@ export const Sider: React.FC<SiderProps> = ({ collapsed, navigationItems: propNa
             className="transition-all duration-300"
           />
         ) : (
-          <div className="flex justify-center w-full">
+          <div
+            className="flex justify-center w-full cursor-pointer"
+            onClick={onToggle}
+            title="Expand sidebar"
+          >
             <BrandIcon
               className="transition-all duration-300"
             />
           </div>
+        )}
+        {/* Expand/Collapse Toggle */}
+        {onToggle && !collapsed && (
+          <button
+            onClick={onToggle}
+            className="sidebar-toggle-btn"
+            title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          >
+            <MenuIcon size={18} />
+          </button>
         )}
       </div>
 

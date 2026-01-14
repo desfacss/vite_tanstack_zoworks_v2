@@ -53,7 +53,7 @@ const DashboardCanvas: React.FC<DashboardCanvasProps> = ({
       sortedWidgets.forEach((w, i) => {
         const id = String(w.id);
         const lgW = w.layouts?.lg?.w ?? w.position?.w ?? 4;
-        const lgH = w.layouts?.lg?.h ?? w.position?.h ?? 4;
+        const lgH = Math.max(w.layouts?.lg?.h ?? w.position?.h ?? 4, 2); // Ensure h >= minH
 
         lg.push({
           i: id,
@@ -65,25 +65,25 @@ const DashboardCanvas: React.FC<DashboardCanvasProps> = ({
         });
 
         if (w.layouts?.md) {
-          md.push({ i: id, ...w.layouts.md, minW: 2, minH: 2 });
+          md.push({ i: id, ...w.layouts.md, h: Math.max(w.layouts.md.h ?? lgH, 2), minW: 2, minH: 2 });
         } else {
           md.push({ i: id, x: 0, y: Infinity, w: lgW, h: lgH, minW: 2, minH: 2 });
         }
 
         if (w.layouts?.sm) {
-          sm.push({ i: id, ...w.layouts.sm, minW: 2, minH: 2 });
+          sm.push({ i: id, ...w.layouts.sm, h: Math.max(w.layouts.sm.h ?? lgH, 2), minW: 2, minH: 2 });
         } else {
           sm.push({ i: id, x: 0, y: i, w: 12, h: lgH, minW: 2, minH: 2 });
         }
 
         if (w.layouts?.xs) {
-          xs.push({ i: id, ...w.layouts.xs, minW: 2, minH: 2 });
+          xs.push({ i: id, ...w.layouts.xs, h: Math.max(w.layouts.xs.h ?? lgH, 2), minW: 2, minH: 2 });
         } else {
           xs.push({ i: id, x: 0, y: i, w: 6, h: lgH, minW: 2, minH: 2 });
         }
 
         if (w.layouts?.xxs) {
-          xxs.push({ i: id, ...w.layouts.xxs, minW: 1, minH: 2 });
+          xxs.push({ i: id, ...w.layouts.xxs, h: Math.max(w.layouts.xxs.h ?? lgH, 2), minW: 1, minH: 2 });
         } else {
           xxs.push({ i: id, x: 0, y: i, w: 1, h: lgH, minW: 1, minH: 2 });
         }

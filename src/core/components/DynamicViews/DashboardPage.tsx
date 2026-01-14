@@ -4,7 +4,7 @@ import { Button, Select, Spin, Row, Col, Typography, message, Space, Popconfirm,
 import { Plus, Pencil, Trash2, RefreshCw } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/core/lib/store';
-import MetricChartWidget, { MetricWidgetConfig } from './MetricChartWidget'; 
+import MetricChartWidget, { MetricWidgetConfig } from './MetricChartWidget';
 import DashboardEditor from './DashboardEditor'; // Import the editor
 import dayjs from 'dayjs';
 
@@ -29,11 +29,11 @@ const DashboardPage: React.FC = () => {
   const [isEditingMode, setIsEditingMode] = useState(false);
 
   // Use a state toggle to force a refresh in the widgets
-  const [refreshKey, setRefreshKey] = useState(0); 
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
-    const userRoles = user?.roles || [];
-    const isAdmin = userRoles.includes('saasadmin') || userRoles.includes('systemadmin');
+    const roleName = user?.roles?.name || '';
+    const isAdmin = roleName === 'saasadmin' || roleName === 'systemadmin';
     setIsEditingMode(isAdmin);
   }, [user?.roles]);
 
@@ -160,8 +160,8 @@ const DashboardPage: React.FC = () => {
     : 'N/A';
 
   return (
-    <div className="p-4 space-y-4">
-      <div className="flex justify-between items-center mb-4">
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
         <Space>
           <Typography.Title level={3} style={{ margin: 0 }}>My Dashboards</Typography.Title>
           <Select
@@ -176,7 +176,7 @@ const DashboardPage: React.FC = () => {
             <>
               {isEditingMode && (
                 <>
-                  <Button icon={<EditOutlined />} onClick={handleEditDashboard}>Edit</Button>
+                  <Button icon={<Pencil size={16} />} onClick={handleEditDashboard}>Edit</Button>
                   <Popconfirm
                     title="Delete Dashboard"
                     description={`Are you sure you want to delete "${selectedDashboard?.name}"?`}
@@ -184,21 +184,21 @@ const DashboardPage: React.FC = () => {
                     okText="Yes"
                     cancelText="No"
                   >
-                    <Button icon={<DeleteOutlined />} danger>Delete</Button>
+                    <Button icon={<Trash2 size={16} />} danger>Delete</Button>
                   </Popconfirm>
                 </>
               )}
-              <Button icon={<ReloadOutlined />} onClick={handleForceRefreshAllWidgets}>Refresh All Widgets</Button>
+              <Button icon={<RefreshCw size={16} />} onClick={handleForceRefreshAllWidgets}>Refresh All Widgets</Button>
             </>
           )}
         </Space>
         {isEditingMode && (
-          <Button type="primary" icon={<PlusOutlined />} onClick={handleCreateNew}>
+          <Button type="primary" icon={<Plus size={16} />} onClick={handleCreateNew}>
             Create New Dashboard
           </Button>
         )}
       </div>
-      
+
       {selectedDashboardId && (
         <Typography.Text type="secondary" style={{ fontSize: '0.8em' }}>
           Last Updated: {lastUpdated}
@@ -216,7 +216,7 @@ const DashboardPage: React.FC = () => {
         <div className="text-center text-gray-500 py-8">
           <Typography.Paragraph>You don't have any dashboards yet.</Typography.Paragraph>
           {isEditingMode && (
-            <Button type="primary" icon={<PlusOutlined />} onClick={handleCreateNew}>
+            <Button type="primary" icon={<Plus size={16} />} onClick={handleCreateNew}>
               Create Your First Dashboard
             </Button>
           )}
@@ -237,7 +237,7 @@ const DashboardPage: React.FC = () => {
                 if (!widgetViewConfig) {
                   return (
                     <Col xs={24} sm={12} md={8} lg={6} key={widgetConfig.id}>
-                      <Card bordered className="shadow-md h-full">
+                      <Card variant="outlined" className="shadow-md h-full">
                         <Typography.Text type="danger">
                           Error: View config not found for {entityFullName}
                         </Typography.Text>

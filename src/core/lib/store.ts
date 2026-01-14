@@ -34,6 +34,12 @@ interface ViewPreferences {
     } | undefined;
   };
 }
+
+// Mobile settings for bottom navigation
+interface MobilePreferences {
+  bottomNavEnabled: boolean;
+  bottomNavItems: string[]; // Array of navigation item keys
+}
 interface ThemeState {
   themeMode: 'light' | 'dark' | 'system';
   isDarkMode: boolean; // Computed from themeMode + system preference
@@ -84,6 +90,7 @@ interface AuthState {
   // --- UI/App State (persisted) ---
   navigationItems: NavigationItem[];
   viewPreferences: ViewPreferences;
+  mobilePreferences: MobilePreferences;
   appSettings: any;
 
   // --- Status Flags ---
@@ -106,6 +113,7 @@ interface AuthState {
   setNavigationItems: (items: NavigationItem[]) => void;
   setViewPreferences: (userId: string, entityType: string, prefs: Partial<ViewPreferences[string][string]>) => void;
   resetViewPreferences: (userId: string, entityType: string) => void;
+  setMobilePreferences: (prefs: Partial<MobilePreferences>) => void;
   setIsOnline: (isOnline: boolean) => void;
   setAuthError: (error: string | null) => void;
 }
@@ -126,6 +134,10 @@ const initialState: Partial<AuthState> = {
   ...defaultSessionState,
   navigationItems: [],
   viewPreferences: {},
+  mobilePreferences: {
+    bottomNavEnabled: true, // Enabled by default
+    bottomNavItems: [], // Empty = auto-select first 5
+  },
   initialized: false,
   isOnline: typeof navigator !== 'undefined' ? navigator.onLine : true,
   authError: null,
@@ -267,6 +279,9 @@ export const useAuthStore = create<AuthState>()(
           return { viewPreferences: newPreferences };
         });
       },
+      setMobilePreferences: (prefs) => set((state) => ({
+        mobilePreferences: { ...state.mobilePreferences, ...prefs }
+      })),
       setIsOnline: (isOnline) => set({ isOnline }),
       setAuthError: (error) => set({ authError: error }),
     }),
@@ -277,6 +292,7 @@ export const useAuthStore = create<AuthState>()(
       partialize: (state) => ({
         viewPreferences: state.viewPreferences,
         navigationItems: state.navigationItems,
+        mobilePreferences: state.mobilePreferences,
         appSettings: state.appSettings,
       }),
       version: 1,

@@ -14,9 +14,16 @@ function detectDeviceType(): DeviceType {
   const isMobileUA = /iphone|android.*mobile|windows phone|blackberry/.test(ua);
   const isTabletUA = /ipad|android(?!.*mobile)|tablet/.test(ua);
 
-  if (isMobileUA || width <= 768) return 'mobile';
-  if (isTabletUA || (width > 768 && width <= 1024)) return 'tablet';
-  return 'desktop';
+  // Viewport width takes priority for responsive design
+  // If width is clearly desktop-sized, treat as desktop regardless of UA
+  if (width >= 1024) return 'desktop';
+  if (width < 768) return 'mobile';
+
+  // For tablet range (768-1024), use UA hint if available
+  if (isTabletUA) return 'tablet';
+  if (isMobileUA) return 'mobile';
+
+  return 'tablet'; // Default for 768-1024 range
 }
 
 function detectOS(): OS {

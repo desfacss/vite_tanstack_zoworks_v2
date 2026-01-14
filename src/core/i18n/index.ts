@@ -81,6 +81,18 @@ export async function initI18n(
           order: ['localStorage', 'navigator'],
           caches: ['localStorage'],
         },
+        // Format missing translation keys as readable text
+        parseMissingKeyHandler: (key: string) => {
+          // Extract last part after the final dot (e.g., "common.label.sample" → "sample")
+          const lastPart = key.split('.').pop() || key;
+
+          // Replace underscores and hyphens with spaces, then apply title case
+          return lastPart
+            .replace(/[-_]/g, ' ')
+            .split(' ')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+            .join(' ');
+        },
       });
   }
 

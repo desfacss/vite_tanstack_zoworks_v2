@@ -1,8 +1,7 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
-import ReactDOM from 'react-dom';
 import { Card, Select, Button, message } from 'antd';
 import { MoreHorizontal, Plus, ChevronLeft, ChevronRight, GripVertical } from 'lucide-react';
-import { DragDropContext, Droppable, Draggable, DropResult, DraggableProvided, DraggableStateSnapshot } from '@hello-pangea/dnd';
+import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import styled from 'styled-components';
 import { motion } from 'framer-motion';
 import RowActions from './RowActions';
@@ -34,16 +33,16 @@ const LanesContainer = styled.div`
 `;
 
 const Lane = styled.div<{ highlighted?: boolean }>`
-  background-color: var(--color-bg-secondary);
-  border-radius: var(--tenant-border-radius, 12px);
+  background-color: ${(props) => props.color || 'var(--color-bg-secondary)'};
+  border-radius: var(--tenant-border-radius, 8px);
   padding: 16px;
   width: 300px;
   min-width: 300px;
   display: flex;
   flex-direction: column;
+  transition: all 0.3s ease;
   height: calc(100vh - 300px);
   scroll-snap-align: start;
-  border: 1px solid var(--color-border);
   &.collapsed {
     width: 60px !important;
     min-width: 60px !important;
@@ -65,9 +64,10 @@ const CardWrapper = styled.div`
     border: 1px solid var(--color-border);
     border-radius: var(--tenant-border-radius, 8px);
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-    transition: box-shadow 0.2s ease, border-color 0.2s ease;
+    transition: all 0.2s ease;
     &:hover {
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      transform: translateY(-2px);
       border-color: rgba(var(--color-primary-rgb, 0, 0, 0), 0.3);
     }
   }
@@ -91,52 +91,6 @@ const CardWrapper = styled.div`
   }
 `;
 
-// Portal for dragging items - fixes visual offset from parent transforms
-const useDragPortal = () => {
-  const [portal, setPortal] = useState<HTMLElement | null>(null);
-
-  useEffect(() => {
-    let div = document.getElementById('kanban-drag-portal');
-    if (!div) {
-      div = document.createElement('div');
-      div.id = 'kanban-drag-portal';
-      document.body.appendChild(div);
-    }
-    setPortal(div);
-    return () => {
-      // Don't remove on unmount - other instances might use it
-    };
-  }, []);
-
-  return portal;
-};
-
-// Wrapper to render dragged items in portal
-const PortalAwareItem: React.FC<{
-  provided: DraggableProvided;
-  snapshot: DraggableStateSnapshot;
-  children: React.ReactNode;
-}> = ({ provided, snapshot, children }) => {
-  const portal = useDragPortal();
-
-  const child = (
-    <CardWrapper
-      ref={provided.innerRef}
-      {...provided.draggableProps}
-      {...provided.dragHandleProps}
-      style={provided.draggableProps.style}
-    >
-      {children}
-    </CardWrapper>
-  );
-
-  // When dragging, render in portal to avoid transform offset issues
-  if (snapshot.isDragging && portal) {
-    return ReactDOM.createPortal(child, portal);
-  }
-
-  return child;
-};
 
 interface KanbanViewProps {
   entityType: string;
@@ -510,50 +464,26 @@ const KanbanView: React.FC<KanbanViewProps> = ({
               <Droppable droppableId={lane.id} key={lane.id}>
                 {(provided, snapshot) => (
                   <Lane
+                    color={lane.color}
                     className={collapsedLanes[lane.id] ? 'collapsed' : ''}
-                    {...(snapshot.isDraggingOver && { highlighted: true })}
+                    {...(snapshot.isDraggingOver && { highlighted: true })} //highlighted={snapshot.isDraggingOver}
                   >
                     <div
-                      className={`flex items-center justify-between mb-4 cursor-pointer ${collapsedLanes[lane.id] ? 'column-title-collapsed' : ''}`}
+                      className={`flex items-center justify-between mb-4 cursor-pointer ${collapsedLanes[lane.id] ? 'column-title-collapsed' : ''
+                        }`}
                       onClick={() => handleToggleLane(lane.id)}
                     >
                       <div className="flex items-center gap-2">
                         {collapsedLanes[lane.id] ? (
-                          <ChevronRight size={18} style={{ color: 'var(--color-text-secondary)' }} />
+                          <ChevronRight size={20} />
                         ) : (
-                          <ChevronLeft size={18} style={{ color: 'var(--color-text-secondary)' }} />
+                          <ChevronLeft size={20} />
                         )}
-                        {/* Colored dot indicator */}
-                        <span
-                          style={{
-                            width: '8px',
-                            height: '8px',
-                            borderRadius: '50%',
-                            backgroundColor: lane.color?.includes('#') ? lane.color : 'var(--color-primary)'
-                          }}
-                        />
-                        <h3 style={{
-                          fontSize: '14px',
-                          fontWeight: 600,
-                          margin: 0,
-                          color: 'var(--color-text-primary)'
-                        }}>
-                          {lane.title}
-                        </h3>
-                        {/* Card count badge */}
-                        <span style={{
-                          fontSize: '12px',
-                          fontWeight: 500,
-                          padding: '2px 8px',
-                          borderRadius: '10px',
-                          background: 'var(--color-bg-tertiary, rgba(0,0,0,0.06))',
-                          color: 'var(--color-text-secondary)'
-                        }}>
-                          {lane.cards.length}
-                        </span>
+                        {/* Display lane.title (which is stage.name or laneConfig.name) */}
+                        <h3 className="text-h3 text-gray-700 !mb-0">{lane.title}</h3>
                       </div>
                       {!collapsedLanes[lane.id] && viewConfig.kanbanview?.actions?.bulk?.some((action: any) => action.name === 'add_') && (
-                        <Button type="dashed" size="small" icon={<Plus size={14} />}>
+                        <Button type="dashed" block icon={<Plus size={14} />}>
                           Add
                         </Button>
                       )}
@@ -563,78 +493,25 @@ const KanbanView: React.FC<KanbanViewProps> = ({
                       <LaneContent {...provided.droppableProps} ref={provided.innerRef}>
                         {lane.cards.map((card, index) => (
                           <Draggable key={card.id} draggableId={card.id.toString()} index={index}>
-                            {(provided, snapshot) => (
-                              <PortalAwareItem provided={provided} snapshot={snapshot}>
+                            {(provided) => (
+                              <CardWrapper
+                                ref={provided.innerRef}
+                                {...provided.draggableProps}
+                                {...provided.dragHandleProps}
+                              >
                                 <Card>
                                   <div className="card-title">
-                                    <GripVertical size={16} style={{ color: 'var(--color-text-tertiary)' }} />
+                                    <GripVertical size={16} className="text-gray-400" />
                                     <span>{getFieldValue(card, viewConfig.kanbanview?.cardFields?.title)}</span>
                                   </div>
                                   <p className="card-description">
                                     {getFieldValue(card, viewConfig.kanbanview?.cardFields?.description)}
                                   </p>
-
-                                  {/* Mock Progress Bar */}
-                                  <div style={{ marginTop: '12px' }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '4px' }}>
-                                      <span style={{ color: 'var(--color-text-secondary)' }}>Progress</span>
-                                      <span style={{ color: 'var(--color-text-primary)', fontWeight: 500 }}>
-                                        {Math.floor((card.id?.charCodeAt?.(0) || 50) % 100)}%
-                                      </span>
-                                    </div>
-                                    <div style={{
-                                      height: '4px',
-                                      background: 'var(--color-bg-tertiary, rgba(0,0,0,0.06))',
-                                      borderRadius: '2px',
-                                      overflow: 'hidden'
-                                    }}>
-                                      <div style={{
-                                        height: '100%',
-                                        width: `${Math.floor((card.id?.charCodeAt?.(0) || 50) % 100)}%`,
-                                        background: 'var(--color-primary)',
-                                        borderRadius: '2px'
-                                      }} />
-                                    </div>
-                                  </div>
-
-                                  {/* Assignee */}
-                                  <div style={{
-                                    display: 'flex',
-                                    justifyContent: 'space-between',
-                                    alignItems: 'center',
-                                    marginTop: '12px',
-                                    paddingTop: '12px',
-                                    borderTop: '1px solid var(--color-border)'
-                                  }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                      <div style={{
-                                        width: '24px',
-                                        height: '24px',
-                                        borderRadius: '50%',
-                                        background: 'var(--color-primary)',
-                                        color: '#fff',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        fontSize: '11px',
-                                        fontWeight: 600
-                                      }}>
-                                        {(getFieldValue(card, viewConfig.kanbanview?.cardFields?.assignee) || 'U').charAt(0).toUpperCase()}
-                                      </div>
-                                      <span style={{ fontSize: '13px', color: 'var(--color-text-secondary)' }}>
-                                        {getFieldValue(card, viewConfig.kanbanview?.cardFields?.assignee) || 'Unassigned'}
-                                      </span>
-                                    </div>
-                                    <span style={{
-                                      fontSize: '12px',
-                                      color: 'var(--color-primary)',
-                                      cursor: 'pointer',
-                                      fontWeight: 500
-                                    }}>
-                                      Open →
-                                    </span>
-                                  </div>
-
+                                  {viewConfig.kanbanview?.cardFields?.label && (
+                                    <p className="text-xs text-gray-500">
+                                      {getFieldValue(card, viewConfig.kanbanview?.cardFields?.label)}
+                                    </p>
+                                  )}
                                   {viewConfig.kanbanview?.actions?.row?.length > 0 && (
                                     <div className="card-actions">
                                       <RowActions
@@ -649,7 +526,7 @@ const KanbanView: React.FC<KanbanViewProps> = ({
                                     </div>
                                   )}
                                 </Card>
-                              </PortalAwareItem>
+                              </CardWrapper>
                             )}
                           </Draggable>
                         ))}

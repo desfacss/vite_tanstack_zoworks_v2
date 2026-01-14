@@ -170,8 +170,8 @@ const MediaContent = ({ type, content, message }: { type: string, content: any, 
             <Card
                 size="small"
                 style={{
-                    background: 'rgba(0,0,0,0.03)',
-                    border: '1px solid rgba(0,0,0,0.05)',
+                    background: token.colorFillQuaternary,
+                    border: `1px solid ${token.colorBorderSecondary}`,
                     borderRadius: 8,
                     marginTop: 4
                 }}
@@ -206,7 +206,7 @@ const MediaContent = ({ type, content, message }: { type: string, content: any, 
 
 export const MessageBubble = ({ message, onReply }: MessageBubbleProps) => {
     const { token } = theme.useToken();
-    const isDarkMode = token.colorBgLayout === '#000000';
+    const isDarkMode = token.colorBgLayout !== '#ffffff' && token.colorBgLayout !== '#f8faf9' && token.colorBgLayout !== '#fafafa';
     const isSent = message.sender_type === 'user';
 
     let content: any = message.content;
@@ -260,9 +260,9 @@ export const MessageBubble = ({ message, onReply }: MessageBubbleProps) => {
                     padding: '6px 7px 8px 9px',
                     borderRadius: 7.5,
                     backgroundColor: isSent
-                        ? (isDarkMode ? '#005c4b' : '#E7FFDB')
-                        : (isDarkMode ? '#202c33' : '#FFFFFF'),
-                    color: isDarkMode ? '#e9edef' : 'inherit',
+                        ? (isDarkMode ? '#005c4b' : '#dcf8c6')
+                        : (isDarkMode ? '#202c33' : '#ffffff'),
+                    color: isDarkMode ? '#e9edef' : token.colorText,
                     boxShadow: '0 1px 0.5px rgba(11,20,26,.13)',
                     borderTopLeftRadius: !isSent ? 0 : 7.5,
                     borderTopRightRadius: isSent ? 0 : 7.5,
@@ -307,7 +307,7 @@ export const MessageBubble = ({ message, onReply }: MessageBubbleProps) => {
                     {type === 'button' && (
                         <div style={{
                             padding: '8px 12px',
-                            background: 'rgba(0,0,0,0.03)',
+                            background: token.colorFillQuaternary,
                             borderRadius: 8,
                             borderLeft: '4px solid #00a884'
                         }}>
@@ -319,7 +319,7 @@ export const MessageBubble = ({ message, onReply }: MessageBubbleProps) => {
                     {type === 'contacts' && (
                         <div style={{ padding: 4 }}>
                             {content.contacts?.map((contact: any, i: number) => (
-                                <Card key={i} size="small" style={{ background: 'rgba(0,0,0,0.05)', marginBottom: 8 }}>
+                                <Card key={i} size="small" style={{ background: token.colorFillQuaternary, marginBottom: 8, border: 'none' }}>
                                     <Space align="start">
                                         <Avatar icon={<User size={16} />} src={contact.org?.logo || undefined} />
                                         <div>

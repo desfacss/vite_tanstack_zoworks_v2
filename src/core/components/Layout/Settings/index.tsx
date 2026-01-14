@@ -35,6 +35,7 @@ export const Settings: React.FC<SettingsProps> = ({ open, onClose }) => {
   const user = auth.user;
   const organization = auth.organization;
   const location = auth.location;
+  const navigationItems = auth.navigationItems;
   const setOrganization = auth.setOrganization;
   const setLocation = auth.setLocation;
   const viewPreferences = auth.viewPreferences;
@@ -669,6 +670,55 @@ export const Settings: React.FC<SettingsProps> = ({ open, onClose }) => {
               Update Brand Identity
             </Button>
           </Form>
+        </div>
+
+        {/* Mobile Settings Section */}
+        <div className="border-t border-gray-100 pt-6">
+          <Title level={5} className="mb-4 flex items-center gap-2">
+            <Grid size={18} className="text-[var(--color-primary)]" />
+            Mobile Navigation
+          </Title>
+          <Space direction="vertical" className="w-full" size="middle">
+            <div className="flex justify-between items-center bg-[var(--color-bg-primary)] p-3 rounded-lg border border-[var(--color-border)] shadow-sm">
+              <div className="flex items-center gap-2">
+                <Text>Show Bottom Navigation</Text>
+              </div>
+              <input
+                type="checkbox"
+                checked={auth.mobilePreferences?.bottomNavEnabled ?? true}
+                onChange={e => auth.setMobilePreferences({ bottomNavEnabled: e.target.checked })}
+                className="w-5 h-5 rounded border-[var(--color-border)] text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
+              />
+            </div>
+            {auth.mobilePreferences?.bottomNavEnabled && (
+              <div className="bg-[var(--color-bg-primary)] p-3 rounded-lg border border-[var(--color-border)] shadow-sm">
+                <Text className="text-xs text-[var(--color-text-secondary)] block mb-2">
+                  Select up to 5 items for the bottom tab bar
+                </Text>
+                <Select
+                  mode="multiple"
+                  maxCount={5}
+                  value={auth.mobilePreferences?.bottomNavItems || []}
+                  onChange={(keys) => auth.setMobilePreferences({ bottomNavItems: keys })}
+                  placeholder="Auto (first 5 items)"
+                  className="w-full"
+                  options={navigationItems.reduce((acc: any[], item) => {
+                    if (item.children) {
+                      return [...acc, ...item.children.map((child: any) => ({
+                        value: child.key,
+                        label: typeof child.label === 'string' ? child.label : child.key.split('/').pop(),
+                      }))];
+                    }
+                    return [...acc, {
+                      value: item.key,
+                      label: typeof item.label === 'string' ? item.label : item.key.split('/').pop(),
+                    }];
+                  }, [])}
+                  allowClear
+                />
+              </div>
+            )}
+          </Space>
         </div>
 
         {/* Accessibility Section */}
