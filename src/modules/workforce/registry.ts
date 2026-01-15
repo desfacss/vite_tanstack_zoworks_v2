@@ -21,6 +21,8 @@ export async function register(
 ) {
   console.log('[Workforce] Registering module');
 
+  const subModules = config.sub_modules || {};
+
   // 1. Register translations FIRST (for labels to work)
   await registerModuleTranslations('workforce', {
     en: () => import('./i18n/en.json'),
