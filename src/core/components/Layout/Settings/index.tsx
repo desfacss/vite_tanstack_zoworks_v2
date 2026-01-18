@@ -49,7 +49,7 @@ export const Settings: React.FC<SettingsProps> = ({ open, onClose }) => {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState<'light' | 'dark' | null>(null);
 
-  const publitio = useMemo(() => new PublitioAPI('xr7tJHfDaqk5ov18TkJX', 'aApiZqz6Di1eacmemfof14xwN63lyJHG'), []);
+  const publitio = useMemo(() => new PublitioAPI(import.meta.env.VITE_PUBLITIO_API_KEY, import.meta.env.VITE_PUBLITIO_API_SECRET), []);
 
   // Flattened form state for easier handling
   const [form] = Form.useForm();

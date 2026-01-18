@@ -16,7 +16,7 @@ const FilesTab: React.FC<FilesTabProps> = ({ editItem, rawData }) => {
   const [visibleCreateFolder, setVisibleCreateFolder] = useState<boolean>(false);
   const [folderName, setFolderName] = useState<string>('');
 
-  const publitio = new PublitioAPI('xr7tJHfDaqk5ov18TkJX', 'aApiZqz6Di1eacmemfof14xwN63lyJHG');
+  const publitio = new PublitioAPI(import.meta.env.VITE_PUBLITIO_API_KEY, import.meta.env.VITE_PUBLITIO_API_SECRET);
 
   useEffect(() => {
     const project = rawData?.find((item) => item.id === editItem?.id);
