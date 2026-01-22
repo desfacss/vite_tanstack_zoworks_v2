@@ -4623,3 +4623,305 @@ legend {
 [data-theme="dark"] .kanban-card-tag {
   background: rgba(255, 255, 255, 0.08);
 }
+
+/* ============================================
+   ADAPTIVE AI CRM STYLES - Modern UI Enhancements
+   ============================================ */
+
+/* Glass Morphism Effects */
+.glass-card {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+}
+
+[data-theme='dark'] .glass-card,
+.dark .glass-card {
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Premium Shadows */
+.premium-shadow {
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+}
+
+.premium-shadow-lg {
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+}
+
+.shadow-purple-sm {
+  box-shadow: 0 4px 12px hsl(270 100% 50% / 0.1);
+}
+
+.shadow-amber-sm {
+  box-shadow: 0 4px 12px hsl(45 100% 50% / 0.1);
+}
+
+/* Gradient Backgrounds */
+.gradient-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.gradient-success {
+  background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%);
+}
+
+.gradient-danger {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.gradient-ai {
+  background: linear-gradient(135deg, hsl(190 95% 50%), hsl(210 100% 60%));
+}
+
+/* Hover Effects */
+.hover-lift {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.15);
+}
+
+/* Smooth Transitions */
+.transition-all-smooth {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* AI Mode Indicator */
+.ai-mode-active {
+  position: relative;
+}
+
+.ai-mode-active::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(135deg, hsl(190 95% 50% / 0.1), transparent);
+  animation: ai-pulse 3s ease-in-out infinite;
+}
+
+/* AI Glow Effect */
+.ai-glow {
+  box-shadow: 0 0 20px hsl(190 100% 60% / 0.4),
+    0 0 40px hsl(190 100% 60% / 0.2);
+}
+
+.ai-border {
+  position: relative;
+  background: linear-gradient(var(--color-bg-secondary), var(--color-bg-secondary)) padding-box,
+    linear-gradient(135deg, hsl(190 95% 50%), hsl(214 100% 50%)) border-box;
+  border: 1px solid transparent;
+}
+
+/* Animations */
+@keyframes ai-pulse {
+
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in-custom {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes typing {
+
+  0%,
+  80%,
+  100% {
+    transform: scale(0);
+  }
+
+  40% {
+    transform: scale(1);
+  }
+}
+
+@keyframes pulse-subtle {
+
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.85;
+    transform: scale(1.01);
+  }
+}
+
+@keyframes bounce-subtle {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out;
+}
+
+.animate-fade-in-custom {
+  animation: fade-in-custom 0.2s ease-out;
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-bounce-subtle {
+  animation: bounce-subtle 2s ease-in-out infinite;
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite linear;
+}
+
+.typing-indicator span {
+  animation: typing 1.4s ease-in-out infinite;
+}
+
+.typing-indicator span:nth-child(1) {
+  animation-delay: -0.32s;
+}
+
+.typing-indicator span:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+/* Chat Message Styles - AI Enhanced */
+.chat-message-user-ai {
+  background: hsl(214 100% 50%);
+  color: white;
+  border-radius: 1rem;
+  border-bottom-right-radius: 0.25rem;
+  padding: 0.75rem 1rem;
+}
+
+.chat-message-ai {
+  background: var(--color-bg-secondary);
+  border-radius: 1rem;
+  border-bottom-left-radius: 0.25rem;
+  padding: 0.75rem 1rem;
+  border-left: 3px solid hsl(190 95% 50%);
+}
+
+/* CRM Card Styles - Enhanced */
+.crm-card-enhanced {
+  background: var(--color-bg-secondary);
+  border-radius: var(--tenant-border-radius, 12px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--color-border);
+  transition: all 0.2s ease;
+}
+
+.crm-card-enhanced:hover {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+}
+
+/* AI Assistant Input */
+.ai-assistant-input {
+  background: rgba(var(--color-secondary-rgb), 0.1);
+  border: 2px solid transparent;
+  border-radius: var(--tenant-border-radius, 12px);
+  padding: 0.75rem 1rem;
+  transition: all 0.2s ease;
+}
+
+.ai-assistant-input:focus {
+  background: var(--color-bg-secondary);
+  border-color: hsl(190 95% 50%);
+  box-shadow: 0 0 0 3px hsl(190 95% 50% / 0.1);
+}
+
+/* Status Badges - Enhanced */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.status-active {
+  background: hsl(142 76% 36% / 0.1);
+  color: hsl(142 76% 36%);
+}
+
+.status-pending {
+  background: hsl(38 92% 50% / 0.1);
+  color: hsl(38 92% 50%);
+}
+
+.status-inactive {
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-tertiary);
+}
+
+/* Custom Scrollbar for AI components */
+.custom-scrollbar-ai::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.custom-scrollbar-ai::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar-ai::-webkit-scrollbar-thumb {
+  background: rgba(var(--color-primary-rgb), 0.2);
+  border-radius: 3px;
+}
+
+.custom-scrollbar-ai::-webkit-scrollbar-thumb:hover {
+  background: rgba(var(--color-primary-rgb), 0.3);
+}

@@ -40,6 +40,9 @@ const WorkforceLeaves = lazy(() => import('@/modules/workforce/pages/Leaves'));
 const WorkforceTimesheets = lazy(() => import('@/modules/workforce/pages/Timesheets'));
 const WorkforceExpenses = lazy(() => import('@/modules/workforce/pages/Expenses'));
 
+// AI Module
+const AIWorkbench = lazy(() => import('@/modules/ai/pages/AIWorkbench'));
+
 const generateNavItems = (t: (key: string) => string) => {
     // For mini-project, we return a static set of nav items
     // In the full app, this would be dynamically generated based on permissions
@@ -148,6 +151,12 @@ export const AppRoutes: FC = () => {
 
                         {/* 404 */}
                         <Route path="*" element={<NotFound />} />
+                    </Route>
+
+                    {/* Special Routes - Authenticated but no permission checks */}
+                    <Route element={<AuthedLayoutProvider><AuthedLayout /></AuthedLayoutProvider>}>
+                        {/* AI Workbench - accessible to all authenticated users */}
+                        <Route path="/ai/workbench" element={<AIWorkbench />} />
                     </Route>
                 </Route>
 

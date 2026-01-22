@@ -6,6 +6,7 @@ import { ArrowRight, LayoutGrid, List as ListIcon } from 'lucide-react';
 import { useAuthedLayoutConfig } from '../Layout/AuthedLayoutContext';
 import dayjs from 'dayjs';
 import RowActions from './RowActions';
+import { getAutoRenderer } from '@/core/components/utils/columnRenderers';
 
 interface FieldConfig {
     fieldPath: string;
@@ -98,6 +99,18 @@ const GridView: React.FC<GridViewProps> = ({
     const renderField = (record: any, fieldConfig: FieldConfig) => {
         let value = record[fieldConfig.fieldPath];
         const { style = {}, subFields = [], webLink, cardSection, renderType } = fieldConfig;
+
+        // Try smart auto-renderer first (unless webLink or custom renderType is specified)
+        if (!webLink && !renderType) {
+            const autoRenderer = getAutoRenderer(fieldConfig.fieldPath);
+            if (autoRenderer) {
+                const rendered = autoRenderer(value);
+                // If rendered successfully, wrap it for grid display
+                if (rendered !== null && rendered !== undefined) {
+                    return <span style={{ ...style, display: 'block' }}>{rendered}</span>;
+                }
+            }
+        }
 
         // Handle arrayCount renderType
         if (renderType === 'arrayCount' && Array.isArray(value)) {

@@ -6,6 +6,7 @@ import { UserIcon } from 'lucide-react';
 import { useAuthedLayoutConfig } from '../Layout/AuthedLayoutContext';
 import dayjs from 'dayjs';
 import RowActions from './RowActions';
+import { getAutoRenderer } from '@/core/components/utils/columnRenderers';
 
 interface TableViewProps {
   entityType: string;
@@ -97,6 +98,18 @@ const TableView: React.FC<TableViewProps> = ({
         key: field.fieldPath,
         sorter: viewConfig?.tableview?.showFeatures?.includes('sorting'),
         render: (value: any) => {
+          // Try smart auto-renderer first based on field name and data type
+          const autoRenderer = getAutoRenderer(field.fieldPath, field.dataType);
+          if (autoRenderer) {
+            const rendered = autoRenderer(value);
+            // If it's the first display field and has content, apply primary styling
+            if (field.fieldPath === firstDisplayFieldPath && value !== null && value !== undefined && value !== '') {
+              return <span className="font-semibold display-id-text" style={{ color: 'var(--tenant-primary)', whiteSpace: 'nowrap' }}>{rendered}</span>;
+            }
+            return rendered;
+          }
+
+          // Fallback to existing manual logic for fields not matched by auto-renderer
           if (field.renderType === 'arrayCount' && Array.isArray(value)) {
             return value.length || '-';
           }

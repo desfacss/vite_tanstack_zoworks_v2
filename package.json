@@ -16,6 +16,7 @@
     "generate:menu-translations": "node scripts/generate-menu-translations.cjs"
   },
   "dependencies": {
+    "@ai-sdk/google": "^3.0.10",
     "@chevrotain/regexp-to-ast": "11.0.3",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
@@ -31,6 +32,7 @@
     "@tanstack/react-query-devtools": "^5.24.1",
     "@tanstack/react-query-persist-client": "^5.74.11",
     "ace-builds": "^1.41.0",
+    "ai": "^6.0.42",
     "ajv": "^8.17.1",
     "antd": "^5.14.2",
     "classnames": "^2.5.1",
