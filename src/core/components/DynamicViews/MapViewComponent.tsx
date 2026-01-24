@@ -442,7 +442,7 @@ const MapViewComponent: React.FC<MapViewProps> = ({
         onClick: () => { },
       })) || []
     );
-  }, [mapViewConfig?.actions.bulk]);
+  }, [mapViewConfig?.actions?.bulk]);
 
   React.useEffect(() => {
     setConfig((prev) => ({ ...prev, actionButtons }));
@@ -508,7 +508,7 @@ const MapViewComponent: React.FC<MapViewProps> = ({
                         .filter((f) => f.mapSection === 'footer')
                         .map((field) => renderField(record, field))
                         .filter(Boolean)}
-                      {mapViewConfig?.actions.row?.length > 0 && (
+                      {mapViewConfig?.actions?.row && mapViewConfig.actions.row.length > 0 && (
                         <div style={{ marginTop: 8 }}>
                           <RowActions
                             entityType={entityType}
