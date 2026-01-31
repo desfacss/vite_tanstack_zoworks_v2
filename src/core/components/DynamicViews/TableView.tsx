@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import { message, Table, Tag, List } from 'antd';
 import { motion } from 'framer-motion';
 import { UserIcon } from 'lucide-react';
@@ -14,18 +14,15 @@ interface TableViewProps {
   data: any[];
   isLoading?: boolean;
   filterValues?: Record<string, any>;
-  pagination?: { current: number; pageSize: number; total: number };
   onTableChange?: (pagination: any, filters: any, sorter: any) => void;
-  schema?: any;
-  globalFilters?: React.ReactNode;
-  config?: any; // Ensure config is passed if used by RowActions
+  config?: any; 
   currentTab?: string;
   tabOptions?: Array<{ key: string; hiddenFields?: string[] }>;
   allDisplayableColumns: { fieldName: string; fieldPath: string }[];
   visibleColumns: string[];
+  globalFilters?: React.ReactNode;
 }
 
-// Define ViewConfig for TableView as well for clarity if not already done globally
 interface ViewConfig {
   tableview?: {
     fields: Array<{
@@ -33,7 +30,8 @@ interface ViewConfig {
       fieldPath: string;
       order: number;
       renderType?: 'arrayCount' | string;
-      isPrimaryDisplay?: boolean; // Added for making a field bold as primary display
+      isPrimaryDisplay?: boolean; 
+      dataType?: string;
     }>;
     showFeatures?: string[];
     actions: {
@@ -51,15 +49,13 @@ const TableView: React.FC<TableViewProps> = ({
   data = [],
   isLoading = false,
   filterValues,
-  pagination,
   onTableChange,
-  schema,
-  config, // Added config prop
-  globalFilters,
+  config,
   currentTab,
   tabOptions,
   allDisplayableColumns,
   visibleColumns,
+  globalFilters,
 }) => {
   const isMobile = window.innerWidth <= 768;
   const { setConfig } = useAuthedLayoutConfig();
@@ -73,19 +69,17 @@ const TableView: React.FC<TableViewProps> = ({
 
   const columns = useMemo(() => {
     if (!viewConfig?.tableview?.fields) return [];
-    // Get the configuration for the current tab from props
     const currentTabConfig = tabOptions?.find(tab => tab.key === currentTab);
     const hiddenFields = currentTabConfig?.hiddenFields || [];
 
-    // Identify the first primary display field or just the first field for styling purposes
-    const firstDisplayFieldPath = viewConfig.tableview.fields
+    const fields = viewConfig.tableview.fields || [];
+    const firstDisplayFieldPath = [...fields]
       .sort((a, b) => a.order - b.order)[0]?.fieldPath;
 
-    // Combine initially configured fields and selected fields from metadata
     const combinedFields = [
-      ...viewConfig.tableview.fields,
+      ...fields,
       ...allDisplayableColumns.filter(field =>
-        !viewConfig.tableview.fields.some(f => f.fieldPath === field.fieldPath)
+        !fields.some(f => f.fieldPath === field.fieldPath)
       )
     ];
 
@@ -96,20 +90,18 @@ const TableView: React.FC<TableViewProps> = ({
         title: field.fieldName,
         dataIndex: field.fieldPath,
         key: field.fieldPath,
-        sorter: viewConfig?.tableview?.showFeatures?.includes('sorting'),
+        sorter: viewConfig?.tableview?.showFeatures ? viewConfig.tableview.showFeatures.includes('sorting') : true,
+        sortOrder: filterValues?.sorter?.field === field.fieldPath ? (filterValues?.sorter?.order || null) : null,
         render: (value: any) => {
-          // Try smart auto-renderer first based on field name and data type
           const autoRenderer = getAutoRenderer(field.fieldPath, field.dataType);
           if (autoRenderer) {
             const rendered = autoRenderer(value);
-            // If it's the first display field and has content, apply primary styling
             if (field.fieldPath === firstDisplayFieldPath && value !== null && value !== undefined && value !== '') {
               return <span className="font-semibold display-id-text" style={{ color: 'var(--tenant-primary)', whiteSpace: 'nowrap' }}>{rendered}</span>;
             }
             return rendered;
           }
 
-          // Fallback to existing manual logic for fields not matched by auto-renderer
           if (field.renderType === 'arrayCount' && Array.isArray(value)) {
             return value.length || '-';
           }
@@ -156,11 +148,11 @@ const TableView: React.FC<TableViewProps> = ({
     }
 
     return tableColumns;
-  }, [viewConfig, entityType, currentTab, tabOptions, allDisplayableColumns, visibleColumns, data, config]);
+  }, [viewConfig, entityType, currentTab, tabOptions, allDisplayableColumns, visibleColumns, data, config, filterValues]);
 
   const actionButtons = useMemo(() => {
     return (
-      viewConfig?.tableview.actions.bulk?.map((action) => ({
+      viewConfig?.tableview?.actions?.bulk?.map((action: any) => ({
         name: action.name,
         label: action.name === 'add_' ? 'Add Item' : action.name,
         type: 'primary' as const,
@@ -170,16 +162,21 @@ const TableView: React.FC<TableViewProps> = ({
     );
   }, [viewConfig]);
 
-  React.useEffect(() => {
-    setConfig((prev) => ({ ...prev, actionButtons }));
+  useEffect(() => {
+    const formattedButtons = actionButtons.map(btn => ({
+      icon: btn.icon,
+      tooltip: btn.label,
+      onClick: btn.onClick
+    }));
+    setConfig({ actionButtons: formattedButtons });
   }, [setConfig, actionButtons]);
 
-  // Field to display in mobile view (e.g., description field)
   const descriptionField = useMemo(() => {
-    // Use a fallback field like 'details.email' or the first field with a display-friendly value
-    const defaultDescriptionField = viewConfig?.tableview?.fields.find(
-      (field) => field.fieldPath.includes('email') || field.fieldPath === 'description'
-    )?.fieldPath || viewConfig?.tableview?.fields[1]?.fieldPath || 'name';
+    const fields = viewConfig?.tableview?.fields;
+    if (!fields) return 'name';
+    const defaultDescriptionField = fields.find(
+      (field: any) => field.fieldPath.includes('email') || field.fieldPath === 'description'
+    )?.fieldPath || fields[1]?.fieldPath || 'name';
     return defaultDescriptionField;
   }, [viewConfig]);
 
@@ -214,7 +211,7 @@ const TableView: React.FC<TableViewProps> = ({
                 >
                   <List.Item.Meta
                     avatar={<UserIcon size={24} />}
-                    title={record.name || (viewConfig?.tableview?.fields[0] ? record[viewConfig.tableview.fields[0].fieldPath] : '-')}
+                    title={record.name || (viewConfig?.tableview?.fields ? record[viewConfig.tableview.fields[0].fieldPath] : '-')}
                     description={
                       <div>
                         <div>{record[descriptionField] || '-'}</div>

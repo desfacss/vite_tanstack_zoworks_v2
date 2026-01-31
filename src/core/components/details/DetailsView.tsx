@@ -2,10 +2,10 @@
 import React, { useState, lazy, Suspense, useMemo } from 'react';
 import { Tabs, Spin } from 'antd';
 import { useTranslation } from 'react-i18next';
-import NotesTab from './NotesTab';
 import DetailOverview from './DetailOverview';
 import EntityImages from './EntityImages';
-import ActivitiesManager from './ActivitiesManager';
+import EntityComments from './EntityComments';
+import EntityActivities from './EntityActivities';
 // NOTE: StatusTab and Logs are now registered via the tickets module registry
 // and loaded dynamically through registry.getTabsForEntity()
 import { registry } from '@/core/registry';
@@ -58,9 +58,10 @@ const DetailsView: React.FC<DetailsViewProps> = ({
     // StatusTab and Logs are now provided by the tickets module via registry
     const staticComponentMap: Record<string, { component: React.ComponentType<any>; props: any }> = {
       'Overview': { component: DetailOverview, props: { openMessageModal, data: editItem, viewConfig, config } },
-      'Notes': { component: NotesTab, props: {} },
-      'Files': { component: EntityImages, props: { entity_type: entityType, entity_id: editItem?.id } },
-      'Activities': { component: ActivitiesManager, props: { entity_name: entityType, entity_id: editItem?.id } },
+      'Notes': { component: EntityComments, props: { entity_id: editItem?.id } },
+      'Comments': { component: EntityComments, props: { entity_id: editItem?.id } },
+      'Files': { component: EntityImages, props: { entity_id: editItem?.id } },
+      'Activities': { component: EntityActivities, props: { entity_id: editItem?.id } },
       // 'Status' and 'Logs' are now registered by tickets module and available via registry.getTabsForEntity()
     };
 

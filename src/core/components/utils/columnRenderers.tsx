@@ -159,6 +159,17 @@ const stageColorMap: Record<string, string> = {
     customer: 'green',
     partner: 'purple',
 
+    // Recruitment stages
+    applied: 'blue',
+    screening: 'cyan',
+    interview: 'orange',
+    'interview completed': 'purple',
+    'interview_completed': 'purple',
+    shortlisted: 'green',
+    offered: 'green',
+    hired: 'green',
+    onboarding: 'blue',
+
     // General
     pending: 'orange',
     approved: 'green',

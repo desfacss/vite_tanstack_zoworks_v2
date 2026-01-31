@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { message, Spin, Image, Tooltip, Button, Modal, Row, Col } from 'antd';
 import { File, Trash2 } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/core/lib/supabase';
 import { useAuthStore } from '@/core/lib/store';
 import dayjs from 'dayjs';
 import ImageUploader from '@/core/components/shared/ImageUploader';
@@ -24,12 +24,11 @@ interface GallerySet {
 }
 
 interface EntityImagesProps {
-  entity_type: string;
   entity_id: string;
 }
 
-const EntityImages: React.FC<EntityImagesProps> = ({ entity_type, entity_id }) => {
-  const { user } = useAuthStore();
+const EntityImages: React.FC<EntityImagesProps> = ({ entity_id }) => {
+  const { user, organization } = useAuthStore();
   const [loading, setLoading] = useState(false);
   const [gallery, setGallery] = useState<GallerySet[]>([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -38,53 +37,61 @@ const EntityImages: React.FC<EntityImagesProps> = ({ entity_type, entity_id }) =
   useEffect(() => {
     const fetchFiles = async () => {
       setLoading(true);
-      const config = {
-        entity_schema: 'public',
-        entity_name: 'ent_attachments',
-        organization_id: user?.organization_id,
-        joins: [
-          {
-            schema: 'identity',
-            name: 'users',
-            alias: 'assignee',
-            type: 'LEFT',
-            on_clause: 'base.created_by = assignee.id',
-          },
-        ],
-        filters: [
-          {
-            column: 'entity_type',
-            operator: '=',
-            value: entity_type,
-          },
-          {
-            column: 'entity_id',
-            operator: '=',
-            value: entity_id,
-          },
-        ],
-        sorting: {
-          column: 'created_at',
-          direction: 'DESC',
-        },
-      };
-
       try {
-        // const { data, error } = await supabase.rpc('core_get_entity_data_v5', { config });
-        const { data, error } = await supabase.schema('core').rpc('core_get_entity_data_v30', { config });
-        if (error) {
+        // 1. Fetch attachments directly
+        let query = supabase
+          .schema('core')
+          .from('object_attachments')
+          .select('*')
+          .eq('object_id', entity_id);
+
+        const org_id = user?.organization_id || organization?.id;
+        if (org_id) {
+          query = query.eq('organization_id', org_id);
+        }
+
+        const { data: attachments, error: attachError } = await query.order('created_at', { ascending: false });
+
+        if (attachError) {
           message.error('Failed to fetch files.');
-          console.error(error);
+          console.error('Fetch error:', attachError);
           return;
         }
 
-        const parsedData = data?.data || [];
+        // 2. Extract unique uploader IDs
+        const uploaderIds = [...new Set((attachments || []).map(a => a.uploaded_by).filter(Boolean))];
+        const userMap: Record<string, string> = {};
+
+        // 3. Fetch user names if there are uploaders
+        if (uploaderIds.length > 0) {
+          const { data: users, error: userError } = await supabase
+            .schema('identity')
+            .from('users')
+            .select('id, name')
+            .in('id', uploaderIds);
+
+          if (!userError && users) {
+            users.forEach(u => {
+              userMap[u.id] = u.name;
+            });
+          }
+        }
+
+        // 4. Map results
         setGallery(
-          parsedData.map((item: any) => ({
-            id: item.id, // Ensure id is mapped
-            files: item.images,
-            created_by: item.created_by,
-            created_by_name: item.assignee?.name,
+          (attachments || []).map((item: any) => ({
+            id: item.id,
+            files: [{
+              url: item.file_url,
+              thumbnail: item.metadata?.thumbnail,
+              name: item.file_name,
+              type: item.file_type,
+              description: item.description,
+              created_at: item.created_at,
+              location: item.metadata?.location,
+            }],
+            created_by: item.uploaded_by,
+            created_by_name: userMap[item.uploaded_by] || 'Unknown',
           }))
         );
       } catch (err) {
@@ -95,10 +102,10 @@ const EntityImages: React.FC<EntityImagesProps> = ({ entity_type, entity_id }) =
       }
     };
 
-    if (user?.organization_id) {
+    if (entity_id) {
       fetchFiles();
     }
-  }, [entity_type, entity_id, user?.organization_id]);
+  }, [entity_id, user?.organization_id]);
 
   // Handle new file uploads
   const handleFilesUploaded = async (files: FileObject[]) => {
@@ -109,12 +116,26 @@ const EntityImages: React.FC<EntityImagesProps> = ({ entity_type, entity_id }) =
 
     setLoading(true);
     try {
-      const { data, error } = await supabase.from('ent_attachments').insert({
-        entity_type,
-        entity_id,
-        images: files,
-        created_by: user.id,
-      }).select();
+      const org_id = user?.organization_id || organization?.id;
+      const uploadData = files.map(file => ({
+        object_id: entity_id,
+        organization_id: org_id,
+        file_name: file.name,
+        file_url: file.url,
+        file_type: file.type,
+        description: file.description,
+        uploaded_by: user.id,
+        metadata: {
+          thumbnail: file.thumbnail,
+          location: file.location,
+        }
+      }));
+
+      const { data, error } = await supabase
+        .schema('core')
+        .from('object_attachments')
+        .insert(uploadData)
+        .select();
 
       if (error) {
         console.error('Supabase insert error:', error);
@@ -122,17 +143,22 @@ const EntityImages: React.FC<EntityImagesProps> = ({ entity_type, entity_id }) =
         return;
       }
 
-      const newRecord = data[0];
-      setGallery((prev) => [
-        {
-          id: newRecord.id,
-          files: newRecord.images,
-          created_by: newRecord.created_by,
-          created_by_name: user?.name || 'Unknown',
-        },
-        ...prev,
-      ]);
+      const newRecords = data.map((record: any) => ({
+        id: record.id,
+        files: [{
+          url: record.file_url,
+          thumbnail: record.metadata?.thumbnail,
+          name: record.file_name,
+          type: record.file_type,
+          description: record.description,
+          created_at: record.created_at,
+          location: record.metadata?.location,
+        }],
+        created_by: record.uploaded_by,
+        created_by_name: user?.name || 'Unknown',
+      }));
 
+      setGallery((prev) => [...newRecords, ...prev]);
       message.success('Files uploaded successfully!');
     } catch (error) {
       console.error('Error saving files:', error);
@@ -156,7 +182,8 @@ const EntityImages: React.FC<EntityImagesProps> = ({ entity_type, entity_id }) =
     setLoading(true);
     try {
       const { error } = await supabase
-        .from('ent_attachments')
+        .schema('core')
+        .from('object_attachments')
         .delete()
         .eq('id', fileToDelete.id);
 
@@ -202,34 +229,34 @@ const EntityImages: React.FC<EntityImagesProps> = ({ entity_type, entity_id }) =
                     padding: 16,
                     border: '1px solid #e8e8e8',
                     borderRadius: 8,
-                    position: 'relative', // Make this card container relative
-                    overflow: 'hidden', // Ensures nothing spills outside the rounded corners
+                    position: 'relative',
+                    overflow: 'hidden',
                   }}>
                     {/* Delete button positioned absolutely */}
                     <Button
-                      type="text" // Changed to text type for a cleaner look without background
+                      type="text"
                       icon={<Trash2 size={16} />}
                       onClick={() => handleRemoveFile(fileSet.id)}
                       style={{
                         position: 'absolute',
-                        top: 8, // Adjust as needed for desired spacing from top
-                        right: 8, // Adjust as needed for desired spacing from right
+                        top: 8,
+                        right: 8,
                         color: 'red',
-                        zIndex: 1, // Ensure it's above other content
-                        background: 'rgba(255, 255, 255, 0.7)', // Optional: slight background for visibility
-                        borderRadius: '50%', // Optional: makes it round
-                        height: 32, // Adjust height to make it a neat circle
-                        width: 32, // Adjust width to make it a neat circle
+                        zIndex: 1,
+                        background: 'rgba(255, 255, 255, 0.7)',
+                        borderRadius: '50%',
+                        height: 32,
+                        width: 32,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                       }}
                     />
 
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 8, marginTop: 24 }}> {/* Added marginTop to prevent overlap with button */}
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 8, marginTop: 24 }}>
                       {fileSet.files.map((file, fileIndex) => (
                         <div key={fileIndex} style={{ position: 'relative' }}>
-                          {file.type.startsWith('image/') ? (
+                          {file.type?.startsWith('image/') ? (
                             <Image
                               src={file.thumbnail || file.url}
                               alt={file.description || file.name}

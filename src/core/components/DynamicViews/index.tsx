@@ -969,6 +969,7 @@ const DynamicViews: React.FC<DynamicViewsProps> = ({
         return {
           fieldName: field.display_name,
           fieldPath: fieldPath,
+          dataType: field.data_type,
         };
       });
   }, [viewConfig?.metadata]);
@@ -1067,9 +1068,12 @@ const DynamicViews: React.FC<DynamicViewsProps> = ({
         entity_schema: entitySchema,
         entity_name: entityType,
         organization_id: organization.id,
-        sorting: {
-          column: filterValues.sorter?.field || 'updated_at',
-          direction: filterValues.sorter?.order === 'ascend' ? 'ASC' : 'DESC',
+        sorting: filterValues.sorter ? {
+          column: filterValues.sorter.field,
+          direction: filterValues.sorter.order === 'ascend' ? 'ASC' : 'DESC',
+        } : {
+          column: 'updated_at',
+          direction: 'DESC',
         },
         pagination: {
           limit: pageSize,
@@ -1181,16 +1185,21 @@ const DynamicViews: React.FC<DynamicViewsProps> = ({
 
   // --- Handlers ---
 
-  const handleTableChange = (_newPagination: any, _filters: any, sorter: any) => {
-    if (sorter.field && sorter.field.endsWith('_id_name')) {
-      console.log("Ignoring sort for display field:", sorter.field);
-      return;
-    }
+  const handleTableChange = (pagination: any, filters: any, sorter: any) => {
+    console.log("handleTableChange triggered", { pagination, filters, sorter });
+
+    // Ant Design's sorter can be an object or an array of objects
+    const activeSorter = Array.isArray(sorter) ? sorter[0] : sorter;
+    const field = activeSorter?.field || activeSorter?.columnKey;
+    const order = activeSorter?.order;
+
+    const newSorter = field && order ? { field, order } : null;
+    console.log("New sorter state:", newSorter);
 
     // Sort change resets pagination to start
     setFilterValues((prev) => ({
       ...prev,
-      sorter: sorter.field ? { field: sorter.field, order: sorter.order } : null,
+      sorter: newSorter,
     }));
     setCurrentPageIndex(0);
     setCursorStack([null]);

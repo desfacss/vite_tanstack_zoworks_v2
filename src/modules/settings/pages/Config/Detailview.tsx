@@ -39,7 +39,7 @@ const ConfigEditor: React.FC<ConfigEditorProps> = ({ detailView, entityType, ent
   const [form] = Form.useForm();
   const [entityId, setEntityId] = useState<string | null>(null);
   const [viewConfigId, setViewConfigId] = useState<string | null>(null);
-  const staticTabOptions = ['Overview', 'Files', 'Notes', 'Status', 'Activities', 'Logs'];
+  const staticTabOptions = ['Overview', 'Files', 'Notes', 'Comments', 'Status', 'Activities', 'Logs'];
   const tabViewOptions = ['tableview', 'gridview', 'kanbanview', 'calendarview', 'timelineview', 'ganttview', 'dashboardview'];
 
   useEffect(() => {
@@ -122,7 +122,7 @@ const ConfigEditor: React.FC<ConfigEditorProps> = ({ detailView, entityType, ent
     }
 
     try {
-      const cleanedStaticTabs = values.staticTabs?.map(({ tabType, ...rest }, index) => {
+      const cleanedStaticTabs = (values.staticTabs || []).map(({ tabType, ...rest }, index) => {
         if (!rest.tab) {
           throw new Error(`Static tab value at index ${index} cannot be empty`);
         }
@@ -134,10 +134,10 @@ const ConfigEditor: React.FC<ConfigEditorProps> = ({ detailView, entityType, ent
 
       const updatedDetailView: DetailView = {
         staticTabs: cleanedStaticTabs,
-        dynamicTabs: values.dynamicTabs,
+        dynamicTabs: values.dynamicTabs || [],
       };
 
-      const { data, error } = await supabase
+      const { error } = await supabase
         .schema('core')
         .from('view_configs')
         .update({ detailview: updatedDetailView })
@@ -240,79 +240,78 @@ const ConfigEditor: React.FC<ConfigEditorProps> = ({ detailView, entityType, ent
     );
   };
 
-  const columnsStatic = [
+  const getStaticColumns = (remove: (index: number) => void) => [
     {
       title: 'Tab',
-      dataIndex: 'tab',
+      dataIndex: 'name',
       key: 'tab',
-      render: (_: any, __: any, index: number) => (
+      render: (name: number) => (
         <Input.Group compact>
-          <Form.Item name={[index, 'tabType']} noStyle initialValue="predefined">
+          <Form.Item name={[name, 'tabType']} noStyle initialValue="predefined">
             <Select showSearch style={{ width: '30%' }}>
               <Option value="predefined">Predefined</Option>
               <Option value="custom">Custom</Option>
             </Select>
           </Form.Item>
           <Form.Item
-            name={[index, 'tab']}
-            rules={[{ required: true, message: 'Tab value is required!' }]}
             noStyle
+            shouldUpdate={(prev, curr) =>
+              prev.staticTabs?.[name]?.tabType !== curr.staticTabs?.[name]?.tabType
+            }
           >
-            <Form.Item
-              noStyle
-              shouldUpdate={(prev, curr) =>
-                prev.staticTabs?.[index]?.tabType !== curr.staticTabs?.[index]?.tabType
-              }
-            >
-              {({ getFieldValue }) => {
-                const tabType = getFieldValue(['staticTabs', index, 'tabType']) || 'predefined';
-                return tabType === 'predefined' ? (
-                  <Select showSearch style={{ width: '70%' }} placeholder="Select tab">
-                    {staticTabOptions.map((option) => (
-                      <Option key={option} value={option}>
-                        {option}
-                      </Option>
-                    ))}
-                  </Select>
-                ) : (
-                  <Input style={{ width: '70%' }} placeholder="Custom component path" />
-                );
-              }}
-            </Form.Item>
+            {({ getFieldValue }) => {
+              const tabType = getFieldValue(['staticTabs', name, 'tabType']) || 'predefined';
+              return (
+                <Form.Item
+                  name={[name, 'tab']}
+                  rules={[{ required: true, message: 'Tab value is required!' }]}
+                  noStyle
+                >
+                  {tabType === 'predefined' ? (
+                    <Select showSearch style={{ width: '70%' }} placeholder="Select tab">
+                      {staticTabOptions.map((option) => (
+                        <Option key={option} value={option}>
+                          {option}
+                        </Option>
+                      ))}
+                    </Select>
+                  ) : (
+                    <Input style={{ width: '70%' }} placeholder="Custom component path" />
+                  )}
+                </Form.Item>
+              );
+            }}
           </Form.Item>
         </Input.Group>
       ),
     },
     {
       title: 'Label',
-      dataIndex: 'label',
+      dataIndex: 'name',
       key: 'label',
-      render: (_: any, __: any, index: number) => (
-        <Form.Item name={[index, 'label']} rules={[{ required: true, message: 'Please input the label!' }]}>
+      render: (name: number) => (
+        <Form.Item name={[name, 'label']} rules={[{ required: true, message: 'Please input the label!' }]}>
           <Input placeholder="Label" />
         </Form.Item>
       ),
     },
     {
       title: 'Order',
-      dataIndex: 'order',
+      dataIndex: 'name',
       key: 'order',
-      render: (_: any, __: any, index: number) => (
-        <Form.Item name={[index, 'order']} normalize={(value) => Number(value)}>
+      render: (name: number) => (
+        <Form.Item name={[name, 'order']} normalize={(value) => Number(value)}>
           <Input type="number" placeholder="Order" />
         </Form.Item>
       ),
     },
     {
       title: 'Action',
+      dataIndex: 'name',
       key: 'action',
-      render: (_: any, __: any, index: number) => (
+      render: (name: number) => (
         <Button
-          onClick={() => {
-            const staticTabs = form.getFieldValue('staticTabs') || [];
-            staticTabs.splice(index, 1);
-            form.setFieldsValue({ staticTabs });
-          }}
+          onClick={() => remove(name)}
           icon={<DeleteOutlined />}
           danger
         />
@@ -320,43 +319,44 @@ const ConfigEditor: React.FC<ConfigEditorProps> = ({ detailView, entityType, ent
     },
   ];
 
-  const columnsDynamic = [
+  const getDynamicColumns = (remove: (index: number) => void) => [
     {
       title: 'Label',
-      dataIndex: 'label',
+      dataIndex: 'name',
       key: 'label',
-      render: (_: any, __: any, index: number) => (
-        <Form.Item name={[index, 'label']} rules={[{ required: true, message: 'Please input the label!' }]}>
+      render: (name: number) => (
+        <Form.Item name={[name, 'label']} rules={[{ required: true, message: 'Please input the label!' }]}>
           <Input placeholder="Label" />
         </Form.Item>
       ),
     },
     {
       title: 'Entity Type',
-      dataIndex: ['props', 'entityType'],
+      dataIndex: 'name',
       key: 'entityType',
-      render: (_: any, __: any, index: number) => (
-        <Form.Item name={[index, 'props', 'entityType']} rules={[{ required: true, message: 'Please input the entity type!' }]}>
+      render: (name: number) => (
+        <Form.Item name={[name, 'props', 'entityType']} rules={[{ required: true, message: 'Please input the entity type!' }]}>
           <Input placeholder="Entity Type" />
         </Form.Item>
       ),
     },
     {
       title: 'Filters',
+      dataIndex: 'name',
       key: 'filters',
-      render: (_: any, __: any, index: number) => (
+      render: (name: number) => (
         <Form.Item shouldUpdate>
           {() => (
             <Popover
               content={
                 <FilterEditor
-                  filters={form.getFieldValue(['dynamicTabs', index, 'props', 'filters']) || []}
+                  filters={form.getFieldValue(['dynamicTabs', name, 'props', 'filters']) || []}
                   onChange={(newFilters) => {
                     const dynamicTabs = form.getFieldValue('dynamicTabs') || [];
-                    dynamicTabs[index] = {
-                      ...dynamicTabs[index],
+                    dynamicTabs[name] = {
+                      ...dynamicTabs[name],
                       props: {
-                        ...dynamicTabs[index].props,
+                        ...dynamicTabs[name].props,
                         filters: newFilters,
                       },
                     };
@@ -375,10 +375,10 @@ const ConfigEditor: React.FC<ConfigEditorProps> = ({ detailView, entityType, ent
     },
     {
       title: 'Tabs',
-      dataIndex: ['props', 'tabs'],
+      dataIndex: 'name',
       key: 'tabs',
-      render: (_: any, __: any, index: number) => (
-        <Form.Item name={[index, 'props', 'tabs']}>
+      render: (name: number) => (
+        <Form.Item name={[name, 'props', 'tabs']}>
           <Select showSearch mode="multiple" placeholder="Select Tabs">
             {tabViewOptions.map((option) => (
               <Option key={option} value={option}>
@@ -391,34 +391,31 @@ const ConfigEditor: React.FC<ConfigEditorProps> = ({ detailView, entityType, ent
     },
     {
       title: 'Detail View',
-      dataIndex: 'detailView',
+      dataIndex: 'name',
       key: 'detailView',
-      render: (_: any, __: any, index: number) => (
-        <Form.Item name={[index, 'detailView']} valuePropName="checked" initialValue={false}>
+      render: (name: number) => (
+        <Form.Item name={[name, 'detailView']} valuePropName="checked" initialValue={false}>
           <Checkbox />
         </Form.Item>
       ),
     },
     {
       title: 'Order',
-      dataIndex: 'order',
+      dataIndex: 'name',
       key: 'order',
-      render: (_: any, __: any, index: number) => (
-        <Form.Item name={[index, 'order']} normalize={(value) => Number(value)}>
+      render: (name: number) => (
+        <Form.Item name={[name, 'order']} normalize={(value) => Number(value)}>
           <Input type="number" placeholder="Order" />
         </Form.Item>
       ),
     },
     {
       title: 'Action',
+      dataIndex: 'name',
       key: 'action',
-      render: (_: any, __: any, index: number) => (
+      render: (name: number) => (
         <Button
-          onClick={() => {
-            const dynamicTabs = form.getFieldValue('dynamicTabs') || [];
-            dynamicTabs.splice(index, 1);
-            form.setFieldsValue({ dynamicTabs });
-          }}
+          onClick={() => remove(name)}
           icon={<DeleteOutlined />}
           danger
         />
@@ -426,53 +423,34 @@ const ConfigEditor: React.FC<ConfigEditorProps> = ({ detailView, entityType, ent
     },
   ];
 
-  const handleAddStatic = () => {
-    const staticTabs = form.getFieldValue('staticTabs') || [];
-    const dynamicTabs = form.getFieldValue('dynamicTabs') || [];
-    const maxOrder = Math.max(
-      ...staticTabs.map((tab: StaticTab) => tab.order || 0),
-      ...dynamicTabs.map((tab: DynamicTab) => tab.order || 0),
+  const calculateMaxOrder = () => {
+    const values = form.getFieldsValue();
+    const staticTabs = values.staticTabs || [];
+    const dynamicTabs = values.dynamicTabs || [];
+    return Math.max(
+      ...staticTabs.map((tab: any) => tab.order || 0),
+      ...dynamicTabs.map((tab: any) => tab.order || 0),
       0
     );
-    const newStaticTabs = [
-      ...staticTabs,
-      { tab: '', label: '', order: maxOrder + 1, tabType: 'predefined' },
-    ];
-    form.setFieldsValue({ staticTabs: newStaticTabs });
-  };
-
-  const handleAddDynamic = () => {
-    const staticTabs = form.getFieldValue('staticTabs') || [];
-    const dynamicTabs = form.getFieldValue('dynamicTabs') || [];
-    const maxOrder = Math.max(
-      ...staticTabs.map((tab: StaticTab) => tab.order || 0),
-      ...dynamicTabs.map((tab: DynamicTab) => tab.order || 0),
-      0
-    );
-    const newDynamicTabs = [
-      ...dynamicTabs,
-      {
-        label: '',
-        order: maxOrder + 1,
-        detailView: false,
-        props: { entityType: '', filters: [], tabs: [] },
-      },
-    ];
-    form.setFieldsValue({ dynamicTabs: newDynamicTabs });
   };
 
   return (
     <Form form={form} onFinish={onFinish}>
       <Title level={4}>Static Tabs </Title>
       <Form.List name="staticTabs">
-        {(fields) => (
+        {(fields, { add, remove }) => (
           <>
             <Table
-              columns={columnsStatic}
-              dataSource={fields.map((field, index) => ({ ...field, key: `static-${index}` }))}
+              columns={getStaticColumns(remove)}
+              dataSource={fields}
               pagination={false}
+              rowKey="key"
             />
-            <Button onClick={handleAddStatic} icon={<PlusOutlined />} style={{ marginBottom: 16 }}>
+            <Button 
+              onClick={() => add({ tab: '', label: '', order: calculateMaxOrder() + 1, tabType: 'predefined' })} 
+              icon={<PlusOutlined />} 
+              style={{ margin: '16px 0' }}
+            >
               Add Static Tab
             </Button>
           </>
@@ -481,21 +459,31 @@ const ConfigEditor: React.FC<ConfigEditorProps> = ({ detailView, entityType, ent
 
       <Title level={4}>Dynamic Tabs </Title>
       <Form.List name="dynamicTabs">
-        {(fields) => (
+        {(fields, { add, remove }) => (
           <>
             <Table
-              columns={columnsDynamic}
-              dataSource={fields.map((field, index) => ({ ...field, key: `dynamic-${index}` }))}
+              columns={getDynamicColumns(remove)}
+              dataSource={fields}
               pagination={false}
+              rowKey="key"
             />
-            <Button onClick={handleAddDynamic} icon={<PlusOutlined />} style={{ marginBottom: 16 }}>
+            <Button 
+              onClick={() => add({
+                label: '',
+                order: calculateMaxOrder() + 1,
+                detailView: false,
+                props: { entityType: '', filters: [], tabs: [] },
+              })} 
+              icon={<PlusOutlined />} 
+              style={{ margin: '16px 0' }}
+            >
               Add Dynamic Tab
             </Button>
           </>
         )}
       </Form.List>
 
-      <Form.Item>
+      <Form.Item style={{ marginTop: 24 }}>
         <Button type="primary" htmlType="submit">
           Save Configuration
         </Button>
