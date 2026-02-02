@@ -137,9 +137,9 @@ const Metadata: React.FC<MetadataProps> = ({
       'boolean', 'uuid', 'json', 'jsonb', 'array', 'USER-DEFINED',
       'object', 'array_of_objects',
       'list_string', 'list_integer', 'list_float', 'list_uuid' 
-    ],
-    semantic_type_sub_type_options: ['quantitative', 'temporal', 'nominal', 'ordinal', 'geojson', 'discrete'],
-    semantic_type_default_aggregation_options: ['sum', 'avg', 'min', 'max', 'count', 'count_distinct'],
+    ].sort(),
+    semantic_type_sub_type_options: ['quantitative', 'temporal', 'nominal', 'ordinal', 'geojson', 'discrete'].sort(),
+    semantic_type_default_aggregation_options: ['sum', 'avg', 'min', 'max', 'count', 'count_distinct'].sort(),
   };
 
   // --- DATA FETCHING FUNCTION (MOVED OUTSIDE useEffect) ---

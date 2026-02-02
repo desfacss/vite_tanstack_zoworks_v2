@@ -343,7 +343,7 @@ const YViewConfigManager: React.FC = () => {
                 details: entity.semantics?.details,
                 // ... other fields as needed
             };
-        }); // No longer filtering out entities without view_configs
+        }).sort((a, b) => a.entity_type.localeCompare(b.entity_type)); 
         console.log("cd", consolidatedData);
         setConfigs(consolidatedData);
         const uniqueSchemas = [...new Set(entities.map(item => item.entity_schema).filter(Boolean))].sort();

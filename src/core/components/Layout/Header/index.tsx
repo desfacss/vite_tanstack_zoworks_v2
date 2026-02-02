@@ -157,7 +157,9 @@ export const Header: React.FC<HeaderProps> = ({
     }
   };
 
-  const organizationOptions = useMemo(() => userOrgLocations.map(org => ({
+  const organizationOptions = useMemo(() => userOrgLocations
+    .sort((a, b) => a.organization_name.localeCompare(b.organization_name))
+    .map(org => ({
     value: org.organization_id,
     label: (
       <div>
@@ -170,10 +172,13 @@ export const Header: React.FC<HeaderProps> = ({
 
   const currentLocations = useMemo(() => {
     if (!organization?.id) return [];
-    return userOrgLocations.find(o => o.organization_id === organization.id)?.locations.map(l => ({
-      value: l.location_id,
-      label: l.location_name,
-    })) || [];
+    const locs = userOrgLocations.find(o => o.organization_id === organization.id)?.locations || [];
+    return locs
+      .sort((a, b) => a.location_name.localeCompare(b.location_name))
+      .map(l => ({
+        value: l.location_id,
+        label: l.location_name,
+      }));
   }, [organization?.id, userOrgLocations]);
 
   const isFetchingSession = useIsFetching({ queryKey: ['user-session'] }) > 0;

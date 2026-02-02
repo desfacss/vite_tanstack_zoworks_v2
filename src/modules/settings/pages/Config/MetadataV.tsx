@@ -94,9 +94,9 @@ const ViewMetadata: React.FC<MetadataProps> = ({ entityType, entitySchema, fetch
         'text', 'varchar', 'char', 'date', 'timestamp', 'timestamp with time zone',
         'boolean', 'uuid', 'json', 'jsonb', 'array', 'USER-DEFINED',
         'object', 'array_of_objects', 'list_string', 'list_integer', 'list_float', 'list_uuid'
-    ],
-    semantic_type_sub_type_options: ['quantitative', 'temporal', 'nominal', 'ordinal', 'geojson'],
-    semantic_type_default_aggregation_options: ['sum', 'avg', 'min', 'max', 'count', 'count_distinct'],
+    ].sort(),
+    semantic_type_sub_type_options: ['quantitative', 'temporal', 'nominal', 'ordinal', 'geojson'].sort(),
+    semantic_type_default_aggregation_options: ['sum', 'avg', 'min', 'max', 'count', 'count_distinct'].sort(),
   };
 
   // --- Data Fetching Effect ---
