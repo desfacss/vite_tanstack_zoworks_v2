@@ -42,6 +42,7 @@ const WorkforceExpenses = lazy(() => import('@/modules/workforce/pages/Expenses'
 
 // AI Module
 const AIWorkbench = lazy(() => import('@/modules/ai/pages/AIWorkbench'));
+const GenericDynamicPage = lazy(() => import('@/core/components/DynamicViews/GenericDynamicPage'));
 
 const generateNavItems = (t: (key: string) => string) => {
     // For mini-project, we return a static set of nav items
@@ -148,6 +149,12 @@ export const AppRoutes: FC = () => {
 
                         {/* Sample page for new module development */}
                         <Route path="/sample" element={<SamplePage />} />
+
+                        {/* Dynamic routes for schemas */}
+                        <Route path="/external/:entity" element={<GenericDynamicPage schema="external" />} />
+                        <Route path="/hr/:entity" element={<GenericDynamicPage schema="hr" />} />
+                        <Route path="/unified/:entity" element={<GenericDynamicPage schema="unified" />} />
+                        <Route path="/identity/:entity" element={<GenericDynamicPage schema="identity" />} />
 
                         {/* 404 */}
                         <Route path="*" element={<NotFound />} />

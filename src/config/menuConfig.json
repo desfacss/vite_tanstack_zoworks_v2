@@ -20,11 +20,304 @@
     ],
     "external": [
       {
-        "filePath": "src/modules/external/pages/ServiceAssets.tsx",
-        "routePath": "/external/service-assets",
-        "translationKey": "service-assets",
-        "key": "service-assets",
-        "submoduleKey": "external-service-assets"
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/external/accounts",
+        "translationKey": "accounts",
+        "key": "external-accounts",
+        "submoduleKey": "external-accounts"
+      },
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/external/contacts",
+        "translationKey": "contacts",
+        "key": "external-contacts",
+        "submoduleKey": "external-contacts"
+      },
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/external/contracts",
+        "translationKey": "contracts",
+        "key": "external-contracts",
+        "submoduleKey": "external-contracts"
+      },
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/external/customers_b2b",
+        "translationKey": "customers_b2b",
+        "key": "external-customers-b2b",
+        "submoduleKey": "external-customers_b2b"
+      },
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/external/customers_b2c",
+        "translationKey": "customers_b2c",
+        "key": "external-customers-b2c",
+        "submoduleKey": "external-customers_b2c"
+      },
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/external/customers_business",
+        "translationKey": "customers_business",
+        "key": "external-customers-business",
+        "submoduleKey": "external-customers_business"
+      },
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/external/customers_individual",
+        "translationKey": "customers_individual",
+        "key": "external-customers-individual",
+        "submoduleKey": "external-customers_individual"
+      },
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/external/deals",
+        "translationKey": "deals",
+        "key": "external-deals",
+        "submoduleKey": "external-deals"
+      },
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/external/leads",
+        "translationKey": "leads",
+        "key": "external-leads",
+        "submoduleKey": "external-leads"
+      },
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/external/partners",
+        "translationKey": "partners",
+        "key": "external-partners",
+        "submoduleKey": "external-partners"
+      },
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/external/prospects",
+        "translationKey": "prospects",
+        "key": "external-prospects",
+        "submoduleKey": "external-prospects"
+      },
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/external/service_assets",
+        "translationKey": "service_assets",
+        "key": "external-service-assets",
+        "submoduleKey": "external-service_assets"
+      },
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/external/vendors",
+        "translationKey": "vendors",
+        "key": "external-vendors",
+        "submoduleKey": "external-vendors"
+      }
+    ],
+    "hr": [
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/hr/applications",
+        "translationKey": "applications",
+        "key": "hr-applications",
+        "submoduleKey": "hr-applications"
+      },
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/hr/assessments",
+        "translationKey": "assessments",
+        "key": "hr-assessments",
+        "submoduleKey": "hr-assessments"
+      },
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/hr/candidates",
+        "translationKey": "candidates",
+        "key": "hr-candidates",
+        "submoduleKey": "hr-candidates"
+      },
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/hr/consultants",
+        "translationKey": "consultants",
+        "key": "hr-consultants",
+        "submoduleKey": "hr-consultants"
+      },
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/hr/contractors",
+        "translationKey": "contractors",
+        "key": "hr-contractors",
+        "submoduleKey": "hr-contractors"
+      },
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/hr/employees",
+        "translationKey": "employees",
+        "key": "hr-employees",
+        "submoduleKey": "hr-employees"
+      },
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/hr/interviews",
+        "translationKey": "interviews",
+        "key": "hr-interviews",
+        "submoduleKey": "hr-interviews"
+      },
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/hr/offers",
+        "translationKey": "offers",
+        "key": "hr-offers",
+        "submoduleKey": "hr-offers"
+      },
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/hr/policies",
+        "translationKey": "policies",
+        "key": "hr-policies",
+        "submoduleKey": "hr-policies"
+      },
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/hr/policy_documents",
+        "translationKey": "policy_documents",
+        "key": "hr-policy-documents",
+        "submoduleKey": "hr-policy_documents"
+      },
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/hr/requisitions",
+        "translationKey": "requisitions",
+        "key": "hr-requisitions",
+        "submoduleKey": "hr-requisitions"
+      },
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/hr/screenings",
+        "translationKey": "screenings",
+        "key": "hr-screenings",
+        "submoduleKey": "hr-screenings"
+      },
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/hr/workers",
+        "translationKey": "workers",
+        "key": "hr-workers",
+        "submoduleKey": "hr-workers"
+      }
+    ],
+    "unified": [
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/unified/contacts",
+        "translationKey": "contacts",
+        "key": "unified-contacts",
+        "submoduleKey": "unified-contacts"
+      },
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/unified/organizations",
+        "translationKey": "organizations",
+        "key": "unified-organizations",
+        "submoduleKey": "unified-organizations"
+      },
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/unified/projects",
+        "translationKey": "projects",
+        "key": "unified-projects",
+        "submoduleKey": "unified-projects"
+      },
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/unified/tasks",
+        "translationKey": "tasks",
+        "key": "unified-tasks",
+        "submoduleKey": "unified-tasks"
+      },
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/unified/tickets",
+        "translationKey": "tickets",
+        "key": "unified-tickets",
+        "submoduleKey": "unified-tickets"
+      }
+    ],
+    "identity": [
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/identity/location_types",
+        "translationKey": "location_types",
+        "key": "identity-location-types",
+        "submoduleKey": "identity-location_types"
+      },
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/identity/locations",
+        "translationKey": "locations",
+        "key": "identity-locations",
+        "submoduleKey": "identity-locations"
+      },
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/identity/modules",
+        "translationKey": "modules",
+        "key": "identity-modules",
+        "submoduleKey": "identity-modules"
+      },
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/identity/org_module_configs",
+        "translationKey": "org_module_configs",
+        "key": "identity-org-module-configs",
+        "submoduleKey": "identity-org_module_configs"
+      },
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/identity/organization_users",
+        "translationKey": "organization_users",
+        "key": "identity-organization-users",
+        "submoduleKey": "identity-organization_users"
+      },
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/identity/organizations",
+        "translationKey": "organizations",
+        "key": "identity-organizations",
+        "submoduleKey": "identity-organizations"
+      },
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/identity/roles",
+        "translationKey": "roles",
+        "key": "identity-roles",
+        "submoduleKey": "identity-roles"
+      },
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/identity/teams",
+        "translationKey": "teams",
+        "key": "identity-teams",
+        "submoduleKey": "identity-teams"
+      },
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/identity/user_roles",
+        "translationKey": "user_roles",
+        "key": "identity-user-roles",
+        "submoduleKey": "identity-user_roles"
+      },
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/identity/user_teams",
+        "translationKey": "user_teams",
+        "key": "identity-user-teams",
+        "submoduleKey": "identity-user_teams"
+      },
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/identity/users",
+        "translationKey": "users",
+        "key": "identity-users",
+        "submoduleKey": "identity-users"
       }
     ],
     "admin": [

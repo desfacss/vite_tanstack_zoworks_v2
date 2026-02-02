@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Tabs, Button, message, Select, Input, Modal, Space, Tooltip, Checkbox, Tag } from 'antd';
+import { Tabs, Button, message, Modal, Space, Tooltip, Checkbox, Tag, Layout, Menu } from 'antd';
 import Form from '@rjsf/antd';
 import { RJSFSchema } from '@rjsf/utils';
 import validator from '@rjsf/validator-ajv8';
 import { supabase } from '@/core/lib/supabase';
 import TableViewConfig from './TableViewConfig';
-import CrudTableConfig from './CrudTableConfig';
 // import MasterObject from './MasterObject';
 // import QueryBuilderComponent from './QueryBuilder';
 import ConfigEditor from './Detailview';
@@ -19,7 +18,6 @@ import { useAuthStore } from '@/core/lib/store';
 import GlobalAccessConfig from './GlobalAccessConfig';
 import ViewConfigEditor from './ViewConfigEditor';
 import Metadata from './Metadata';
-import MetadataV from './MetadataV';
 import FormBuilder from './FormBuilder';
 import StagesConfig from './StagesConfig';
 import GanttViewConfig from './GanttViewConfig';
@@ -27,9 +25,11 @@ import CalendarViewConfig from './CalendarViewConfig';
 import ViewSuggestionModal from './ViewSuggestionModal';
 import DisplayIdConfig from './DisplayIdConfig';
 import EntityRegistrationWizard from './EntityRegistrationWizard';
-import { ThunderboltOutlined, ReloadOutlined, DeleteOutlined } from '@ant-design/icons';
+import { ThunderboltOutlined, ReloadOutlined, DeleteOutlined, DatabaseOutlined, TableOutlined, PlusOutlined } from '@ant-design/icons';
 
-const { Option } = Select;
+const { Sider, Content } = Layout;
+
+
 
 interface YViewConfig {
   id: string;
@@ -632,25 +632,127 @@ const YViewConfigManager: React.FC = () => {
     }
   };
 
+  // Construct Menu items from schemas and configs
+  const menuItems = schemaOptions.map(schema => ({
+    key: `schema:${schema}`,
+    label: schema,
+    icon: <DatabaseOutlined />,
+    children: configs
+      .filter(config => config.entity_schema === schema)
+      .map(config => ({
+        key: config.id,
+        label: (
+          <Space>
+            {config.entity_type}
+            {config.is_logical_variant ? (
+              <Tag color="purple" style={{ fontSize: 10 }}>V</Tag>
+            ) : (
+              <Tag color="green" style={{ fontSize: 10 }}>P</Tag>
+            )}
+          </Space>
+        ),
+        icon: <TableOutlined />,
+      }))
+  }));
+
+  const handleMenuSelect = ({ key }: { key: string }) => {
+    if (key.startsWith('schema:')) return; // Ignore schema parent clicks
+
+    const value = key;
+    console.log('Menu item selected:', value);
+    const selectedConfig = configs?.find((config) => config?.id === value);
+    const selectedWorkflowConfiguration = workflowConfigurations?.find(
+      (config) => config?.name === selectedConfig?.entity_type
+    );
+    
+    // Auto-setup logic (same as dropdown)
+    if (selectedConfig?._needsSetup) {
+      handleAutoSetup(selectedConfig);
+    }
+    
+    setSelectedRow(value);
+    setSelectedSchema(selectedConfig?.entity_schema || null); // Update selectedSchema
+    setSelectedConfig(selectedConfig || null);
+    setSelectedWorkflowConfiguration(selectedWorkflowConfiguration || null);
+  };
+
+  const handleAutoSetup = async (config: YViewConfig) => {
+    try {
+      const entityId = config.id;
+      const entityType = `${config.entity_schema}.${config.entity_type}`;
+      
+      await supabase.schema('core').from('view_configs').upsert([{
+        entity_id: entityId,
+        entity_type: entityType,
+        general: {},
+        tableview: {},
+        gridview: {},
+        kanbanview: {},
+        detailview: {},
+        details_overview: {},
+      }], { onConflict: 'entity_id' });
+      
+      await supabase.schema('core').from('metrics').upsert([{
+        entity_id: entityId,
+        entity_type: entityType,
+        metrics: {},
+      }], { onConflict: 'entity_id' });
+      
+      message.success('Entity configuration initialized');
+      fetchConfigs();
+    } catch (err) {
+      console.error('Error auto-creating config rows:', err);
+    }
+  };
+
   return (
-    <div style={{ padding: '20px' }}>
-      {/* <h1>View Config Manager</h1> */}
-      <div style={{ marginBottom: '20px' }}>
-        {/* <Input
-          placeholder="Enter table name"
-          style={{ width: '60%', marginRight: '10px' }}
-          value={selectedRow || ''}
-          onChange={(e) => setSelectedRow(e.target.value)}
-        /> */}
-        {/* <Button type="primary" onClick={handleFetchTable}>
-          Fetch
-        </Button> */}
-        <Space>
-          <Button type="primary" onClick={handleAddNew}>
-            Add New
+    <Layout style={{ minHeight: 'calc(100vh - 64px)', background: 'transparent' }}>
+      <Sider 
+        width={300} 
+        theme="light" 
+        style={{ 
+          borderRight: '1px solid #f0f0f0',
+          overflow: 'auto',
+          height: 'calc(100vh - 100px)',
+          position: 'sticky',
+          top: 0
+        }}
+      >
+        <div style={{ padding: '16px', borderBottom: '1px solid #f0f0f0' }}>
+          <Button 
+            type="primary" 
+            icon={<PlusOutlined />} 
+            onClick={handleAddNew}
+            block
+          >
+            Register Entity
           </Button>
+        </div>
+        <Menu
+          mode="inline"
+          selectedKeys={selectedRow ? [selectedRow] : []}
+          style={{ borderRight: 0 }}
+          items={menuItems}
+          onSelect={handleMenuSelect}
+          defaultOpenKeys={schemaOptions.map(s => `schema:${s}`)}
+        />
+      </Sider>
+      
+      <Content style={{ padding: '0 24px 24px' }}>
+        <div style={{ padding: '20px 0', borderBottom: '1px solid #f0f0f0', marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Space align="center">
+            <h2 style={{ margin: 0 }}>
+              {selectedConfig ? (
+                <>
+                  {selectedConfig.entity_schema}.{selectedConfig.entity_type}
+                  {selectedConfig.is_logical_variant && <Tag color="purple" style={{ marginLeft: 8 }}>Variant</Tag>}
+                </>
+              ) : 'Select a configuration'}
+            </h2>
+          </Space>
+
           {selectedConfig && (
-            <>
+            <Space>
               <Tooltip title="Generate view configurations from metadata">
                 <Button
                   type="primary"
@@ -682,121 +784,9 @@ const YViewConfigManager: React.FC = () => {
                   Delete
                 </Button>
               </Tooltip>
-            </>
+            </Space>
           )}
-        </Space>
-        <Select
-          placeholder="Select Schema"
-          showSearch
-          optionFilterProp="children"
-          style={{ width: '200px', marginLeft: '10px' }}
-          onChange={(value: string) => {
-            setSelectedSchema(value);
-            setSelectedRow(null); // Reset entity_type selection when schema changes
-            setSelectedConfig(null);
-            setSelectedWorkflowConfiguration(null);
-          }}
-          value={selectedSchema}
-        >
-          {schemaOptions.map((schema) => (
-            <Option key={schema} value={schema}>
-              {schema}
-            </Option>
-          ))}
-        </Select>
-        <Select
-          placeholder="Select Entity"
-          showSearch
-          optionFilterProp="children"
-          style={{ width: '250px', marginLeft: '10px' }}
-          onChange={async (value: string) => {
-            console.log('Dropdown value selected:', value);
-            const selectedConfig = configs?.find((config) => config?.id === value);
-            const selectedWorkflowConfiguration = workflowConfigurations?.find(
-              (config) => config?.name === selectedConfig?.entity_type
-            );
-            console.log('Selected Config Object:', selectedConfig, selectedWorkflowConfiguration);
-            
-            // Auto-create missing view_configs and metrics rows if entity needs setup
-            if (selectedConfig?._needsSetup) {
-              try {
-                const entityId = selectedConfig.id;
-                const entityType = `${selectedConfig.entity_schema}.${selectedConfig.entity_type}`;
-                
-                // Create view_configs row
-                const { error: viewConfigError } = await supabase
-                  .schema('core')
-                  .from('view_configs')
-                  .upsert([{
-                    entity_id: entityId,
-                    entity_type: entityType,
-                    general: {},
-                    tableview: {},
-                    gridview: {},
-                    kanbanview: {},
-                    detailview: {},
-                    details_overview: {},
-                  }], { onConflict: 'entity_id' });
-                
-                if (viewConfigError) {
-                  console.error('Error creating view_configs:', viewConfigError);
-                }
-                
-                // Create metrics row
-                const { error: metricsError } = await supabase
-                  .schema('core')
-                  .from('metrics')
-                  .upsert([{
-                    entity_id: entityId,
-                    entity_type: entityType,
-                    metrics: {},
-                  }], { onConflict: 'entity_id' });
-                
-                if (metricsError) {
-                  console.error('Error creating metrics:', metricsError);
-                }
-                
-                if (!viewConfigError && !metricsError) {
-                  message.success('Entity configuration initialized');
-                  fetchConfigs(); // Refresh to get the new data
-                }
-              } catch (err) {
-                console.error('Error auto-creating config rows:', err);
-              }
-            }
-            
-            setSelectedRow(value);
-            setSelectedConfig(selectedConfig || null);
-            setSelectedWorkflowConfiguration(selectedWorkflowConfiguration || null);
-          }}
-          value={selectedRow}
-          optionLabelProp="label"
-        >
-          {configs
-            .filter((config) => config.entity_schema === selectedSchema) // Filter by schema
-            .map((config) => (
-              <Option 
-                key={config.id} 
-                value={config.id}
-                label={config.entity_type}
-              >
-                <Space>
-                  <span>{config.entity_type}</span>
-                  {config.is_logical_variant ? (
-                    <Tag color="purple" style={{ marginLeft: 4, fontSize: 10 }}>Variant</Tag>
-                  ) : (
-                    <Tag color="green" style={{ marginLeft: 4, fontSize: 10 }}>Physical</Tag>
-                  )}
-                  {config.base_source_name && (
-                    <span style={{ color: '#888', fontSize: 11 }}>
-                      (from {config.base_source_name.split('.').pop()})
-                    </span>
-                  )}
-                </Space>
-              </Option>
-            ))}
-        </Select>
-      </div>
+        </div>
 
       {selectedConfig ? (
         <Tabs 
@@ -997,7 +987,8 @@ const YViewConfigManager: React.FC = () => {
            </Checkbox>
          </div>
       </Modal>
-    </div>
+      </Content>
+    </Layout>
   );
 };
 
