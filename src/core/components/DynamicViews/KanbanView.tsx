@@ -375,7 +375,7 @@ const KanbanView: React.FC<KanbanViewProps> = ({
         });
 
         // const { data: rpcData, error } = await supabase.rpc('core_upsert_data_v7', {
-        const { data: rpcData, error } = await supabase.schema('analytics').rpc('core_upsert_data_v8', {
+        const { data: rpcData, error } = await supabase.schema('core').rpc('core_upsert_data_v8', {
           table_name: (viewConfig?.entity_schema || "public") + "." + entityType,
           data: { [fieldPathForRPC]: targetValueForRPC },
           id: draggableId,

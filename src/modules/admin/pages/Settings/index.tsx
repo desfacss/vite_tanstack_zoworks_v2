@@ -67,7 +67,7 @@ const Settings: React.FC = () => {
       children: <RoleFeatureEdit organization={organization} />,
     },
     {
-      label: organization?.app_settings?.holidays ? 'Location & Holidays' : 'Location',
+      label: (organization?.app_settings as any)?.holidays ? 'Location & Holidays' : 'Location',
       key: '4',
       children: <LocationSettings />,
     },
@@ -83,8 +83,9 @@ const Settings: React.FC = () => {
     },
   ];
 
-  // Conditionally add tabs based on user role
-  if (user?.role_id?.name === 'SassAdmin') {
+  // Conditionally add tabs based on user role (SassAdmin or Superadmin)
+  const roleName = user?.roles?.name || (user?.role_id as any)?.name;
+  if (roleName === 'SassAdmin' || roleName === 'Superadmin') {
     items.push(
       {
         label: 'Workflow Settings',

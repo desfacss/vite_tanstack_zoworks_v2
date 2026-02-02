@@ -322,6 +322,13 @@
     ],
     "admin": [
       {
+        "filePath": "src/modules/admin/pages/Diagnostics.tsx",
+        "routePath": "/admin/diagnostics",
+        "translationKey": "diagnostics",
+        "key": "diagnostics",
+        "submoduleKey": "admin-diagnostics"
+      },
+      {
         "filePath": "src/modules/admin/pages/Settings/index.tsx",
         "routePath": "/admin/settings",
         "translationKey": "settings",

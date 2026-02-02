@@ -110,7 +110,7 @@ const RowActions: React.FC<RowActionsProps> = ({
       };
       const relatedTable = config?.details?.related_table;
 
-      const { data, error } = await (supabase as any).schema('analytics').rpc('core_upsert_data_v8', {
+      const { data, error } = await (supabase as any).schema('core').rpc('core_upsert_data_v8', {
         table_name: viewConfig?.entity_type || entityType,
         data: dataPayload,
         id: record.id,

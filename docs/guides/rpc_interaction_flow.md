@@ -111,9 +111,9 @@ These RPCs power the generic entity viewing/editing system used across CRM, Tick
 
 | RPC Name | Schema | File | Description |
 |----------|--------|------|-------------|
-| `core_upsert_data_v8` | `analytics` | [RowActions.tsx](file:///c:/Users/ganesh/zoworks/vite_tanstack_zoworks_v2/src/core/components/DynamicViews/RowActions.tsx#L113) | Insert or update entity records |
-| `core_upsert_data_v8` | `analytics` | [KanbanView.tsx](file:///c:/Users/ganesh/zoworks/vite_tanstack_zoworks_v2/src/core/components/DynamicViews/KanbanView.tsx#L349) | Update record when dragging cards in Kanban |
-| `core_upsert_data_v8` | `analytics` | [GlobalActions.tsx](file:///c:/Users/ganesh/zoworks/vite_tanstack_zoworks_v2/src/core/components/DynamicViews/GlobalActions.tsx#L84) | Bulk global actions on entities |
+| `core_upsert_data_v8` | `core` | [RowActions.tsx](file:///c:/Users/ganesh/zoworks/vite_tanstack_zoworks_v2/src/core/components/DynamicViews/RowActions.tsx#L113) | Insert or update entity records |
+| `core_upsert_data_v8` | `core` | [KanbanView.tsx](file:///c:/Users/ganesh/zoworks/vite_tanstack_zoworks_v2/src/core/components/DynamicViews/KanbanView.tsx#L349) | Update record when dragging cards in Kanban |
+| `core_upsert_data_v8` | `core` | [GlobalActions.tsx](file:///c:/Users/ganesh/zoworks/vite_tanstack_zoworks_v2/src/core/components/DynamicViews/GlobalActions.tsx#L84) | Bulk global actions on entities |
 | `core_bulk_upsert_data` | `public` | [BulkUpload.tsx](file:///c:/Users/ganesh/zoworks/vite_tanstack_zoworks_v2/src/core/components/DynamicViews/BulkUpload.tsx#L531) | Bulk import data from CSV/Excel |
 
 ### Metrics & Analytics

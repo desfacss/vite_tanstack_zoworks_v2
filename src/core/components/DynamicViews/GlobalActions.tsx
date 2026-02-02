@@ -81,7 +81,7 @@ const GlobalActions: React.FC<GlobalActionsProps> = ({
         ...(metadata?.some((field: any) => field.key === "location_id") && location?.id && isLocationPartition(permissions, path?.pathname) ? { location_id: location?.id } : {}),
       };
 
-      const { data, error } = await supabase.schema('analytics').rpc("core_upsert_data_v8", {
+      const { data, error } = await supabase.schema('core').rpc("core_upsert_data_v8", {
         table_name: (entitySchema || "public") + "." + entityType,
         data: dataPayload,
         id: null,
@@ -128,14 +128,14 @@ const GlobalActions: React.FC<GlobalActionsProps> = ({
       const pageModules = import.meta.glob('@/pages/**/*.tsx');
       const moduleComponents = import.meta.glob('@/modules/**/components/*.tsx');
       const allModules = { ...pageModules, ...moduleComponents };
-      
+
       // Extract component name from path (e.g., "TicketNew" from "../pages/Clients/TicketNew")
       const componentName = formPath.split('/').pop()?.replace('.tsx', '') || '';
-      
-      const modulePath = Object.keys(allModules).find(key => 
+
+      const modulePath = Object.keys(allModules).find(key =>
         key.endsWith(`/${componentName}.tsx`)
       );
-      
+
       if (modulePath && allModules[modulePath]) {
         const Component = await allModules[modulePath]() as any;
         setLoadedActionComponent(() => Component.default || Component);
@@ -161,7 +161,7 @@ const GlobalActions: React.FC<GlobalActionsProps> = ({
       // Simple component name like "TicketForm" - no slashes, no dots (not a file path or form schema)
       const isComponentName = !a.form.includes('/') && !a.form.includes('.') && /^[A-Z]/.test(a.form);
       const isComponent = isComponentPath || isComponentName;
-      
+
       list.push({
         type: isComponent ? 'component' : 'config',
         id: `config-${idx}`,

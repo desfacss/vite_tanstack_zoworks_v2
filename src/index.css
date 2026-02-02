@@ -325,6 +325,53 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
+/* Base Zo Styles (Claude-inspired) */
+[data-theme-preset="base_zo"]:not(.dark) .ant-layout {
+  background: #F9F7F2 !important;
+  position: relative;
+  background-image: none !important;
+}
+
+[data-theme-preset="base_zo"]:not(.dark) .ant-layout-sider {
+  background: #F1EFE9 !important;
+  border-right: 1px solid rgba(0, 0, 0, 0.05) !important;
+}
+
+[data-theme-preset="base_zo"]:not(.dark) .ant-layout-header {
+  background: #F9F7F2 !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05) !important;
+}
+
+[data-theme-preset="base_zo"]:not(.dark) .page-card {
+  background: #ffffff !important;
+  border: 1px solid rgba(0, 0, 0, 0.05) !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+  border-radius: 12px;
+}
+
+[data-theme-preset="base_zo"] h1, 
+[data-theme-preset="base_zo"] h2, 
+[data-theme-preset="base_zo"] h3 {
+  font-family: 'Georgia', serif; /* Claude uses a serif font for headings */
+  letter-spacing: -0.02em;
+  font-weight: 500;
+}
+
+.dark[data-theme-preset="base_zo"] .ant-layout {
+  background: #171717 !important;
+}
+
+.dark[data-theme-preset="base_zo"] .ant-layout-sider {
+  background: #121212 !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.05) !important;
+}
+
+.dark[data-theme-preset="base_zo"] .page-card {
+  background: #212121 !important;
+  border: 1px solid rgba(255, 255, 255, 0.05) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
 .dark {
   --color-bg-primary: #0f172a;
   /* Slate 900 */

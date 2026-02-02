@@ -112,7 +112,7 @@ const ApprovalActionButtons: React.FC<ApprovalActionButtonsProps> = ({
 
       // Use the core_upsert_data_v7 RPC for the update
       // const { error } = await supabase.rpc('core_upsert_data_v7', {
-      const { error } = await supabase.schema('analytics').rpc('core_upsert_data_v8', {
+      const { error } = await supabase.schema('core').rpc('core_upsert_data_v8', {
         // table_name: `${ entitySchema }.${ entityType } `,
         table_name: entityType,
         data: payload,

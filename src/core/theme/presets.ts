@@ -172,6 +172,35 @@ export const THEME_PRESETS: Record<string, Partial<TenantThemeConfig> & { descri
             inputBg: '#2a3942',         // WhatsApp dark input
             textColor: '#e9edef',
         }
+    },
+
+    // Base Zo - Claude-inspired aesthetic (Warm Parchment & Graphite)
+    base_zo: {
+        borderRadius: 12,
+        baseFontSize: 14,
+        containerPadding: 24,
+        preset: 'base_zo',
+        description: 'Claude-inspired warm parchment and graphite aesthetic',
+        light: {
+            primaryColor: '#D97757',    // Claude Terra-cotta
+            secondaryColor: '#5C4B43',  // Muted brown
+            cardBg: '#ffffff',
+            layoutBg: '#F9F7F2',        // Warm parchment
+            headerBg: '#F9F7F2',
+            siderBg: '#F1EFE9',         // Slightly darker parchment
+            inputBg: '#ffffff',
+            textColor: '#212121',       // Deep graphite
+        },
+        dark: {
+            primaryColor: '#D97757',    // Claude Terra-cotta
+            secondaryColor: '#A89F94',  // Muted sand
+            cardBg: '#212121',          // Graphite card
+            layoutBg: '#171717',        // Deep graphite background
+            headerBg: '#171717',
+            siderBg: '#121212',         // Near black sider
+            inputBg: '#2a2a2a',
+            textColor: '#E6E1D6',       // Off-white text
+        }
     }
 };
 
