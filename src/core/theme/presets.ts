@@ -124,10 +124,10 @@ export const THEME_PRESETS: Record<string, Partial<TenantThemeConfig> & { descri
         baseFontSize: 16,
         containerPadding: 28,
         preset: 'neon', // Triggers CSS layer in index.css
-        description: 'Electric neon with thunder animations',
+        description: 'Electric neon with high-impact animations',
         light: {
-            primaryColor: '#00E599',    // Neon Green
-            secondaryColor: '#00E599',  // Standardize to green
+            primaryColor: '#47c6e3',    // Zoworks logo cyan
+            secondaryColor: '#4F46E5',  // Indigo/Secondary
             cardBg: '#ffffff',
             layoutBg: '#f8fafb',        // Off-white with subtle warmth
             headerBg: 'rgba(255, 255, 255, 0.85)',  // Frosted glass header
@@ -136,8 +136,8 @@ export const THEME_PRESETS: Record<string, Partial<TenantThemeConfig> & { descri
             textColor: '#1a1a2e',       // Deep slate for contrast
         },
         dark: {
-            primaryColor: '#00E599',    // Neon Green
-            secondaryColor: '#00E599',  // Standardize to green for pure neon look
+            primaryColor: '#47c6e3',    // Zoworks logo cyan
+            secondaryColor: '#4F46E5',  // Indigo/Secondary
             cardBg: '#0f0f0f',          // Near black card
             layoutBg: '#020202',        // Pitch black layout
             headerBg: '#000000',        // Pure black header

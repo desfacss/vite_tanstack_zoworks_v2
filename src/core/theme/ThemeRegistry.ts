@@ -15,7 +15,8 @@ import { THEME_PRESETS } from './presets';
 // CONSTANTS
 // ============================================================================
 
-export { DEFAULT_PRIMARY_COLOR, DEFAULT_SECONDARY_COLOR } from './settings';
+import { DEFAULT_PRIMARY_COLOR, DEFAULT_SECONDARY_COLOR } from './settings';
+export { DEFAULT_PRIMARY_COLOR, DEFAULT_SECONDARY_COLOR };
 
 // ============================================================================
 // TYPES

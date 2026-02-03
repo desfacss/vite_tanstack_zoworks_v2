@@ -2779,12 +2779,12 @@ legend {
 
 [data-theme-preset="neon"] {
   /* Neon effects inherit from tenant's primary color (from database) */
-  --neon-primary: var(--color-primary, #00E599);
-  --neon-secondary: var(--color-secondary, #00A3FF);
+  --neon-primary: var(--color-primary, #47c6e3);
+  --neon-secondary: var(--color-secondary, #4F46E5);
 
   /* Dynamic RGB values for rgba() usage - will be set by ThemeRegistry */
-  --neon-bg-glow: rgba(var(--color-primary-rgb, 0, 229, 153), 0.12);
-  --neon-border: rgba(var(--color-primary-rgb, 0, 229, 153), 0.15);
+  --neon-bg-glow: rgba(var(--color-primary-rgb, 71, 198, 227), 0.12);
+  --neon-border: rgba(var(--color-primary-rgb, 71, 198, 227), 0.15);
   --neon-card-bg: rgba(13, 13, 13, 0.9);
 }
 
@@ -2795,17 +2795,17 @@ legend {
 
 /* Primary Button - Gradient effect */
 [data-theme-preset="neon"] .ant-btn-primary {
-  background: linear-gradient(135deg, var(--color-primary, #00E599) 0%, #00ffca 100%) !important;
+  background: linear-gradient(135deg, var(--color-primary, #47c6e3) 0%, var(--neon-primary) 100%) !important;
 }
 
 /* Segmented Selected - Gradient effect */
 [data-theme-preset="neon"] .ant-segmented-item-selected {
-  background: linear-gradient(135deg, var(--color-primary, #00E599) 0%, #00ffca 100%) !important;
+  background: linear-gradient(135deg, var(--color-primary, #47c6e3) 0%, var(--neon-primary) 100%) !important;
 }
 
 /* Radio Button Checked - Gradient effect */
 [data-theme-preset="neon"] .ant-radio-button-wrapper-checked {
-  background: linear-gradient(135deg, var(--color-primary, #00E599) 0%, #00ffca 100%) !important;
+  background: linear-gradient(135deg, var(--color-primary, #47c6e3) 0%, var(--neon-primary) 100%) !important;
 }
 
 /* ============================================
@@ -2813,37 +2813,32 @@ legend {
    Glow shadows, dark backgrounds
    ============================================ */
 
-/* Override base dark colors with bottle green for neon theme */
+/* Override base dark colors with a deep neutral dark for neon theme */
 [data-theme-preset="neon"].dark {
-  --color-bg-primary: #04120e;
-  /* Balanced deep green-black */
-  --color-bg-secondary: #071d17;
-  /* Slightly lighter dark green */
-  --color-bg-tertiary: #0a2820;
+  --color-bg-primary: #020406;
+  /* Deep obsidian */
+  --color-bg-secondary: #0a0c0e;
+  /* Slightly lighter obsidian */
+  --color-bg-tertiary: #121418;
   /* Highlights & Drawer */
-  --color-bg-primary-rgb: 4, 18, 14;
+  --color-bg-primary-rgb: 2, 4, 6;
 
   /* Neon Specific Form Controls - Deep Wells */
-  --color-control-bg: #020806;
-  /* Darkest black-green */
+  --color-control-bg: #010203;
+  /* Darkest black */
   --color-control-border: rgba(var(--color-primary-rgb), 0.15);
   --color-control-placeholder: rgba(255, 255, 255, 0.4);
 }
 
 /* Base Layout Overrides - Immersive Startup Pattern */
 [data-theme-preset="neon"].dark .ant-layout {
-  background: #04120e !important;
+  background: #020406 !important;
   position: relative;
   overflow: hidden;
   background-image:
-
-    /* radial-gradient(circle at 20% -10%, rgba(var(--color-primary-rgb), 0.15) 0%, transparent 40%),
-    radial-gradient(circle at 80% 10%, rgba(0, 229, 153, 0.05) 0%, transparent 50%),
-     */
-
     radial-gradient(circle at 20% -10%, rgba(var(--color-primary-rgb), 0.3) 0%, transparent 40%),
     radial-gradient(circle at 80% 10%, rgba(var(--color-primary-rgb), 0.1) 0%, transparent 50%),
-    linear-gradient(180deg, #04120e 0%, #071d17 100%) !important;
+    linear-gradient(180deg, #020406 0%, #0a0c0e 100%) !important;
   background-size: 100% 100% !important;
   background-attachment: fixed !important;
 }
@@ -3373,7 +3368,7 @@ legend {
 [data-theme-preset="neon"].dark .welcome-hub .ant-btn,
 [data-theme-preset="neon"].dark .content-body .ant-btn-primary,
 [data-theme-preset="neon"].dark .main-content .ant-btn-primary {
-  background: linear-gradient(135deg, var(--neon-primary) 0%, #00ffca 100%) !important;
+  background: linear-gradient(135deg, var(--neon-primary) 0%, var(--neon-secondary) 100%) !important;
   color: #000000 !important;
   border: none !important;
   box-shadow: 0 0 15px rgba(var(--color-primary-rgb), 0.4) !important;
@@ -3475,9 +3470,9 @@ legend {
   height: 3px;
   background: linear-gradient(90deg,
       transparent 0%,
-      #00E599 20%,
-      #007755 50%,
-      #00E599 80%,
+      var(--neon-primary) 20%,
+      color-mix(in srgb, var(--neon-primary), #000 40%) 50%,
+      var(--neon-primary) 80%,
       transparent 100%);
   box-shadow:
     0 0 8px rgba(var(--color-primary-rgb), 0.8),
