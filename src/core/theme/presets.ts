@@ -203,6 +203,34 @@ export const THEME_PRESETS: Record<string, Partial<TenantThemeConfig> & { descri
             inputBg: '#2a2a2a',
             textColor: '#E6E1D6',       // Off-white text
         }
+    },
+    // Neon Zo - High-voltage tech meet professional warmth (Neon.com + Claude)
+    neon_zo: {
+        borderRadius: 12,
+        baseFontSize: 14,
+        containerPadding: 24,
+        preset: 'neon_zo', // Triggers unique CSS layer
+        description: 'Claude-inspired warmth with electric Neon.com accents',
+        light: {
+            primaryColor: '#00E599',    // Neon Green
+            secondaryColor: '#5C4B43',  // Claude Muted Brown
+            cardBg: '#ffffff',
+            layoutBg: '#F9F7F2',        // Claude Warm Parchment
+            headerBg: '#F9F7F2',
+            siderBg: '#F1EFE9',         // Claude Sidebar
+            inputBg: '#ffffff',
+            textColor: '#212121',       // Graphite
+        },
+        dark: {
+            primaryColor: '#00E599',    // Neon Green
+            secondaryColor: '#4F46E5',  // Indigo
+            cardBg: '#0D1117',          // Deep Obsidian
+            layoutBg: '#020406',        // Neon Black
+            headerBg: '#020406',
+            siderBg: '#010203',         // Pitch Black
+            inputBg: '#161B22',
+            textColor: '#E6E1D6',       // Off-white
+        }
     }
 };
 

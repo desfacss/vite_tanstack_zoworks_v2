@@ -4997,3 +4997,141 @@ legend {
 .custom-scrollbar-ai::-webkit-scrollbar-thumb:hover {
   background: rgba(var(--color-primary-rgb), 0.3);
 }
+
+/* =====================================================
+   LAYER 5: NEON ZO THEME (Neon.com + Claude)
+   The ultimate blend of professional warmth and high-voltage tech 
+   ===================================================== */
+
+[data-theme-preset="neon_zo"] {
+  --neon-primary: var(--color-primary, #00E599);
+  --neon-secondary: var(--color-secondary, #4F46E5);
+  --neon-glow: rgba(var(--color-primary-rgb), 0.4);
+  --lightning-speed: 3s;
+}
+
+/* --- Lightning Border Animation --- */
+@keyframes lightning-stroke {
+  0% {
+    transform: translate(-100%, -100%) rotate(0deg);
+  }
+
+  100% {
+    transform: translate(100%, 100%) rotate(360deg);
+  }
+}
+
+@keyframes lightning-glow {
+
+  0%,
+  100% {
+    filter: brightness(1) drop-shadow(0 0 5px var(--neon-glow));
+  }
+
+  50% {
+    filter: brightness(1.5) drop-shadow(0 0 15px var(--neon-primary));
+  }
+}
+
+/* --- Layout Grid --- */
+[data-theme-preset="neon_zo"] .ant-layout {
+  background-image:
+    linear-gradient(rgba(var(--color-primary-rgb), 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(var(--color-primary-rgb), 0.05) 1px, transparent 1px) !important;
+  background-size: 40px 40px !important;
+  position: relative;
+}
+
+/* --- Card & Sidebar Lightning Borders --- */
+[data-theme-preset="neon_zo"] .page-card,
+[data-theme-preset="neon_zo"] .ant-layout-sider,
+[data-theme-preset="neon_zo"] .ant-card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(var(--color-primary-rgb), 0.1) !important;
+}
+
+[data-theme-preset="neon_zo"] .page-card::before,
+[data-theme-preset="neon_zo"] .ant-layout-sider::before,
+[data-theme-preset="neon_zo"] .ant-card::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(90deg,
+      transparent 0%,
+      transparent 40%,
+      var(--neon-primary) 50%,
+      transparent 60%,
+      transparent 100%);
+  background-size: 200% 200%;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.15;
+  animation: lightning-sweep var(--lightning-speed) linear infinite;
+}
+
+@keyframes lightning-sweep {
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Ensure content stays above the lightning sweep */
+[data-theme-preset="neon_zo"] .page-card>*,
+[data-theme-preset="neon_zo"] .ant-layout-sider>*,
+[data-theme-preset="neon_zo"] .ant-card>* {
+  position: relative;
+  z-index: 1;
+}
+
+/* --- Accents & Components --- */
+[data-theme-preset="neon_zo"] .ant-btn-primary {
+  background: var(--neon-primary) !important;
+  color: #000 !important;
+  font-weight: 700 !important;
+  border: none !important;
+  box-shadow: 0 0 10px var(--neon-glow) !important;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+[data-theme-preset="neon_zo"] .ant-btn-primary:hover {
+  filter: brightness(1.1) !important;
+  box-shadow: 0 0 20px var(--neon-primary) !important;
+}
+
+/* Specific CLI-style elements (referencing image 1) */
+[data-theme-preset="neon_zo"] .cli-box {
+  background: #000 !important;
+  color: var(--neon-primary) !important;
+  border: 1px solid var(--neon-primary) !important;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+}
+
+/* --- Dark Mode Enhancements --- */
+[data-theme-preset="neon_zo"].dark .page-card,
+[data-theme-preset="neon_zo"].dark .ant-card {
+  background: rgba(13, 17, 23, 0.9) !important;
+  backdrop-filter: blur(10px);
+}
+
+[data-theme-preset="neon_zo"].dark .ant-layout-header {
+  border-bottom: 1px solid rgba(var(--color-primary-rgb), 0.2) !important;
+}
+
+/* --- Light Mode Refinement --- */
+[data-theme-preset="neon_zo"]:not(.dark) .ant-layout {
+  background-color: #F9F7F2 !important;
+  /* Claude Base */
+}
+
+[data-theme-preset="neon_zo"]:not(.dark) .ant-btn-primary {
+  box-shadow: 0 4px 0 color-mix(in srgb, var(--neon-primary), #000 20%) !important;
+}

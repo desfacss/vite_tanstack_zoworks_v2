@@ -149,7 +149,6 @@ const CalendarViewConfig: React.FC<CalendarViewConfigProps> = ({
       },
       actions,
       exportOptions,
-      exportOptions,
       showFeatures,
     };
     // Add additional fields dynamically
@@ -287,7 +286,7 @@ const CalendarViewConfig: React.FC<CalendarViewConfigProps> = ({
     <div>
       <h2>Calendar View Configuration</h2>
 
-       <Title level={4}>Fields </Title>
+      <Title level={4}>Fields </Title>
       <Table
         dataSource={fields}
         columns={fieldColumns}
@@ -304,7 +303,7 @@ const CalendarViewConfig: React.FC<CalendarViewConfigProps> = ({
         Add Field
       </Button>
 
-       <Title level={4}>Actions </Title>
+      <Title level={4}>Actions </Title>
       <Row gutter={[16, 16]}>
         <Col span={12}>
           <h4>Row Actions:</h4>
@@ -332,7 +331,7 @@ const CalendarViewConfig: React.FC<CalendarViewConfigProps> = ({
         </Col>
       </Row>
 
-       <Title level={4}>Export Options </Title>
+      <Title level={4}>Export Options </Title>
       <Select
         mode="tags"
         value={exportOptions}
@@ -344,7 +343,7 @@ const CalendarViewConfig: React.FC<CalendarViewConfigProps> = ({
         <Option value="csv">CSV</Option>
       </Select>
 
-       <Title level={4}>Show Features </Title>
+      <Title level={4}>Show Features </Title>
       <Checkbox.Group
         options={[
           { label: 'Search', value: 'search' },
