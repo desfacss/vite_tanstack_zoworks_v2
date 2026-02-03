@@ -11,7 +11,7 @@ import { ThemeConfig, theme } from 'antd';
  */
 export const getAntdTheme = (
     isDark: boolean,
-    primaryColor: string = '#1890ff',
+    primaryColor: string = '#47c6e3',
     secondaryColor: string = '#4F46E5',
     borderRadius: number = 8,
     fontSize: number = 14
@@ -123,6 +123,11 @@ export const getAntdTheme = (
                 headerColor: 'var(--color-text-secondary)',
                 headerBorderRadius: Math.round(10 * ratio),
                 cellPaddingBlock: Math.round(16 * ratio),
+                // Row hover - uses primary color with subtle transparency
+                rowHoverBg: 'rgba(var(--color-primary-rgb), 0.04)',
+                // Explicit row selection colors using primary with transparency
+                rowSelectedBg: 'rgba(var(--color-primary-rgb), 0.08)',
+                rowSelectedHoverBg: 'rgba(var(--color-primary-rgb), 0.12)',
             },
             Tag: {
                 borderRadiusSM: Math.max(2, componentRadius - 2),

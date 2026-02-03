@@ -30,6 +30,7 @@ const Contacts = lazy(() => import('@/modules/crm/pages/Contacts'));
 const Tickets = lazy(() => import('@/modules/tickets/pages/Tickets'));
 const ServiceAssets = lazy(() => import('@/modules/external/pages/ServiceAssets'));
 const AdminSettings = lazy(() => import('@/modules/admin/pages/Settings'));
+const AdminBranding = lazy(() => import('@/modules/admin/pages/Settings/Branding'));
 const Profile = lazy(() => import('../pages/core/Profile'));
 const Settings = lazy(() => import('../pages/core/UserSetting'));
 const WaInbox = lazy(() => import('@/modules/wa/pages/InboxPage'));
@@ -140,8 +141,9 @@ export const AppRoutes: FC = () => {
                         <Route path="/workforce/timesheets" element={<WorkforceTimesheets />} />
                         <Route path="/workforce/expenses" element={<WorkforceExpenses />} />
 
-                        {/* Admin - Settings */}
+                        {/* Admin - Settings & Branding */}
                         <Route path="/admin/settings" element={<AdminSettings />} />
+                        <Route path="/admin/branding" element={<AdminBranding />} />
 
                         {/* Profile & Settings */}
                         <Route path="/profile" element={<Profile />} />

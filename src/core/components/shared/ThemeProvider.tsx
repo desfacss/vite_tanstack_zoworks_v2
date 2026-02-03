@@ -1,10 +1,7 @@
 import React, { useEffect } from 'react';
 import { ConfigProvider, App } from 'antd';
 import { useThemeStore } from '@/core/lib/store';
-import { getAntdTheme } from '@/core/theme/settings';
-
-// TODO: In future, get primaryColor from TenantConfig
-const PREDEFINED_TENANT_COLOR = '#1890ff';
+import { getAntdTheme } from '@/core/theme/ThemeRegistry';
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const isDarkMode = useThemeStore((state) => state.isDarkMode);
@@ -14,7 +11,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     document.documentElement.classList.toggle('dark', isDarkMode);
   }, [isDarkMode]);
 
-  const currentTheme = getAntdTheme(isDarkMode, PREDEFINED_TENANT_COLOR);
+  const currentTheme = getAntdTheme(isDarkMode);
 
   return (
     <ConfigProvider theme={currentTheme}>

@@ -4,6 +4,7 @@ import { ArrowUp, ArrowDown } from 'lucide-react';
 import lodashGroupBy from 'lodash/groupBy';
 import { useTranslation } from 'react-i18next';
 import { useThemeStore } from '@/core/lib/store';
+import { getTenantPrimaryColor } from '@/core/theme/ThemeRegistry';
 
 // --- Types ---
 export type ChartType =
@@ -79,6 +80,7 @@ export const BaseChart: React.FC<{
     const updateChart = async () => {
       if (!chartRef.current || !data.length || !isMounted) return;
       const Plotly = (await import('plotly.js-dist-min')).default;
+      const primaryColor = getTenantPrimaryColor();
 
       let chartData = [...data];
 
@@ -141,7 +143,7 @@ export const BaseChart: React.FC<{
           textinfo: 'label+percent',
           textposition: 'outside',
           automargin: true,
-          marker: { colors: config.colors || ['#1890ff', '#13c2c2', '#52c41a', '#faad14', '#f5222d', '#722ed1'] }
+          marker: { colors: config.colors || [primaryColor, '#13c2c2', '#52c41a', '#faad14', '#f5222d', '#722ed1'] }
         }];
       }
       else if (type === 'gauge') {
@@ -155,7 +157,7 @@ export const BaseChart: React.FC<{
           value: val,
           gauge: {
             axis: { range: [min, max], tickcolor: textColor },
-            bar: { color: "#1890ff" },
+            bar: { color: primaryColor },
             steps: [
               { range: [min, max * 0.6], color: isDarkMode ? 'rgba(255,255,255,0.05)' : "#f0f5ff" },
               { range: [max * 0.6, max * 0.9], color: isDarkMode ? 'rgba(255,255,255,0.1)' : "#d6e4ff" }

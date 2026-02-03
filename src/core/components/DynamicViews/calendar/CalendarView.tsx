@@ -114,9 +114,11 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, viewMode, isMobile 
 
     // ... (color mapping logic remains the same) ...
     let backgroundColor = baseColor;
+    import { DEFAULT_PRIMARY_COLOR } from '@/core/theme/ThemeRegistry';
+
     if (baseColor && !baseColor.startsWith('#')) {
       const colorMap: { [key: string]: string } = {
-        'blue': '#1890ff', 'green': '#52c41a', 'red': '#ff4d4f', 'orange': '#fa8c16',
+        'blue': DEFAULT_PRIMARY_COLOR, 'green': '#52c41a', 'red': '#ff4d4f', 'orange': '#fa8c16',
         'purple': '#722ed1', 'cyan': '#13c2c2', 'geekblue': '#2f54eb', 'gold': '#faad14',
         'lime': '#a0d911', 'magenta': '#eb2f96', 'volcano': '#fa541c'
       };

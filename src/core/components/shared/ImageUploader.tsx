@@ -49,12 +49,12 @@ const ImageUploader = forwardRef<ImageUploaderRef, ImageUploaderProps>(
         const [activeTab, setActiveTab] = useState('files');
         const [linkFile, setLinkFile] = useState<any | null>(null);
         // const [cropModalVisible, setCropModalVisible] = useState(false);
-    // const [crop, setCrop] = useState({ unit: '%', x: 0, y: 0, width: 50, height: 50, aspect: 1 });
-    // const [imageSrc, setImageSrc] = useState<string | null>(null);
-    // const [imageRef, setImageRef] = useState<HTMLImageElement | null>(null);
-    // const [currentFileIndex, setCurrentFileIndex] = useState<number | null>(null);
+        // const [crop, setCrop] = useState({ unit: '%', x: 0, y: 0, width: 50, height: 50, aspect: 1 });
+        // const [imageSrc, setImageSrc] = useState<string | null>(null);
+        // const [imageRef, setImageRef] = useState<HTMLImageElement | null>(null);
+        // const [currentFileIndex, setCurrentFileIndex] = useState<number | null>(null);
 
-    // Get geolocation
+        // Get geolocation
 
         const getLocation = useCallback((): Promise<{ lat: number; lng: number } | null> => {
             return new Promise((resolve) => {
@@ -119,13 +119,13 @@ const ImageUploader = forwardRef<ImageUploaderRef, ImageUploaderProps>(
         }, [allowedTypes, fileList, maxFiles, requestCameraPermission, linkFile]);
 
         // Convert file to base64
-    // const getBase64 = useCallback((file: File): Promise<string> =>
-    //   new Promise((resolve, reject) => {
-    //     const reader = new FileReader();
-    //     reader.readAsDataURL(file);
-    //     reader.onload = () => resolve(reader.result as string);
-    //     reader.onerror = (error) => reject(error);
-    //   }), []);
+        // const getBase64 = useCallback((file: File): Promise<string> =>
+        //   new Promise((resolve, reject) => {
+        //     const reader = new FileReader();
+        //     reader.readAsDataURL(file);
+        //     reader.onload = () => resolve(reader.result as string);
+        //     reader.onerror = (error) => reject(error);
+        //   }), []);
         const compressAndResizeImage = useCallback((file: File, maxWidth = 800): Promise<File> => {
             if (!file.type.startsWith('image/')) return Promise.resolve(file);
             return new Promise((resolve, reject) => {
@@ -152,26 +152,26 @@ const ImageUploader = forwardRef<ImageUploaderRef, ImageUploaderProps>(
         }, []);
 
         // Get cropped image
-    // const getCroppedImage = useCallback((): Promise<File> => {
-    //   if (!imageRef || !crop.width || !crop.height) {
-    //     message.error('Please select a crop area.');
-    //     return Promise.reject();
-    //   }
-    //   const canvas = document.createElement('canvas');
-    //   const scaleX = imageRef.naturalWidth / imageRef.width;
-    //   const scaleY = imageRef.naturalHeight / imageRef.height;
-    //   canvas.width = crop.width * scaleX;
-    //   canvas.height = crop.height * scaleY;
-    //   const ctx = canvas.getContext('2d')!;
-    //   ctx.drawImage(imageRef, crop.x * scaleX, crop.y * scaleY, crop.width * scaleX, crop.height * scaleY, 0, 0, crop.width * scaleX, crop.height * scaleY);
-    //   return new Promise((resolve) => {
-    //     canvas.toBlob(
-    //       (blob) => resolve(new File([blob!], `cropped_${Date.now()}.jpg`, { type: 'image/jpeg', lastModified: Date.now() })),
-    //       'image/jpeg',
-    //       0.7
-    //     );
-    //   });
-    // }, [imageRef, crop]);
+        // const getCroppedImage = useCallback((): Promise<File> => {
+        //   if (!imageRef || !crop.width || !crop.height) {
+        //     message.error('Please select a crop area.');
+        //     return Promise.reject();
+        //   }
+        //   const canvas = document.createElement('canvas');
+        //   const scaleX = imageRef.naturalWidth / imageRef.width;
+        //   const scaleY = imageRef.naturalHeight / imageRef.height;
+        //   canvas.width = crop.width * scaleX;
+        //   canvas.height = crop.height * scaleY;
+        //   const ctx = canvas.getContext('2d')!;
+        //   ctx.drawImage(imageRef, crop.x * scaleX, crop.y * scaleY, crop.width * scaleX, crop.height * scaleY, 0, 0, crop.width * scaleX, crop.height * scaleY);
+        //   return new Promise((resolve) => {
+        //     canvas.toBlob(
+        //       (blob) => resolve(new File([blob!], `cropped_${Date.now()}.jpg`, { type: 'image/jpeg', lastModified: Date.now() })),
+        //       'image/jpeg',
+        //       0.7
+        //     );
+        //   });
+        // }, [imageRef, crop]);
         const beforeUpload = useCallback((file: File, files: File[]) => {
             if (file.size / 1024 / 1024 > uploadConfig.maxFileSize) {
                 message.error(`File must be smaller than ${uploadConfig.maxFileSize}MB!`);
@@ -199,25 +199,25 @@ const ImageUploader = forwardRef<ImageUploaderRef, ImageUploaderProps>(
 
 
         // Handle crop confirmation
-    // const handleCropConfirm = useCallback(async () => {
-    //   try {
-    //     const croppedFile = await getCroppedImage();
-    //     setCropModalVisible(false);
-    //     setFileList((prev) => [
-    //       ...prev,
-    //       {
-    //         uid: `-${prev.length + 1}`,
-    //         name: croppedFile.name,
-    //         status: 'done',
-    //         url: URL.createObjectURL(croppedFile),
-    //         originFileObj: croppedFile,
-    //       },
-    //     ]);
-    //   } catch (error) {
-    //     console.error('Error cropping image:', error);
-    //     message.error('Failed to crop image.');
-    //   }
-    // }, [getCroppedImage]);
+        // const handleCropConfirm = useCallback(async () => {
+        //   try {
+        //     const croppedFile = await getCroppedImage();
+        //     setCropModalVisible(false);
+        //     setFileList((prev) => [
+        //       ...prev,
+        //       {
+        //         uid: `-${prev.length + 1}`,
+        //         name: croppedFile.name,
+        //         status: 'done',
+        //         url: URL.createObjectURL(croppedFile),
+        //         originFileObj: croppedFile,
+        //       },
+        //     ]);
+        //   } catch (error) {
+        //     console.error('Error cropping image:', error);
+        //     message.error('Failed to crop image.');
+        //   }
+        // }, [getCroppedImage]);
 
         const handleGoogleDocChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
             const newLink = e.target.value;
@@ -234,7 +234,7 @@ const ImageUploader = forwardRef<ImageUploaderRef, ImageUploaderProps>(
                 setLinkFile(null);
             }
         }, []);
-        
+
         const triggerUpload = useCallback(async (): Promise<FileObject[]> => {
             const itemsToUpload = [...fileList];
             if (linkFile) {
@@ -308,7 +308,7 @@ const ImageUploader = forwardRef<ImageUploaderRef, ImageUploaderProps>(
                         avatar={
                             <div style={{ width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                 <a href={file.url} target="_blank" rel="noopener noreferrer">
-                                    <Link size={24} color="#1890ff" />
+                                    <Link size={24} color="var(--color-primary)" />
                                 </a>
                             </div>
                         }
@@ -327,7 +327,7 @@ const ImageUploader = forwardRef<ImageUploaderRef, ImageUploaderProps>(
                                     <img src={previewUrl} alt={file.name} style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 4 }} />
                                 ) : (
                                     <a href={file.url} target="_blank" rel="noopener noreferrer">
-                                        <FileText size={24} color="#1890ff" />
+                                        <FileText size={24} color="var(--color-primary)" />
                                     </a>
                                 )}
                             </div>
@@ -384,7 +384,7 @@ const ImageUploader = forwardRef<ImageUploaderRef, ImageUploaderProps>(
                 ),
             },
         ];
-        
+
         const combinedFileList = [...fileList, ...(linkFile ? [linkFile] : [])];
         const totalFiles = combinedFileList.length;
 
@@ -397,7 +397,7 @@ const ImageUploader = forwardRef<ImageUploaderRef, ImageUploaderProps>(
                         onChange={setActiveTab}
                     />
 
-                    {activeTab!=="link" && <div style={{ marginTop: 16, marginBottom: 16 }}>
+                    {activeTab !== "link" && <div style={{ marginTop: 16, marginBottom: 16 }}>
                         <span style={{ fontSize: 14, color: '#555' }}>{totalFiles}/{maxFiles} files selected</span>
                     </div>}
 

@@ -94,36 +94,36 @@ const PartitionFilterBuilder: React.FC<PartitionFilterBuilderProps> = ({
       .filter(f => f.column && f.operator)
       .map(f => {
         const operator = f.operator;
-        
+
         // Operators that don't need a value
         if (operator === 'IS NULL' || operator === 'IS NOT NULL') {
           return `${f.column} ${operator}`;
         }
-        
+
         // Handle IN/NOT IN with array values
         if (operator === 'IN' || operator === 'NOT IN') {
-          const valuesArray = Array.isArray(f.value) 
-            ? f.value 
+          const valuesArray = Array.isArray(f.value)
+            ? f.value
             : String(f.value).split(',').map(v => v.trim()).filter(Boolean);
           const formattedValues = valuesArray.map(v => `'${v}'`).join(', ');
           return `${f.column} ${operator} (${formattedValues})`;
         }
-        
+
         // Handle LIKE with wildcards
         if (operator === 'LIKE') {
           return `${f.column} LIKE '%${f.value}%'`;
         }
-        
+
         // Standard comparison operators
         const value = typeof f.value === 'string' ? f.value : String(f.value);
         // Check if value looks like a number
         const isNumeric = !isNaN(Number(value)) && value.trim() !== '';
-        return isNumeric 
+        return isNumeric
           ? `${f.column} ${operator} ${value}`
           : `${f.column} ${operator} '${value}'`;
       })
       .join(' AND ');
-    
+
     setGeneratedSql(sql);
     onChange(sql, currentFilters);
   }, [onChange]);
@@ -153,7 +153,7 @@ const PartitionFilterBuilder: React.FC<PartitionFilterBuilderProps> = ({
   const updateFilter = (id: string, field: keyof PartitionFilter, fieldValue: any) => {
     setFilters(filters.map(f => {
       if (f.id !== id) return f;
-      
+
       // Reset value when operator changes to one that doesn't need value
       if (field === 'operator') {
         const op = OPERATORS.find(o => o.value === fieldValue);
@@ -161,7 +161,7 @@ const PartitionFilterBuilder: React.FC<PartitionFilterBuilderProps> = ({
           return { ...f, [field]: fieldValue, value: '' };
         }
       }
-      
+
       return { ...f, [field]: fieldValue };
     }));
   };
@@ -184,13 +184,13 @@ const PartitionFilterBuilder: React.FC<PartitionFilterBuilderProps> = ({
   };
 
   return (
-    <Card 
-      size="small" 
+    <Card
+      size="small"
       title={
         <Space>
           <span>Partition Filter</span>
           <Tooltip title="Define conditions to filter records from the base table. Multiple conditions are combined with AND.">
-            <InfoCircleOutlined style={{ color: '#1890ff' }} />
+            <InfoCircleOutlined style={{ color: 'var(--color-primary)' }} />
           </Tooltip>
         </Space>
       }
@@ -202,11 +202,11 @@ const PartitionFilterBuilder: React.FC<PartitionFilterBuilderProps> = ({
             No filters defined. Click "Add Condition" to create a partition filter.
           </Text>
         )}
-        
+
         {filters.map((filter, index) => (
           <Space key={filter.id} align="start" wrap style={{ width: '100%' }}>
             {index > 0 && <Tag color="orange">AND</Tag>}
-            
+
             <Select
               placeholder="Select column"
               style={{ width: 180 }}
@@ -216,13 +216,13 @@ const PartitionFilterBuilder: React.FC<PartitionFilterBuilderProps> = ({
               disabled={disabled}
               showSearch
               optionFilterProp="children"
-              options={columns.map(c => ({ 
-                value: c.key, 
+              options={columns.map(c => ({
+                value: c.key,
                 label: c.display_name || c.key,
                 title: `${c.key} (${c.type})`,
               }))}
             />
-            
+
             <Select
               placeholder="Operator"
               style={{ width: 180 }}
@@ -231,7 +231,7 @@ const PartitionFilterBuilder: React.FC<PartitionFilterBuilderProps> = ({
               disabled={disabled}
               options={OPERATORS.map(o => ({ value: o.value, label: o.label }))}
             />
-            
+
             {operatorNeedsValue(filter.operator) && (
               <Input
                 placeholder={getValuePlaceholder(filter.operator)}
@@ -241,7 +241,7 @@ const PartitionFilterBuilder: React.FC<PartitionFilterBuilderProps> = ({
                 disabled={disabled}
               />
             )}
-            
+
             <Button
               icon={<DeleteOutlined />}
               danger
@@ -251,17 +251,17 @@ const PartitionFilterBuilder: React.FC<PartitionFilterBuilderProps> = ({
             />
           </Space>
         ))}
-        
-        <Button 
-          type="dashed" 
-          icon={<PlusOutlined />} 
+
+        <Button
+          type="dashed"
+          icon={<PlusOutlined />}
           onClick={addFilter}
           disabled={disabled || !schema || !tableName}
           style={{ width: '100%', marginTop: 8 }}
         >
           Add Condition
         </Button>
-        
+
         {generatedSql && (
           <div style={{ marginTop: 12, padding: '8px 12px', background: '#f5f5f5', borderRadius: 4 }}>
             <Text type="secondary" style={{ fontSize: 12 }}>Generated SQL WHERE clause:</Text>

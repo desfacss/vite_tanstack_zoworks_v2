@@ -240,11 +240,11 @@
 :root {
   --color-primary: var(--tenant-primary);
   --color-secondary: var(--tenant-secondary);
-  /* Base Theme RGB (Sync'd by ThemeRegistry.ts) */
-  --color-primary-rgb: 0, 229, 153;
-  /* Default: Neon Green */
-  --color-secondary-rgb: 0, 229, 153;
-  /* Default: Neon Green */
+  /* Base Theme RGB - Fallback values (ThemeRegistry.ts overrides at runtime) */
+  --color-primary-rgb: 24, 144, 255;
+  /* Default: Ant Design Blue (neutral fallback) */
+  --color-secondary-rgb: 24, 144, 255;
+  /* Default: Ant Design Blue */
   --color-bg-primary-rgb: 255, 255, 255;
   --color-bg-secondary-rgb: 248, 250, 252;
 
@@ -349,10 +349,11 @@
   border-radius: 12px;
 }
 
-[data-theme-preset="base_zo"] h1, 
-[data-theme-preset="base_zo"] h2, 
+[data-theme-preset="base_zo"] h1,
+[data-theme-preset="base_zo"] h2,
 [data-theme-preset="base_zo"] h3 {
-  font-family: 'Georgia', serif; /* Claude uses a serif font for headings */
+  font-family: 'Georgia', serif;
+  /* Claude uses a serif font for headings */
   letter-spacing: -0.02em;
   font-weight: 500;
 }
@@ -373,28 +374,24 @@
 }
 
 .dark {
-  --color-bg-primary: #0f172a;
-  /* Slate 900 */
-  --color-bg-secondary: #1e293b;
-  /* Slate 800 */
-  --color-bg-tertiary: #334155;
-  /* Slate 700 */
+  /* Dark mode backgrounds - use tenant-provided values (set by ThemeRegistry) */
+  /* Fallback to neutral dark grays if tenant vars not set */
+  --color-bg-primary: var(--tenant-layout-bg, #171717);
+  --color-bg-secondary: var(--tenant-card-bg, #212121);
+  --color-bg-tertiary: var(--tenant-sider-bg, #1a1a1a);
 
   /* Dark Mode specific text/border adjustments */
   --color-text-primary: #f8fafc;
-  /* Slate 50 - Light text for Dark mode */
+  /* Light text for Dark mode */
   --color-text-secondary: #94a3b8;
-  /* Slate 400 */
   --color-text-tertiary: #64748b;
-  /* Slate 500 */
 
   --color-border: rgba(255, 255, 255, 0.1);
   --color-border-hover: rgba(255, 255, 255, 0.2);
   --color-shadow: rgba(0, 0, 0, 0.4);
 
   /* Form Controls - Dark Well Pattern */
-  --color-control-bg: #1e293b;
-  /* Slate 800 */
+  --color-control-bg: var(--tenant-card-bg, #212121);
   --color-control-border: rgba(255, 255, 255, 0.1);
   --color-control-placeholder: rgba(255, 255, 255, 0.35);
 }
@@ -723,6 +720,39 @@ body {
 
 .dark .ant-table-tbody>tr:hover>td {
   background: var(--color-bg-tertiary);
+}
+
+/* =====================================================
+   BASE LAYER: Table Row Hover Styling
+   Overrides Ant Design's default blue hover color
+   ===================================================== */
+.ant-table-wrapper .ant-table-tbody .ant-table-row>.ant-table-cell-row-hover {
+  background: rgba(var(--color-primary-rgb), 0.04) !important;
+}
+
+/* =====================================================
+   BASE LAYER: Table Row Selection Styling
+   Applied to ALL presets - uses primary color with transparency
+   ===================================================== */
+.ant-table-row-selected>td {
+  background: rgba(var(--color-primary-rgb), 0.08) !important;
+}
+
+.ant-table-row-selected:hover>td {
+  background: rgba(var(--color-primary-rgb), 0.12) !important;
+}
+
+.dark .ant-table-row-selected>td {
+  background: rgba(var(--color-primary-rgb), 0.12) !important;
+}
+
+.dark .ant-table-row-selected:hover>td {
+  background: rgba(var(--color-primary-rgb), 0.16) !important;
+}
+
+/* Base Layer: Loading Spinner - uses primary color */
+.ant-spin-dot-item {
+  background-color: var(--color-primary) !important;
 }
 
 .dark .ant-input,

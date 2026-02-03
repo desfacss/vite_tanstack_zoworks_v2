@@ -12,6 +12,13 @@ import { getAntdTheme as getBaseTheme } from './settings';
 import { THEME_PRESETS } from './presets';
 
 // ============================================================================
+// CONSTANTS
+// ============================================================================
+
+export const DEFAULT_PRIMARY_COLOR = '#47c6e3'; // Zoworks Cyan
+export const DEFAULT_SECONDARY_COLOR = '#4F46E5';
+
+// ============================================================================
 // TYPES
 // ============================================================================
 
@@ -145,9 +152,30 @@ export function loadTenantTheme(config: TenantThemeConfig): void {
         preset: presetKey,
     };
 
-    // 3. Deep merge mode-specific settings to ensure partial overrides don't wipe preset defaults
-    mergedConfig.light = { ...presetData.light, ...config.light };
-    mergedConfig.dark = { ...presetData.dark, ...config.dark };
+    // 3. SPECIAL: If using 'base' preset and primary color is an old default, migrate to new brand color
+    // This allows code-level updates to the base theme to reflect for existing tenants
+    if (presetKey === 'base') {
+        const isOldDefault = (
+            mergedConfig.primaryColor === '#1890ff' ||
+            mergedConfig.primaryColor === '#1677ff' ||
+            mergedConfig.light?.primaryColor === '#1890ff' ||
+            mergedConfig.light?.primaryColor === '#1677ff'
+        );
+
+        if (isOldDefault) {
+            const newPrimary = presetData.light?.primaryColor || '#47c6e3';
+            mergedConfig.primaryColor = newPrimary;
+            if (mergedConfig.light) mergedConfig.light.primaryColor = newPrimary;
+            // Also update dark mode if it was the old default
+            if (mergedConfig.dark?.primaryColor === '#1890ff') {
+                mergedConfig.dark.primaryColor = presetData.dark?.primaryColor || newPrimary;
+            }
+        }
+    }
+
+    // 4. Deep merge mode-specific settings to ensure partial overrides don't wipe preset defaults
+    mergedConfig.light = { ...presetData.light, ...config.light, ...mergedConfig.light };
+    mergedConfig.dark = { ...presetData.dark, ...config.dark, ...mergedConfig.dark };
 
     // Standardize border radius
     if (config.borderRadius === undefined && presetData.borderRadius !== undefined) {
@@ -353,7 +381,7 @@ function updateFavicon(faviconUrl: string): void {
 export function getAntdTheme(isDarkMode: boolean = false): ThemeConfig {
     // Pick mode-specific config or fall back to global
     const modeConfig = isDarkMode ? tenantConfig?.dark : tenantConfig?.light;
-    const primaryColor = modeConfig?.primaryColor || tenantConfig?.primaryColor || '#1890ff';
+    const primaryColor = modeConfig?.primaryColor || tenantConfig?.primaryColor || DEFAULT_PRIMARY_COLOR;
     const secondaryColor = modeConfig?.secondaryColor || tenantConfig?.secondaryColor || primaryColor;
     const borderRadius = tenantConfig?.borderRadius ?? 12; // Use 12 as default
     const fontSize = tenantConfig?.baseFontSize || 14;
@@ -408,6 +436,10 @@ export function getAntdTheme(isDarkMode: boolean = false): ThemeConfig {
                 borderRadiusLG: borderRadius + 4,
                 paddingLG: 24,
                 boxShadowTertiary: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
+            },
+            Table: {
+                ...baseTheme.components?.Table,
+                // Row selection uses primary color with transparency
             },
             Layout: {
                 ...baseTheme.components?.Layout,
@@ -490,7 +522,7 @@ export function getTenantThemeConfig(): TenantThemeConfig | null {
  * Get tenant primary color
  */
 export function getTenantPrimaryColor(): string {
-    return tenantConfig?.primaryColor || '#1890ff';
+    return tenantConfig?.primaryColor || DEFAULT_PRIMARY_COLOR;
 }
 
 /**

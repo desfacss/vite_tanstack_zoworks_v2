@@ -317,13 +317,13 @@ const CustomDescriptionWidget = ({ options }) => {
             <HelpCircle
               onClick={handleHelpClick}
               size={18}
-              style={{ color: "#1890ff", cursor: "pointer" }}
+              style={{ color: "var(--color-primary)", cursor: "pointer" }}
             />
           ) : (
             <Tooltip title={helpText} placement="right">
               <HelpCircle
                 size={18}
-                style={{ color: "#1890ff", cursor: "pointer" }}
+                style={{ color: "var(--color-primary)", cursor: "pointer" }}
               />
             </Tooltip>
           )

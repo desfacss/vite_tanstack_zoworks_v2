@@ -267,7 +267,7 @@ const EntityConfigForm: React.FC = () => {
 
                         {form.getFieldValue(['token_config', name, 'type']) === 'counter' && (
                           <Tooltip title="This token is automatically handled by the trigger and does not require extra configuration.">
-                            <HelpCircle size={16} style={{ color: '#1890ff', marginTop: 8 }} />
+                            <HelpCircle size={16} style={{ color: 'var(--color-primary)', marginTop: 8 }} />
                           </Tooltip>
                         )}
 

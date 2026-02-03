@@ -7,7 +7,8 @@ import {
   Building,
   CreditCard,
   HelpCircle,
-  FileText
+  FileText,
+  Palette
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
@@ -40,6 +41,10 @@ export const ProfileMenu: React.FC = () => {
   const { setShowSettings } = useAuthedLayoutConfig();
   const { t } = useTranslation();
 
+  // Check if user has admin role
+  const roleName = user?.roles?.name || (user?.role_id as any)?.name;
+  const isAdmin = roleName === 'SassAdmin' || roleName === 'Superadmin';
+
   const handleLogout = async () => {
     setIsLoggingOut(true);
     console.log('>>> [ProfileMenu] Cancelling queries & Logging out...');
@@ -66,6 +71,8 @@ export const ProfileMenu: React.FC = () => {
       { type: 'divider' },
       { key: 'organization', label: t('common.label.organization_settings'), icon: <Building size={16} />, onClick: () => navigate('/settings?tab=organization') },
       { key: 'team', label: t('common.label.management'), icon: <User size={16} />, onClick: () => navigate('/settings?tab=team') },
+      // Branding - only for admin roles
+      ...(isAdmin ? [{ key: 'branding', label: 'Branding', icon: <Palette size={16} />, onClick: () => navigate('/admin/branding') }] : []),
       { type: 'divider' },
       { key: 'help', label: t('common.label.help_support'), icon: <HelpCircle size={16} />, onClick: () => window.open('https://help.zoworks.com', '_blank') },
       { key: 'docs', label: t('common.label.documentation'), icon: <FileText size={16} />, onClick: () => window.open('https://docs.zoworks.com', '_blank') },
@@ -82,6 +89,8 @@ export const ProfileMenu: React.FC = () => {
     { key: 'divider1', label: '' },
     { key: 'organization', label: t('common.label.organization_settings'), icon: <Building size={20} />, onClick: () => navigate('/settings?tab=organization') },
     { key: 'team', label: t('common.label.management'), icon: <User size={20} />, onClick: () => navigate('/settings?tab=team') },
+    // Branding - only for admin roles
+    ...(isAdmin ? [{ key: 'branding', label: 'Branding', icon: <Palette size={20} />, onClick: () => navigate('/admin/branding') }] : []),
     { key: 'divider2', label: '' },
     { key: 'help', label: t('common.label.help_support'), icon: <HelpCircle size={20} />, onClick: () => window.open('https://help.zoworks.com', '_blank') },
     { key: 'docs', label: t('common.label.documentation'), icon: <FileText size={20} />, onClick: () => window.open('https://docs.zoworks.com', '_blank') },

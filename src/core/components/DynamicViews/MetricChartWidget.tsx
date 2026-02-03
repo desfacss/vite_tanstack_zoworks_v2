@@ -14,6 +14,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Card, Statistic, message, Spin, Typography } from 'antd';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/core/lib/store';
+import { getTenantPrimaryColor } from '@/core/theme/ThemeRegistry';
 import { snakeToTitleCase } from '@/core/components/common/utils/casing';
 import dayjs from 'dayjs';
 
@@ -98,6 +99,7 @@ const MetricChartWidget: React.FC<MetricChartWidgetProps> = ({ widgetConfig, vie
     const renderChart = async () => {
       if (plotRef.current && metricData && metricData.length > 0 && chartType !== 'statistic') {
         const Plotly = (await import('plotly.js-dist-min')).default;
+        const primaryColor = getTenantPrimaryColor();
         console.log(`Rendering Plotly chart for widget ${widgetId}. Data:`, metricData);
 
         const metricDisplayName = metricDefinition?.display_name || snakeToTitleCase(metricKey);
@@ -149,7 +151,7 @@ const MetricChartWidget: React.FC<MetricChartWidgetProps> = ({ widgetConfig, vie
               automargin: true,
               marker: {
                 colors: [
-                  '#1890ff', '#2fc25b', '#facc14', '#eb2f96', '#722ed1', '#fa8c16', '#a0d911', '#597ef7', '#f759ab', '#9254de'
+                  primaryColor, '#2fc25b', '#facc14', '#eb2f96', '#722ed1', '#fa8c16', '#a0d911', '#597ef7', '#f759ab', '#9254de'
                 ]
               }
             }];
@@ -226,7 +228,7 @@ const MetricChartWidget: React.FC<MetricChartWidgetProps> = ({ widgetConfig, vie
               type: 'funnel',
               marker: {
                 color: [
-                  '#1890ff', '#2fc25b', '#facc14', '#eb2f96', '#722ed1', '#fa8c16', '#a0d911', '#597ef7', '#f759ab', '#9254de'
+                  primaryColor, '#2fc25b', '#facc14', '#eb2f96', '#722ed1', '#fa8c16', '#a0d911', '#597ef7', '#f759ab', '#9254de'
                 ]
               },
               hovertemplate: `<b>%{y}</b><br>${metricDisplayName}: %{x}<extra></extra>`,

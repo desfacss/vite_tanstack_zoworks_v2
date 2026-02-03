@@ -163,7 +163,7 @@ const MediaContent = ({ type, content, message }: { type: string, content: any, 
 
         if (extension === 'pdf') { Icon = FileType; iconColor = '#ff4d4f'; }
         else if (['xls', 'xlsx', 'csv'].includes(extension || '')) { Icon = FileSpreadsheet; iconColor = '#52c41a'; }
-        else if (['doc', 'docx'].includes(extension || '')) { Icon = FileIcon; iconColor = '#1890ff'; }
+        else if (['doc', 'docx'].includes(extension || '')) { Icon = FileIcon; iconColor = 'var(--color-primary)'; }
         else if (['zip', 'rar'].includes(extension || '')) { Icon = Archive; iconColor = '#faad14'; }
 
         return (

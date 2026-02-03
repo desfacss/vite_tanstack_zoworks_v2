@@ -1,6 +1,6 @@
-
 import { supabase } from '@/core/lib/supabase';
 import env_def from '@/core/lib/env';
+import { DEFAULT_PRIMARY_COLOR } from '@/core/theme/ThemeRegistry';
 
 /**
  * Tenant configuration resolved from identity.v_organizations.
@@ -263,7 +263,7 @@ function getLoginPortalConfig(): TenantConfig {
         module_config: {},
         theme_config: {
             mode: 'light',
-            primaryColor: '#1890ff',
+            primaryColor: DEFAULT_PRIMARY_COLOR,
             brandName: 'Zoworks',
             preset: 'base',
         },
@@ -294,7 +294,7 @@ function getEmergencyDefaults(subdomain: string): TenantConfig {
         module_config: {},
         theme_config: {
             mode: 'light',
-            primaryColor: '#1890ff',
+            primaryColor: DEFAULT_PRIMARY_COLOR,
             brandName: 'Zoworks',
             preset: 'base',
         },

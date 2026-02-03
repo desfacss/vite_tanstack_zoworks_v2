@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Card, Tabs } from 'antd';
 import LocationSettings from './LocationSettings';
 import Organization from './Organization';
+import Branding from './Branding';
 import RoleFeatureEdit from './RolePermissions';
 import TimesheetSettings from './Timesheet';
 import LeaveSettings from './LeaveSettings';
@@ -86,6 +87,13 @@ const Settings: React.FC = () => {
   // Conditionally add tabs based on user role (SassAdmin or Superadmin)
   const roleName = user?.roles?.name || (user?.role_id as any)?.name;
   if (roleName === 'SassAdmin' || roleName === 'Superadmin') {
+    // Insert Branding tab near the beginning (after Organization at index 2)
+    items.splice(3, 0, {
+      label: 'Branding',
+      key: 'branding',
+      children: <Branding />,
+    });
+
     items.push(
       {
         label: 'Workflow Settings',

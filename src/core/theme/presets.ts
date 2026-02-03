@@ -11,29 +11,31 @@ import { TenantThemeConfig } from './ThemeRegistry';
  * When a preset is selected, its colors should override tenant config.
  */
 export const THEME_PRESETS: Record<string, Partial<TenantThemeConfig> & { description?: string }> = {
-    // Base/Default - Clean, minimal, professional
+    // Base/Default - Clean, minimal, professional (Based on Claude-inspired aesthetic)
     base: {
-        borderRadius: 8,
+        borderRadius: 12,
         baseFontSize: 14,
         containerPadding: 24,
-        description: 'Clean and minimal design',
+        description: 'Zoworks default aesthetic',
         light: {
-            primaryColor: '#1677ff',
-            secondaryColor: '#722ed1',
+            primaryColor: '#47c6e3',    // Zoworks logo cyan
+            secondaryColor: '#5C4B43',  // Muted brown from base_zo
             cardBg: '#ffffff',
-            layoutBg: '#f5f5f5',
-            headerBg: '#ffffff',
-            siderBg: '#ffffff',
-            textColor: '#1f1f1f',
+            layoutBg: '#F9F7F2',        // Warm parchment
+            headerBg: '#F9F7F2',
+            siderBg: '#F1EFE9',         // Slightly darker parchment
+            inputBg: '#ffffff',
+            textColor: '#212121',       // Deep graphite
         },
         dark: {
-            primaryColor: '#1890ff',
-            secondaryColor: '#9254de',
-            cardBg: '#1f1f1f',
-            layoutBg: '#141414',
-            headerBg: '#1f1f1f',
-            siderBg: '#1f1f1f',
-            textColor: '#ffffff',
+            primaryColor: '#47c6e3',    // Zoworks logo cyan
+            secondaryColor: '#A89F94',  // Muted sand from base_zo
+            cardBg: '#212121',          // Graphite card
+            layoutBg: '#171717',        // Deep graphite background
+            headerBg: '#171717',
+            siderBg: '#121212',         // Near black sider
+            inputBg: '#2a2a2a',
+            textColor: '#E6E1D6',       // Off-white text
         }
     },
 
