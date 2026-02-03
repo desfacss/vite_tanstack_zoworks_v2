@@ -36,6 +36,8 @@ export interface ThemeModeConfig {
     siderBg?: string;     // Background color for Sider
     inputBg?: string;     // Background color for input fields
     textColor?: string;   // Primary text color
+    fontFamily?: string;  // Custom font for this mode
+    headingFontFamily?: string; // Custom heading font
 }
 
 /**
@@ -72,6 +74,7 @@ export interface TenantThemeConfig {
     defaultMode?: ThemeMode;     // Tenant's default, user can override (now supports 'system')
     preset?: string;             // ID of a base preset (e.g., 'glassmorphism')
     heroHeader?: boolean;        // NEW: Enable branded hero-style header
+    headingFontFamily?: string;  // NEW: Global heading font fallback
 }
 
 /**
@@ -272,6 +275,12 @@ function applyStaticBranding(config: TenantThemeConfig): void {
     root.style.setProperty('--tenant-font-size', `${baseSize}px`);
     root.style.setProperty('--tenant-zoom-factor', `${zoomFactor}`);
 
+    // Font Families
+    const bodyFont = config.light?.fontFamily || config.fontFamily || "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+    const headingFont = config.light?.headingFontFamily || config.headingFontFamily || bodyFont;
+    root.style.setProperty('--tenant-font-family', bodyFont);
+    root.style.setProperty('--tenant-heading-font-family', headingFont);
+
     // Layout Padding centralization
     const padding = (config.containerPadding !== undefined ? config.containerPadding : 24) * zoomFactor;
     root.style.setProperty('--layout-padding', `${padding}px`);
@@ -343,8 +352,10 @@ function applyStaticBranding(config: TenantThemeConfig): void {
         root.removeAttribute('data-glass-effect');
     }
 
-    // Gradient Card Layout
-    if (config.preset === 'gradient_card' || config.preset === 'branded_header' || config.heroHeader) {
+    // Layout & Hero Header Control
+    const isGradientLayout = config.preset === 'gradient_card' || config.preset === 'branded_header' || config.heroHeader === true;
+
+    if (isGradientLayout) {
         root.setAttribute('data-theme-layout', 'gradient-card');
         root.setAttribute('data-hero-header', 'true');
     } else {
@@ -399,6 +410,7 @@ export function getAntdTheme(isDarkMode: boolean = false): ThemeConfig {
             colorBgContainer: 'var(--tenant-card-bg)',
             colorBgLayout: 'var(--tenant-layout-bg)',
             colorText: modeConfig?.textColor || (isDarkMode ? '#e9edef' : 'rgba(0, 0, 0, 0.88)'),
+            fontFamily: modeConfig?.fontFamily || tenantConfig?.fontFamily || "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
         },
         components: {
             ...baseTheme.components,

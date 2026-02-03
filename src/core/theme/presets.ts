@@ -17,6 +17,7 @@ export const THEME_PRESETS: Record<string, Partial<TenantThemeConfig> & { descri
         baseFontSize: 14,
         containerPadding: 24,
         description: 'Zoworks default aesthetic (Claude-inspired)',
+        fontFamily: "'Inter', sans-serif",
         light: {
             primaryColor: '#D97757',    // Claude Terra-cotta
             secondaryColor: '#5C4B43',  // Muted brown
@@ -45,6 +46,8 @@ export const THEME_PRESETS: Record<string, Partial<TenantThemeConfig> & { descri
         baseFontSize: 14,
         containerPadding: 24,
         description: 'Apple-inspired frosted glass',
+        fontFamily: "'PT Sans', sans-serif",
+        headingFontFamily: "'Raleway', sans-serif",
         light: {
             primaryColor: '#007AFF',
             secondaryColor: '#5856D6',
@@ -71,6 +74,8 @@ export const THEME_PRESETS: Record<string, Partial<TenantThemeConfig> & { descri
         baseFontSize: 14,
         containerPadding: 20,
         description: 'Sharp and professional for enterprise',
+        fontFamily: "'Source Sans Pro', sans-serif",
+        headingFontFamily: "'Montserrat', sans-serif",
         light: {
             primaryColor: '#1e40af',
             secondaryColor: '#1e3a8a',
@@ -91,6 +96,9 @@ export const THEME_PRESETS: Record<string, Partial<TenantThemeConfig> & { descri
         }
     },
 
+    // Modern - Dynamic, clean, high-tech pairing
+    // REMOVED - Integrated into Glassmorphism and Gradient Card
+
     // Gradient Card - Modern gradient header
     gradient_card: {
         borderRadius: 16,
@@ -98,6 +106,8 @@ export const THEME_PRESETS: Record<string, Partial<TenantThemeConfig> & { descri
         containerPadding: 28,
         heroHeader: true,
         description: 'Bold gradients with hero header',
+        fontFamily: "'PT Sans', sans-serif",
+        headingFontFamily: "'Raleway', sans-serif",
         light: {
             primaryColor: '#4F46E5',
             secondaryColor: '#10B981',
@@ -125,6 +135,7 @@ export const THEME_PRESETS: Record<string, Partial<TenantThemeConfig> & { descri
         containerPadding: 28,
         preset: 'neon', // Triggers CSS layer in index.css
         description: 'Electric neon with high-impact animations',
+        fontFamily: "'Inter', sans-serif",
         light: {
             primaryColor: '#57D9B4',
             secondaryColor: '#4F46E5',  // Indigo/Secondary
@@ -154,6 +165,7 @@ export const THEME_PRESETS: Record<string, Partial<TenantThemeConfig> & { descri
         containerPadding: 16,
         preset: 'whatsapp',
         description: 'Authentic WhatsApp design with signature green',
+        fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
         light: {
             primaryColor: '#25D366',    // WhatsApp Green (signature)
             secondaryColor: '#008069',  // WhatsApp Teal
@@ -183,6 +195,7 @@ export const THEME_PRESETS: Record<string, Partial<TenantThemeConfig> & { descri
         containerPadding: 24,
         preset: 'base_zo',
         description: 'Claude-inspired warm parchment and graphite aesthetic',
+        fontFamily: "'Inter', sans-serif",
         light: {
             primaryColor: '#D97757',    // Claude Terra-cotta
             secondaryColor: '#5C4B43',  // Muted brown
@@ -211,6 +224,7 @@ export const THEME_PRESETS: Record<string, Partial<TenantThemeConfig> & { descri
         containerPadding: 24,
         preset: 'neon_zo', // Triggers unique CSS layer
         description: 'Claude-inspired warmth with electric Neon.com accents',
+        fontFamily: "'Inter', sans-serif",
         light: {
             primaryColor: '#00E599',    // Neon Green
             secondaryColor: '#5C4B43',  // Claude Muted Brown

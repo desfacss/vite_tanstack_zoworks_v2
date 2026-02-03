@@ -3,6 +3,11 @@
 @tailwind utilities;
 
 /* ============================================
+   FONT IMPORTS
+   ============================================ */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700&family=Source+Sans+Pro:wght@400;600;700&family=Raleway:wght@400;500;600;700&family=PT+Sans:wght@400;700&display=swap');
+
+/* ============================================
    LAYOUT CSS VARIABLES
    ============================================
    Single source of truth for layout spacing.
@@ -635,13 +640,27 @@ body,
 }
 
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-family: var(--tenant-font-family, "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif") !important;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background-color: var(--color-bg-primary);
   color: var(--color-text-primary);
   overflow-x: hidden;
   overflow-y: auto;
+}
+
+/* Heading Fonts */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.ant-typography-title,
+.ant-card-head-title,
+.brand-name {
+  font-family: var(--tenant-heading-font-family, var(--tenant-font-family, "'Inter', sans-serif")) !important;
+  font-weight: 600 !important;
 }
 
 /* Custom scrollbar */

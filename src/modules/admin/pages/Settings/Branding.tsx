@@ -112,6 +112,11 @@ const Branding: React.FC = () => {
             containerPadding: currentValues.containerPadding,
             defaultMode: currentValues.defaultMode,
             allowUserDarkMode: currentValues.allowUserDarkMode,
+            // Layout Flags
+            heroHeader: currentValues.heroHeader,
+            compactMode: currentValues.compactMode,
+            fontFamily: currentValues.fontFamily,
+            headingFontFamily: currentValues.headingFontFamily,
         };
         updateTenantTheme(updatedConfig);
     };
@@ -146,6 +151,11 @@ const Branding: React.FC = () => {
                     dark_layoutBg: preset.dark?.layoutBg || '#141414',
                     dark_headerBg: preset.dark?.headerBg || '#141414',
                     dark_siderBg: preset.dark?.siderBg || '#141414',
+                    // Optional flags - explicitly reset to preset or default
+                    heroHeader: preset.heroHeader || false,
+                    compactMode: preset.compactMode || false,
+                    fontFamily: preset.fontFamily || undefined,
+                    headingFontFamily: preset.headingFontFamily || undefined,
                 };
                 form.setFieldsValue(newValues);
                 handleValuesChange(null, { ...form.getFieldsValue(true), ...newValues });
@@ -161,7 +171,7 @@ const Branding: React.FC = () => {
         try {
             const values = form.getFieldsValue(true);
             const payload: Partial<TenantThemeConfig> = {
-                ...themeConfig,
+                // DO NOT spread old themeConfig - leads to stale flags like heroHeader sticking around
                 preset: values.preset,
                 brandName: values.brandName,
                 faviconUrl: values.faviconUrl,
@@ -192,6 +202,11 @@ const Branding: React.FC = () => {
                 containerPadding: values.containerPadding,
                 defaultMode: values.defaultMode,
                 allowUserDarkMode: values.allowUserDarkMode,
+                // Layout Flags
+                heroHeader: values.heroHeader,
+                compactMode: values.compactMode,
+                fontFamily: values.fontFamily,
+                headingFontFamily: values.headingFontFamily,
             };
 
             const { error } = await supabase
