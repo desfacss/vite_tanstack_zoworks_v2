@@ -9,10 +9,13 @@ import { ThemeConfig, theme } from 'antd';
  * - Detailed Dark Mode optimization
  * - Centralized design tokens
  */
+export const DEFAULT_PRIMARY_COLOR = '#47c6e3'; // Zoworks Cyan
+export const DEFAULT_SECONDARY_COLOR = '#4F46E5';
+
 export const getAntdTheme = (
     isDark: boolean,
-    primaryColor: string = '#47c6e3',
-    secondaryColor: string = '#4F46E5',
+    primaryColor: string = DEFAULT_PRIMARY_COLOR,
+    secondaryColor: string = DEFAULT_SECONDARY_COLOR,
     borderRadius: number = 8,
     fontSize: number = 14
 ): ThemeConfig => {

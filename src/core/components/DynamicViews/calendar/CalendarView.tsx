@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { DEFAULT_PRIMARY_COLOR } from '@/core/theme/ThemeRegistry';
 import { Calendar, dayjsLocalizer, View, Views } from 'react-big-calendar';
 import dayjs from 'dayjs';
 import { Typography, Card, Button, Empty } from 'antd';
@@ -114,7 +115,6 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, viewMode, isMobile 
 
     // ... (color mapping logic remains the same) ...
     let backgroundColor = baseColor;
-    import { DEFAULT_PRIMARY_COLOR } from '@/core/theme/ThemeRegistry';
 
     if (baseColor && !baseColor.startsWith('#')) {
       const colorMap: { [key: string]: string } = {

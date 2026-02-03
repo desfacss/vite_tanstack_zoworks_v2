@@ -15,8 +15,7 @@ import { THEME_PRESETS } from './presets';
 // CONSTANTS
 // ============================================================================
 
-export const DEFAULT_PRIMARY_COLOR = '#47c6e3'; // Zoworks Cyan
-export const DEFAULT_SECONDARY_COLOR = '#4F46E5';
+export { DEFAULT_PRIMARY_COLOR, DEFAULT_SECONDARY_COLOR } from './settings';
 
 // ============================================================================
 // TYPES
