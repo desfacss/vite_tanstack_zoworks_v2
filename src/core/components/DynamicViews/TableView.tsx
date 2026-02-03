@@ -97,7 +97,11 @@ const TableView: React.FC<TableViewProps> = ({
           if (autoRenderer) {
             const rendered = autoRenderer(value);
             if (field.fieldPath === firstDisplayFieldPath && value !== null && value !== undefined && value !== '') {
-              return <span className="font-semibold display-id-text" style={{ color: 'var(--tenant-primary)', whiteSpace: 'nowrap' }}>{rendered}</span>;
+              return (
+                <span className="font-semibold display-id-text" style={{ color: 'var(--tenant-primary)', whiteSpace: 'nowrap' }}>
+                  {React.isValidElement(rendered) ? rendered : (typeof rendered === 'object' && rendered !== null ? JSON.stringify(rendered) : rendered)}
+                </span>
+              );
             }
             return rendered;
           }
@@ -123,8 +127,18 @@ const TableView: React.FC<TableViewProps> = ({
           }
           const content = (value !== null && value !== undefined && value !== '') ? value : '-';
           if (field.fieldPath === firstDisplayFieldPath && content !== '-') {
-            return <span className="font-semibold display-id-text" style={{ color: 'var(--tenant-primary)', whiteSpace: 'nowrap' }}>{content}</span>
+            return (
+              <span className="font-semibold display-id-text" style={{ color: 'var(--tenant-primary)', whiteSpace: 'nowrap' }}>
+                {React.isValidElement(content) ? content : (typeof content === 'object' && content !== null ? JSON.stringify(content) : content)}
+              </span>
+            );
           }
+          
+          // Final safety check for objects to prevent React crash
+          if (typeof content === 'object' && content !== null) {
+            return <span className="text-xs opacity-70 italic">{JSON.stringify(content)}</span>;
+          }
+
           return content;
         },
       })) as any[];
