@@ -43,7 +43,10 @@ const Login = () => {
 
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [isSyncing, setIsSyncing] = useState(true);
+
+  // Only default to syncing if we actually have a token in storage
+  const hasToken = typeof window !== 'undefined' && !!localStorage.getItem('app.auth.token');
+  const [isSyncing, setIsSyncing] = useState(hasToken);
 
   // Organization selection state
   const [organizations, setOrganizations] = useState<UserOrganization[]>([]);
@@ -61,19 +64,48 @@ const Login = () => {
 
   // 2. INITIAL CHECK: Look for existing session
   useEffect(() => {
-    const checkSession = async () => {
-      console.log('>>> [LoginPage] Checking for existing session...');
-      const { data: { session } } = await supabase.auth.getSession();
+    let isMounted = true;
 
-      if (session) {
-        console.log('>>> [LoginPage] Found session token. Waiting for Store hydration...');
-        setIsSyncing(true);
-      } else {
-        console.log('>>> [LoginPage] No session found. Ready for user input.');
+    // Safety timeout for Login syncing: if it takes > 3s, show the form
+    const timer = setTimeout(() => {
+      if (isMounted && isSyncing) {
+        console.warn('>>> [LoginPage] Auth check timed out. Showing login form.');
         setIsSyncing(false);
       }
+    }, 3000);
+
+    const checkSession = async () => {
+      console.log('>>> [LoginPage] Checking for existing session...');
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+
+        if (error) {
+          console.error('>>> [LoginPage] Session check error:', error);
+          if (isMounted) setIsSyncing(false);
+          return;
+        }
+
+        if (session) {
+          console.log('>>> [LoginPage] Found session token. Waiting for Store hydration...');
+          // Keep isSyncing as true, SessionManager will eventually set user in store
+          if (isMounted) setIsSyncing(true);
+        } else {
+          console.log('>>> [LoginPage] No session found. Ready for user input.');
+          if (isMounted) setIsSyncing(false);
+        }
+      } catch (err) {
+        console.error('>>> [LoginPage] Unexpected checkSession error:', err);
+        if (isMounted) setIsSyncing(false);
+      } finally {
+        if (isMounted) clearTimeout(timer);
+      }
     };
+
     checkSession();
+    return () => {
+      isMounted = false;
+      clearTimeout(timer);
+    };
   }, []);
 
   /**
@@ -126,9 +158,15 @@ const Login = () => {
     devLog('006', 'Setting preferred organization in backend', org.id);
     try {
       await supabase.schema('identity').rpc('set_preferred_organization', { new_org_id: org.id });
-      
+
       devLog('007', 'Refreshing session to update JWT claims');
-      await supabase.auth.refreshSession();
+      // Add a 5s safety timeout to refreshSession to prevent hangs
+      await Promise.race([
+        supabase.auth.refreshSession(),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Refresh timeout')), 5000))
+      ]).catch(err => {
+        console.warn('[Login] Session refresh timed out or failed, proceeding anyway:', err);
+      });
     } catch (err) {
       console.error('[Login] Failed to set preferred org or refresh session:', err);
       // Continue anyway, it might work if already set or if RLS is not too strict yet

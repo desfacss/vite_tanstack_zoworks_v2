@@ -6,8 +6,9 @@ import env_def from './env';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
+console.log('[Supabase] Initializing client with URL:', supabaseUrl ? 'FOUND' : 'MISSING');
 if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('Supabase configuration is missing. Please check your environment variables.');
+  console.error('[Supabase] Configuration is missing! URL:', supabaseUrl, 'Key:', supabaseAnonKey ? 'EXISTS' : 'MISSING');
   throw new Error('Missing Supabase configuration');
 }
 

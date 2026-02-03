@@ -548,17 +548,19 @@ const fetchUserSessionData = async ({ queryKey }: QueryFunctionContext<UserSessi
   // 2. DECISION MATRIX: Reactive Key vs JWT Fallback
   // If the hook requested a specific ID (from Store), use it.
   // If the hook passed null (First load), fall back to JWT.
-  // Check for org_id in both app_metadata (common for hooks) and user_metadata
-  let targetOrgId = requestedOrgId || 
-                    session.user.app_metadata?.org_id || 
-                    session.user.user_metadata?.org_id;
+  // Check for org_id in both app_metadata and user_metadata
+  let targetOrgId = requestedOrgId ||
+    session.user.app_metadata?.org_id ||
+    session.user.app_metadata?.organization_id ||
+    session.user.user_metadata?.org_id ||
+    session.user.user_metadata?.organization_id;
 
   // --- SMART BOOTSTRAP (Reload Support) ---
   // If we still don't have an ID (e.g., cold reload before JWT refresh), 
   // we fetch it from the database instead of failing.
   if (!targetOrgId && session.user.id) {
     console.log('%c[Flow] Bootstrapping Org ID from Database...', 'color: cyan');
-    
+
     // Attempt 1: Get Preferred Org from identity.users
     const { data: userData } = await supabase
       .schema('identity')
@@ -579,7 +581,7 @@ const fetchUserSessionData = async ({ queryKey }: QueryFunctionContext<UserSessi
         .eq('is_active', true)
         .order('created_at', { ascending: true })
         .limit(1);
-      
+
       targetOrgId = memberships?.[0]?.organization_id;
     }
 
@@ -604,7 +606,7 @@ const fetchUserSessionData = async ({ queryKey }: QueryFunctionContext<UserSessi
   const { data: rpcData, error: rpcError } = await supabase
     .schema('identity')
     .rpc('jwt_get_user_session', { p_organization_id: targetOrgId });
-    console.log('qq-jwt_get_user_session', rpcData);
+  console.log('qq-jwt_get_user_session', rpcData);
 
   if (rpcError || !rpcData) throw new Error(rpcError?.message || 'RPC No Data');
 
