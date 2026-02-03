@@ -2779,12 +2779,12 @@ legend {
 
 [data-theme-preset="neon"] {
   /* Neon effects inherit from tenant's primary color (from database) */
-  --neon-primary: var(--color-primary, #47c6e3);
+  --neon-primary: var(--color-primary, #57D9B4);
   --neon-secondary: var(--color-secondary, #4F46E5);
 
   /* Dynamic RGB values for rgba() usage - will be set by ThemeRegistry */
-  --neon-bg-glow: rgba(var(--color-primary-rgb, 71, 198, 227), 0.12);
-  --neon-border: rgba(var(--color-primary-rgb, 71, 198, 227), 0.15);
+  --neon-bg-glow: rgba(var(--color-primary-rgb, 87, 217, 180), 0.12);
+  --neon-border: rgba(var(--color-primary-rgb, 87, 217, 180), 0.15);
   --neon-card-bg: rgba(13, 13, 13, 0.9);
 }
 
@@ -2795,17 +2795,17 @@ legend {
 
 /* Primary Button - Gradient effect */
 [data-theme-preset="neon"] .ant-btn-primary {
-  background: linear-gradient(135deg, var(--color-primary, #47c6e3) 0%, var(--neon-primary) 100%) !important;
+  background: linear-gradient(135deg, var(--color-primary, #57D9B4) 0%, var(--neon-primary) 100%) !important;
 }
 
 /* Segmented Selected - Gradient effect */
 [data-theme-preset="neon"] .ant-segmented-item-selected {
-  background: linear-gradient(135deg, var(--color-primary, #47c6e3) 0%, var(--neon-primary) 100%) !important;
+  background: linear-gradient(135deg, var(--color-primary, #57D9B4) 0%, var(--neon-primary) 100%) !important;
 }
 
 /* Radio Button Checked - Gradient effect */
 [data-theme-preset="neon"] .ant-radio-button-wrapper-checked {
-  background: linear-gradient(135deg, var(--color-primary, #47c6e3) 0%, var(--neon-primary) 100%) !important;
+  background: linear-gradient(135deg, var(--color-primary, #57D9B4) 0%, var(--neon-primary) 100%) !important;
 }
 
 /* ============================================
@@ -3688,7 +3688,7 @@ legend {
 /* Light Mode Status Indicators */
 [data-theme-preset="neon"]:not(.dark) .status-online {
   background-color: var(--neon-primary);
-  box-shadow: 0 0 6px rgba(0, 229, 153, 0.6);
+  box-shadow: 0 0 6px rgba(87, 217, 180, 0.6);
 }
 
 /* ============================================
@@ -3697,7 +3697,7 @@ legend {
 
 /* Avatar - Override default blue */
 [data-theme-preset="neon"]:not(.dark) .ant-avatar {
-  background: linear-gradient(135deg, var(--neon-primary) 0%, #00b377 100%) !important;
+  background: linear-gradient(135deg, var(--neon-primary) 0%, #48C5A3 100%) !important;
   color: #000000 !important;
 }
 
@@ -3842,10 +3842,10 @@ legend {
 [data-theme-preset="neon"]:not(.dark) .welcome-hub .ant-btn,
 [data-theme-preset="neon"]:not(.dark) .content-body .ant-btn-primary,
 [data-theme-preset="neon"]:not(.dark) .main-content .ant-btn-primary {
-  background: linear-gradient(135deg, var(--neon-primary) 0%, #00d68a 100%) !important;
+  background: linear-gradient(135deg, var(--neon-primary) 0%, #48C5A3 100%) !important;
   color: #000000 !important;
   border: none !important;
-  box-shadow: 0 4px 15px rgba(0, 229, 153, 0.35) !important;
+  box-shadow: 0 4px 15px rgba(87, 217, 180, 0.35) !important;
 }
 
 /* Highlighted name in welcome message */

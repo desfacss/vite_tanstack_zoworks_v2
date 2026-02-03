@@ -11,15 +11,15 @@ import { TenantThemeConfig } from './ThemeRegistry';
  * When a preset is selected, its colors should override tenant config.
  */
 export const THEME_PRESETS: Record<string, Partial<TenantThemeConfig> & { description?: string }> = {
-    // Base/Default - Clean, minimal, professional (Based on Claude-inspired aesthetic)
+    // Base/Default - Clean, minimal, professional (Now synced with Claude-inspired base_zo)
     base: {
         borderRadius: 12,
         baseFontSize: 14,
         containerPadding: 24,
-        description: 'Zoworks default aesthetic',
+        description: 'Zoworks default aesthetic (Claude-inspired)',
         light: {
-            primaryColor: '#47c6e3',    // Zoworks logo cyan
-            secondaryColor: '#5C4B43',  // Muted brown from base_zo
+            primaryColor: '#D97757',    // Claude Terra-cotta
+            secondaryColor: '#5C4B43',  // Muted brown
             cardBg: '#ffffff',
             layoutBg: '#F9F7F2',        // Warm parchment
             headerBg: '#F9F7F2',
@@ -28,8 +28,8 @@ export const THEME_PRESETS: Record<string, Partial<TenantThemeConfig> & { descri
             textColor: '#212121',       // Deep graphite
         },
         dark: {
-            primaryColor: '#47c6e3',    // Zoworks logo cyan
-            secondaryColor: '#A89F94',  // Muted sand from base_zo
+            primaryColor: '#D97757',    // Claude Terra-cotta
+            secondaryColor: '#A89F94',  // Muted sand
             cardBg: '#212121',          // Graphite card
             layoutBg: '#171717',        // Deep graphite background
             headerBg: '#171717',
@@ -126,7 +126,7 @@ export const THEME_PRESETS: Record<string, Partial<TenantThemeConfig> & { descri
         preset: 'neon', // Triggers CSS layer in index.css
         description: 'Electric neon with high-impact animations',
         light: {
-            primaryColor: '#47c6e3',    // Zoworks logo cyan
+            primaryColor: '#57D9B4',
             secondaryColor: '#4F46E5',  // Indigo/Secondary
             cardBg: '#ffffff',
             layoutBg: '#f8fafb',        // Off-white with subtle warmth
@@ -136,7 +136,7 @@ export const THEME_PRESETS: Record<string, Partial<TenantThemeConfig> & { descri
             textColor: '#1a1a2e',       // Deep slate for contrast
         },
         dark: {
-            primaryColor: '#47c6e3',    // Zoworks logo cyan
+            primaryColor: '#57D9B4',
             secondaryColor: '#4F46E5',  // Indigo/Secondary
             cardBg: '#0f0f0f',          // Near black card
             layoutBg: '#020202',        // Pitch black layout
