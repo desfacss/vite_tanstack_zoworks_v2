@@ -3,16 +3,19 @@ import { supabase } from '@/core/lib/supabase';
 import { useAuthStore } from '@/core/lib/store';
 import type { WaContact } from '../types';
 
-const getOrganizationId = async (): Promise<string> => {
-    const org = useAuthStore.getState().organization;
-    if (!org?.id) throw new Error('No organization selected');
-    return org.id;
+const getAccessScope = () => {
+    const { organization, location } = useAuthStore.getState();
+    if (!organization?.id) throw new Error('No organization selected');
+    return {
+        organizationId: organization.id,
+        locationId: location?.id
+    };
 };
 
 const fetchContactForConversation = async (conversationId: string): Promise<WaContact | null> => {
-    const organizationId = await getOrganizationId();
+    const { organizationId, locationId } = getAccessScope();
 
-    const { data: conversation, error: convError } = await supabase
+    let query = supabase
         .from('wa_conversations')
         .select(`
             id,
@@ -36,8 +39,13 @@ const fetchContactForConversation = async (conversationId: string): Promise<WaCo
             )
         `)
         .eq('organization_id', organizationId)
-        .eq('id', conversationId)
-        .maybeSingle();
+        .eq('id', conversationId);
+
+    if (locationId) {
+        query = query.eq('location_id', locationId);
+    }
+
+    const { data: conversation, error: convError } = await query.maybeSingle();
 
     if (convError) {
         console.error('Error fetching conversation contact:', convError);
@@ -62,14 +70,19 @@ const fetchContactForConversation = async (conversationId: string): Promise<WaCo
 };
 
 const fetchContactById = async (contactId: string): Promise<WaContact | null> => {
-    const organizationId = await getOrganizationId();
+    const { organizationId, locationId } = getAccessScope();
 
-    const { data, error } = await supabase
+    let query = supabase
         .from('wa_contacts')
         .select('*')
         .eq('organization_id', organizationId)
-        .eq('id', contactId)
-        .maybeSingle();
+        .eq('id', contactId);
+
+    if (locationId) {
+        query = query.eq('location_id', locationId);
+    }
+
+    const { data, error } = await query.maybeSingle();
 
     if (error) {
         console.error('Error fetching contact:', error);
@@ -91,13 +104,19 @@ const fetchContactById = async (contactId: string): Promise<WaContact | null> =>
 };
 
 const fetchConversationCount = async (contactId: string): Promise<number> => {
-    const organizationId = await getOrganizationId();
+    const { organizationId, locationId } = getAccessScope();
 
-    const { count, error } = await supabase
+    let query = supabase
         .from('wa_conversations')
         .select('*', { count: 'exact', head: true })
         .eq('organization_id', organizationId)
         .eq('contact_id', contactId);
+
+    if (locationId) {
+        query = query.eq('location_id', locationId);
+    }
+
+    const { count, error } = await query;
 
     if (error) {
         console.error('Error fetching conversation count:', error);
@@ -108,13 +127,19 @@ const fetchConversationCount = async (contactId: string): Promise<number> => {
 };
 
 const fetchMessageCount = async (contactId: string): Promise<number> => {
-    const organizationId = await getOrganizationId();
+    const { organizationId, locationId } = getAccessScope();
 
-    const { count, error } = await supabase
+    let query = supabase
         .from('wa_messages')
         .select('*', { count: 'exact', head: true })
         .eq('organization_id', organizationId)
         .eq('contact_id', contactId);
+
+    if (locationId) {
+        query = query.eq('location_id', locationId);
+    }
+
+    const { count, error } = await query;
 
     if (error) {
         console.error('Error fetching message count:', error);
@@ -125,8 +150,9 @@ const fetchMessageCount = async (contactId: string): Promise<number> => {
 };
 
 export const useContactForConversation = (conversationId: string | null) => {
+    const { organization, location } = useAuthStore();
     return useQuery({
-        queryKey: ['conversationContact', conversationId],
+        queryKey: ['conversationContact', organization?.id, location?.id, conversationId],
         queryFn: () => fetchContactForConversation(conversationId!),
         enabled: !!conversationId,
         staleTime: 1000 * 60,
@@ -134,8 +160,9 @@ export const useContactForConversation = (conversationId: string | null) => {
 };
 
 export const useContact = (contactId: string | null) => {
+    const { organization, location } = useAuthStore();
     return useQuery({
-        queryKey: ['contact', contactId],
+        queryKey: ['contact', organization?.id, location?.id, contactId],
         queryFn: () => fetchContactById(contactId!),
         enabled: !!contactId,
         staleTime: 1000 * 60,
@@ -143,14 +170,15 @@ export const useContact = (contactId: string | null) => {
 };
 
 export const useContactStats = (contactId: string | null) => {
+    const { organization, location } = useAuthStore();
     const conversationCountQuery = useQuery({
-        queryKey: ['contactConversationCount', contactId],
+        queryKey: ['contactConversationCount', organization?.id, location?.id, contactId],
         queryFn: () => fetchConversationCount(contactId!),
         enabled: !!contactId,
     });
 
     const messageCountQuery = useQuery({
-        queryKey: ['contactMessageCount', contactId],
+        queryKey: ['contactMessageCount', organization?.id, location?.id, contactId],
         queryFn: () => fetchMessageCount(contactId!),
         enabled: !!contactId,
     });

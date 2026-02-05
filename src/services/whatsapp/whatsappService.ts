@@ -4,12 +4,23 @@ import { useAuthStore } from '@/core/lib/store';
 import type { SendMessageParams, MessageResult, MediaUploadResult, ConversationUpdateParams } from './types';
 
 /**
- * Get the current organization ID from auth store
+ * Get the current access scope from auth store
+ */
+export const getAccessScope = () => {
+  const { organization, location } = useAuthStore.getState();
+  if (!organization?.id) throw new Error('No organization selected');
+  return {
+    organizationId: organization.id,
+    locationId: location?.id
+  };
+};
+
+/**
+ * Get the current organization ID (legacy helper)
  */
 export const getOrganizationId = async (): Promise<string> => {
-  const org = useAuthStore.getState().organization;
-  if (!org?.id) throw new Error('No organization selected');
-  return org.id;
+  const { organizationId } = getAccessScope();
+  return organizationId;
 };
 
 /**
@@ -22,12 +33,15 @@ export const uploadMediaToMeta = async (file: File): Promise<MediaUploadResult> 
   formData.append('file', file);
 
   try {
-    const organizationId = await getOrganizationId();
+    const { organizationId, locationId } = getAccessScope();
     if (organizationId) {
       formData.append('organization_id', organizationId);
     }
+    if (locationId) {
+      formData.append('location_id', locationId);
+    }
   } catch (e) {
-    console.warn('[uploadMediaToMeta] Could not get organizationId:', e);
+    console.warn('[uploadMediaToMeta] Could not get access scope:', e);
   }
 
   let metaType = 'document';
@@ -61,10 +75,10 @@ export const uploadMediaToMeta = async (file: File): Promise<MediaUploadResult> 
  * @returns Promise with the sent message
  */
 export const sendWhatsAppMessage = async (params: SendMessageParams): Promise<MessageResult> => {
-  const organizationId = await getOrganizationId();
+  const { organizationId, locationId } = getAccessScope();
 
   // Fetch conversation and contact details
-  const { data: conversation, error: convError } = await supabase
+  let convQuery = supabase
     .from('wa_conversations')
     .select(`
       id,
@@ -76,8 +90,13 @@ export const sendWhatsAppMessage = async (params: SendMessageParams): Promise<Me
       )
     `)
     .eq('id', params.conversationId)
-    .eq('organization_id', organizationId)
-    .single();
+    .eq('organization_id', organizationId);
+
+  if (locationId) {
+    convQuery = convQuery.eq('location_id', locationId);
+  }
+
+  const { data: conversation, error: convError } = await convQuery.single();
 
   if (convError || !conversation) {
     throw new Error('Conversation not found');
@@ -128,6 +147,7 @@ export const sendWhatsAppMessage = async (params: SendMessageParams): Promise<Me
 
   const requestBody = {
     p_organization_id: organizationId,
+    p_location_id: locationId || null,
     p_contact_wa_id: contact.wa_id,
     p_message_type: messageType,
     p_message_content: p_message_content,
@@ -172,17 +192,23 @@ export const sendWhatsAppMessage = async (params: SendMessageParams): Promise<Me
 export const updateConversationStatus = async (
   params: ConversationUpdateParams
 ): Promise<{ success: boolean }> => {
-  const organizationId = await getOrganizationId();
+  const { organizationId, locationId } = getAccessScope();
 
   const updateData: Record<string, any> = {};
   if (params.status) updateData.status = params.status;
   if (params.assigneeId !== undefined) updateData.assignee_id = params.assigneeId;
 
-  const { error } = await supabase
+  let query = supabase
     .from('wa_conversations')
     .update(updateData)
     .eq('id', params.conversationId)
     .eq('organization_id', organizationId);
+
+  if (locationId) {
+    query = query.eq('location_id', locationId);
+  }
+
+  const { error } = await query;
 
   if (error) {
     console.error('Error updating conversation:', error);

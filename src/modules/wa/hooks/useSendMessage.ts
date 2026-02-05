@@ -8,10 +8,10 @@ export { uploadMediaToMeta, getOrganizationId } from '@/services/whatsapp';
 export type { SendMessageParams, MessageResult, MediaUploadResult } from '@/services/whatsapp';
 
 // Import services for local use
-import { 
-  sendWhatsAppMessage, 
-  getOrganizationId,
-  type SendMessageParams 
+import {
+    sendWhatsAppMessage,
+    getAccessScope,
+    type SendMessageParams
 } from '@/services/whatsapp';
 
 /**
@@ -82,17 +82,23 @@ const updateConversationStatus = async (params: {
     status?: string;
     assigneeId?: string;
 }) => {
-    const organizationId = await getOrganizationId();
+    const { organizationId, locationId } = getAccessScope();
 
     const updateData: Record<string, any> = {};
     if (params.status) updateData.status = params.status;
     if (params.assigneeId !== undefined) updateData.assignee_id = params.assigneeId;
 
-    const { error } = await supabase
+    let query = supabase
         .from('wa_conversations')
         .update(updateData)
         .eq('id', params.conversationId)
         .eq('organization_id', organizationId);
+
+    if (locationId) {
+        query = query.eq('location_id', locationId);
+    }
+
+    const { error } = await query;
 
     if (error) {
         console.error('Error updating conversation:', error);

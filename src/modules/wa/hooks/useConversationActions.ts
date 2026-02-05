@@ -10,10 +10,13 @@ interface TeamMember {
     avatar?: string;
 }
 
-const getOrganizationId = async (): Promise<string> => {
-    const org = useAuthStore.getState().organization;
-    if (!org?.id) throw new Error('No organization selected');
-    return org.id;
+const getAccessScope = () => {
+    const { organization, location } = useAuthStore.getState();
+    if (!organization?.id) throw new Error('No organization selected');
+    return {
+        organizationId: organization.id,
+        locationId: location?.id
+    };
 };
 
 const closeConversation = async (conversationId: string) => {
@@ -30,13 +33,19 @@ const closeConversation = async (conversationId: string) => {
 };
 
 const reopenConversation = async (conversationId: string) => {
-    const organizationId = await getOrganizationId();
+    const { organizationId, locationId } = getAccessScope();
 
-    const { error } = await supabase
+    let query = supabase
         .from('wa_conversations')
         .update({ status: 'open', updated_at: new Date().toISOString() })
         .eq('id', conversationId)
         .eq('organization_id', organizationId);
+
+    if (locationId) {
+        query = query.eq('location_id', locationId);
+    }
+
+    const { error } = await query;
 
     if (error) {
         console.error('Error reopening conversation:', error);
@@ -47,7 +56,7 @@ const reopenConversation = async (conversationId: string) => {
 };
 
 const snoozeConversation = async (conversationId: string, snoozeUntil?: string) => {
-    const organizationId = await getOrganizationId();
+    const { organizationId, locationId } = getAccessScope();
 
     const updateData: Record<string, any> = {
         status: 'snoozed',
@@ -58,11 +67,17 @@ const snoozeConversation = async (conversationId: string, snoozeUntil?: string) 
         updateData.snoozed_until = snoozeUntil;
     }
 
-    const { error } = await supabase
+    let query = supabase
         .from('wa_conversations')
         .update(updateData)
         .eq('id', conversationId)
         .eq('organization_id', organizationId);
+
+    if (locationId) {
+        query = query.eq('location_id', locationId);
+    }
+
+    const { error } = await query;
 
     if (error) {
         console.error('Error snoozing conversation:', JSON.stringify(error, null, 2));
@@ -87,7 +102,7 @@ const assignAgent = async (conversationId: string, agentId: string | null) => {
 };
 
 const fetchTeamMembers = async (): Promise<TeamMember[]> => {
-    const organizationId = await getOrganizationId();
+    const { organizationId } = getAccessScope();
 
     const { data, error } = await supabase
         .schema('identity')
@@ -110,8 +125,9 @@ const fetchTeamMembers = async (): Promise<TeamMember[]> => {
 };
 
 export const useTeamMembers = () => {
+    const { organization, location } = useAuthStore();
     return useQuery({
-        queryKey: ['teamMembers'],
+        queryKey: ['teamMembers', organization?.id, location?.id],
         queryFn: fetchTeamMembers,
         staleTime: 1000 * 60 * 5,
     });

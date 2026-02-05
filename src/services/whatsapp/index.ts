@@ -4,6 +4,7 @@ export {
   sendWhatsAppMessage,
   updateConversationStatus,
   getOrganizationId,
+  getAccessScope,
 } from './whatsappService';
 
 export type {

@@ -4,10 +4,13 @@ import type { Message } from '../types';
 import { supabase } from '@/core/lib/supabase';
 import { useAuthStore } from '@/core/lib/store';
 
-const getOrganizationId = async (): Promise<string> => {
-    const org = useAuthStore.getState().organization;
-    if (!org?.id) throw new Error('No organization selected');
-    return org.id;
+const getAccessScope = () => {
+    const { organization, location } = useAuthStore.getState();
+    if (!organization?.id) throw new Error('No organization selected');
+    return {
+        organizationId: organization.id,
+        locationId: location?.id
+    };
 };
 
 const getMessageType = (content: any): Message['type'] => {
@@ -24,9 +27,9 @@ const getMessageType = (content: any): Message['type'] => {
 };
 
 const fetchMessages = async (conversationId: string): Promise<Message[]> => {
-    const organizationId = await getOrganizationId();
+    const { organizationId, locationId } = getAccessScope();
 
-    const { data, error } = await supabase
+    let query = supabase
         .from('wa_messages')
         .select(`
             id,
@@ -50,8 +53,15 @@ const fetchMessages = async (conversationId: string): Promise<Message[]> => {
             ) 
         `)
         .eq('organization_id', organizationId)
-        .eq('conversation_id', conversationId)
-        .order('timestamp', { ascending: true });
+        .eq('conversation_id', conversationId);
+
+    if (locationId) {
+        query = query.eq('location_id', locationId);
+    }
+
+    query = query.order('timestamp', { ascending: true });
+
+    const { data, error } = await query;
 
     if (error) {
         console.error('Error fetching messages:', error);
@@ -102,9 +112,10 @@ const fetchMessages = async (conversationId: string): Promise<Message[]> => {
 
 export const useMessages = (conversationId: string | null) => {
     const queryClient = useQueryClient();
+    const { organization, location } = useAuthStore();
 
     const query = useQuery({
-        queryKey: ['messages', conversationId],
+        queryKey: ['messages', organization?.id, location?.id, conversationId],
         queryFn: () => fetchMessages(conversationId!),
         enabled: !!conversationId,
         staleTime: 1000 * 60,
@@ -114,11 +125,17 @@ export const useMessages = (conversationId: string | null) => {
         if (!conversationId) return;
 
         let channel: any;
-        const organizationId = useAuthStore.getState().organization?.id;
+        const organizationId = organization?.id;
+        const locationId = location?.id;
 
         if (!organizationId) return;
 
         console.log(`[useMessages] Setting up subscription for Conversation: ${conversationId}`);
+
+        let filter = `conversation_id=eq.${conversationId},organization_id=eq.${organizationId}`;
+        if (locationId) {
+            filter += `,location_id=eq.${locationId}`;
+        }
 
         channel = supabase
             .channel(`messages-${conversationId}`)
@@ -128,7 +145,7 @@ export const useMessages = (conversationId: string | null) => {
                     event: 'INSERT',
                     schema: 'public',
                     table: 'wa_messages',
-                    filter: `conversation_id=eq.${conversationId}`,
+                    filter: filter,
                 },
                 () => {
                     queryClient.invalidateQueries({ queryKey: ['messages', conversationId] });
@@ -140,7 +157,7 @@ export const useMessages = (conversationId: string | null) => {
                     event: 'UPDATE',
                     schema: 'public',
                     table: 'wa_messages',
-                    filter: `conversation_id=eq.${conversationId}`,
+                    filter: filter,
                 },
                 () => {
                     queryClient.invalidateQueries({ queryKey: ['messages', conversationId] });
@@ -160,7 +177,7 @@ export const useMessages = (conversationId: string | null) => {
                 supabase.removeChannel(channel);
             }
         };
-    }, [queryClient, conversationId]);
+    }, [queryClient, organization?.id, location?.id, conversationId]);
 
     return query;
 };
