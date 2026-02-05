@@ -149,12 +149,12 @@ export const THEME_PRESETS: Record<string, Partial<TenantThemeConfig> & { descri
         dark: {
             primaryColor: '#57D9B4',
             secondaryColor: '#4F46E5',  // Indigo/Secondary
-            cardBg: '#0f0f0f',          // Near black card
-            layoutBg: '#020202',        // Pitch black layout
-            headerBg: '#000000',        // Pure black header
-            siderBg: '#000000',         // Pure black sidebar
-            inputBg: '#111111',         // Dark input fields
-            textColor: '#ffffff',
+            cardBg: '#0D1117',          // Deep Obsidian card
+            layoutBg: '#020408',        // Solid black-obsidian layout
+            headerBg: '#010203',        // Pure black header
+            siderBg: '#010203',         // Pure black sidebar
+            inputBg: '#161B22',         // GitHub-style dark input
+            textColor: '#E6E1D6',       // Off-white for readability
         }
     },
 

@@ -39,7 +39,7 @@ const Login = () => {
   const redirectTo = searchParams.get('redirect');
 
   // Get user from store to know when to redirect
-  const { user, organization, setOrganization, reset } = useAuthStore();
+  const { user, organization, setOrganization, reset, initialized } = useAuthStore();
 
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -107,6 +107,14 @@ const Login = () => {
       clearTimeout(timer);
     };
   }, []);
+
+  // 2a. REACTIVE SYNCING: If store initializes but user is null, stop syncing
+  useEffect(() => {
+    if (initialized && !user && isSyncing) {
+      console.log('>>> [LoginPage] Store hydrated but no user found. Revealed login form.');
+      setIsSyncing(false);
+    }
+  }, [initialized, user, isSyncing]);
 
   /**
    * Handle redirect after login/org selection
@@ -405,6 +413,7 @@ const Login = () => {
                       <Input
                         prefix={<Building className="text-gray-400" size={20} />}
                         placeholder={t('common.label.organization')}
+                        size="large"
                       />
                     </Form.Item>
                   )}

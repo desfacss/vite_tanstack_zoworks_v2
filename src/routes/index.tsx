@@ -31,6 +31,7 @@ const Tickets = lazy(() => import('@/modules/tickets/pages/Tickets'));
 const ServiceAssets = lazy(() => import('@/modules/external/pages/ServiceAssets'));
 const AdminSettings = lazy(() => import('@/modules/admin/pages/Settings'));
 const AdminBranding = lazy(() => import('@/modules/admin/pages/Settings/Branding'));
+const AdminFormElements = lazy(() => import('@/modules/admin/pages/Settings/FormElements'));
 const Profile = lazy(() => import('../pages/core/Profile'));
 const Settings = lazy(() => import('../pages/core/UserSetting'));
 const WaInbox = lazy(() => import('@/modules/wa/pages/InboxPage'));
@@ -160,6 +161,7 @@ export const AppRoutes: FC = () => {
                         {/* Admin - Settings & Branding */}
                         <Route path="/admin/settings" element={<AdminSettings />} />
                         <Route path="/admin/branding" element={<AdminBranding />} />
+                        <Route path="/admin/form-elements" element={<AdminFormElements />} />
 
                         {/* Profile & Settings */}
                         <Route path="/profile" element={<Profile />} />

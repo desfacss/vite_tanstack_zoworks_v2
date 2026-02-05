@@ -15,7 +15,7 @@ const ALL_LANGUAGES = [
   { value: 'fr', label: 'Français' },
 ];
 
-export const LanguageSelect = () => {
+export const LanguageSelect = ({ className }: { className?: string }) => {
   const { i18n } = useTranslation();
   const { organization } = useAuthStore();
 
@@ -27,7 +27,7 @@ export const LanguageSelect = () => {
   return (
     <Select
       value={i18n.language}
-      style={{ width: 150 }}
+      className={className}
       onChange={(value) => changeLanguage(value)}
     >
       {filteredLanguages.map(lang => (

@@ -35,11 +35,12 @@ interface ViewPreferences {
   };
 }
 
-// Mobile settings for bottom navigation
-interface MobilePreferences {
-  bottomNavEnabled: boolean;
-  bottomNavItems: string[]; // Array of navigation item keys
+// Accessibility settings
+export interface AccessibilityPreferences {
+  baseFontSize: number; // 12-20px (default 14)
+  viewportZoom: number; // 80-120 (default 100)
 }
+
 interface ThemeState {
   themeMode: 'light' | 'dark' | 'system';
   isDarkMode: boolean; // Computed from themeMode + system preference
@@ -91,6 +92,7 @@ interface AuthState {
   navigationItems: NavigationItem[];
   viewPreferences: ViewPreferences;
   mobilePreferences: MobilePreferences;
+  accessibilityPreferences: AccessibilityPreferences;
   appSettings: any;
 
   // --- Status Flags ---
@@ -114,6 +116,7 @@ interface AuthState {
   setViewPreferences: (userId: string, entityType: string, prefs: Partial<ViewPreferences[string][string]>) => void;
   resetViewPreferences: (userId: string, entityType: string) => void;
   setMobilePreferences: (prefs: Partial<MobilePreferences>) => void;
+  setAccessibilityPreferences: (prefs: Partial<AccessibilityPreferences>) => void;
   setIsOnline: (isOnline: boolean) => void;
   setAuthError: (error: string | null) => void;
 }
@@ -137,6 +140,10 @@ const initialState: Partial<AuthState> = {
   mobilePreferences: {
     bottomNavEnabled: true, // Enabled by default
     bottomNavItems: [], // Empty = auto-select first 5
+  },
+  accessibilityPreferences: {
+    baseFontSize: 14,
+    viewportZoom: 100,
   },
   initialized: false,
   isOnline: typeof navigator !== 'undefined' ? navigator.onLine : true,
@@ -282,6 +289,9 @@ export const useAuthStore = create<AuthState>()(
       setMobilePreferences: (prefs) => set((state) => ({
         mobilePreferences: { ...state.mobilePreferences, ...prefs }
       })),
+      setAccessibilityPreferences: (prefs) => set((state) => ({
+        accessibilityPreferences: { ...state.accessibilityPreferences, ...prefs }
+      })),
       setIsOnline: (isOnline) => set({ isOnline }),
       setAuthError: (error) => set({ authError: error }),
     }),
@@ -293,6 +303,7 @@ export const useAuthStore = create<AuthState>()(
         viewPreferences: state.viewPreferences,
         navigationItems: state.navigationItems,
         mobilePreferences: state.mobilePreferences,
+        accessibilityPreferences: state.accessibilityPreferences,
         appSettings: state.appSettings,
       }),
       version: 1,

@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { useAuthStore } from '@/core/lib/store';
 import { useUserSession } from '@/core/hooks/useUserSession';
 import { supabase } from '@/lib/supabase';
-import { loadTenantTheme } from '@/core/theme/ThemeRegistry';
+import { loadTenantTheme, applyAccessibility } from '@/core/theme/ThemeRegistry';
 import { useTranslation } from 'react-i18next';
 import { changeLanguage } from '@/core/i18n';
 
@@ -75,60 +75,14 @@ export const SessionManager = () => {
             appMetadata?.organization_id;
 
           if (!hasOrgClaim) {
-            console.log('[SessionManager] ⚠️ Missing org_id/organization_id in JWT. Refreshing...');
-            setIsRefreshing(true);
-
-            try {
-              const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
-
-              if (refreshError) {
-                console.error('[SessionManager] ❌ Refresh failed:', refreshError);
-                if (isMounted) {
-                  setInitialized(true);
-                  setIsRefreshing(false);
-                }
-                return;
-              }
-
-              if (refreshData.session) {
-                const refreshedUser = refreshData.session.user;
-                console.log('[SessionManager] Debug - Refreshed User Metadata:', refreshedUser.user_metadata);
-                console.log('[SessionManager] Debug - Refreshed App Metadata:', refreshedUser.app_metadata);
-
-                const newHasOrg = refreshedUser.user_metadata?.org_id ||
-                  refreshedUser.user_metadata?.organization_id ||
-                  refreshedUser.app_metadata?.org_id ||
-                  refreshedUser.app_metadata?.organization_id;
-
-                if (newHasOrg) {
-                  console.log('[SessionManager] ✅ Refresh complete. Enabling queries NOW.');
-                  if (isMounted) {
-                    setIsRefreshing(false);
-                    setEnabled(true);
-                  }
-                } else {
-                  console.error('[SessionManager] ❌ Refresh STILL didn\'t add org_id!');
-                  console.log('[SessionManager] Full Session User Object:', JSON.stringify(refreshedUser, null, 2));
-                  if (isMounted) {
-                    setAuthError('Session refresh failed. Please logout and login again.');
-                    setInitialized(true);
-                    setIsRefreshing(false);
-                  }
-                }
-              }
-            } catch (err) {
-              console.error('[SessionManager] Unexpected Refresh error:', err);
-              if (isMounted) {
-                setInitialized(true);
-                setIsRefreshing(false);
-              }
-            }
+            console.log('[SessionManager] ⚠️ Missing org_id context in JWT. Proceeding to fetch profile...');
           } else {
-            console.log('[SessionManager] ✅ JWT has org context. Enabling queries.');
-            if (isMounted) {
-              setEnabled(true);
-              // Note: setInitialized(true) will be called by useUserSession -> setSession
-            }
+            console.log('[SessionManager] ✅ JWT has org context.');
+          }
+
+          if (isMounted) {
+            setEnabled(true);
+            // Note: setInitialized(true) will be called by useUserSession -> setSession or onError
           }
         } else {
           console.log('[SessionManager] No session found.');
@@ -178,11 +132,19 @@ export const SessionManager = () => {
     }
   }, [isSuccess, isError, data, setSession, clearUserSession, error, organization?.id, isLoggingOut, setAuthError, isStale, setInitialized]);
 
-  // --- Effect 3: Watch and Apply Theme Configuration ---
+  // --- Effect 3: Watch and Apply Theme & Accessibility Configuration ---
   useEffect(() => {
+    // 1. Apply Organization Theme
     if (data?.organization?.theme_config) {
-      console.log('[SessionManager] Applying org theme_config from database:', data.organization.theme_config);
+      console.log('[SessionManager] Applying org theme_config:', data.organization.theme_config);
       loadTenantTheme(data.organization.theme_config as any);
+    }
+
+    // 2. Apply User Accessibility Preferences
+    const accessPrefs = useAuthStore.getState().accessibilityPreferences;
+    if (accessPrefs) {
+      console.log('[SessionManager] Applying accessibility preferences:', accessPrefs);
+      applyAccessibility(accessPrefs);
     }
   }, [data?.organization?.theme_config]);
 

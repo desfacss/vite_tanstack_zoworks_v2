@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700&family=Source+Sans+Pro:wght@400;600;700&family=Raleway:wght@400;500;600;700&family=PT+Sans:wght@400;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -5,7 +7,6 @@
 /* ============================================
    FONT IMPORTS
    ============================================ */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700&family=Source+Sans+Pro:wght@400;600;700&family=Raleway:wght@400;500;600;700&family=PT+Sans:wght@400;700&display=swap');
 
 /* ============================================
    LAYOUT CSS VARIABLES
@@ -243,23 +244,23 @@
 
 /* ===== CSS Variables for Theme Support ===== */
 :root {
-  --color-primary: var(--tenant-primary);
-  --color-secondary: var(--tenant-secondary);
-  /* Base Theme RGB - Fallback values (ThemeRegistry.ts overrides at runtime) */
-  --color-primary-rgb: 24, 144, 255;
-  /* Default: Ant Design Blue (neutral fallback) */
-  --color-secondary-rgb: 24, 144, 255;
-  /* Default: Ant Design Blue */
-  --color-bg-primary-rgb: 255, 255, 255;
-  --color-bg-secondary-rgb: 248, 250, 252;
+  /* Core Theme Colors - Point to Dual Mode Variables set by Registry */
+  --color-primary: var(--tenant-primary-light);
+  --color-secondary: var(--tenant-secondary-light);
 
-  /* Semantic Backgrounds (Linked to Tenant System) */
-  --color-bg-primary: var(--tenant-layout-bg, #f8faf9);
-  /* Subtle Minty White */
-  --color-bg-secondary: var(--tenant-card-bg, #ffffff);
-  /* Pristine white elevation */
-  --color-bg-tertiary: var(--tenant-sider-bg, #f1f5f4);
-  /* Very light gray-mint Sider */
+  /* Semantic Backgrounds - Point to Dual Mode Variables */
+  --color-bg-primary: var(--tenant-layout-bg-light, #f8faf9);
+  --color-bg-secondary: var(--tenant-card-bg-light, #ffffff);
+  --color-bg-tertiary: var(--tenant-sider-bg-light, #f1f5f4);
+
+  /* RGB variants for alpha support */
+  --color-primary-rgb: var(--color-primary-rgb-light);
+  --color-bg-primary-rgb: var(--color-bg-primary-rgb-light);
+  --color-bg-tertiary-rgb: var(--color-bg-tertiary-rgb-light);
+
+  /* Base Spacing & Typography */
+  --layout-zoom: var(--layout-zoom-percent, 100%);
+  --base-font-size: var(--layout-font-size-px, 14px);
 
   /* Semantic Text (Adaptive defaults) */
   --color-text-primary: #0f172a;
@@ -276,15 +277,12 @@
   --color-shadow: rgba(4, 40, 32, 0.1);
 
   /* Form Controls */
-  --color-control-bg: #f8fafc;
-  /* Slate 50 "well" look */
-  --color-control-border: #cbd5e1;
-  /* Slate 300 sharper border */
+  --color-control-bg: var(--color-bg-primary);
+  --color-control-border: var(--color-border);
   --color-control-placeholder: #94a3b8;
 
   --color-whatsapp-green: #25D366;
   --color-whatsapp-teal: #008069;
-  --color-shadow: rgba(0, 0, 0, 0.05);
 }
 
 /* Drawer Styles - Light Version */
@@ -296,27 +294,28 @@
 
 /* Base Light Layout Settings */
 [data-theme-preset="neon"]:not(.dark) .ant-layout {
-  background: #f8faf9 !important;
+  background: var(--color-bg-primary);
   position: relative;
   overflow: hidden;
   background-image:
     /* Vivid White Corner Glows */
-    radial-gradient(circle at 10% 10%, var(--neon-light-accent-glow) 0%, transparent 40%),
+    radial-gradient(circle at 10% 10%, rgba(var(--color-primary-rgb), 0.05) 0%, transparent 40%),
     /* Soft Base Gradient */
-    linear-gradient(135deg, #fbfdfc 0%, #f1f5f4 100%) !important;
-  background-size: 100% 100%, 100% 100% !important;
-  background-attachment: fixed !important;
+    linear-gradient(135deg, rgba(var(--color-bg-secondary-rgb), 0.8) 0%, var(--color-bg-primary) 100%);
+  background-size: 100% 100%, 100% 100%;
+  background-attachment: fixed;
 }
 
 [data-theme-preset="neon"]:not(.dark) .ant-layout-sider {
-  background: #ffffff !important;
-  border-right: 1px solid rgba(4, 40, 32, 0.05) !important;
+  background: var(--color-bg-secondary);
+  border-right: 1px solid var(--color-border);
   box-shadow: 2px 0 8px rgba(0, 0, 0, 0.02);
 }
 
 [data-theme-preset="neon"]:not(.dark) .ant-layout-header {
-  background: #ffffff !important;
-  border-bottom: 1px solid rgba(4, 40, 32, 0.05) !important;
+  background: var(--color-bg-secondary);
+  border-bottom: 1px solid var(--color-border);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
   /* Ensure header stays on top */
   position: sticky !important;
@@ -325,31 +324,31 @@
 }
 
 [data-theme-preset="neon"]:not(.dark) .page-card {
-  background: #ffffff !important;
-  border: 1px solid rgba(4, 40, 32, 0.08) !important;
+  background: var(--color-bg-secondary) !important;
+  border: 1px solid var(--color-border) !important;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 /* Base Zo Styles (Claude-inspired) */
 [data-theme-preset="base_zo"]:not(.dark) .ant-layout {
-  background: #F9F7F2 !important;
+  background: var(--color-bg-primary);
   position: relative;
-  background-image: none !important;
+  background-image: none;
 }
 
 [data-theme-preset="base_zo"]:not(.dark) .ant-layout-sider {
-  background: #F1EFE9 !important;
-  border-right: 1px solid rgba(0, 0, 0, 0.05) !important;
+  background: var(--color-bg-tertiary);
+  border-right: 1px solid var(--color-border);
 }
 
 [data-theme-preset="base_zo"]:not(.dark) .ant-layout-header {
-  background: #F9F7F2 !important;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05) !important;
+  background: var(--color-bg-primary);
+  border-bottom: 1px solid var(--color-border);
 }
 
 [data-theme-preset="base_zo"]:not(.dark) .page-card {
-  background: #ffffff !important;
-  border: 1px solid rgba(0, 0, 0, 0.05) !important;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
   border-radius: 12px;
 }
@@ -364,26 +363,34 @@
 }
 
 .dark[data-theme-preset="base_zo"] .ant-layout {
-  background: #171717 !important;
+  background: var(--color-bg-primary);
 }
 
 .dark[data-theme-preset="base_zo"] .ant-layout-sider {
-  background: #121212 !important;
-  border-right: 1px solid rgba(255, 255, 255, 0.05) !important;
+  background: var(--color-bg-tertiary);
+  border-right: 1px solid var(--color-border);
 }
 
 .dark[data-theme-preset="base_zo"] .page-card {
-  background: #212121 !important;
-  border: 1px solid rgba(255, 255, 255, 0.05) !important;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
 }
 
 .dark {
-  /* Dark mode backgrounds - use tenant-provided values (set by ThemeRegistry) */
-  /* Fallback to neutral dark grays if tenant vars not set */
-  --color-bg-primary: var(--tenant-layout-bg, #171717);
-  --color-bg-secondary: var(--tenant-card-bg, #212121);
-  --color-bg-tertiary: var(--tenant-sider-bg, #1a1a1a);
+  /* Core Theme Colors - Point to Dark Variables */
+  --color-primary: var(--tenant-primary-dark);
+  --color-secondary: var(--tenant-secondary-dark);
+
+  /* Semantic Backgrounds - Point to Dark Variables */
+  --color-bg-primary: var(--tenant-layout-bg-dark, #171717);
+  --color-bg-secondary: var(--tenant-card-bg-dark, #212121);
+  --color-bg-tertiary: var(--tenant-sider-bg-dark, #1a1a1a);
+
+  /* RGB variants for alpha support */
+  --color-primary-rgb: var(--color-primary-rgb-dark);
+  --color-bg-primary-rgb: var(--color-bg-primary-rgb-dark);
+  --color-bg-tertiary-rgb: var(--color-bg-tertiary-rgb-dark);
 
   /* Dark Mode specific text/border adjustments */
   --color-text-primary: #f8fafc;
@@ -401,6 +408,27 @@
   --color-control-placeholder: rgba(255, 255, 255, 0.35);
 }
 
+/* Custom Flat Selects (for Settings Drawer) */
+.custom-select-flat .ant-select-selector {
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+.custom-select-flat .ant-select-selection-item {
+  font-weight: 500;
+  color: var(--color-primary);
+}
+
+.custom-select-flat .ant-select-arrow {
+  color: var(--color-primary);
+}
+
+.custom-select-flat.ant-select-focused .ant-select-selector {
+  box-shadow: none !important;
+}
+
 /* ===== Global Styles ===== */
 * {
   margin: 0;
@@ -412,6 +440,8 @@
 body {
   color: var(--color-text-primary);
   background-color: var(--color-bg-primary);
+  zoom: var(--layout-zoom);
+  font-size: var(--base-font-size);
 }
 
 /* ============================================
@@ -574,45 +604,202 @@ body {
 }
 
 /* === Input, Select, Picker - Consistent Styling === */
-.ant-input,
-.ant-input-number,
-.ant-input-number-input,
+/* === Input, Select, Picker - Consistent Styling === */
+/* 1. Base State: Standard element styling */
+.ant-input:not(.ant-input-group .ant-input),
+.ant-input-number:not(.ant-input-number-affix-wrapper .ant-input-number),
 .ant-select-selector,
 .ant-picker {
   background-color: var(--color-bg-secondary) !important;
   border: 1px solid rgba(var(--color-primary-rgb, var(--color-secondary-rgb)), 0.5) !important;
-  /* 50% transparent primary border */
   border-radius: var(--tenant-border-radius, 12px) !important;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
   height: 40px !important;
-  /* Strict 40px standard */
   display: flex !important;
   align-items: center !important;
 }
 
-.ant-select-selector {
-  padding: 0 12px !important;
+/* Force children to fill height and inherit font for global consistency */
+.ant-input,
+.ant-input-number-input,
+.ant-select-selection-search-input,
+.ant-picker-input>input {
+  height: 100% !important;
+  font-size: 14px !important;
+  line-height: normal !important;
 }
 
-.ant-input-number {
+/* 2. Affix Wrappers (Prefix, Suffix, Password) - Inclusive Border & Solid Height */
+.ant-input-affix-wrapper,
+.ant-input-number-affix-wrapper {
+  background-color: var(--color-bg-secondary) !important;
+  border: 1px solid rgba(var(--color-primary-rgb, var(--color-secondary-rgb)), 0.5) !important;
+  border-radius: var(--tenant-border-radius, 12px) !important;
+  padding: 0 12px !important;
+  /* Reset padding to standard horizontal */
+  height: 40px !important;
+  box-sizing: border-box !important;
+  display: flex !important;
+  align-items: center !important;
+  overflow: hidden;
+}
+
+/* Remove internal borders/backgrounds for inclusivity */
+.ant-input-affix-wrapper .ant-input,
+.ant-input-number-affix-wrapper .ant-input-number-input,
+.ant-input-number-affix-wrapper .ant-input-number,
+.ant-input-number-affix-wrapper .ant-input-number-handler-wrap,
+.ant-input-group .ant-input,
+.ant-input-group .ant-input-affix-wrapper,
+.ant-input-group .ant-input-number,
+.ant-input-group .ant-select-selector,
+.ant-input-group .ant-picker {
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  font-size: inherit !important;
+  line-height: inherit !important;
+}
+
+/* Ensure the value fields take full center space */
+.ant-input-affix-wrapper .ant-input,
+.ant-input-number-affix-wrapper .ant-input-number-input,
+.ant-input-number-affix-wrapper .ant-input-number {
+  height: 100% !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  flex: 1 !important;
+  width: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+/* 3. Group Wrappers (Addons, Search) - Restore Layout & Inclusive Border */
+.ant-input-group-wrapper,
+.ant-input-number-group-wrapper {
+  background-color: transparent !important;
+  display: inline-block !important;
+  vertical-align: middle;
   width: 100% !important;
 }
 
+.ant-input-group {
+  display: flex !important;
+  align-items: stretch !important;
+  border: 1px solid rgba(var(--color-primary-rgb, var(--color-secondary-rgb)), 0.5) !important;
+  border-radius: var(--tenant-border-radius, 12px) !important;
+  overflow: hidden;
+  height: 40px !important;
+  background-color: var(--color-bg-secondary) !important;
+}
+
+/* Flatten internal components in groups and ensure they don't overlap */
+.ant-input-group>* {
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  height: 100% !important;
+  margin: 0 !important;
+}
+
+/* Ensure inputs fill the group space */
+.ant-input-group .ant-input,
+.ant-input-group .ant-input-affix-wrapper,
+.ant-input-group .ant-input-number,
+.ant-input-group .ant-input-number-affix-wrapper {
+  flex: 1 !important;
+  width: 100% !important;
+}
+
+/* Special handling for addons to keep their width consistent */
+.ant-input-group .ant-input-group-addon {
+  flex: 0 0 auto !important;
+  width: auto !important;
+  background: rgba(var(--color-primary-rgb), 0.08) !important;
+  padding: 0 12px !important;
+  display: flex !important;
+  align-items: center !important;
+  color: var(--color-text-secondary) !important;
+  font-weight: 500;
+  border-right: 1px solid rgba(var(--color-primary-rgb), 0.1) !important;
+}
+
+/* Special handling for search button to ensure visibility and flat look */
+.ant-input-group .ant-input-search-button {
+  flex: 0 0 auto !important;
+  width: 44px !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.ant-input-group-addon:last-child {
+  border-right: none !important;
+  border-left: 1px solid rgba(var(--color-primary-rgb), 0.1) !important;
+}
+
+/* 4. Separators & Icons */
+.ant-input-prefix {
+  margin-right: 8px !important;
+  padding-right: 8px !important;
+  border-right: 1px solid rgba(var(--color-primary-rgb), 0.15) !important;
+  display: flex !important;
+  align-items: center !important;
+  height: 18px !important;
+  color: var(--color-text-secondary) !important;
+}
+
+.ant-input-suffix {
+  margin-left: 8px !important;
+  padding-left: 8px !important;
+  border-left: 1px solid rgba(var(--color-primary-rgb), 0.15) !important;
+  display: flex !important;
+  align-items: center !important;
+  height: 18px !important;
+  color: var(--color-text-secondary) !important;
+}
+
+/* 5. Autofill Fix: Remove white patches */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus,
+textarea:-webkit-autofill:active,
+.ant-input:-webkit-autofill,
+.ant-input-affix-wrapper input:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 1000px var(--color-bg-secondary) inset !important;
+  -webkit-text-fill-color: var(--color-text-primary) !important;
+  transition: background-color 5000s ease-in-out 0s !important;
+  background-color: var(--color-bg-secondary) !important;
+  background-clip: content-box !important;
+}
+
+/* 6. Hover & Focus States */
 .ant-input:hover,
 .ant-select-selector:hover,
-.ant-picker:hover {
-  border-color: var(--color-border-hover) !important;
-  background-color: var(--color-bg-tertiary) !important;
+.ant-picker:hover,
+.ant-input-affix-wrapper:hover,
+.ant-input-group:hover,
+.ant-input-number-affix-wrapper:hover {
+  border-color: var(--color-primary) !important;
 }
 
 .ant-input:focus,
 .ant-input-focused,
+.ant-input-affix-wrapper-focused,
 .ant-select-focused .ant-select-selector,
-.ant-picker-focused {
+.ant-picker-focused,
+.ant-input-group:focus-within {
   border-color: var(--color-primary) !important;
   background-color: var(--color-bg-primary) !important;
   box-shadow: 0 0 0 4px rgba(var(--color-primary-rgb), 0.15), 0 0 12px rgba(var(--color-primary-rgb), 0.1) !important;
-  /* Neon Glow */
+  outline: none !important;
 }
 
 /* Ensure 100% width on forms */
@@ -2851,13 +3038,13 @@ legend {
 
 /* Base Layout Overrides - Immersive Startup Pattern */
 [data-theme-preset="neon"].dark .ant-layout {
-  background: #020406 !important;
+  background: var(--color-bg-primary, #020406) !important;
   position: relative;
   overflow: hidden;
   background-image:
-    radial-gradient(circle at 20% -10%, rgba(var(--color-primary-rgb), 0.3) 0%, transparent 40%),
-    radial-gradient(circle at 80% 10%, rgba(var(--color-primary-rgb), 0.1) 0%, transparent 50%),
-    linear-gradient(180deg, #020406 0%, #0a0c0e 100%) !important;
+    radial-gradient(circle at 20% -10%, rgba(var(--color-primary-rgb), 0.15) 0%, transparent 40%),
+    radial-gradient(circle at 80% 10%, rgba(var(--color-primary-rgb), 0.05) 0%, transparent 50%),
+    linear-gradient(180deg, var(--color-bg-primary) 0%, var(--color-bg-secondary) 100%) !important;
   background-size: 100% 100% !important;
   background-attachment: fixed !important;
 }
@@ -2885,14 +3072,14 @@ legend {
 */
 
 [data-theme-preset="neon"].dark .ant-layout-sider {
-  background: rgba(7, 29, 23, 0.85) !important;
+  background: rgba(var(--color-bg-tertiary-rgb), 0.85) !important;
   backdrop-filter: blur(30px);
   border-right: 1px solid var(--neon-border) !important;
 }
 
 [data-theme-preset="neon"].dark .ant-layout-header {
   /* Solid background with blur for neon effect - prevents content overlap */
-  background: rgba(7, 29, 23, 0.95) !important;
+  background: rgba(var(--color-bg-tertiary-rgb), 0.95) !important;
   backdrop-filter: blur(20px) !important;
   -webkit-backdrop-filter: blur(20px) !important;
   border-bottom: 1px solid var(--neon-border) !important;
@@ -2907,16 +3094,14 @@ legend {
    .ant-card inside .page-card = Plain card (no effects)
    ================================================== */
 [data-theme-preset="neon"].dark .page-card {
-  background: linear-gradient(135deg, rgba(7, 29, 23, 0.98) 0%, rgba(10, 40, 32, 0.95) 100%) !important;
-  background-image: linear-gradient(90deg, rgba(var(--color-primary-rgb), 0.06) 1px, transparent 1px),
-    linear-gradient(180deg, rgba(var(--color-primary-rgb), 0.06) 1px, transparent 1px),
-    linear-gradient(135deg, rgba(7, 29, 23, 0.98) 0%, rgba(10, 40, 32, 0.95) 100%) !important;
-  background-size: 16px 16px, 16px 16px, 100% 100% !important;
+  background: var(--color-bg-secondary) !important;
+  background-image:
+    linear-gradient(90deg, rgba(var(--color-primary-rgb), 0.04) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(var(--color-primary-rgb), 0.04) 1px, transparent 1px) !important;
+  background-size: 16px 16px !important;
   backdrop-filter: blur(25px);
   border: 1px solid rgba(var(--color-primary-rgb), 0.15) !important;
-  box-shadow:
-    0 10px 40px rgba(0, 0, 0, 0.8),
-    inset 0 0 50px rgba(var(--color-primary-rgb), 0.03) !important;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
   position: relative;
   overflow: hidden;
 }
@@ -2935,9 +3120,9 @@ legend {
 
 /* Nested .ant-card inside .page-card - DARKER for readability (matches table) */
 [data-theme-preset="neon"].dark .page-card .ant-card {
-  background: #0d2820 !important;
+  background: var(--color-bg-tertiary, #0a0c10) !important;
   /* Darkest, matches table bg */
-  border: 1px solid rgba(0, 229, 153, 0.15) !important;
+  border: 1px solid rgba(var(--color-primary-rgb), 0.15) !important;
   box-shadow: none !important;
 }
 
@@ -2948,13 +3133,13 @@ legend {
 }
 
 [data-theme-preset="neon"].dark .dashboard-canvas>.react-grid-layout>div {
-  background: #0d2820 !important;
+  background: var(--color-bg-tertiary, #0a0c10) !important;
   /* Matches grid cards */
-  border: 1px solid rgba(0, 229, 153, 0.15) !important;
+  border: 1px solid rgba(var(--color-primary-rgb), 0.15) !important;
 }
 
 [data-theme-preset="neon"].dark .dashboard-canvas>.react-grid-layout>div>div:first-child {
-  background: #0d2820 !important;
+  background: rgba(var(--color-primary-rgb), 0.04) !important;
   /* Widget header */
   border-color: rgba(0, 229, 153, 0.1) !important;
 }
@@ -3304,19 +3489,19 @@ legend {
 
 /* Drawer - Standing out with dual corner glows and neon edge */
 [data-theme-preset="neon"].dark .ant-drawer-content {
-  background-color: #0d2820 !important;
+  background-color: var(--color-bg-primary, #020408) !important;
   background-image:
-    radial-gradient(circle at 0% 0%, rgba(var(--color-primary-rgb), 0.3) 0%, transparent 30%),
-    radial-gradient(circle at 100% 100%, rgba(var(--color-primary-rgb), 0.2) 0%, transparent 30%) !important;
+    radial-gradient(circle at 0% 0%, rgba(var(--color-primary-rgb), 0.1) 0%, transparent 30%),
+    radial-gradient(circle at 100% 100%, rgba(var(--color-primary-rgb), 0.05) 0%, transparent 30%) !important;
   box-shadow:
-    -15px 0 60px rgba(0, 0, 0, 0.95),
-    inset 1px 1px 0 rgba(var(--color-primary-rgb), 0.15) !important;
-  border-left: 1px solid rgba(var(--color-primary-rgb), 0.4) !important;
+    -15px 0 60px rgba(0, 0, 0, 0.9),
+    inset 1px 1px 0 rgba(var(--color-primary-rgb), 0.05) !important;
+  border-left: 1px solid rgba(var(--color-primary-rgb), 0.2) !important;
 }
 
 [data-theme-preset="neon"].dark .ant-drawer-header {
-  background: rgba(0, 229, 153, 0.08) !important;
-  border-bottom: 1px solid rgba(0, 229, 153, 0.15) !important;
+  background: rgba(0, 0, 0, 0.2) !important;
+  border-bottom: 1px solid rgba(var(--color-primary-rgb), 0.1) !important;
 }
 
 [data-theme-preset="neon"].dark .ant-drawer-body {

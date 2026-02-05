@@ -13,12 +13,12 @@ import { ThemeToggle } from '@/core/components/Layout/ThemeToggle';
 const { Title, Text } = Typography;
 
 // Helper to extract hex string from ColorPicker value
-const getColorString = (value: any): string => {
-    if (!value) return DEFAULT_PRIMARY_COLOR;
+const getColorString = (value: any, fallback: string = DEFAULT_PRIMARY_COLOR): string => {
+    if (!value) return fallback;
     if (typeof value === 'string') return value;
     if (typeof value?.toHexString === 'function') return value.toHexString();
     if (typeof value?.metaColor?.toHexString === 'function') return value.metaColor.toHexString();
-    return DEFAULT_PRIMARY_COLOR;
+    return fallback;
 };
 
 /**
@@ -69,6 +69,11 @@ const Branding: React.FC = () => {
                 dark_layoutBg: themeConfig.dark?.layoutBg || preset?.dark?.layoutBg || '#141414',
                 dark_headerBg: themeConfig.dark?.headerBg || preset?.dark?.headerBg || '#141414',
                 dark_siderBg: themeConfig.dark?.siderBg || preset?.dark?.siderBg || '#141414',
+                // Layout Flags
+                heroHeader: themeConfig.heroHeader || false,
+                compactMode: themeConfig.compactMode || false,
+                fontFamily: themeConfig.fontFamily,
+                headingFontFamily: themeConfig.headingFontFamily,
                 baseFontSize: themeConfig.baseFontSize || preset?.baseFontSize || 14,
                 containerPadding: themeConfig.containerPadding || preset?.containerPadding || 24,
                 defaultMode: themeConfig.defaultMode || 'light',
@@ -93,20 +98,20 @@ const Branding: React.FC = () => {
                 secondaryColor: getColorString(currentValues.light_secondaryColor),
                 logoUrl: currentValues.light_logoUrl,
                 logoIconUrl: currentValues.light_logoIconUrl,
-                cardBg: getColorString(currentValues.light_cardBg),
-                layoutBg: getColorString(currentValues.light_layoutBg),
-                headerBg: getColorString(currentValues.light_headerBg),
-                siderBg: getColorString(currentValues.light_siderBg),
+                cardBg: getColorString(currentValues.light_cardBg, '#ffffff'),
+                layoutBg: getColorString(currentValues.light_layoutBg, '#f8faf9'),
+                headerBg: getColorString(currentValues.light_headerBg, '#ffffff'),
+                siderBg: getColorString(currentValues.light_siderBg, '#f1f5f4'),
             },
             dark: {
                 primaryColor: getColorString(currentValues.dark_primaryColor),
                 secondaryColor: getColorString(currentValues.dark_secondaryColor),
                 logoUrl: currentValues.dark_logoUrl,
                 logoIconUrl: currentValues.dark_logoIconUrl,
-                cardBg: getColorString(currentValues.dark_cardBg),
-                layoutBg: getColorString(currentValues.dark_layoutBg),
-                headerBg: getColorString(currentValues.dark_headerBg),
-                siderBg: getColorString(currentValues.dark_siderBg),
+                cardBg: getColorString(currentValues.dark_cardBg, '#212121'),
+                layoutBg: getColorString(currentValues.dark_layoutBg, '#171717'),
+                headerBg: getColorString(currentValues.dark_headerBg, '#171717'),
+                siderBg: getColorString(currentValues.dark_siderBg, '#1a1a1a'),
             },
             baseFontSize: currentValues.baseFontSize,
             containerPadding: currentValues.containerPadding,
@@ -368,10 +373,10 @@ const Branding: React.FC = () => {
                                                         <Form.Item name="light_cardBg" label="Card Background">
                                                             <ColorPicker showText />
                                                         </Form.Item>
-                                                        <Form.Item name="light_layoutBg" label="Page Background">
+                                                        <Form.Item name="light_headerBg" label="Header Background">
                                                             <ColorPicker showText />
                                                         </Form.Item>
-                                                        <Form.Item name="light_headerBg" label="Header Background">
+                                                        <Form.Item name="light_siderBg" label="Sidebar Background">
                                                             <ColorPicker showText />
                                                         </Form.Item>
                                                     </>
@@ -394,6 +399,9 @@ const Branding: React.FC = () => {
                                                             <ColorPicker showText />
                                                         </Form.Item>
                                                         <Form.Item name="dark_headerBg" label="Header Background">
+                                                            <ColorPicker showText />
+                                                        </Form.Item>
+                                                        <Form.Item name="dark_siderBg" label="Sidebar Background">
                                                             <ColorPicker showText />
                                                         </Form.Item>
                                                     </>

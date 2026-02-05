@@ -8,9 +8,11 @@ import { LanguageSelect } from '../LanguageSelect';
 import { useAuthStore } from '@/core/lib/store';
 import { supabase } from '@/lib/supabase';
 import type { Organization, Location } from '@/core/lib/types';
-import { Globe, Grid } from 'lucide-react';
+import { Globe, Grid, Type, ZoomIn } from 'lucide-react';
+import { applyAccessibility } from '@/core/theme/ThemeRegistry';
 
 const { Title, Text } = Typography;
+const { Option } = Select;
 
 interface SettingsProps {
   open: boolean;
@@ -113,6 +115,15 @@ export const Settings: React.FC<SettingsProps> = ({ open, onClose }) => {
     }
   };
 
+  // --- Accessibility Handlers ---
+  const handleAccessibilityChange = (prefs: any) => {
+    auth.setAccessibilityPreferences(prefs);
+    applyAccessibility({
+      baseFontSize: prefs.baseFontSize ?? auth.accessibilityPreferences.baseFontSize,
+      viewportZoom: prefs.viewportZoom ?? auth.accessibilityPreferences.viewportZoom,
+    });
+  };
+
   const organizationOptions = useMemo(() => userOrgLocations.map(org => ({
     value: org.organization_id,
     label: (<div><span className='font-medium'>{org.organization_name}</span><br /><span className='text-xs text-[var(--color-text-secondary)]'>{org.roles?.join(', ')}</span></div>)
@@ -136,8 +147,8 @@ export const Settings: React.FC<SettingsProps> = ({ open, onClose }) => {
       className="settings-drawer"
     >
       <div className="space-y-8">
-        {/* Context Switching Section */}
-        <div className="bg-[var(--color-bg-secondary)] p-4 rounded-xl space-y-4">
+        {/* Context Switching Section - HIDDEN ON DESKTOP */}
+        <div className="bg-[var(--color-bg-secondary)] p-4 rounded-xl space-y-4 lg:hidden">
           <Title level={5} className="m-0 text-[var(--color-text-primary)]">{t('core.settings.label.context')}</Title>
           <Form layout="vertical" size="middle">
             <Form.Item label={t('common.label.organization')} className="mb-3">
@@ -165,42 +176,93 @@ export const Settings: React.FC<SettingsProps> = ({ open, onClose }) => {
 
         {/* Appearance Section */}
         <div className="px-1">
-          <div className="flex justify-between items-center mb-4">
-            <Title level={5} className="m-0">{t('core.settings.label.appearance')}</Title>
+          <div className="flex justify-between items-center mb-6">
+            <Title level={5} className="m-0 tracking-tight">{t('core.settings.label.appearance')}</Title>
             <ThemeToggle />
           </div>
-          <Space direction="vertical" className="w-full" size="middle">
-            <div className="flex justify-between items-center bg-[var(--color-bg-primary)] p-3 rounded-lg border border-[var(--color-border)] shadow-sm">
-              <div className="flex items-center gap-2">
-                <Globe size={16} className="text-[var(--color-text-secondary)]" />
-                <Text>{t('core.settings.label.language')}</Text>
+          <div className="flex justify-between items-center py-1">
+            <div className="flex items-center gap-3">
+              <Globe size={18} className="text-[var(--color-text-secondary)]" />
+              <Text className="font-medium text-[var(--color-text-primary)]">{t('core.settings.label.language')}</Text>
+            </div>
+            <LanguageSelect className="w-[120px] custom-select-flat" />
+          </div>
+        </div>
+
+        {/* Accessibility Section */}
+        <div className="px-1 border-t border-[var(--color-border)] pt-8">
+          <Title level={5} className="mb-6 flex items-center gap-2 tracking-tight">
+            <Type size={20} className="text-[var(--color-primary)]" />
+            Accessibility
+          </Title>
+          <Space direction="vertical" className="w-full" size="large">
+            {/* Viewport Zoom */}
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                  <ZoomIn size={16} className="text-[var(--color-text-secondary)]" />
+                  <Text>Interface Scale</Text>
+                </div>
+                <Text className="font-mono text-xs">{auth.accessibilityPreferences.viewportZoom}%</Text>
               </div>
-              <LanguageSelect />
+              <Select
+                value={auth.accessibilityPreferences.viewportZoom}
+                onChange={(val) => handleAccessibilityChange({ viewportZoom: val })}
+                className="w-full custom-select-flat"
+              >
+                <Option value={80}>80% (Compact)</Option>
+                <Option value={90}>90%</Option>
+                <Option value={100}>100% (Standard)</Option>
+                <Option value={110}>110%</Option>
+                <Option value={120}>120% (Large)</Option>
+              </Select>
+            </div>
+
+            {/* Base Font Size */}
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                  <Type size={16} className="text-[var(--color-text-secondary)]" />
+                  <Text>Base Font Size</Text>
+                </div>
+                <Text className="font-mono text-xs">{auth.accessibilityPreferences.baseFontSize}px</Text>
+              </div>
+              <Select
+                value={auth.accessibilityPreferences.baseFontSize}
+                onChange={(val) => handleAccessibilityChange({ baseFontSize: val })}
+                className="w-full custom-select-flat"
+              >
+                <Option value={12}>12px (Small)</Option>
+                <Option value={13}>13px</Option>
+                <Option value={14}>14px (Standard)</Option>
+                <Option value={15}>15px</Option>
+                <Option value={16}>16px (Medium)</Option>
+                <Option value={18}>18px</Option>
+                <Option value={20}>20px (Large)</Option>
+              </Select>
             </div>
           </Space>
         </div>
 
         {/* Mobile Settings Section */}
-        <div className="border-t border-gray-100 pt-6">
-          <Title level={5} className="mb-4 flex items-center gap-2">
-            <Grid size={18} className="text-[var(--color-primary)]" />
+        <div className="border-t border-[var(--color-border)] pt-8">
+          <Title level={5} className="mb-6 flex items-center gap-2 tracking-tight">
+            <Grid size={20} className="text-[var(--color-primary)]" />
             Mobile Navigation
           </Title>
-          <Space direction="vertical" className="w-full" size="middle">
-            <div className="flex justify-between items-center bg-[var(--color-bg-primary)] p-3 rounded-lg border border-[var(--color-border)] shadow-sm">
-              <div className="flex items-center gap-2">
-                <Text>Show Bottom Navigation</Text>
-              </div>
+          <div className="space-y-6">
+            <div className="flex justify-between items-center py-1">
+              <Text className="font-medium text-[var(--color-text-primary)]">Show Bottom Navigation</Text>
               <input
                 type="checkbox"
                 checked={auth.mobilePreferences?.bottomNavEnabled ?? true}
                 onChange={e => auth.setMobilePreferences({ bottomNavEnabled: e.target.checked })}
-                className="w-5 h-5 rounded border-[var(--color-border)] text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
+                className="w-5 h-5 rounded border-[var(--color-border)] text-[var(--color-primary)] focus:ring-[var(--color-primary)] bg-transparent cursor-pointer"
               />
             </div>
             {auth.mobilePreferences?.bottomNavEnabled && (
-              <div className="bg-[var(--color-bg-primary)] p-3 rounded-lg border border-[var(--color-border)] shadow-sm">
-                <Text className="text-xs text-[var(--color-text-secondary)] block mb-2">
+              <div className="pt-2">
+                <Text className="text-xs text-[var(--color-text-secondary)] block mb-3 font-medium uppercase tracking-wider">
                   Select up to 5 items for the bottom tab bar
                 </Text>
                 <Select
@@ -209,7 +271,7 @@ export const Settings: React.FC<SettingsProps> = ({ open, onClose }) => {
                   value={auth.mobilePreferences?.bottomNavItems || []}
                   onChange={(keys) => auth.setMobilePreferences({ bottomNavItems: keys })}
                   placeholder="Auto (first 5 items)"
-                  className="w-full"
+                  className="w-full custom-select-flat"
                   options={navigationItems.reduce((acc: any[], item) => {
                     if (item.children) {
                       return [...acc, ...item.children.map((child: any) => ({
@@ -226,11 +288,11 @@ export const Settings: React.FC<SettingsProps> = ({ open, onClose }) => {
                 />
               </div>
             )}
-          </Space>
+          </div>
         </div>
 
         {/* Admin Info Notice */}
-        <div className="border-t border-gray-100 pt-6 pb-12">
+        <div className="border-t border-[var(--color-border)] pt-6 pb-12">
           <div className="bg-[var(--color-info-bg)] rounded-lg p-3 border border-[var(--color-info-border)]">
             <Text className="text-xs leading-tight block text-[var(--color-info)]">
               🎨 <strong>Looking for theme customization?</strong><br />

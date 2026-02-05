@@ -69,7 +69,7 @@ const ResetPassword = () => {
                                 name="password"
                                 rules={[{ required: true, message: t('core.auth.message.password_required') }]}
                             >
-                                <Input.Password />
+                                <Input.Password size="large" />
                             </Form.Item>
                             <Form.Item>
                                 <Button

@@ -301,6 +301,10 @@ function applyStaticBranding(config: TenantThemeConfig): void {
     const darkCard = config.dark?.cardBg || '#1f1f1f';
     const lightLayout = config.light?.layoutBg || '#f0f2f5';
     const darkLayout = config.dark?.layoutBg || '#141414';
+    const lightSider = config.light?.siderBg || '#ffffff';
+    const darkSider = config.dark?.siderBg || '#141414';
+    const lightHeader = config.light?.headerBg || '#ffffff';
+    const darkHeader = config.dark?.headerBg || '#141414';
 
     root.setAttribute('data-light-primary', lightPrimary);
     root.setAttribute('data-dark-primary', darkPrimary);
@@ -311,33 +315,39 @@ function applyStaticBranding(config: TenantThemeConfig): void {
     root.setAttribute('data-light-layout', lightLayout);
     root.setAttribute('data-dark-layout', darkLayout);
 
-    // Initial variable set
-    const isDark = document.documentElement.classList.contains('dark');
-    const currentPrimary = isDark ? darkPrimary : lightPrimary;
-    const currentSecondary = isDark ? darkSecondary : lightSecondary;
-    const currentCard = isDark ? darkCard : lightCard;
-    const currentLayout = isDark ? darkLayout : lightLayout;
-
-    root.style.setProperty('--tenant-primary', currentPrimary);
-    root.style.setProperty('--tenant-secondary', currentSecondary);
-    root.style.setProperty('--tenant-card-bg', currentCard);
-    root.style.setProperty('--tenant-layout-bg', currentLayout);
-    root.style.setProperty('--tenant-sider-bg', isDark ? (config.dark?.siderBg || '#141414') : (config.light?.siderBg || '#ffffff'));
-
-    // RGB values for rgba() support in CSS (enables dynamic glow/glass effects)
-    root.style.setProperty('--color-primary-rgb', hexToRgb(currentPrimary));
-    root.style.setProperty('--color-secondary-rgb', hexToRgb(currentSecondary));
-    root.style.setProperty('--color-bg-primary-rgb', hexToRgb(currentLayout));
-    root.style.setProperty('--color-bg-secondary-rgb', hexToRgb(currentCard));
-
+    // --- DUAL MODE CSS VARIABLES (CORE REACTIVITY FIX) ---
+    // We set these for BOTH modes so CSS can map them instantly via .dark selector
+    root.style.setProperty('--tenant-primary-light', lightPrimary);
+    root.style.setProperty('--tenant-primary-dark', darkPrimary);
+    root.style.setProperty('--tenant-secondary-light', lightSecondary);
+    root.style.setProperty('--tenant-secondary-dark', darkSecondary);
     root.style.setProperty('--tenant-card-bg-light', lightCard);
     root.style.setProperty('--tenant-card-bg-dark', darkCard);
     root.style.setProperty('--tenant-layout-bg-light', lightLayout);
     root.style.setProperty('--tenant-layout-bg-dark', darkLayout);
-    root.style.setProperty('--tenant-header-bg-light', config.light?.headerBg || '#ffffff');
-    root.style.setProperty('--tenant-header-bg-dark', config.dark?.headerBg || '#141414');
-    root.style.setProperty('--tenant-sider-bg-light', config.light?.siderBg || '#ffffff');
-    root.style.setProperty('--tenant-sider-bg-dark', config.dark?.siderBg || '#141414');
+    root.style.setProperty('--tenant-header-bg-light', lightHeader);
+    root.style.setProperty('--tenant-header-bg-dark', darkHeader);
+    root.style.setProperty('--tenant-sider-bg-light', lightSider);
+    root.style.setProperty('--tenant-sider-bg-dark', darkSider);
+
+    // Dynamic Alpha support
+    root.style.setProperty('--color-primary-rgb-light', hexToRgb(lightPrimary));
+    root.style.setProperty('--color-primary-rgb-dark', hexToRgb(darkPrimary));
+    root.style.setProperty('--color-bg-primary-rgb-light', hexToRgb(lightLayout));
+    root.style.setProperty('--color-bg-primary-rgb-dark', hexToRgb(darkLayout));
+    root.style.setProperty('--color-bg-tertiary-rgb-light', hexToRgb(lightSider));
+    root.style.setProperty('--color-bg-tertiary-rgb-dark', hexToRgb(darkSider));
+
+    // Expose Glassmorphism effects (independent of mode toggle)
+    if (config.preset === 'glassmorphism' || config.preset === 'ultra_glass') {
+        root.style.setProperty('--tenant-backdrop-blur', '15px');
+        root.style.setProperty('--tenant-card-border', '1px solid rgba(255, 255, 255, 0.3)');
+        root.setAttribute('data-glass-effect', 'true');
+    } else {
+        root.style.setProperty('--tenant-backdrop-blur', '0px');
+        root.style.setProperty('--tenant-card-border', 'none');
+        root.removeAttribute('data-glass-effect');
+    }
 
     // Glassmorphism effects
     if (config.preset === 'glassmorphism' || config.preset === 'ultra_glass') {
@@ -407,8 +417,8 @@ export function getAntdTheme(isDarkMode: boolean = false): ThemeConfig {
         token: {
             ...baseTheme.token,
             borderRadius,
-            colorBgContainer: 'var(--tenant-card-bg)',
-            colorBgLayout: 'var(--tenant-layout-bg)',
+            colorBgContainer: modeConfig?.cardBg || (isDarkMode ? '#1f1f1f' : '#ffffff'),
+            colorBgLayout: modeConfig?.layoutBg || (isDarkMode ? '#141414' : '#f0f2f5'),
             colorText: modeConfig?.textColor || (isDarkMode ? '#e9edef' : 'rgba(0, 0, 0, 0.88)'),
             fontFamily: modeConfig?.fontFamily || tenantConfig?.fontFamily || "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
         },
@@ -455,8 +465,8 @@ export function getAntdTheme(isDarkMode: boolean = false): ThemeConfig {
             },
             Layout: {
                 ...baseTheme.components?.Layout,
-                headerBg: 'var(--tenant-card-bg)',
-                siderBg: 'var(--tenant-card-bg)',
+                headerBg: modeConfig?.headerBg || (isDarkMode ? '#141414' : '#ffffff'),
+                siderBg: modeConfig?.siderBg || (isDarkMode ? '#141414' : '#ffffff'),
             },
         }
     };
@@ -475,33 +485,6 @@ export function applyThemeMode(isDarkMode: boolean): void {
     if (metaTheme) {
         metaTheme.setAttribute('content', isDarkMode ? '#141414' : '#ffffff');
     }
-
-    // Update mode-aware variables
-    const primary = root.getAttribute(isDarkMode ? 'data-dark-primary' : 'data-light-primary');
-    const secondary = root.getAttribute(isDarkMode ? 'data-dark-secondary' : 'data-light-secondary');
-    const cardBg = root.getAttribute(isDarkMode ? 'data-dark-card' : 'data-light-card');
-    const layoutBg = root.getAttribute(isDarkMode ? 'data-dark-layout' : 'data-light-layout');
-
-    if (primary) {
-        root.style.setProperty('--tenant-primary', primary);
-        root.style.setProperty('--color-primary-rgb', hexToRgb(primary));
-    }
-    if (secondary) {
-        root.style.setProperty('--tenant-secondary', secondary);
-        root.style.setProperty('--color-secondary-rgb', hexToRgb(secondary));
-    }
-    if (cardBg) {
-        root.style.setProperty('--tenant-card-bg', cardBg);
-        root.style.setProperty('--color-bg-secondary-rgb', hexToRgb(cardBg));
-    }
-    if (layoutBg) {
-        root.style.setProperty('--tenant-layout-bg', layoutBg);
-        root.style.setProperty('--color-bg-primary-rgb', hexToRgb(layoutBg));
-    }
-
-    // Update sider background
-    const siderBg = isDarkMode ? (tenantConfig?.dark?.siderBg || '#141414') : (tenantConfig?.light?.siderBg || '#ffffff');
-    root.style.setProperty('--tenant-sider-bg', siderBg);
 }
 
 
@@ -579,4 +562,22 @@ function validateAssetUrl(url: string | undefined): string | undefined {
     }
 
     return url;
+}
+
+/**
+ * Apply user accessibility preferences (Zoom & Font Size)
+ */
+export function applyAccessibility(prefs: { baseFontSize: number; viewportZoom: number }): void {
+    if (typeof document === 'undefined') return;
+    const root = document.documentElement;
+
+    // Viewport Zoom
+    root.style.setProperty('--layout-zoom-percent', `${prefs.viewportZoom}%`);
+
+    // Proportional Font Size
+    root.style.setProperty('--layout-font-size-px', `${prefs.baseFontSize}px`);
+
+    // Derived spacing (gutter) - scaled by zoom
+    const zoomFactor = prefs.baseFontSize / 14;
+    root.style.setProperty('--layout-zoom-factor', `${zoomFactor}`);
 }
