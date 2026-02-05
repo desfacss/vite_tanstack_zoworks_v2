@@ -8,20 +8,29 @@ export class DisplayIdService {
   /**
    * Get display ID configuration for an entity type
    */
-  static async getConfig(entityType: string, organizationId: string): Promise<DisplayIdConfig | null> {
+  static async getConfig(entityType: string, organizationId: string, entitySchema: string = 'public'): Promise<DisplayIdConfig | null> {
     try {
-      const { data, error } = await supabase
-        .from('z_view_config')
-        .select('display_format')
+      let query = supabase
+        .schema('core')
+        .from('display_id_states')
+        .select('*')
         .eq('entity_type', entityType)
-        .single();
+        .eq('entity_schema', entitySchema);
+
+      if (organizationId) {
+        query = query.eq('organization_id', organizationId);
+      } else {
+        query = query.is('organization_id', null);
+      }
+
+      const { data, error } = await query.maybeSingle();
 
       if (error || !data) {
         console.warn(`No display ID config found for entity type: ${entityType}`);
         return null;
       }
 
-      return data?.display_format as DisplayIdConfig || null;
+      return data as unknown as DisplayIdConfig || null;
     } catch (error) {
       console.error('Error fetching display ID config:', error);
       return null;
@@ -93,14 +102,26 @@ export class DisplayIdService {
   /**
    * Update display ID configuration
    */
-  static async updateConfig(entityType: string, config: DisplayIdConfig, organizationId: string): Promise<boolean> {
+  static async updateConfig(
+    entityType: string, 
+    config: DisplayIdConfig, 
+    organizationId: string,
+    entitySchema: string = 'public'
+  ): Promise<boolean> {
     try {
       const { error } = await supabase
-        .from('z_view_config')
+        .schema('core')
+        .from('display_id_states')
         .upsert({
           entity_type: entityType,
-          display_format: config,
+          entity_schema: entitySchema,
+          organization_id: organizationId || null,
+          format_template: config.format_template,
+          padding: config.padding,
+          reset_period: config.reset_period,
           updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'entity_schema,entity_type,organization_id'
         });
 
       return !error;
@@ -116,6 +137,7 @@ export class DisplayIdService {
   static async validate(
     entityType: string,
     displayId: string,
+    entitySchema: string = 'public',
     entityId?: string
   ): Promise<DisplayIdValidationResult> {
     try {
@@ -123,30 +145,19 @@ export class DisplayIdService {
         return { isValid: false, message: 'Display ID cannot be empty' };
       }
 
-      const config = await this.getConfig(entityType, ''); // orgId not strictly needed for fetch by entity_type if global
-      if (!config) {
-        return { isValid: false, message: 'Configuration not found for entity type' };
-      }
-
-      const { table, schema } = config.table_name;
-      let query = supabase
-        .schema(schema)
-        .from(table)
+      const { data, error } = await supabase
+        .schema(entitySchema)
+        .from(entityType)
         .select('id')
-        .eq('display_id', displayId);
-
-      if (entityId) {
-        query = query.neq('id', entityId);
-      }
-
-      const { data, error } = await query;
+        .eq('display_id', displayId)
+        .maybeSingle();
 
       if (error) {
         console.error('Error validating display ID:', error);
         return { isValid: false, message: 'Validation failed' };
       }
 
-      if (data && data.length > 0) {
+      if (data && (!entityId || data.id !== entityId)) {
         return { isValid: false, message: 'This display ID already exists' };
       }
 
@@ -186,15 +197,17 @@ export class DisplayIdService {
    * Get required fields for display ID generation based on config
    */
   static getRequiredFields(config: DisplayIdConfig | null): string[] {
-    if (!config) return [];
+    if (!config || !config.format_template) return [];
     
     const requiredFields: string[] = [];
+    const template = config.format_template;
     
-    config.token_config.forEach(token => {
-      if (token.type === 'lookup' && token.entity_field) {
-        requiredFields.push(token.entity_field);
-      }
-    });
+    // Simple heuristic: check for common tokens that map to fields
+    if (template.includes('{LOCATION_CODE}')) requiredFields.push('location_id');
+    if (template.includes('{CLIENT_CODE}')) requiredFields.push('client_id');
+    if (template.includes('{ACCOUNT_CODE}')) requiredFields.push('account_id');
+    if (template.includes('{CATEGORY_CODE}')) requiredFields.push('category_id');
+    if (template.includes('{PROJECT_CODE}')) requiredFields.push('project_id');
 
     return [...new Set(requiredFields)];
   }
@@ -208,6 +221,7 @@ export class DisplayIdService {
     const requiredFields = this.getRequiredFields(config);
     return requiredFields.every(field => {
       const value = formData[field];
+      // Basic check: location_id, created_at, account_id are often system-provided or mandatory
       return (field === 'location_id' || field === "created_at" || field === "account_id") || (value != null && value !== '' && value !== undefined);
     });
   }

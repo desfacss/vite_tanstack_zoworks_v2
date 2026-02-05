@@ -908,6 +908,7 @@ const YViewConfigManager: React.FC = () => {
                 <DisplayIdConfig
                   entityType={selectedConfig?.entity_type || ''}
                   entitySchema={selectedSchema || ''}
+                  organizationId={organization?.id}
                 />
               ),
             },

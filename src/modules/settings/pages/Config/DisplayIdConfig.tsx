@@ -1,35 +1,33 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Input, Form, Select, Typography, Space, Divider, Row, Col, Card, message, Modal } from 'antd';
+import { Button, Input, Form, Select, Typography, Space, Divider, Row, Col, Card, message } from 'antd';
 import { SettingOutlined, SwapOutlined } from '@ant-design/icons';
 import { supabase } from '@/core/lib/supabase';
 import TokenTemplateModal, { useTokenTemplates } from './TokenTemplateModal'; // Import the new modal
 
-const { Title, Text, Paragraph } = Typography;
+const { Title, Text } = Typography;
 const { Option } = Select;
+const { TextArea } = Input;
 
 interface DisplayIdConfigProps {
   entityType: string;
   entitySchema: string;
+  organizationId?: string;
 }
 
 interface IdConfig {
-  prefix: string;
-  separator: string;
-  counter_padding: number;
-  template_string: string;
-  start_number: number;
-  reset_period: 'none' | 'daily' | 'monthly' | 'yearly_cal' | 'yearly_fin';
+  format_template: string;
+  reset_period: 'CALENDAR_YEAR' | 'FINANCIAL_YEAR';
+  padding: number;
+  current_counter?: Record<string, number>;
 }
 
-const DisplayIdConfig: React.FC<DisplayIdConfigProps> = ({ entityType, entitySchema }) => {
+const DisplayIdConfig: React.FC<DisplayIdConfigProps> = ({ entityType, entitySchema, organizationId }) => {
   const [loading, setLoading] = useState(false);
   const [config, setConfig] = useState<IdConfig>({
-    prefix: '',
-    separator: '-',
-    counter_padding: 4,
-    template_string: '',
-    start_number: 1,
-    reset_period: 'none',
+    format_template: '',
+    reset_period: 'CALENDAR_YEAR',
+    padding: 4,
+    current_counter: {},
   });
   const [previewId, setPreviewId] = useState('');
   const [isTemplateModalVisible, setIsTemplateModalVisible] = useState(false);
@@ -38,35 +36,47 @@ const DisplayIdConfig: React.FC<DisplayIdConfigProps> = ({ entityType, entitySch
   // Use the custom hook for template logic
   const {
       availableTokens,
-      fetchTokens,
-      loadingTokens
+      fetchTokens
   } = useTokenTemplates(entityType, entitySchema);
 
   useEffect(() => {
     fetchConfig();
     fetchTokens(); // Fetch tokens when component mounts
-  }, [entityType, entitySchema]);
+  }, [entityType, entitySchema, organizationId]);
 
   useEffect(() => {
     generatePreview();
-  }, [config]);
+  }, [config, availableTokens]);
 
   const fetchConfig = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      let query = supabase
         .schema('core')
-        .from('entities')
-        .select('id_config')
+        .from('display_id_states')
+        .select('*')
         .eq('entity_type', entityType)
-        .eq('entity_schema', entitySchema)
-        .single();
+        .eq('entity_schema', entitySchema);
 
-      if (error && error.code !== 'PGRST116') throw error;
+      if (organizationId) {
+        query = query.eq('organization_id', organizationId);
+      } else {
+        query = query.is('organization_id', null);
+      }
 
-      if (data?.id_config) {
-        setConfig(data.id_config);
-        form.setFieldsValue(data.id_config);
+      const { data, error } = await query.maybeSingle();
+
+      if (error) throw error;
+
+      if (data) {
+        const fetchedConfig = {
+          format_template: data.format_template || '',
+          reset_period: data.reset_period || 'CALENDAR_YEAR',
+          padding: data.padding || 4,
+          current_counter: data.current_counter || {},
+        };
+        setConfig(fetchedConfig);
+        form.setFieldsValue(fetchedConfig);
       }
     } catch (error: any) {
       console.error('Error fetching ID config:', error);
@@ -79,16 +89,26 @@ const DisplayIdConfig: React.FC<DisplayIdConfigProps> = ({ entityType, entitySch
   const handleSave = async (values: IdConfig) => {
     try {
       setLoading(true);
+      const upsertData = {
+        entity_type: entityType,
+        entity_schema: entitySchema,
+        organization_id: organizationId || null,
+        format_template: values.format_template,
+        padding: values.padding,
+        reset_period: values.reset_period,
+        updated_at: new Date().toISOString(),
+      };
+
       const { error } = await supabase
         .schema('core')
-        .from('entities')
-        .update({ id_config: values })
-        .eq('entity_type', entityType)
-        .eq('entity_schema', entitySchema);
+        .from('display_id_states')
+        .upsert(upsertData, { 
+          onConflict: 'entity_schema,entity_type,organization_id' 
+        });
 
       if (error) throw error;
       
-      setConfig(values);
+      setConfig(prev => ({ ...prev, ...values }));
       message.success('ID configuration saved successfully');
     } catch (error: any) {
       console.error('Error saving ID config:', error);
@@ -100,12 +120,13 @@ const DisplayIdConfig: React.FC<DisplayIdConfigProps> = ({ entityType, entitySch
 
   const generatePreview = () => {
     const today = new Date();
-    const separator = config.separator || '-';
     const tokens: Record<string, string> = {
       '{YYYY}': today.getFullYear().toString(),
       '{YY}': today.getFullYear().toString().slice(-2),
       '{MM}': (today.getMonth() + 1).toString().padStart(2, '0'),
       '{DD}': today.getDate().toString().padStart(2, '0'),
+      '{SEQ}': '0'.repeat(config.padding),
+      '{COUNTER}': '0'.repeat(config.padding),
       // Add fake values for lookup tokens for preview
       ...availableTokens.reduce((acc, token) => ({
           ...acc, 
@@ -113,50 +134,25 @@ const DisplayIdConfig: React.FC<DisplayIdConfigProps> = ({ entityType, entitySch
       }), {})
     };
 
-    // Start with prefix if available
-    let preview = config.prefix ? config.prefix.toUpperCase() + separator : '';
-    
     // Add template string with tokens replaced
-    let templatePart = config.template_string || '';
+    let preview = config.format_template || '';
     Object.entries(tokens).forEach(([token, value]) => {
-      templatePart = templatePart.replace(new RegExp(token.replace(/[{}]/g, '\\$&'), 'g'), value);
+      preview = preview.replace(new RegExp(token.replace(/[{}]/g, '\\$&'), 'g'), value);
     });
-    preview += templatePart;
-
-    // Add counter
-    const counter = config.start_number.toString().padStart(config.counter_padding, '0');
-    preview += (preview ? separator : '') + counter;
 
     setPreviewId(preview);
   };
   
   const handleTemplateSelect = (selectedToken: string) => {
-      // Append the token to the existing template string with separator
-      const currentTemplate = config.template_string || '';
-      const separator = config.separator || '-';
+      const currentTemplate = config.format_template || '';
+      const newTemplate = currentTemplate ? `${currentTemplate}-${selectedToken}` : selectedToken;
       
-      let newTemplate: string;
-      if (currentTemplate.trim()) {
-        // Append token with separator
-        newTemplate = `${currentTemplate}${separator}${selectedToken}`;
-      } else {
-        // First token, no separator needed
-        newTemplate = selectedToken;
-      }
-      
-      form.setFieldsValue({ template_string: newTemplate });
-      setConfig(prev => ({ ...prev, template_string: newTemplate }));
-      // Keep the modal open so user can add more tokens
+      form.setFieldsValue({ format_template: newTemplate });
+      setConfig(prev => ({ ...prev, format_template: newTemplate }));
   };
 
   return (
     <div style={{ maxWidth: 800 }}>
-      {/* <h2>Display ID Configuration</h2>
-      <Paragraph type="secondary">
-        Configure how unique identifiers are generated for {entityType}. 
-        IDs are composed of a prefix/template part and an auto-incrementing counter.
-      </Paragraph> */}
-
       <Card>
         <Form
           form={form}
@@ -181,55 +177,22 @@ const DisplayIdConfig: React.FC<DisplayIdConfigProps> = ({ entityType, entitySch
             </Col>
 
             <Col span={24}>
-              <Form.Item label="Format Template" tooltip="Use tokens to construct the dynamic part of the ID. Click 'Insert Token' to add multiple tokens.">
+              <Form.Item label="Format Template" tooltip="Use tokens to construct the dynamic part of the ID. Tokens like {YYYY}, {MM}, {COUNTER}, {SEQ} are supported.">
                 <Space.Compact style={{ width: '100%' }}>
                     <Form.Item
-                        name="separator"
-                        noStyle
-                    >
-                        <Select 
-                          style={{ width: 70 }} 
-                          onChange={(newSep) => {
-                            const oldSep = config.separator || '-';
-                            const currentTemplate = config.template_string || '';
-                            
-                            // Only replace separators that are BETWEEN tokens (outside of curly braces)
-                            // Use regex to match separator only when followed by { or preceded by }
-                            // Pattern: }oldSep{ or }oldSep at end, or oldSep{ at start
-                            let updatedTemplate = currentTemplate;
-                            
-                            // Replace }{sep}{ patterns (between two tokens)
-                            const betweenTokensRegex = new RegExp(`\\}\\${oldSep}\\{`, 'g');
-                            updatedTemplate = updatedTemplate.replace(betweenTokensRegex, `}${newSep}{`);
-                            
-                            form.setFieldsValue({ template_string: updatedTemplate });
-                            setConfig(prev => ({ 
-                              ...prev, 
-                              separator: newSep,
-                              template_string: updatedTemplate
-                            }));
-                          }}
-                        >
-                          <Option value="-">-</Option>
-                          <Option value="_">_</Option>
-                          <Option value="/">/</Option>
-                          <Option value=".">.</Option>
-                        </Select>
-                    </Form.Item>
-                    <Form.Item
-                        name="template_string"
+                        name="format_template"
                         noStyle
                     >
                         <Input 
-                            placeholder="e.g., {PREFIX}{YYYY}{MM}" 
+                            placeholder="e.g., REQ-{SEQ} or TKT-{DATE}-{COUNTER}" 
                             style={{ flex: 1 }}
-                            onChange={(e) => setConfig(prev => ({ ...prev, template_string: e.target.value }))}
+                            onChange={(e) => setConfig(prev => ({ ...prev, format_template: e.target.value }))}
                         />
                     </Form.Item>
                     <Button 
                         onClick={() => {
-                          form.setFieldsValue({ template_string: '' });
-                          setConfig(prev => ({ ...prev, template_string: '' }));
+                          form.setFieldsValue({ format_template: '' });
+                          setConfig(prev => ({ ...prev, format_template: '' }));
                         }}
                     >
                         Clear
@@ -246,23 +209,8 @@ const DisplayIdConfig: React.FC<DisplayIdConfigProps> = ({ entityType, entitySch
             </Col>
 
             <Col span={12}>
-                {/* Prefix is essentially redundant if we have a full template string, 
-                    but keeping it for backward compatibility or simple use cases if needed. 
-                    Maybe hide it if template_string is used? Or treat it as a static potential start?
-                    For this impl, lets keep it but maybe de-emphasize it.
-                */}
               <Form.Item 
-                name="prefix" 
-                label="Static Prefix (Optional)"
-                extra="Added before the template string"
-              >
-                <Input placeholder="e.g. PO" />
-              </Form.Item>
-            </Col>
-
-            <Col span={12}>
-              <Form.Item 
-                name="counter_padding" 
+                name="padding" 
                 label="Counter Padding" 
                 initialValue={4}
                 rules={[{ required: true }]}
@@ -278,28 +226,28 @@ const DisplayIdConfig: React.FC<DisplayIdConfigProps> = ({ entityType, entitySch
 
             <Col span={12}>
               <Form.Item 
-                name="start_number" 
-                label="Start Number" 
-                initialValue={1}
-                rules={[{ required: true }]}
+                name="reset_period" 
+                label="Counter Reset Period" 
+                initialValue="CALENDAR_YEAR"
               >
-                <Input type="number" min={1} />
+                <Select>
+                  <Option value="CALENDAR_YEAR">Calendar Year (Jan 1st)</Option>
+                  <Option value="FINANCIAL_YEAR">Financial Year (Apr 1st)</Option>
+                </Select>
               </Form.Item>
             </Col>
 
-            <Col span={12}>
-              <Form.Item 
-                name="reset_period" 
-                label="Counter Reset Period" 
-                initialValue="none"
-              >
-                <Select>
-                  <Option value="none">Never Reset</Option>
-                  <Option value="daily">Daily (First ID of day is 1)</Option>
-                  <Option value="monthly">Monthly (First ID of month is 1)</Option>
-                  <Option value="yearly_cal">Yearly (Calendar - Jan 1st)</Option>
-                  <Option value="yearly_fin">Yearly (Financial - Apr 1st)</Option>
-                </Select>
+            <Col span={24}>
+              <Form.Item label="Current Counter Status (Read-Only)">
+                <TextArea 
+                  rows={4} 
+                  value={JSON.stringify(config.current_counter || {}, null, 2)} 
+                  readOnly 
+                  style={{ background: '#f9f9f9', fontFamily: 'monospace' }}
+                />
+                <Text type="secondary" style={{ fontSize: '12px' }}>
+                  This shows the current counter values stored in the database for different keys.
+                </Text>
               </Form.Item>
             </Col>
           </Row>

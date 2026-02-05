@@ -1,24 +1,11 @@
 export interface DisplayIdConfig {
-  format: string;
-  date_field: string;
-  table_name: {
-    table: string;
-    schema: string;
-  };
-  start_number: number;
-  token_config: Array<{
-    type: 'lookup' | 'date_part' | 'counter';
-    token: string;
-    entity_field?: string;
-    lookup_table?: {
-      table: string;
-      schema: string;
-    };
-    lookup_id_field?: string;
-    lookup_value_field?: string;
-    format?: string;
-  }>;
-  counter_padding: number;
+  format_template: string;
+  padding: number;
+  reset_period: 'CALENDAR_YEAR' | 'FINANCIAL_YEAR';
+  current_counter?: Record<string, number>;
+  entity_type?: string;
+  entity_schema?: string;
+  organization_id?: string | null;
 }
 
 export interface DisplayIdPreview {
