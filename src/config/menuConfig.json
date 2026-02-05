@@ -16,6 +16,20 @@
         "translationKey": "tickets",
         "key": "tickets",
         "submoduleKey": "support-tickets"
+      },
+      {
+        "filePath": "src/modules/workforce/pages/ServiceReports.tsx",
+        "routePath": "/support/service-reports",
+        "translationKey": "service-reports",
+        "key": "service-reports",
+        "submoduleKey": "support-service-reports"
+      },
+      {
+        "filePath": "src/modules/workforce/pages/ServiceInvoices.tsx",
+        "routePath": "/support/service-invoices",
+        "translationKey": "service-invoices",
+        "key": "service-invoices",
+        "submoduleKey": "support-service-invoices"
       }
     ],
     "external": [
@@ -375,6 +389,22 @@
         "translationKey": "expenses",
         "key": "expenses",
         "submoduleKey": "workforce-expenses"
+      },
+      {
+        "filePath": "src/modules/workforce/pages/TeamsUsers.tsx",
+        "routePath": "/workforce/teams-users",
+        "translationKey": "teams-users",
+        "key": "teams-users",
+        "submoduleKey": "workforce-teams-users"
+      }
+    ],
+    "erp": [
+      {
+        "filePath": "src/modules/erp/pages/Invoices.tsx",
+        "routePath": "/erp/invoices",
+        "translationKey": "invoices",
+        "key": "invoices",
+        "submoduleKey": "erp-invoices"
       }
     ]
   },

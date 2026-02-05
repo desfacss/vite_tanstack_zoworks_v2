@@ -81,7 +81,7 @@ const GlobalActions: React.FC<GlobalActionsProps> = ({
         ...(metadata?.some((field: any) => field.key === "location_id") && location?.id && isLocationPartition(permissions, path?.pathname) ? { location_id: location?.id } : {}),
       };
 
-      const { data, error } = await supabase.schema('core').rpc("core_upsert_data_v8", {
+      const { data, error } = await supabase.schema('core').rpc("api_new_core_upsert_data", {
         table_name: (entitySchema || "public") + "." + entityType,
         data: dataPayload,
         id: null,

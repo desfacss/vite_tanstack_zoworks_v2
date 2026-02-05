@@ -301,13 +301,31 @@ export const booleanRenderer = (value: boolean | null | undefined) => {
 // ============================================
 // USER/PERSON RENDERER
 // ============================================
-export const userRenderer = (value: string | null | undefined) => {
+export const userRenderer = (value: any) => {
     if (!value) return <span className="text-muted-foreground">-</span>;
+
+    // Handle JSONB structure from service_reports: { users: ["Name", ...] }
+    if (typeof value === 'object' && value.users && Array.isArray(value.users)) {
+        if (value.users.length === 0) return <span className="text-muted-foreground">-</span>;
+        return (
+            <div className="flex flex-wrap gap-1">
+                {value.users.map((user: string, i: number) => (
+                    <span key={i} className="flex items-center gap-1.5 text-sm bg-secondary/50 px-1.5 py-0.5 rounded">
+                        <User size={12} className="text-muted-foreground" />
+                        <span className="truncate">{user}</span>
+                    </span>
+                ))}
+            </div>
+        );
+    }
+
+    // Handle direct string value
+    const displayValue = typeof value === 'object' ? JSON.stringify(value) : String(value);
 
     return (
         <span className="flex items-center gap-1.5 text-sm">
             <User size={12} className="text-muted-foreground" />
-            <span className="truncate">{value}</span>
+            <span className="truncate">{displayValue}</span>
         </span>
     );
 };

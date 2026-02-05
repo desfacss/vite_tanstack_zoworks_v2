@@ -1089,7 +1089,7 @@ const DynamicViews: React.FC<DynamicViewsProps> = ({
       };
 
       // 🚀 UPDATED RPC CALL NAME
-      const { data, error } = await supabase.schema('core').rpc('api_fetch_entity_records_v2', {
+      const { data, error } = await supabase.schema('core').rpc('api_new_fetch_entity_records', {
         config: rpcConfig,
       });
 

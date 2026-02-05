@@ -40,6 +40,12 @@ const SettingsConfig = lazy(() => import('@/modules/settings/pages/Config'));
 const WorkforceLeaves = lazy(() => import('@/modules/workforce/pages/Leaves'));
 const WorkforceTimesheets = lazy(() => import('@/modules/workforce/pages/Timesheets'));
 const WorkforceExpenses = lazy(() => import('@/modules/workforce/pages/Expenses'));
+const TeamsUsers = lazy(() => import('@/modules/workforce/pages/TeamsUsers'));
+
+// Tickets & Documents
+const ServiceReports = lazy(() => import('@/modules/workforce/pages/ServiceReports'));
+const ServiceInvoices = lazy(() => import('@/modules/workforce/pages/ServiceInvoices'));
+const Invoices = lazy(() => import('@/modules/erp/pages/Invoices'));
 
 // AI Module
 const AIWorkbench = lazy(() => import('@/modules/ai/pages/AIWorkbench'));
@@ -129,6 +135,15 @@ export const AppRoutes: FC = () => {
                         {/* Support - Tickets */}
                         <Route path="/support/tickets" element={<Tickets />} />
 
+                        {/* Service Reports */}
+                        <Route path="/support/service-reports" element={<ServiceReports />} />
+
+                        {/* Service Invoices */}
+                        <Route path="/support/service-invoices" element={<ServiceInvoices />} />
+
+                        {/* ERP - Invoices */}
+                        <Route path="/erp/invoices" element={<Invoices />} />
+
                         {/* External - Service Assets */}
                         <Route path="/external/service-assets" element={<ServiceAssets />} />
 
@@ -140,6 +155,7 @@ export const AppRoutes: FC = () => {
                         <Route path="/workforce/leaves" element={<WorkforceLeaves />} />
                         <Route path="/workforce/timesheets" element={<WorkforceTimesheets />} />
                         <Route path="/workforce/expenses" element={<WorkforceExpenses />} />
+                        <Route path="/workforce/teams-users" element={<TeamsUsers />} />
 
                         {/* Admin - Settings & Branding */}
                         <Route path="/admin/settings" element={<AdminSettings />} />
