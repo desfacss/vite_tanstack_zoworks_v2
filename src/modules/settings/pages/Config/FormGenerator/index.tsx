@@ -107,17 +107,36 @@ const FormGenerator: React.FC<FormGeneratorProps> = ({ onGenerate, onClose, defa
       // Prefer v_metadata if available, fallback to metadata
       const metadata: EntityField[] = selectedEntity.v_metadata || selectedEntity.metadata || [];
       
+      console.log('🔍 FormGenerator Debug:', {
+        entityName,
+        hasVMetadata: !!selectedEntity.v_metadata,
+        hasMetadata: !!selectedEntity.metadata,
+        metadataLength: metadata.length,
+        metadata: metadata,
+        options
+      });
+      
       if (!metadata || metadata.length === 0) {
         message.warning('Selected entity has no metadata fields');
         return;
       }
 
       const schemas = generateFormFromMetadata(metadata, entityName, options);
+      
+      console.log('📋 Generated Schemas:', {
+        dataSchemaPropertiesCount: Object.keys(schemas.dataSchema.properties).length,
+        dataSchemaProperties: Object.keys(schemas.dataSchema.properties),
+        uiSchemaKeys: Object.keys(schemas.uiSchema),
+        dataSchema: schemas.dataSchema,
+        uiSchema: schemas.uiSchema
+      });
+      
       setGeneratedSchemas(schemas);
       message.success(`Generated form schema with ${Object.keys(schemas.dataSchema.properties).length} fields`);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to generate form';
       message.error(errorMessage);
+      console.error('❌ Form generation error:', err);
     } finally {
       setGenerating(false);
     }

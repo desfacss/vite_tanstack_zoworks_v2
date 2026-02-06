@@ -34,6 +34,12 @@ export function generateFormFromMetadata(
 ): GeneratedFormSchemas {
   const opts = { ...DEFAULT_OPTIONS, ...options };
   
+  console.log('🔧 generateFormFromMetadata called:', {
+    totalMetadataFields: metadata.length,
+    entityName,
+    options: opts
+  });
+  
   const dataSchema: DataSchema = {
     type: 'object',
     title: formatEntityTitle(entityName),
@@ -47,6 +53,13 @@ export function generateFormFromMetadata(
   
   // Filter and process fields
   const processableFields = metadata.filter(field => shouldIncludeField(field, opts));
+  
+  console.log('📊 Field filtering results:', {
+    totalFields: metadata.length,
+    processableFields: processableFields.length,
+    filteredOutCount: metadata.length - processableFields.length,
+    processableFieldKeys: processableFields.map(f => f.key)
+  });
   
   for (const field of processableFields) {
     const fieldKey = normalizeFieldKey(field.key);
@@ -79,29 +92,48 @@ export function generateFormFromMetadata(
 function shouldIncludeField(field: EntityField, options: GeneratorOptions): boolean {
   // Skip non-displayable fields
   if (field.is_displayable === false) {
+    console.log(`❌ Excluding ${field.key}: is_displayable=false`);
     return false;
   }
   
   // Skip system fields unless explicitly included
   if (!options.includeSystemFields && isSystemField(field.key)) {
+    console.log(`❌ Excluding ${field.key}: system field (includeSystemFields=${options.includeSystemFields})`);
     return false;
   }
   
   // Skip read-only fields unless explicitly included
   if (!options.includeReadOnlyFields && field.is_read_only) {
+    console.log(`❌ Excluding ${field.key}: read-only (includeReadOnlyFields=${options.includeReadOnlyFields})`);
     return false;
   }
   
-  // Skip virtual fields that are computed from views (not JSONB paths)
+  // Skip virtual fields that are truly computed/derived (aggregations, etc.)
+  // BUT keep virtual fields from views and JSONB paths
   if (field.is_virtual && !field.jsonb_column) {
-    return false;
+    // Check if it's a computed/derived field based on semantic type
+    const isComputedField = 
+      field.semantic_type?.role === 'measure' || 
+      field.semantic_type?.default_aggregation;
+    
+    // Only exclude if it's actually a computed aggregation
+    // Otherwise, it's likely just a view column that should be included
+    if (isComputedField) {
+      console.log(`❌ Excluding ${field.key}: computed/aggregated field`);
+      return false;
+    }
+    
+    // Allow regular virtual fields from views
+    console.log(`✅ Including ${field.key}: virtual field from view`);
   }
   
   // Skip raw JSONB columns (we'll include their expanded virtual fields)
   if (field.type === 'jsonb' && !field.is_virtual) {
+    console.log(`❌ Excluding ${field.key}: raw JSONB column`);
     return false;
   }
   
+  console.log(`✅ Including ${field.key}`);
   return true;
 }
 

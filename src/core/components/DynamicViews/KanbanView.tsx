@@ -365,23 +365,19 @@ const KanbanView: React.FC<KanbanViewProps> = ({
           throw new Error('No record selected for update');
         }
 
+        const updatePayload = {
+          id: draggableId,
+          [fieldPathForRPC]: targetValueForRPC
+        };
+
         console.log('Update payload:', {
           table_name: (viewConfig?.entity_schema || "public") + "." + entityType,
-          data: { [fieldPathForRPC]: targetValueForRPC }, // Use the correct fieldPath and target ID
-          id: draggableId,
-          related_table_name: null,
-          related_data_key: null,
-          related_unique_keys: null,
+          data: updatePayload
         });
 
-        // const { data: rpcData, error } = await supabase.rpc('core_upsert_data_v7', {
         const { data: rpcData, error } = await supabase.schema('core').rpc('api_new_core_upsert_data', {
           table_name: (viewConfig?.entity_schema || "public") + "." + entityType,
-          data: { [fieldPathForRPC]: targetValueForRPC },
-          id: draggableId,
-          related_table_name: null,
-          related_data_key: null,
-          related_unique_keys: null,
+          data: updatePayload
         });
 
         if (error) {

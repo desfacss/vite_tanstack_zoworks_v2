@@ -50,7 +50,6 @@ const GlobalActions: React.FC<GlobalActionsProps> = ({
   const path = useLocation();
   const globalActionsFromConfig = config?.global_actions || [];
   const metadata = viewConfig?.metadata;
-  const relatedTable = config?.details?.related_table;
 
   // Actions from both Config and Registry
   const registeredActions = useMemo(() => registry.getActionsForEntity(entityType, 'global'), [entityType]);
@@ -81,15 +80,17 @@ const GlobalActions: React.FC<GlobalActionsProps> = ({
         ...(metadata?.some((field: any) => field.key === "location_id") && location?.id && isLocationPartition(permissions, path?.pathname) ? { location_id: location?.id } : {}),
       };
 
+      // Ensure schema prefix is included in table_name
+      const schema = entitySchema || "public";
+      const fullTableName = `${schema}.${entityType}`;
+
       const { data, error } = await supabase.schema('core').rpc("api_new_core_upsert_data", {
-        table_name: (entitySchema || "public") + "." + entityType,
-        data: dataPayload,
-        id: null,
-        related_table_name: relatedTable?.name,
-        related_data_key: relatedTable?.key,
-        related_unique_keys: relatedTable?.unique_keys,
-        related_fk_column: relatedTable?.fk_column || 'project_id'
+        table_name: fullTableName,
+        data: dataPayload
       });
+
+      // Note: Related table functionality not implemented for create operations yet
+      // TODO: Implement sequential updates if needed
 
       if (error) throw error;
       return data;

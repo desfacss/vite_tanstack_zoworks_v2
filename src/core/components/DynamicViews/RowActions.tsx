@@ -103,24 +103,93 @@ const RowActions: React.FC<RowActionsProps> = ({
       if (!record?.id) throw new Error('No record selected for update');
 
       const metadata = viewConfig?.metadata || [];
+      const relatedTable = config?.details?.related_table;
+      // Extract schema from entity_type or use entity_schema
+      const entityTypeWithSchema = viewConfig?.entity_type || entityType;
+      const hasSchemaPrefix = entityTypeWithSchema.includes('.');
+      const schema = hasSchemaPrefix 
+        ? entityTypeWithSchema.split('.')[0] 
+        : (viewConfig?.entity_schema || 'public');
+      const table = hasSchemaPrefix 
+        ? entityTypeWithSchema.split('.')[1] 
+        : entityTypeWithSchema;
+      const fullTableName = `${schema}.${table}`;
+
+      // Filter out system-managed fields that should not be in the payload
+      const systemManagedFields = ['created_at', 'updated_at', 'deleted_at'];
+      const filteredValues = Object.fromEntries(
+        Object.entries(values).filter(([key]) => !systemManagedFields.includes(key))
+      );
+
+      // Convert empty arrays to null for PostgreSQL compatibility
+      const processedValues = Object.fromEntries(
+        Object.entries(filteredValues).map(([key, value]) => {
+          // If it's an empty array, convert to null
+          if (Array.isArray(value) && value.length === 0) {
+            return [key, null];
+          }
+          return [key, value];
+        })
+      );
+
       const dataPayload = {
-        ...values,
+        ...processedValues,
+        id: record.id, // Include id in data object for update
         ...(metadata.some((field: any) => field.key === 'organization_id') ? { organization_id: organization.id } : {}),
         ...(metadata.some((field: any) => field.key === 'updated_by') ? { updated_by: user.id } : {}),
       };
-      const relatedTable = config?.details?.related_table;
 
+      // Update main record
       const { data, error } = await (supabase as any).schema('core').rpc('api_new_core_upsert_data', {
-        table_name: viewConfig?.entity_type || entityType,
-        data: dataPayload,
-        id: record.id,
-        related_table_name: relatedTable?.name,
-        related_data_key: relatedTable?.key,
-        related_unique_keys: relatedTable?.unique_keys,
-        related_fk_column: relatedTable?.fk_column || 'project_id'
+        table_name: fullTableName,
+        data: dataPayload
       });
 
       if (error) throw error;
+
+      // Handle related table updates if configured
+      if (relatedTable?.name && relatedTable?.key && values[relatedTable.key]) {
+        const relatedData = Array.isArray(values[relatedTable.key]) ? values[relatedTable.key] : [values[relatedTable.key]];
+        const fkColumn = relatedTable.fk_column || 'project_id';
+
+        // Delete existing related records not in the new set
+        const submittedIds = relatedData.filter((r: any) => r.id).map((r: any) => r.id);
+        const { data: existingRecords } = await (supabase as any)
+          .schema(relatedTable.name.split('.')[0] || 'public')
+          .from(relatedTable.name.split('.')[1] || relatedTable.name)
+          .select('id')
+          .eq(fkColumn, record.id)
+          .eq('organization_id', organization.id);
+
+        if (existingRecords) {
+          const idsToDelete = existingRecords
+            .map((r: any) => r.id)
+            .filter((id: string) => !submittedIds.includes(id));
+
+          for (const idToDelete of idsToDelete) {
+            await (supabase as any)
+              .schema(relatedTable.name.split('.')[0] || 'public')
+              .from(relatedTable.name.split('.')[1] || relatedTable.name)
+              .delete()
+              .eq('id', idToDelete);
+          }
+        }
+
+        // Upsert each related record
+        for (const relatedRecord of relatedData) {
+          const relatedPayload = {
+            ...relatedRecord,
+            [fkColumn]: data || record.id,
+            organization_id: organization.id,
+          };
+
+          await (supabase as any).schema('core').rpc('api_new_core_upsert_data', {
+            table_name: relatedTable.name,
+            data: relatedPayload
+          });
+        }
+      }
+
       return data;
     },
     onSuccess: () => {

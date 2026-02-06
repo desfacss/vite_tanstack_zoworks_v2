@@ -100,6 +100,7 @@ const ApprovalActionButtons: React.FC<ApprovalActionButtonsProps> = ({
       if (!entityId || !entityType) throw new Error('Entity information missing.');
 
       const payload = {
+        id: entityId, // Include id in data object for update
         // The column in your table that holds the status/stage information
         status: newStatus,
         stage_id: newStatus,
@@ -110,13 +111,9 @@ const ApprovalActionButtons: React.FC<ApprovalActionButtonsProps> = ({
         // rejected_at: newStatus === 'Rejected' ? new Date().toISOString() : null,
       };
 
-      // Use the core_upsert_data_v7 RPC for the update
-      // const { error } = await supabase.rpc('core_upsert_data_v7', {
       const { error } = await supabase.schema('core').rpc('api_new_core_upsert_data', {
-        // table_name: `${ entitySchema }.${ entityType } `,
         table_name: entityType,
-        data: payload,
-        id: entityId,
+        data: payload
       });
 
       if (error) throw error;
