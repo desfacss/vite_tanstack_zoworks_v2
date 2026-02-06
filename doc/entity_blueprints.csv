@@ -1,0 +1,132 @@
+id,entity_type,entity_schema,base_source,physical_ddl,extra_objects,custom_view_sql,partition_filter,ui_config,dependencies,status,created_at,updated_at,sub_panels,display_name,semantics,rules,ai_metadata,classification,display_format,version,blueprint_hash
+0e5cc2d1-e241-433c-ae92-4f4fd1c7ebc2,agents,ai_mcp,unified.contacts,,{},"
+CREATE OR REPLACE VIEW ai_mcp.v_agents AS
+SELECT 
+    uc.id, uc.organization_id, uc.display_id, uc.name,
+    uc.persona_type AS role_level, uc.status,
+    uc.details->>'agent_key' AS agent_key,
+    uc.details->>'description' AS description,
+    uc.details->'model_config' AS model_config,
+    uc.details->>'parent_agent' AS parent_agent_key,
+    a.system_prompt, a.planning_config, a.required_module_key,
+    uc.created_at, uc.updated_at
+FROM unified.contacts uc
+LEFT JOIN ai_mcp.agents a ON a.id = uc.id
+WHERE uc.contact_type = 'agent';
+    ",module = 'ai_mcp',"{""tableview"": {""columns"": [""name"", ""role_level"", ""agent_key"", ""status""], ""sortable"": true}, ""detailview"": {""sections"": [{""name"": ""Agent Info"", ""fields"": [""name"", ""role_level"", ""agent_key""]}, {""name"": ""Configuration"", ""fields"": [""status"", ""ai_details""]}]}, ""defaultView"": ""table""}","[""ai_mcp.agents""]",applied,2026-01-24 05:03:06.997383+00,2026-01-30 12:12:46.568571+00,"[{""fk"": ""object_id"", ""icon"": ""paperclip"", ""name"": ""Attachments"", ""source"": ""core.object_attachments""}, {""fk"": ""object_id"", ""icon"": ""sticky-note"", ""name"": ""Notes"", ""filter"": ""comment_type = 'note'"", ""source"": ""core.object_comments""}, {""fk"": ""object_id"", ""icon"": ""activity"", ""name"": ""Activities"", ""source"": ""core.object_activities""}, {""fk"": ""object_id"", ""icon"": ""tag"", ""name"": ""Tags"", ""source"": ""core.object_tags""}]",,{},{},"{""embedding_model"": ""text-embedding-3-large""}",transactional,,1,
+125e734d-7a4f-40bb-b3d2-b227d6808011,customers_b2c,external,unified.contacts,,{},,lifecycle_stage = 'customer',"{""filters"": [""tags"", ""lifecycle_stage""], ""defaultView"": ""table""}","[""external.contacts"",""external.accounts""]",applied,2026-01-24 05:03:06.997383+00,2026-01-30 12:12:46.568571+00,"[{""fk"": ""object_id"", ""icon"": ""paperclip"", ""name"": ""Attachments"", ""source"": ""core.object_attachments""}, {""fk"": ""object_id"", ""icon"": ""sticky-note"", ""name"": ""Notes"", ""filter"": ""comment_type = 'note'"", ""source"": ""core.object_comments""}, {""fk"": ""object_id"", ""icon"": ""activity"", ""name"": ""Activities"", ""source"": ""core.object_activities""}, {""fk"": ""object_id"", ""icon"": ""tag"", ""name"": ""Tags"", ""source"": ""core.object_tags""}]",,{},{},"{""embedding_model"": ""text-embedding-3-large""}",transactional,,1,
+169daade-da09-4763-ab90-4c322308a57a,interviews,hr,hr.interviews,,{},,,{},[],draft,2026-02-03 20:41:34.583148+00,2026-02-05 08:59:32.527529+00,[],Interviews,{},{},"{""embedding_model"": ""text-embedding-3-large""}",transactional,"{""format"": ""INT-{SEQ}"", ""counter_padding"": 5}",1,
+1b6c6fc3-758b-433e-a726-d1de7f8ca4ec,deals,external,external.deals,,{},,,{},[],draft,2026-02-03 20:41:34.583148+00,2026-02-05 08:59:32.527529+00,[],,{},{},"{""embedding_model"": ""text-embedding-3-large""}",transactional,,1,
+1fc59985-c831-4945-90bf-03ced0ce58f5,service_assets,external,external.service_assets,,{},,,{},[],draft,2026-02-03 20:41:34.583148+00,2026-02-05 08:59:32.527529+00,[],,{},{},"{""embedding_model"": ""text-embedding-3-large""}",transactional,,1,
+208a6308-5b97-4f9c-a501-c50d709523d4,users,identity,unified.contacts,,{},,contact_type = 'user',{},"[""identity.users""]",active,2026-02-03 20:41:34.583148+00,2026-02-05 08:59:32.527529+00,[],,{},{},"{""embedding_model"": ""text-embedding-3-large""}",transactional,,1,
+244557c7-b61f-4619-ac8a-9d6d6c7e4bea,offers,hr,hr.offers,,{},,,{},[],draft,2026-02-03 20:41:34.583148+00,2026-02-05 08:59:32.527529+00,[],Job Offers,{},{},"{""embedding_model"": ""text-embedding-3-large""}",lifecycle,"{""format"": ""OFFER-{SEQ}"", ""counter_padding"": 5}",1,
+2d99ed08-bbd2-4be3-8fa6-16fbe019d3d4,leads,external,unified.contacts,,{},,lifecycle_stage = 'lead',{},"[""external.contacts""]",applied,2026-01-11 10:57:42.249686+00,2026-02-05 08:59:32.527529+00,[],,{},{},"{""embedding_model"": ""text-embedding-3-large""}",transactional,,1,
+2e06cedc-cbf6-42be-abfa-8cabb15ff625,projects,blueprint,unified.projects,,{},,,{},"[""blueprint.projects""]",draft,2026-02-03 20:41:34.583148+00,2026-02-05 08:59:32.527529+00,[],,{},{},"{""embedding_model"": ""text-embedding-3-large""}",transactional,,1,
+366d7b32-06a3-45d5-a5e6-0ce2c6afc016,customers_individual,external,unified.organizations,,{},,type = 'customer' AND is_individual = true,{},"[""external.accounts""]",applied,2026-01-11 10:59:37.552848+00,2026-02-05 08:59:32.527529+00,[],,{},{},"{""embedding_model"": ""text-embedding-3-large""}",transactional,,1,
+393ea1a2-a087-4f5e-bbc8-605354b2df48,location_types,identity,identity.location_types,,{},,,{},[],draft,2026-02-03 20:41:34.583148+00,2026-02-05 08:59:32.527529+00,[],,{},{},"{""embedding_model"": ""text-embedding-3-large""}",transactional,,1,
+3d7ce113-97e8-4fed-ba13-68970e3092d6,customers_b2b,external,unified.contacts,,{},,lifecycle_stage = 'customer',"{""filters"": [""account_id"", ""industry"", ""engagement_score""], ""defaultView"": ""table""}","[""external.contacts"",""external.accounts""]",applied,2026-01-24 05:03:06.997383+00,2026-01-30 12:12:46.568571+00,"[{""fk"": ""object_id"", ""icon"": ""paperclip"", ""name"": ""Attachments"", ""source"": ""core.object_attachments""}, {""fk"": ""object_id"", ""icon"": ""sticky-note"", ""name"": ""Notes"", ""filter"": ""comment_type = 'note'"", ""source"": ""core.object_comments""}, {""fk"": ""object_id"", ""icon"": ""activity"", ""name"": ""Activities"", ""source"": ""core.object_activities""}, {""fk"": ""object_id"", ""icon"": ""tag"", ""name"": ""Tags"", ""source"": ""core.object_tags""}]",,{},{},"{""embedding_model"": ""text-embedding-3-large""}",transactional,,1,
+425adfd3-dd5a-4d2b-b9eb-df245c31e074,roles,identity,identity.roles,,{},,,{},[],draft,2026-02-03 20:41:34.583148+00,2026-02-05 08:59:32.527529+00,[],,{},{},"{""embedding_model"": ""text-embedding-3-large""}",transactional,,1,
+470fd014-ee78-4c76-88da-5d38a164f44c,candidates,hr,unified.contacts,,{},,contact_type = 'candidate',{},"[""hr.candidates""]",draft,2026-02-03 20:41:34.583148+00,2026-02-05 08:59:32.527529+00,[],,{},{},"{""embedding_model"": ""text-embedding-3-large""}",transactional,,1,
+4ca81f4b-56a8-400b-ad69-0733c8bf1e14,organization_users,identity,identity.organization_users,,{},,,{},[],draft,2026-02-03 20:41:34.583148+00,2026-02-05 08:59:32.527529+00,[],,{},{},"{""embedding_model"": ""text-embedding-3-large""}",transactional,,1,
+5313ceed-ae0b-436f-afff-50662708d545,workers,hr,unified.contacts,,{},,contact_type = 'worker',{},"[""hr.workers""]",draft,2026-02-03 20:41:34.583148+00,2026-02-05 08:59:32.527529+00,[],,{},{},"{""embedding_model"": ""text-embedding-3-large""}",transactional,,1,
+5523fb58-d576-46a6-b3e9-700c3e55e21d,modules,identity,identity.modules,,{},,,{},[],draft,2026-02-03 20:41:34.583148+00,2026-02-05 08:59:32.527529+00,[],,{},{},"{""embedding_model"": ""text-embedding-3-large""}",transactional,,1,
+56d0e877-765c-4ba5-ba83-d4c6f85de2ec,applications,hr,hr.applications,,{},,,{},[],draft,2026-02-03 20:41:34.583148+00,2026-02-05 08:59:32.527529+00,[],Job Applications,{},{},"{""embedding_model"": ""text-embedding-3-large""}",lifecycle,"{""format"": ""APP-{SEQ}"", ""counter_padding"": 5}",1,
+62b2a546-7d4c-4020-8b5c-8b4b6db88722,employees,hr,unified.contacts,,{},,contact_type = 'worker' AND persona_type = 'employee',{},"[""identity.organization_users"",""hr.workers""]",applied,2026-01-24 05:03:06.997383+00,2026-02-05 08:59:32.527529+00,[],,{},{},"{""embedding_model"": ""text-embedding-3-large""}",transactional,,1,
+630086d7-d0f4-44be-b5b2-fd9be73cee2a,contractors,hr,unified.contacts,,{},"
+CREATE OR REPLACE VIEW hr.v_contractors AS
+SELECT 
+    uc.id, uc.organization_id, uc.display_id, uc.name, uc.email, uc.phone,
+    uc.persona_type, uc.status, uc.vertical, uc.vertical_payload,
+    ou.location_id, ou.manager_id, ou.user_id,
+    w.details AS hr_details,
+    w.details->'employment'->>'hireDate' AS contract_start,
+    w.details->'employment'->>'jobTitle' AS role_title,
+    uc.created_at, uc.updated_at
+FROM unified.contacts uc
+LEFT JOIN identity.organization_users ou ON ou.id = uc.id
+LEFT JOIN hr.workers w ON w.id = uc.id
+WHERE uc.contact_type = 'worker' AND uc.persona_type = 'contractor';
+        ",contact_type = 'worker' AND persona_type = 'contractor',{},"[""identity.organization_users"",""hr.workers""]",applied,2026-01-24 05:03:06.997383+00,2026-02-05 08:59:32.527529+00,[],,{},{},"{""embedding_model"": ""text-embedding-3-large""}",transactional,,1,
+7eed730a-eb15-48ba-992f-ea0c56c3f610,partners,external,unified.contacts,,{},"
+CREATE OR REPLACE VIEW external.v_partners AS 
+SELECT 
+    uc.id, uc.organization_id, uc.display_id, uc.name, uc.email, uc.phone, uc.lifecycle_stage, uc.persona_type, uc.status, uc.vertical, uc.vertical_payload, uc.details, 
+    ec.account_id, ec.is_partner_delegate, ec.is_primary, ec.company, ec.tags, ec.last_contacted_at, ec.last_engaged_at, 
+    a.name AS partner_company, a.domain, a.industry, 
+    ua.user_id AS assigned_internal_user, ua.role_in_assignment, ua.functional_role, 
+    uc.created_at, uc.updated_at 
+FROM unified.contacts uc 
+LEFT JOIN external.contacts ec ON ec.id = uc.id 
+LEFT JOIN external.accounts a ON a.id = ec.account_id 
+LEFT JOIN external.user_account_assignments ua ON ua.account_id = ec.account_id 
+WHERE uc.contact_type = 'external' AND uc.lifecycle_stage = 'partner';
+        ",contact_type = 'external' AND lifecycle_stage = 'partner',{},"[""external.contacts"",""external.accounts"",""external.user_account_assignments""]",applied,2026-01-24 05:03:06.997383+00,2026-02-05 08:59:32.527529+00,[],,{},{},"{""embedding_model"": ""text-embedding-3-large""}",transactional,,1,
+81ebfe94-3932-4468-b7f9-ae2a2373122f,contacts,external,unified.contacts,"
+    CREATE TABLE IF NOT EXISTS external.contacts (
+      id uuid NOT NULL DEFAULT extensions.uuid_generate_v4(),
+      name text NOT NULL,
+      email text NULL,
+      phone text NULL,
+      created_at timestamp with time zone NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at timestamp with time zone NULL DEFAULT CURRENT_TIMESTAMP,
+      account_id uuid NULL,
+      is_primary boolean NULL DEFAULT false,
+      details jsonb NULL DEFAULT '{}'::jsonb,
+      organization_id uuid NULL DEFAULT '55555555-5555-5555-5555-555555555555'::uuid,
+      location_id uuid NULL,
+      lifecycle_stage public.lifecycle_stage NULL DEFAULT 'lead'::lifecycle_stage,
+      operational_status text NULL DEFAULT 'NEW'::text,
+      contact_type text NULL DEFAULT 'standard'::text,
+      is_partner_delegate boolean NULL DEFAULT false,
+      lead_source text NULL,
+      score numeric NULL DEFAULT 0,
+      company text NULL,
+      industry text NULL,
+      tags text[] NULL DEFAULT '{}'::text[],
+      last_contacted_at timestamp with time zone NULL,
+      communication_preferences jsonb NULL DEFAULT '{}'::jsonb,
+      deleted_at timestamp with time zone NULL,
+      source_lead_id uuid NULL,
+      source_customer_id uuid NULL,
+      entity_instance_id uuid NULL,
+      persona_type text NULL,
+      linkedin_url text NULL,
+      last_engaged_at timestamp with time zone NULL,
+      CONSTRAINT contacts_pkey PRIMARY KEY (id),
+      CONSTRAINT contacts_email_key UNIQUE (email),
+      CONSTRAINT contacts_entity_instance_id_key UNIQUE (entity_instance_id)
+      -- NOTE: FK to accounts is handled in extra_objects or later migration to avoid circular dependencies
+    );
+    ","[""CREATE INDEX IF NOT EXISTS idx_contacts_lifecycle_stage ON external.contacts (lifecycle_stage)"", ""CREATE INDEX IF NOT EXISTS idx_contacts_org_lifecycle ON external.contacts (organization_id, lifecycle_stage)"", ""CREATE INDEX IF NOT EXISTS idx_contacts_tags ON external.contacts USING gin (tags)"", ""CREATE INDEX IF NOT EXISTS idx_contacts_deleted_at ON external.contacts (deleted_at) WHERE (deleted_at IS NOT NULL)"", ""CREATE INDEX IF NOT EXISTS idx_contacts_universal_timeline ON external.contacts (organization_id, created_at DESC, id) INCLUDE (id, created_at)"", ""CREATE TRIGGER update_contacts_updated_at BEFORE UPDATE ON external.contacts FOR EACH ROW EXECUTE FUNCTION update_updated_at_column()"", ""ALTER TABLE external.contacts ADD CONSTRAINT contacts_account_id_fkey FOREIGN KEY (account_id) REFERENCES external.accounts (id) ON DELETE CASCADE""]",,module = 'external',"{""default_view"": ""tableview""}","[""external.contacts""]",applied,2026-01-11 10:57:42.249686+00,2026-01-30 21:11:32.321724+00,[],,{},{},"{""embedding_model"": ""text-embedding-3-large""}",transactional,,1,
+89ddee08-a9fd-4adf-a0e9-9a53ba494c97,tickets,blueprint,unified.tickets,,{},,,{},"[""blueprint.tickets""]",draft,2026-02-03 20:41:34.583148+00,2026-02-05 08:59:32.527529+00,[],,{},{},"{""embedding_model"": ""text-embedding-3-large""}",transactional,,1,
+90c08d69-7c08-4c80-a8de-bb61bf2b5872,contracts,external,external.contracts,,{},,,{},[],draft,2026-02-03 20:41:34.583148+00,2026-02-05 08:59:32.527529+00,[],,{},{},"{""embedding_model"": ""text-embedding-3-large""}",transactional,,1,
+a9b0a933-4d11-4389-9600-2feb506ee576,accounts,external,unified.organizations,,{},,,{},"[""external.accounts""]",draft,2026-02-03 20:41:34.583148+00,2026-02-05 08:59:32.527529+00,[],,{},{},"{""embedding_model"": ""text-embedding-3-large""}",transactional,,1,
+b07bbc9f-14a1-45f5-b0fe-455f6a3b49d7,prospects,external,unified.organizations,,{},,type = 'prospect',{},"[""external.accounts""]",applied,2026-01-24 05:03:06.997383+00,2026-02-05 08:59:32.527529+00,[],,{},{},"{""embedding_model"": ""text-embedding-3-large""}",transactional,,1,
+bd66198c-a8cd-472c-82c2-551642e264c5,assessments,hr,hr.assessments,,{},,,{},[],draft,2026-02-03 20:41:34.583148+00,2026-02-05 08:59:32.527529+00,[],Assessments,{},{},"{""embedding_model"": ""text-embedding-3-large""}",transactional,"{""format"": ""ASS-{SEQ}"", ""counter_padding"": 5}",1,
+d486f278-4f27-4d51-9e0e-7bf825a80347,customers_business,external,unified.organizations,,{},,type = 'customer' AND is_individual = false,{},"[""external.accounts""]",applied,2026-01-11 10:59:37.552848+00,2026-02-05 08:59:32.527529+00,[],,{},{},"{""embedding_model"": ""text-embedding-3-large""}",transactional,,1,
+dec50931-804c-4087-8bf6-ebe642db85e9,tasks,blueprint,unified.tasks,,{},,,{},"[""blueprint.tasks""]",draft,2026-02-03 20:41:34.583148+00,2026-02-05 08:59:32.527529+00,[],,{},{},"{""embedding_model"": ""text-embedding-3-large""}",transactional,,1,
+e2c21e07-429c-4b64-95d5-c8816b37035c,consultants,hr,unified.contacts,,{},"
+CREATE OR REPLACE VIEW hr.v_consultants AS
+SELECT 
+    uc.id, uc.organization_id, uc.display_id, uc.name, uc.email, uc.phone,
+    uc.persona_type, uc.status, uc.vertical, uc.vertical_payload,
+    ou.location_id, ou.manager_id, ou.user_id,
+    u.pref_organization_id AS primary_org,
+    w.details AS hr_details,
+    w.details->'employment'->>'hireDate' AS contract_start,
+    w.details->'employment'->>'jobTitle' AS role_title,
+    uc.created_at, uc.updated_at
+FROM unified.contacts uc
+LEFT JOIN identity.organization_users ou ON ou.id = uc.id
+LEFT JOIN identity.users u ON u.id = ou.user_id
+LEFT JOIN hr.workers w ON w.id = uc.id
+WHERE uc.contact_type = 'worker' AND uc.persona_type = 'consultant';
+        ",contact_type = 'worker' AND persona_type = 'consultant',{},"[""identity.organization_users"",""identity.users"",""hr.workers""]",applied,2026-01-24 05:17:51.638851+00,2026-02-05 08:59:32.527529+00,[],,{},{},"{""embedding_model"": ""text-embedding-3-large""}",transactional,,1,
+ecdfa21e-3548-4d29-8e0b-d7746e2687e7,locations,identity,identity.locations,,{},,,{},[],draft,2026-02-03 20:41:34.583148+00,2026-02-05 08:59:32.527529+00,[],,{},{},"{""embedding_model"": ""text-embedding-3-large""}",transactional,,1,
+ed9be2b6-f470-40cc-9e35-d5083b24055b,organizations,identity,unified.organizations,,{},,,{},"[""identity.organizations""]",draft,2026-02-03 20:41:34.583148+00,2026-02-05 08:59:32.527529+00,[],Organizations,{},{},"{""embedding_model"": ""text-embedding-3-large""}",master,,1,
+ef0560bb-579e-4b51-b44f-3c3b0ff9a67a,screenings,hr,hr.screenings,,{},,,{},[],draft,2026-02-03 20:41:34.583148+00,2026-02-05 08:59:32.527529+00,[],Screenings,{},{},"{""embedding_model"": ""text-embedding-3-large""}",transactional,"{""format"": ""SCR-{SEQ}"", ""counter_padding"": 5}",1,
+f0c960bf-01e6-4f31-b37a-bff1ff1c09f9,policies,hr,hr.policies,,{},,,{},[],draft,2026-02-03 20:41:34.583148+00,2026-02-05 08:59:32.527529+00,[],,{},{},"{""embedding_model"": ""text-embedding-3-large""}",transactional,,1,
+f5dacadb-df48-46bc-97c5-cca5b0c03efd,teams,identity,identity.teams,,{},,,{},[],draft,2026-02-03 20:41:34.583148+00,2026-02-05 08:59:32.527529+00,[],,{},{},"{""embedding_model"": ""text-embedding-3-large""}",transactional,,1,
+f8d0d67b-4cb3-4ecf-8505-4539598c47c3,requisitions,hr,hr.requisitions,,{},,,{},[],draft,2026-02-03 20:41:34.583148+00,2026-02-05 08:59:32.527529+00,[],Job Requisitions,{},{},"{""embedding_model"": ""text-embedding-3-large""}",transactional,"{""format"": ""REQ-{SEQ}"", ""counter_padding"": 5}",1,
+fb40acfd-177a-45ad-abbd-7cbdc559bbcc,vendors,external,unified.organizations,,{},,type = 'vendor',{},"[""external.accounts""]",applied,2026-01-11 10:59:37.552848+00,2026-02-05 08:59:32.527529+00,[],,{},{},"{""embedding_model"": ""text-embedding-3-large""}",transactional,,1,
+fd7f6116-c425-4fcc-8d23-fe17d6de2eb7,policy_documents,hr,hr.policy_documents,,{},,,{},[],draft,2026-02-03 20:41:34.583148+00,2026-02-05 08:59:32.527529+00,[],,{},{},"{""embedding_model"": ""text-embedding-3-large""}",transactional,,1,

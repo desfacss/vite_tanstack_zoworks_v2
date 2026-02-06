@@ -108,6 +108,34 @@ export interface EntityConfig {
   updated_at?: string;
 }
 
+/** 
+ * Entity Blueprint configuration
+ * Corresponds to core.entity_blueprints table
+ */
+export interface EntityBlueprint {
+  id: string;
+  entity_type: string;
+  entity_schema: string;
+  base_source?: string | null;
+  physical_ddl?: string | null;
+  extra_objects?: Record<string, any> | null;
+  custom_view_sql?: string | null;
+  partition_filter?: string | null;
+  ui_config?: Record<string, any> | null;
+  dependencies?: string[] | null;
+  status?: string | null;
+  sub_panels?: any[] | null;
+  display_name?: string | null;
+  semantics?: Record<string, any> | null;
+  rules?: Record<string, any> | null;
+  ai_metadata?: Record<string, any> | null;
+  classification?: string | null;
+  version?: number | null;
+  blueprint_hash?: string | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
 // ============================================================================
 // Entity Version Types (Approval Workflow)
 // ============================================================================

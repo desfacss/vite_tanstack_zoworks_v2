@@ -25,7 +25,8 @@ import CalendarViewConfig from './CalendarViewConfig';
 import ViewSuggestionModal from './ViewSuggestionModal';
 import DisplayIdConfig from './DisplayIdConfig';
 import EntityRegistrationWizard from './EntityRegistrationWizard';
-import { ThunderboltOutlined, ReloadOutlined, DeleteOutlined, DatabaseOutlined, TableOutlined, PlusOutlined } from '@ant-design/icons';
+import BlueprintConfig from './BlueprintConfig';
+import { ThunderboltOutlined, ReloadOutlined, DeleteOutlined, DatabaseOutlined, TableOutlined, PlusOutlined, ExperimentOutlined } from '@ant-design/icons';
 
 const { Sider, Content } = Layout;
 
@@ -590,6 +591,14 @@ const YViewConfigManager: React.FC = () => {
       />
     );
   }
+  if (viewName === 'blueprint') {
+    return (
+      <BlueprintConfig
+        entityType={selectedConfig?.entity_type || ''}
+        entitySchema={selectedSchema || ''}
+      />
+    );
+  }
 
   return (
     <Form
@@ -797,6 +806,16 @@ const YViewConfigManager: React.FC = () => {
               key: 'viewConfig',
               label: 'View Config',
               children: renderTabContent('viewConfig'),
+            },
+            {
+              key: 'blueprint',
+              label: (
+                <span>
+                  <ExperimentOutlined />
+                  Blueprint
+                </span>
+              ),
+              children: renderTabContent('blueprint'),
             },
             {
               key: 'metadata',
