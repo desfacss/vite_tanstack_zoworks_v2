@@ -15,11 +15,14 @@ import {
   message,
   Checkbox,
   Collapse,
+  Radio,
+  Input,
 } from 'antd';
 import { ThunderboltOutlined, ReloadOutlined } from '@ant-design/icons';
 import { supabase } from '@/core/lib/supabase';
 import { Entity, EntityField, GeneratedFormSchemas, GeneratorOptions } from './types';
 import { generateFormFromMetadata } from './utils';
+import { selectFieldsWithLLM } from './llmService';
 import AceEditor from 'react-ace';
 
 const { Title, Text } = Typography;
@@ -42,10 +45,14 @@ const FormGenerator: React.FC<FormGeneratorProps> = ({ onGenerate, onClose, defa
   
   // Generator options
   const [options, setOptions] = useState<GeneratorOptions>({
+    mode: 'recommended',
+    includeForeignKeyFields: true,
     includeSystemFields: false,
     includeReadOnlyFields: false,
     expandJsonbFields: true,
     generateRequired: true,
+    groupByStructure: false,
+    llmQuery: '',
   });
 
   // Fetch entities on mount
@@ -96,9 +103,15 @@ const FormGenerator: React.FC<FormGeneratorProps> = ({ onGenerate, onClose, defa
     : '';
 
   // Handle generate
-  const handleGenerate = useCallback(() => {
+  const handleGenerate = useCallback(async () => {
     if (!selectedEntity) {
       message.warning('Please select an entity first');
+      return;
+    }
+
+    // Validate LLM mode requirements
+    if (options.mode === 'llm' && (!options.llmQuery || options.llmQuery.trim().length === 0)) {
+      message.warning('Please describe what kind of form you want to create');
       return;
     }
 
@@ -107,29 +120,29 @@ const FormGenerator: React.FC<FormGeneratorProps> = ({ onGenerate, onClose, defa
       // Prefer v_metadata if available, fallback to metadata
       const metadata: EntityField[] = selectedEntity.v_metadata || selectedEntity.metadata || [];
       
-      console.log('🔍 FormGenerator Debug:', {
-        entityName,
-        hasVMetadata: !!selectedEntity.v_metadata,
-        hasMetadata: !!selectedEntity.metadata,
-        metadataLength: metadata.length,
-        metadata: metadata,
-        options
-      });
-      
       if (!metadata || metadata.length === 0) {
         message.warning('Selected entity has no metadata fields');
         return;
       }
 
-      const schemas = generateFormFromMetadata(metadata, entityName, options);
+      let selectedFieldKeys: string[] | undefined;
       
-      console.log('📋 Generated Schemas:', {
-        dataSchemaPropertiesCount: Object.keys(schemas.dataSchema.properties).length,
-        dataSchemaProperties: Object.keys(schemas.dataSchema.properties),
-        uiSchemaKeys: Object.keys(schemas.uiSchema),
-        dataSchema: schemas.dataSchema,
-        uiSchema: schemas.uiSchema
-      });
+      // Call LLM if in LLM mode
+      if (options.mode === 'llm') {
+        try {
+          message.loading({ content: '🤖 AI is selecting fields...', key: 'llm', duration: 0 });
+          selectedFieldKeys = await selectFieldsWithLLM(metadata, options.llmQuery!);
+          message.success({ content: `✨ AI selected ${selectedFieldKeys.length} fields`, key: 'llm', duration: 2 });
+        } catch (llmError) {
+          message.destroy('llm');
+          const llmErrorMsg = llmError instanceof Error ? llmError.message : 'LLM selection failed';
+          message.error(llmErrorMsg);
+          console.error('❌ LLM Error:', llmError);
+          return;
+        }
+      }
+
+      const schemas = await generateFormFromMetadata(metadata, entityName, options, selectedFieldKeys);
       
       setGeneratedSchemas(schemas);
       message.success(`Generated form schema with ${Object.keys(schemas.dataSchema.properties).length} fields`);
@@ -227,10 +240,66 @@ const FormGenerator: React.FC<FormGeneratorProps> = ({ onGenerate, onClose, defa
           />
         )}
 
+        {/* Mode Selector */}
+        <div>
+          <Text strong>Generation Mode:</Text>
+          <Radio.Group 
+            value={options.mode} 
+            onChange={e => setOptions({ ...options, mode: e.target.value })}
+            style={{ width: '100%', marginTop: 8 }}
+            buttonStyle="solid"
+          >
+            <Radio.Button value="minimal">⚡ Minimal</Radio.Button>
+            <Radio.Button value="recommended">👍 Recommended</Radio.Button>
+            <Radio.Button value="all">📋 All Fields</Radio.Button>
+            <Radio.Button value="llm">🤖 AI-Powered</Radio.Button>
+          </Radio.Group>
+          
+          {/* Mode descriptions */}
+          <Alert
+            message={
+              options.mode === 'minimal' ? 'Includes only mandatory fields' :
+              options.mode === 'recommended' ? 'Includes mandatory + common displayable fields' :
+              options.mode === 'all' ? 'Includes all available fields' :
+              'AI selects fields based on your description'
+            }
+            type="info"
+            style={{ marginTop: 8 }}
+            showIcon={false}
+          />
+        </div>
+
+        {/* LLM Query Input */}
+        {options.mode === 'llm' && (
+          <div>
+            <Text strong>Describe your form:</Text>
+            <Input.TextArea
+              placeholder="Example: I want to create a simple contact form with name, email, and phone"
+              value={options.llmQuery}
+              onChange={e => setOptions({ ...options, llmQuery: e.target.value })}
+              rows={3}
+              style={{ marginTop: 8 }}
+            />
+          </div>
+        )}
+
         {/* Generator Options */}
         <Collapse ghost>
-          <Panel header="Generator Options" key="options">
+          <Panel header="Advanced Options" key="options">
             <Space direction="vertical">
+              <Checkbox
+                checked={options.includeForeignKeyFields}
+                onChange={e => setOptions({ ...options, includeForeignKeyFields: e.target.checked })}
+              >
+                Include foreign key fields (*_id)
+              </Checkbox>
+              <Checkbox
+                checked={options.groupByStructure}
+                onChange={e => setOptions({ ...options, groupByStructure: e.target.checked })}
+              >
+                Auto-group nested fields (details.*, raci.*)
+              </Checkbox>
+              <Divider style={{ margin: '8px 0' }} />
               <Checkbox
                 checked={options.includeSystemFields}
                 onChange={e => setOptions({ ...options, includeSystemFields: e.target.checked })}

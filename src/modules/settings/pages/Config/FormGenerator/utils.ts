@@ -18,26 +18,31 @@ import {
  * Default generator options
  */
 const DEFAULT_OPTIONS: GeneratorOptions = {
+  mode: 'recommended',
+  includeForeignKeyFields: true,
   includeSystemFields: false,
   includeReadOnlyFields: false,
   expandJsonbFields: true,
   generateRequired: true,
+  groupByStructure: false,
 };
 
 /**
  * Main function to generate form schemas from entity metadata
  */
-export function generateFormFromMetadata(
+export async function generateFormFromMetadata(
   metadata: EntityField[],
   entityName: string,
-  options: Partial<GeneratorOptions> = {}
-): GeneratedFormSchemas {
+  options: Partial<GeneratorOptions> = {},
+  selectedFieldKeys?: string[]  // For LLM mode
+): Promise<GeneratedFormSchemas> {
   const opts = { ...DEFAULT_OPTIONS, ...options };
   
   console.log('🔧 generateFormFromMetadata called:', {
     totalMetadataFields: metadata.length,
     entityName,
-    options: opts
+    mode: opts.mode,
+    selectedFieldKeys: selectedFieldKeys?.length || 'N/A'
   });
   
   const dataSchema: DataSchema = {
@@ -51,35 +56,44 @@ export function generateFormFromMetadata(
     'ui:order': [],
   };
   
-  // Filter and process fields
-  const processableFields = metadata.filter(field => shouldIncludeField(field, opts));
+  // Filter fields based on mode and options
+  let processableFields = metadata.filter(field => shouldIncludeField(field, opts));
+  
+  // Apply mode-based filtering
+  processableFields = applyModeFilter(processableFields, opts.mode!, selectedFieldKeys);
   
   console.log('📊 Field filtering results:', {
     totalFields: metadata.length,
+    mode: opts.mode,
     processableFields: processableFields.length,
-    filteredOutCount: metadata.length - processableFields.length,
     processableFieldKeys: processableFields.map(f => f.key)
   });
   
-  for (const field of processableFields) {
-    const fieldKey = normalizeFieldKey(field.key);
-    
-    // Generate property schema
-    const propertySchema = mapFieldToPropertySchema(field);
-    dataSchema.properties[fieldKey] = propertySchema;
-    
-    // Generate UI schema
-    const uiFieldSchema = mapFieldToUISchema(field);
-    if (Object.keys(uiFieldSchema).length > 0) {
-      uiSchema[fieldKey] = uiFieldSchema;
-    }
-    
-    // Add to ui:order
-    (uiSchema['ui:order'] as string[]).push(fieldKey);
-    
-    // Add to required if mandatory
-    if (opts.generateRequired && field.is_mandatory) {
-      dataSchema.required!.push(fieldKey);
+  // Group fields if option is enabled
+  if (opts.groupByStructure) {
+    processGroupedFields(processableFields, dataSchema, uiSchema, opts);
+  } else {
+    // Process fields normally (flat structure)
+    for (const field of processableFields) {
+      const fieldKey = normalizeFieldKey(field.key);
+      
+      // Generate property schema
+      const propertySchema = mapFieldToPropertySchema(field);
+      dataSchema.properties[fieldKey] = propertySchema;
+      
+      // Generate UI schema
+      const uiFieldSchema = mapFieldToUISchema(field);
+      if (Object.keys(uiFieldSchema).length > 0) {
+        uiSchema[fieldKey] = uiFieldSchema;
+      }
+      
+      // Add to ui:order
+      (uiSchema['ui:order'] as string[]).push(fieldKey);
+      
+      // Add to required if mandatory
+      if (opts.generateRequired && field.is_mandatory) {
+        dataSchema.required!.push(fieldKey);
+      }
     }
   }
   
@@ -105,6 +119,12 @@ function shouldIncludeField(field: EntityField, options: GeneratorOptions): bool
   // Skip read-only fields unless explicitly included
   if (!options.includeReadOnlyFields && field.is_read_only) {
     console.log(`❌ Excluding ${field.key}: read-only (includeReadOnlyFields=${options.includeReadOnlyFields})`);
+    return false;
+  }
+  
+  // Skip foreign key fields (_id fields) unless explicitly included
+  if (!options.includeForeignKeyFields && isForeignKeyField(field)) {
+    console.log(`❌ Excluding ${field.key}: foreign key field (includeForeignKeyFields=${options.includeForeignKeyFields})`);
     return false;
   }
   
@@ -152,6 +172,151 @@ function normalizeFieldKey(key: string): string {
   // Keep as-is for now - DynamicForm should handle nested keys
   return key;
 }
+
+/**
+ * Check if a field is a foreign key field (ends with _id)
+ */
+function isForeignKeyField(field: EntityField): boolean {
+  return field.key.endsWith('_id') && field.foreign_key != null;
+}
+
+/**
+ * Apply mode-based filtering to fields
+ */
+function applyModeFilter(
+  fields: EntityField[],
+  mode: 'minimal' | 'recommended' | 'all' | 'llm',
+  selectedFieldKeys?: string[]
+): EntityField[] {
+  console.log(`🎯 Applying ${mode} mode filter...`);
+  
+  switch (mode) {
+    case 'minimal':
+      // Only mandatory fields
+      return fields.filter(f => {
+        if (f.is_mandatory) {
+          console.log(`✅ Including ${f.key}: mandatory field`);
+          return true;
+        }
+        return false;
+      });
+      
+    case 'recommended':
+      // Mandatory + common displayable fields (exclude virtual unless JSONB)
+      return fields.filter(f => {
+        if (f.is_mandatory) {
+          console.log(`✅ Including ${f.key}: mandatory field`);
+          return true;
+        }
+        if (f.is_displayable !== false && (!f.is_virtual || f.jsonb_column)) {
+          console.log(`✅ Including ${f.key}: recommended field`);
+          return true;
+        }
+        return false;
+      });
+      
+    case 'llm':
+      // Filter based on LLM-selected field keys
+      if (!selectedFieldKeys || selectedFieldKeys.length === 0) {
+        console.warn('⚠️ LLM mode but no selected fields, falling back to recommended');
+        return applyModeFilter(fields, 'recommended');
+      }
+      
+      return fields.filter(f => {
+        if (selectedFieldKeys.includes(f.key)) {
+          console.log(`✅ Including ${f.key}: LLM-selected field`);
+          return true;
+        }
+        return false;
+      });
+      
+    case 'all':
+    default:
+      // Include all fields (already filtered by shouldIncludeField)
+      console.log(`✅ Including all ${fields.length} fields (all mode)`);
+      return fields;
+  }
+}
+
+/**
+ * Process fields with grouping by JSONB structure
+ * Groups fields like details.zip, details.city into a details object
+ */
+function processGroupedFields(
+  fields: EntityField[],
+  dataSchema: DataSchema,
+  uiSchema: UISchema,
+  opts: GeneratorOptions
+): void {
+  // Group fields by prefix (e.g., details.*, raci.*)
+  const grouped: Record<string, EntityField[]> = {};
+  const ungrouped: EntityField[] = [];
+  
+  for (const field of fields) {
+    if (field.key.includes('.') || field.key.includes('__')) {
+      // Extract group name
+      const separator = field.key.includes('.') ? '.' : '__';
+      const groupName = field.key.split(separator)[0];
+      
+      if (!grouped[groupName]) {
+        grouped[groupName] = [];
+      }
+      grouped[groupName].push(field);
+    } else {
+      ungrouped.push(field);
+    }
+  }
+  
+  console.log(`🗂️ Grouping: ${Object.keys(grouped).length} groups, ${ungrouped.length} ungrouped fields`);
+  
+  // Process ungrouped fields normally
+  for (const field of ungrouped) {
+    const fieldKey = normalizeFieldKey(field.key);
+    dataSchema.properties[fieldKey] = mapFieldToPropertySchema(field);
+    
+    const uiFieldSchema = mapFieldToUISchema(field);
+    if (Object.keys(uiFieldSchema).length > 0) {
+      uiSchema[fieldKey] = uiFieldSchema;
+    }
+    
+    (uiSchema['ui:order'] as string[]).push(fieldKey);
+    
+    if (opts.generateRequired && field.is_mandatory) {
+      dataSchema.required!.push(fieldKey);
+    }
+  }
+  
+  // Process grouped fields
+  for (const [groupName, groupFields] of Object.entries(grouped)) {
+    console.log(`📦 Creating group: ${groupName} with ${groupFields.length} fields`);
+    
+    const groupProperties: Record<string, PropertySchema> = {};
+    const groupRequired: string[] = [];
+    
+    for (const field of groupFields) {
+      // Extract nested key (e.g., "details.zip" -> "zip" or "details__zip" -> "zip")
+      const separator = field.key.includes('.') ? '.' : '__';
+      const nestedKey = field.key.split(separator).slice(1).join('_');
+      
+      groupProperties[nestedKey] = mapFieldToPropertySchema(field);
+      
+      if (opts.generateRequired && field.is_mandatory) {
+        groupRequired.push(nestedKey);
+      }
+    }
+    
+    // Create grouped object schema
+    dataSchema.properties[groupName] = {
+      type: 'object',
+      title: formatFieldTitle(groupName),
+      properties: groupProperties,
+      ...(groupRequired.length > 0 && { required: groupRequired })
+    } as any;
+    
+    (uiSchema['ui:order'] as string[]).push(groupName);
+  }
+}
+
 
 /**
  * Format entity name to title case

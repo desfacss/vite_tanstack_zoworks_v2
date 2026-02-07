@@ -113,10 +113,14 @@ export interface DBSchema {
 
 // Generator options
 export interface GeneratorOptions {
-  includeSystemFields?: boolean;   // Include id, created_at, etc.
-  includeReadOnlyFields?: boolean; // Include is_read_only fields
-  expandJsonbFields?: boolean;     // Include JSONB virtual fields
-  generateRequired?: boolean;      // Mark is_mandatory as required
+  mode?: 'minimal' | 'recommended' | 'all' | 'llm';  // Generation mode
+  includeForeignKeyFields?: boolean;   // Include/exclude fields ending with _id
+  includeSystemFields?: boolean;       // Include id, created_at, etc.
+  includeReadOnlyFields?: boolean;     // Include is_read_only fields
+  expandJsonbFields?: boolean;         // Include JSONB virtual fields
+  generateRequired?: boolean;          // Mark is_mandatory as required
+  groupByStructure?: boolean;          // Auto-group nested fields (details.*, raci.*)
+  llmQuery?: string;                   // User query for LLM mode
 }
 
 // System fields to auto-exclude
