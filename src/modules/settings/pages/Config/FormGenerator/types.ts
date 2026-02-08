@@ -114,6 +114,7 @@ export interface DBSchema {
 // Generator options
 export interface GeneratorOptions {
   mode?: 'minimal' | 'recommended' | 'all' | 'llm';  // Generation mode
+  useBackend?: boolean;                // Use backend SQL function for generation
   includeForeignKeyFields?: boolean;   // Include/exclude fields ending with _id
   includeSystemFields?: boolean;       // Include id, created_at, etc.
   includeReadOnlyFields?: boolean;     // Include is_read_only fields

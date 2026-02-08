@@ -17,6 +17,7 @@ import {
   Collapse,
   Radio,
   Input,
+  Switch,
 } from 'antd';
 import { ThunderboltOutlined, ReloadOutlined } from '@ant-design/icons';
 import { supabase } from '@/core/lib/supabase';
@@ -42,7 +43,7 @@ const FormGenerator: React.FC<FormGeneratorProps> = ({ onGenerate, onClose, defa
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [generatedSchemas, setGeneratedSchemas] = useState<GeneratedFormSchemas | null>(null);
-  
+
   // Generator options
   const [options, setOptions] = useState<GeneratorOptions>({
     mode: 'recommended',
@@ -53,6 +54,7 @@ const FormGenerator: React.FC<FormGeneratorProps> = ({ onGenerate, onClose, defa
     generateRequired: true,
     groupByStructure: false,
     llmQuery: '',
+    useBackend: true,
   });
 
   // Fetch entities on mount
@@ -98,8 +100,8 @@ const FormGenerator: React.FC<FormGeneratorProps> = ({ onGenerate, onClose, defa
 
   // Get selected entity
   const selectedEntity = entities.find(e => e.id === selectedEntityId);
-  const entityName = selectedEntity 
-    ? `${selectedEntity.entity_schema}.${selectedEntity.entity_type}` 
+  const entityName = selectedEntity
+    ? `${selectedEntity.entity_schema}.${selectedEntity.entity_type}`
     : '';
 
   // Handle generate
@@ -119,31 +121,53 @@ const FormGenerator: React.FC<FormGeneratorProps> = ({ onGenerate, onClose, defa
     try {
       // Prefer v_metadata if available, fallback to metadata
       const metadata: EntityField[] = selectedEntity.v_metadata || selectedEntity.metadata || [];
-      
+
       if (!metadata || metadata.length === 0) {
         message.warning('Selected entity has no metadata fields');
         return;
       }
 
-      let selectedFieldKeys: string[] | undefined;
-      
-      // Call LLM if in LLM mode
-      if (options.mode === 'llm') {
-        try {
-          message.loading({ content: '🤖 AI is selecting fields...', key: 'llm', duration: 0 });
-          selectedFieldKeys = await selectFieldsWithLLM(metadata, options.llmQuery!);
-          message.success({ content: `✨ AI selected ${selectedFieldKeys.length} fields`, key: 'llm', duration: 2 });
-        } catch (llmError) {
-          message.destroy('llm');
-          const llmErrorMsg = llmError instanceof Error ? llmError.message : 'LLM selection failed';
-          message.error(llmErrorMsg);
-          console.error('❌ LLM Error:', llmError);
-          return;
+      let schemas: GeneratedFormSchemas;
+
+      if (options.useBackend) {
+        // Prepare RPC options
+        const rpcOptions = {
+          mode: options.mode,
+          includeForeignKeyFields: options.includeForeignKeyFields,
+          includeSystemFields: options.includeSystemFields,
+          includeReadOnlyFields: options.includeReadOnlyFields,
+          expandJsonbFields: options.expandJsonbFields,
+          generateRequired: options.generateRequired,
+        };
+
+        const { data, error: rpcError } = await supabase.rpc('api_new_generate_form_schema', {
+          p_entity_name: entityName,
+          p_options: rpcOptions,
+        });
+
+        if (rpcError) throw rpcError;
+        schemas = data as GeneratedFormSchemas;
+      } else {
+        let selectedFieldKeys: string[] | undefined;
+
+        // Call LLM if in LLM mode
+        if (options.mode === 'llm') {
+          try {
+            message.loading({ content: '🤖 AI is selecting fields...', key: 'llm', duration: 0 });
+            selectedFieldKeys = await selectFieldsWithLLM(metadata, options.llmQuery!);
+            message.success({ content: `✨ AI selected ${selectedFieldKeys.length} fields`, key: 'llm', duration: 2 });
+          } catch (llmError) {
+            message.destroy('llm');
+            const llmErrorMsg = llmError instanceof Error ? llmError.message : 'LLM selection failed';
+            message.error(llmErrorMsg);
+            console.error('❌ LLM Error:', llmError);
+            return;
+          }
         }
+
+        schemas = await generateFormFromMetadata(metadata, entityName, options, selectedFieldKeys);
       }
 
-      const schemas = await generateFormFromMetadata(metadata, entityName, options, selectedFieldKeys);
-      
       setGeneratedSchemas(schemas);
       message.success(`Generated form schema with ${Object.keys(schemas.dataSchema.properties).length} fields`);
     } catch (err) {
@@ -182,7 +206,7 @@ const FormGenerator: React.FC<FormGeneratorProps> = ({ onGenerate, onClose, defa
   }));
 
   return (
-    <Card 
+    <Card
       title={
         <Space>
           <ThunderboltOutlined />
@@ -192,12 +216,12 @@ const FormGenerator: React.FC<FormGeneratorProps> = ({ onGenerate, onClose, defa
       style={{ marginBottom: 16 }}
     >
       {error && (
-        <Alert 
-          message="Error" 
-          description={error} 
-          type="error" 
-          showIcon 
-          closable 
+        <Alert
+          message="Error"
+          description={error}
+          type="error"
+          showIcon
+          closable
           style={{ marginBottom: 16 }}
         />
       )}
@@ -243,8 +267,8 @@ const FormGenerator: React.FC<FormGeneratorProps> = ({ onGenerate, onClose, defa
         {/* Mode Selector */}
         <div>
           <Text strong>Generation Mode:</Text>
-          <Radio.Group 
-            value={options.mode} 
+          <Radio.Group
+            value={options.mode}
             onChange={e => setOptions({ ...options, mode: e.target.value })}
             style={{ width: '100%', marginTop: 8 }}
             buttonStyle="solid"
@@ -254,18 +278,34 @@ const FormGenerator: React.FC<FormGeneratorProps> = ({ onGenerate, onClose, defa
             <Radio.Button value="all">📋 All Fields</Radio.Button>
             <Radio.Button value="llm">🤖 AI-Powered</Radio.Button>
           </Radio.Group>
-          
+
+          <div style={{ marginTop: 12, padding: 12, background: 'rgba(0,0,0,0.02)', borderRadius: 8 }}>
+            <Space align="center" style={{ width: '100%', justifyContent: 'space-between' }}>
+              <Space>
+                <Text strong>Smart Backend Engine</Text>
+                <Text type="secondary" style={{ fontSize: '11px' }}>(Tiered Schema Recovery)</Text>
+              </Space>
+              <Switch
+                checked={options.useBackend}
+                onChange={checked => setOptions({ ...options, useBackend: checked })}
+                checkedChildren="ON"
+                unCheckedChildren="OFF"
+              />
+            </Space>
+          </div>
+
           {/* Mode descriptions */}
           <Alert
             message={
               options.mode === 'minimal' ? 'Includes only mandatory fields' :
-              options.mode === 'recommended' ? 'Includes mandatory + common displayable fields' :
-              options.mode === 'all' ? 'Includes all available fields' :
-              'AI selects fields based on your description'
+                options.mode === 'recommended' ? 'Includes mandatory + common displayable fields' :
+                  options.mode === 'all' ? 'Includes all available fields' :
+                    'AI selects fields based on your description'
             }
+            description={options.useBackend ? "Using canonical backend generator" : "Using frontend metadata mapper"}
             type="info"
             style={{ marginTop: 8 }}
-            showIcon={false}
+            showIcon={options.useBackend}
           />
         </div>
 
@@ -346,7 +386,7 @@ const FormGenerator: React.FC<FormGeneratorProps> = ({ onGenerate, onClose, defa
         {generatedSchemas && (
           <Space direction="vertical" style={{ width: '100%' }} size="middle">
             <Title level={5}>Generated Schemas</Title>
-            
+
             <div>
               <Text strong>Data Schema ({Object.keys(generatedSchemas.dataSchema.properties).length} fields):</Text>
               <AceEditor
@@ -394,8 +434,8 @@ const FormGenerator: React.FC<FormGeneratorProps> = ({ onGenerate, onClose, defa
                   Use in FormBuilder
                 </Button>
               )}
-              <Button 
-                icon={<ReloadOutlined />} 
+              <Button
+                icon={<ReloadOutlined />}
                 onClick={() => {
                   setGeneratedSchemas(null);
                   setSelectedEntityId(null);

@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { Card, Button, Input, Select, Switch, Drawer, Row, Col, message, Modal, Space } from 'antd';
+import { Card, Button, Input, Select, Switch, Drawer, Row, Col, message, Modal, Space, Radio, Alert, Typography } from 'antd';
+const { Text } = Typography;
 import { ThunderboltOutlined } from '@ant-design/icons';
 import { widgetConfigs } from './widgets';
 import AceEditor from 'react-ace';
@@ -10,7 +11,7 @@ import AceEditor from 'react-ace';
 import { supabase } from '@/core/lib/supabase';
 import { useAuthStore } from '@/core/lib/store';
 import DynamicForm from '@/core/components/DynamicForm';
-import PageManager from './PageManager'; 
+import PageManager from './PageManager';
 import FormGenerator from '../FormGenerator';
 
 
@@ -91,7 +92,8 @@ const FormBuilder: React.FC<FormBuilderProps> = ({ masterObjectInit, entitySchem
 
   console.log("mod", masterObjectInit);
   const [forms, setForms] = useState<Form[]>([]);
-  const [selectedForm, setSelectedForm] = useState<Form | null>(null);
+  const [generatedSchemas, setGeneratedSchemas] = useState<any | null>(null);
+  const [saveMode, setSaveMode] = useState<'form' | 'record'>('form');
   const [isDrawerVisible, setIsDrawerVisible] = useState<boolean>(false);
   const [dataConfig, setDataConfig] = useState<any[]>([]);
   const [editItem, setEditItem] = useState<Form | null>(null);
@@ -103,28 +105,28 @@ const FormBuilder: React.FC<FormBuilderProps> = ({ masterObjectInit, entitySchem
   const [uiSchema, setUiSchema] = useState<any>({});
   const [fields, setFields] = useState<FormField[]>([]);
   const [fieldInput, setFieldInput] = useState<FieldInput>({
-  title: '',
-  description: '',
-  fieldName: '',
-  fieldType: 'Text',
-  uiOrder: '',
-  required: false,
-  readonly: false,
-  hidden: false,
-  options: [],
-  placeholder: '',
-  lookupTable: '',
-  lookupColumn: '',
-  acceptedFileTypes: '.pdf',
-  // New fields
-  lookupSchema: '',
-  lookupNoId: false,
-  defaultValue: '',
-  dependsOn: '',
-  dependsOnField: '',
-  dependsOnColumn: '',
-  lookupFilters: [],
-});
+    title: '',
+    description: '',
+    fieldName: '',
+    fieldType: 'Text',
+    uiOrder: '',
+    required: false,
+    readonly: false,
+    hidden: false,
+    options: [],
+    placeholder: '',
+    lookupTable: '',
+    lookupColumn: '',
+    acceptedFileTypes: '.pdf',
+    // New fields
+    lookupSchema: '',
+    lookupNoId: false,
+    defaultValue: '',
+    dependsOn: '',
+    dependsOnField: '',
+    dependsOnColumn: '',
+    lookupFilters: [],
+  });
   const [isSaveModalVisible, setIsSaveModalVisible] = useState<boolean>(false);
   const [saveFormName, setSaveFormName] = useState<string>('');
   const [formToSave, setFormToSave] = useState<any>(null);
@@ -132,12 +134,12 @@ const FormBuilder: React.FC<FormBuilderProps> = ({ masterObjectInit, entitySchem
   const showOptions = currentConfig?.requiresOptions;
   const showFileOptions = currentConfig?.hasFileOptions;
   const [showLookup, setShowLookup] = useState<boolean>(currentConfig?.requiresLookup || false);
-// Add after other useState declarations
-const [isPageManagerVisible, setIsPageManagerVisible] = useState<boolean>(false);
-const [uiLayout, setUiLayout] = useState<any[]>([]);
-const [skipEffect, setSkipEffect] = useState<boolean>(false);
-// FormGenerator modal state
-const [isFormGeneratorVisible, setIsFormGeneratorVisible] = useState<boolean>(false);
+  // Add after other useState declarations
+  const [isPageManagerVisible, setIsPageManagerVisible] = useState<boolean>(false);
+  const [uiLayout, setUiLayout] = useState<any[]>([]);
+  const [skipEffect, setSkipEffect] = useState<boolean>(false);
+  // FormGenerator modal state
+  const [isFormGeneratorVisible, setIsFormGeneratorVisible] = useState<boolean>(false);
 
   const handleFieldChange = (key: keyof FieldInput, value: any) => {
     setFieldInput(prev => ({
@@ -179,184 +181,209 @@ const [isFormGeneratorVisible, setIsFormGeneratorVisible] = useState<boolean>(fa
   };
 
   const handleAddField = () => {
-  console.log("gbv2");
-  if (!fieldInput.fieldName.trim()) {
-    message.error('Enter Field Name');
-    return;
-  }
-  if (showLookup && !(fieldInput.lookupTable && fieldInput.lookupColumn)) {
-    message.error('Enter LookUp Details');
-    return;
-  }
+    console.log("gbv2");
+    if (!fieldInput.fieldName.trim()) {
+      message.error('Enter Field Name');
+      return;
+    }
+    if (showLookup && !(fieldInput.lookupTable && fieldInput.lookupColumn)) {
+      message.error('Enter LookUp Details');
+      return;
+    }
 
-  const selectedField = masterObjectInit?.find(item => item.key === fieldInput.fieldName);
-  const fieldTitle = selectedField?.display_name || fieldInput.fieldName;
-  const formattedFieldName = fieldInput.fieldName.trim().replaceAll(' ', '_');
+    const selectedField = masterObjectInit?.find(item => item.key === fieldInput.fieldName);
+    const fieldTitle = selectedField?.display_name || fieldInput.fieldName;
+    const formattedFieldName = fieldInput.fieldName.trim().replaceAll(' ', '_');
 
-  const newField: FormField = {
-    ...fieldInput,
-    fieldTitle,
-    fieldName: formattedFieldName,
-    options: fieldInput.options.length ? fieldInput.options : [],
-    lookupTable: fieldInput.lookupTable || '',
-    lookupColumn: fieldInput.lookupColumn || '',
+    const newField: FormField = {
+      ...fieldInput,
+      fieldTitle,
+      fieldName: formattedFieldName,
+      options: fieldInput.options.length ? fieldInput.options : [],
+      lookupTable: fieldInput.lookupTable || '',
+      lookupColumn: fieldInput.lookupColumn || '',
+    };
+
+    const newFields = [...fields, newField];
+    setFields(newFields);
+
+    // Update ui:layout to include new field in a default page
+    const newUiLayout = uiLayout.length === 0 || uiLayout[0].length === 0
+      ? [[[formattedFieldName]]]
+      : [...uiLayout, [[formattedFieldName]]];
+    setUiLayout(newUiLayout);
+
+    updateSchemas(newFields);
+
+    setFieldInput({
+      title: fieldInput.title || '',
+      description: fieldInput.description || '',
+      fieldName: '',
+      fieldType: 'Text',
+      uiOrder: '',
+      required: false,
+      readonly: false,
+      hidden: false,
+      options: [],
+      placeholder: '',
+      lookupTable: '',
+      lookupColumn: '',
+      acceptedFileTypes: '.pdf',
+      // Reset new fields
+      lookupSchema: '',
+      lookupNoId: false,
+      defaultValue: '',
+      dependsOn: '',
+      dependsOnField: '',
+      dependsOnColumn: '',
+      lookupFilters: [],
+    });
   };
-
-  const newFields = [...fields, newField];
-  setFields(newFields);
-
-  // Update ui:layout to include new field in a default page
-  const newUiLayout = uiLayout.length === 0 || uiLayout[0].length === 0
-    ? [[[formattedFieldName]]]
-    : [...uiLayout, [[formattedFieldName]]];
-  setUiLayout(newUiLayout);
-
-  updateSchemas(newFields);
-
-  setFieldInput({
-    title: fieldInput.title || '',
-    description: fieldInput.description || '',
-    fieldName: '',
-    fieldType: 'Text',
-    uiOrder: '',
-    required: false,
-    readonly: false,
-    hidden: false,
-    options: [],
-    placeholder: '',
-    lookupTable: '',
-    lookupColumn: '',
-    acceptedFileTypes: '.pdf',
-    // Reset new fields
-    lookupSchema: '',
-    lookupNoId: false,
-    defaultValue: '',
-    dependsOn: '',
-    dependsOnField: '',
-    dependsOnColumn: '',
-    lookupFilters: [],
-  });
-};
 
   const updateSchemas = (updatedFields: FormField[], customLayout?: string[][][]) => {
-  console.log("gbv");
-  // Use customLayout if provided, otherwise use current uiLayout state
-  const layoutToUse = customLayout || uiLayout;
-  
-  const newDataSchema: any = {
-    type: 'object',
-    title: fieldInput.title,
-    description: fieldInput.description,
-    required: [],
-    properties: {},
-    definitions: {},
-  };
-  const newUiSchema: any = {
-    'ui:submitButtonOptions': {
-      props: {
-        disabled: false,
-        className: 'ant-btn-variant-solid ant-btn-block',
+    console.log("gbv");
+    // Use customLayout if provided, otherwise use current uiLayout state
+    const layoutToUse = customLayout || uiLayout;
+
+    const newDataSchema: any = {
+      type: 'object',
+      title: fieldInput.title,
+      description: fieldInput.description,
+      required: [],
+      properties: {},
+      definitions: {},
+    };
+    const newUiSchema: any = {
+      'ui:submitButtonOptions': {
+        props: {
+          disabled: false,
+          className: 'ant-btn-variant-solid ant-btn-block',
+        },
+        norender: false,
+        submitText: 'Save',
       },
-      norender: false,
-      submitText: 'Save',
-    },
-    'ui:layout': layoutToUse.length > 0 && layoutToUse[0].length > 0 ? layoutToUse : [updatedFields.map(field => [field.fieldName])],
-  };
+      'ui:layout': layoutToUse.length > 0 && layoutToUse[0].length > 0 ? layoutToUse : [updatedFields.map(field => [field.fieldName])],
+    };
 
-  updatedFields.forEach(field => {
-    const config = widgetConfigs[field.fieldType];
-    if (!config) return;
+    updatedFields.forEach(field => {
+      const config = widgetConfigs[field.fieldType];
+      if (!config) return;
 
-    const fieldDataSchema: any = { ...config.dataSchema, title: field.fieldTitle };
+      const fieldDataSchema: any = { ...config.dataSchema, title: field.fieldTitle };
 
-    // Add default value if specified
-    if (field.defaultValue) {
-      fieldDataSchema.default = field.defaultValue;
-    }
-
-    if (config.requiresOptions && field.options?.length) {
-      fieldDataSchema.enum = field.options;
-    } else if (config.requiresLookup && field.lookupTable && field.lookupColumn) {
-      // Build enhanced enum object with all options
-      const enumConfig: any = {
-        table: field.lookupSchema 
-          ? `${field.lookupSchema}.${field.lookupTable}` 
-          : field.lookupTable,
-        column: field.lookupColumn,
-      };
-      
-      // Add no_id flag if set
-      if (field.lookupNoId) {
-        enumConfig.no_id = true;
+      // Add default value if specified
+      if (field.defaultValue) {
+        fieldDataSchema.default = field.defaultValue;
       }
-      
-      // Add cascading select dependencies
-      if (field.dependsOn) {
-        enumConfig.dependsOn = field.dependsOn;
-        enumConfig.dependsOnField = field.dependsOnField || field.dependsOn;
-        if (field.dependsOnColumn) {
-          enumConfig.dependsOnColumn = field.dependsOnColumn;
+
+      if (config.requiresOptions && field.options?.length) {
+        fieldDataSchema.enum = field.options;
+      } else if (config.requiresLookup && field.lookupTable && field.lookupColumn) {
+        // Build enhanced enum object with all options
+        const enumConfig: any = {
+          table: field.lookupSchema
+            ? `${field.lookupSchema}.${field.lookupTable}`
+            : field.lookupTable,
+          column: field.lookupColumn,
+        };
+
+        // Add no_id flag if set
+        if (field.lookupNoId) {
+          enumConfig.no_id = true;
         }
+
+        // Add cascading select dependencies
+        if (field.dependsOn) {
+          enumConfig.dependsOn = field.dependsOn;
+          enumConfig.dependsOnField = field.dependsOnField || field.dependsOn;
+          if (field.dependsOnColumn) {
+            enumConfig.dependsOnColumn = field.dependsOnColumn;
+          }
+        }
+
+        // Add static filters
+        if (field.lookupFilters && field.lookupFilters.length > 0) {
+          enumConfig.filters = field.lookupFilters;
+        }
+
+        fieldDataSchema.enum = enumConfig;
       }
-      
-      // Add static filters
-      if (field.lookupFilters && field.lookupFilters.length > 0) {
-        enumConfig.filters = field.lookupFilters;
+
+      if (config.dataSchema.definitions) {
+        newDataSchema.definitions = {
+          ...newDataSchema.definitions,
+          ...config.dataSchema.definitions,
+        };
+        delete fieldDataSchema.definitions;
       }
-      
-      fieldDataSchema.enum = enumConfig;
-    }
 
-    if (config.dataSchema.definitions) {
-      newDataSchema.definitions = {
-        ...newDataSchema.definitions,
-        ...config.dataSchema.definitions,
-      };
-      delete fieldDataSchema.definitions;
-    }
+      newDataSchema.properties[field.fieldName] = fieldDataSchema;
+      if (field.required) {
+        newDataSchema.required.push(field.fieldName);
+      }
 
-    newDataSchema.properties[field.fieldName] = fieldDataSchema;
-    if (field.required) {
-      newDataSchema.required.push(field.fieldName);
-    }
+      const fieldUiSchema = { ...config.uiSchema };
+      if (field.placeholder) {
+        fieldUiSchema['ui:placeholder'] = field.placeholder;
+      }
+      if (config.hasFileOptions && field.acceptedFileTypes) {
+        fieldUiSchema['ui:options'] = {
+          ...fieldUiSchema['ui:options'],
+          accept: field.acceptedFileTypes,
+        };
+      }
+      if (field.readonly) {
+        fieldUiSchema['ui:readonly'] = true;
+      }
+      if (field.hidden) {
+        fieldUiSchema['ui:widget'] = 'Hidden';
+      }
+      newUiSchema[field.fieldName] = fieldUiSchema;
+    });
 
-    const fieldUiSchema = { ...config.uiSchema };
-    if (field.placeholder) {
-      fieldUiSchema['ui:placeholder'] = field.placeholder;
-    }
-    if (config.hasFileOptions && field.acceptedFileTypes) {
-      fieldUiSchema['ui:options'] = {
-        ...fieldUiSchema['ui:options'],
-        accept: field.acceptedFileTypes,
-      };
-    }
-    if (field.readonly) {
-      fieldUiSchema['ui:readonly'] = true;
-    }
-    if (field.hidden) {
-      fieldUiSchema['ui:widget'] = 'Hidden';
-    }
-    newUiSchema[field.fieldName] = fieldUiSchema;
-  });
-
-  setDataSchema(newDataSchema);
-  setUiSchema(newUiSchema);
-};
+    setDataSchema(newDataSchema);
+    setUiSchema(newUiSchema);
+  };
   useEffect(() => {
-  console.log("iud4");
-  fetchForms();
-}, []);
+    console.log("iud4");
+    fetchForms();
+  }, []);
 
-useEffect(() => {
-  console.log("iud5");
-  if (!skipEffect) {
-    updateSchemas(fields);
-  }
-  setSkipEffect(false); // Reset after effect runs
-}, [fields, skipEffect]);
+  useEffect(() => {
+    console.log("iud5");
+    if (!skipEffect) {
+      updateSchemas(fields);
+    }
+    setSkipEffect(false); // Reset after effect runs
+  }, [fields, skipEffect]);
+
+  const handleSaveRecord = async (values: any) => {
+    const targetTable = entitySchema || (dataSchema as any).db_schema?.table;
+    if (!targetTable) {
+      return message.error('No target entity/table defined for this form');
+    }
+
+    try {
+      const { error } = await supabase
+        .from(targetTable)
+        .insert([{ ...values, organization_id: organization.id }]);
+
+      if (error) throw error;
+      message.success(`Record saved successfully to ${targetTable}`);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to save record';
+      message.error(errorMessage);
+      console.error('❌ Record save error:', err);
+    }
+  };
 
   const onFinish = (values: any) => {
     console.log("Form Data", values);
+
+    if (saveMode === 'record') {
+      handleSaveRecord(values);
+      return;
+    }
 
     const payload = {
       data_schema: dataSchema,
@@ -422,182 +449,182 @@ useEffect(() => {
   };
 
   const handleFormChange = (formId: string) => {
-  console.log("iud3");
-  const form = forms.find((form) => form.id === formId);
-  if (form) {
-    setSelectedForm(form);
-    setEditItem(form);
-    setDataSchema(form.data_schema);
-    setDataConfig(form.data_config || []);
-    setUiSchema(form.ui_schema);
-    setUiLayout(form.ui_schema['ui:layout'] || [[]]);
+    console.log("iud3");
+    const form = forms.find((form) => form.id === formId);
+    if (form) {
+      setSelectedForm(form);
+      setEditItem(form);
+      setDataSchema(form.data_schema);
+      setDataConfig(form.data_config || []);
+      setUiSchema(form.ui_schema);
+      setUiLayout(form.ui_schema['ui:layout'] || [[]]);
 
-    // Reconstruct fields from data_schema and ui_schema
-    const newFields: FormField[] = Object.keys(form.data_schema.properties || {}).map((fieldName) => {
-      const dataSchemaField = form.data_schema.properties[fieldName] || {};
-      const uiSchemaField = form.ui_schema[fieldName] || {};
-      const enumConfig = dataSchemaField?.enum;
-      
-      // Parse table and schema from enum.table (e.g., "external.accounts" -> schema: "external", table: "accounts")
-      let lookupSchema = '';
-      let lookupTable = '';
-      if (enumConfig?.table && typeof enumConfig.table === 'string') {
-        if (enumConfig.table.includes('.')) {
-          const parts = enumConfig.table.split('.');
-          lookupSchema = parts[0];
-          lookupTable = parts[1];
-        } else {
-          lookupTable = enumConfig.table;
+      // Reconstruct fields from data_schema and ui_schema
+      const newFields: FormField[] = Object.keys(form.data_schema.properties || {}).map((fieldName) => {
+        const dataSchemaField = form.data_schema.properties[fieldName] || {};
+        const uiSchemaField = form.ui_schema[fieldName] || {};
+        const enumConfig = dataSchemaField?.enum;
+
+        // Parse table and schema from enum.table (e.g., "external.accounts" -> schema: "external", table: "accounts")
+        let lookupSchema = '';
+        let lookupTable = '';
+        if (enumConfig?.table && typeof enumConfig.table === 'string') {
+          if (enumConfig.table.includes('.')) {
+            const parts = enumConfig.table.split('.');
+            lookupSchema = parts[0];
+            lookupTable = parts[1];
+          } else {
+            lookupTable = enumConfig.table;
+          }
         }
-      }
-      
-      return {
-        fieldName,
-        fieldTitle: dataSchemaField.title || fieldName,
-        fieldType:
-          uiSchemaField['ui:widget'] === 'select' && enumConfig?.table
-            ? 'Lookup-Select'
-            : uiSchemaField['ui:widget'] === 'SelectableTags'
-            ? 'SelectableTags'
-            : uiSchemaField['ui:widget'] === 'SelectCustomWidget'
-            ? 'SelectSingle'
-            : uiSchemaField['ui:widget'] || 'Text',
-        title: form.data_schema.title || '',
-        description: form.data_schema.description || '',
-        uiOrder: uiSchemaField['ui:order'] || '',
-        required: form.data_schema.required?.includes(fieldName) || false,
-        readonly: uiSchemaField['ui:readonly'] || false,
-        hidden: uiSchemaField['ui:widget'] === 'hidden' || false,
-        options: Array.isArray(enumConfig) ? enumConfig : [],
-        placeholder: uiSchemaField['ui:placeholder'] || '',
-        lookupTable: lookupTable,
-        lookupColumn: enumConfig?.column || '',
-        acceptedFileTypes: uiSchemaField['ui:options']?.accept || '.pdf',
-        // NEW: Parse enhanced enum properties
-        lookupSchema: lookupSchema,
-        lookupNoId: enumConfig?.no_id || false,
-        defaultValue: dataSchemaField.default || '',
-        dependsOn: enumConfig?.dependsOn || '',
-        dependsOnField: enumConfig?.dependsOnField || '',
-        dependsOnColumn: enumConfig?.dependsOnColumn || '',
-        lookupFilters: enumConfig?.filters || [],
-      };
-    });
 
-    setFields(newFields);
-    // Explicitly call updateSchemas to regenerate schemas
-    updateSchemas(newFields);
-  } else {
-    console.log("iud2");
-    setSelectedForm(null);
-    setEditItem(null);
-    setDataSchema({ type: 'object', properties: {}, required: [] });
-    setUiSchema({});
-    setUiLayout([[]]);
-    setFields([]);
-    setDataConfig([]);
-  }
-};
-  
+        return {
+          fieldName,
+          fieldTitle: dataSchemaField.title || fieldName,
+          fieldType:
+            uiSchemaField['ui:widget'] === 'select' && enumConfig?.table
+              ? 'Lookup-Select'
+              : uiSchemaField['ui:widget'] === 'SelectableTags'
+                ? 'SelectableTags'
+                : uiSchemaField['ui:widget'] === 'SelectCustomWidget'
+                  ? 'SelectSingle'
+                  : uiSchemaField['ui:widget'] || 'Text',
+          title: form.data_schema.title || '',
+          description: form.data_schema.description || '',
+          uiOrder: uiSchemaField['ui:order'] || '',
+          required: form.data_schema.required?.includes(fieldName) || false,
+          readonly: uiSchemaField['ui:readonly'] || false,
+          hidden: uiSchemaField['ui:widget'] === 'hidden' || false,
+          options: Array.isArray(enumConfig) ? enumConfig : [],
+          placeholder: uiSchemaField['ui:placeholder'] || '',
+          lookupTable: lookupTable,
+          lookupColumn: enumConfig?.column || '',
+          acceptedFileTypes: uiSchemaField['ui:options']?.accept || '.pdf',
+          // NEW: Parse enhanced enum properties
+          lookupSchema: lookupSchema,
+          lookupNoId: enumConfig?.no_id || false,
+          defaultValue: dataSchemaField.default || '',
+          dependsOn: enumConfig?.dependsOn || '',
+          dependsOnField: enumConfig?.dependsOnField || '',
+          dependsOnColumn: enumConfig?.dependsOnColumn || '',
+          lookupFilters: enumConfig?.filters || [],
+        };
+      });
+
+      setFields(newFields);
+      // Explicitly call updateSchemas to regenerate schemas
+      updateSchemas(newFields);
+    } else {
+      console.log("iud2");
+      setSelectedForm(null);
+      setEditItem(null);
+      setDataSchema({ type: 'object', properties: {}, required: [] });
+      setUiSchema({});
+      setUiLayout([[]]);
+      setFields([]);
+      setDataConfig([]);
+    }
+  };
+
 
   const initData = {
     "details2.companyname": "TDD",
     "details2.web": "gdgdgdrgd",
   };
-// Handler for FormGenerator callback
-const handleFormGeneratorGenerate = useCallback((schemas: any, entityName: string) => {
-  // Extract title and description for form header
-  const formTitle = schemas.dataSchema.title || '';
-  const formDescription = schemas.dataSchema.description || '';
-  
-  // Set uiLayout from generated schema
-  setUiLayout(schemas.uiSchema['ui:layout'] || [[]]);
-  
-  // Reconstruct fields from generated data_schema
-  const newFields: FormField[] = Object.keys(schemas.dataSchema.properties || {}).map((fieldName) => {
-    const prop = schemas.dataSchema.properties[fieldName] || {};
-    const uiField = schemas.uiSchema[fieldName] || {};
-    
-    // Determine field type from schema properties
-    // IMPORTANT: Check for enum lookup object FIRST (before ui:widget) 
-    // to ensure SelectSingle is used for foreign key fields
-    let fieldType = 'Text';
-    if (prop.enum && typeof prop.enum === 'object' && 'table' in prop.enum) {
-      // Foreign key with lookup - use SelectSingle which has requiresLookup: true
-      fieldType = 'SelectSingle';
-    } else if (prop.type === 'boolean') {
-      fieldType = 'Checkboxes';
-    } else if (prop.format === 'date') {
-      fieldType = 'Date';
-    } else if (prop.format === 'date-time') {
-      fieldType = 'DateTime';
-    } else if (prop.type === 'integer' || prop.type === 'number') {
-      fieldType = 'Number';
-    } else if (uiField['ui:widget']) {
-      // Try to find matching widget config by ui:widget
-      const widgetName = uiField['ui:widget'];
-      const matchingType = Object.keys(widgetConfigs).find(key => 
-        widgetConfigs[key].uiSchema?.['ui:widget'] === widgetName
-      );
-      fieldType = matchingType || 'Text';
-    }
-    
-    // Parse lookup table (may be "schema.table" or just "table")
-    let lookupSchema = '';
-    let lookupTable = '';
-    if (prop.enum?.table) {
-      const tableParts = prop.enum.table.split('.');
-      if (tableParts.length > 1) {
-        lookupSchema = tableParts[0];
-        lookupTable = tableParts[1];
-      } else {
-        lookupTable = tableParts[0];
+  // Handler for FormGenerator callback
+  const handleFormGeneratorGenerate = useCallback((schemas: any, entityName: string) => {
+    // Extract title and description for form header
+    const formTitle = schemas.dataSchema.title || '';
+    const formDescription = schemas.dataSchema.description || '';
+
+    // Set uiLayout from generated schema
+    setUiLayout(schemas.uiSchema['ui:layout'] || [[]]);
+
+    // Reconstruct fields from generated data_schema
+    const newFields: FormField[] = Object.keys(schemas.dataSchema.properties || {}).map((fieldName) => {
+      const prop = schemas.dataSchema.properties[fieldName] || {};
+      const uiField = schemas.uiSchema[fieldName] || {};
+
+      // Determine field type from schema properties
+      // IMPORTANT: Check for enum lookup object FIRST (before ui:widget) 
+      // to ensure SelectSingle is used for foreign key fields
+      let fieldType = 'Text';
+      if (prop.enum && typeof prop.enum === 'object' && 'table' in prop.enum) {
+        // Foreign key with lookup - use SelectSingle which has requiresLookup: true
+        fieldType = 'SelectSingle';
+      } else if (prop.type === 'boolean') {
+        fieldType = 'Checkboxes';
+      } else if (prop.format === 'date') {
+        fieldType = 'Date';
+      } else if (prop.format === 'date-time') {
+        fieldType = 'DateTime';
+      } else if (prop.type === 'integer' || prop.type === 'number') {
+        fieldType = 'Number';
+      } else if (uiField['ui:widget']) {
+        // Try to find matching widget config by ui:widget
+        const widgetName = uiField['ui:widget'];
+        const matchingType = Object.keys(widgetConfigs).find(key =>
+          widgetConfigs[key].uiSchema?.['ui:widget'] === widgetName
+        );
+        fieldType = matchingType || 'Text';
       }
-    }
-    
-    return {
-      fieldTitle: prop.title || fieldName,
-      fieldName,
-      fieldType,
+
+      // Parse lookup table (may be "schema.table" or just "table")
+      let lookupSchema = '';
+      let lookupTable = '';
+      if (prop.enum?.table) {
+        const tableParts = prop.enum.table.split('.');
+        if (tableParts.length > 1) {
+          lookupSchema = tableParts[0];
+          lookupTable = tableParts[1];
+        } else {
+          lookupTable = tableParts[0];
+        }
+      }
+
+      return {
+        fieldTitle: prop.title || fieldName,
+        fieldName,
+        fieldType,
+        title: formTitle,
+        description: formDescription,
+        uiOrder: '',
+        required: schemas.dataSchema.required?.includes(fieldName) || false,
+        readonly: uiField['ui:readonly'] || false,
+        hidden: uiField['ui:widget'] === 'hidden',
+        options: Array.isArray(prop.enum) ? prop.enum : [],
+        placeholder: uiField['ui:placeholder'] || '',
+        lookupTable: lookupTable,
+        lookupColumn: prop.enum?.column || '',
+        acceptedFileTypes: '.pdf',
+        lookupSchema: lookupSchema,
+        lookupNoId: prop.enum?.no_id || false,
+        defaultValue: prop.default || '',
+        dependsOn: prop.enum?.dependsOn || '',
+        dependsOnField: prop.enum?.dependsOnField || '',
+        dependsOnColumn: prop.enum?.dependsOnColumn || '',
+        lookupFilters: prop.enum?.filters || [],
+      };
+    });
+
+    // Set fields and regenerate schemas using updateSchemas
+    setFields(newFields);
+
+    // Update fieldInput title/description for future fields
+    setFieldInput(prev => ({
+      ...prev,
       title: formTitle,
       description: formDescription,
-      uiOrder: '',
-      required: schemas.dataSchema.required?.includes(fieldName) || false,
-      readonly: uiField['ui:readonly'] || false,
-      hidden: uiField['ui:widget'] === 'hidden',
-      options: Array.isArray(prop.enum) ? prop.enum : [],
-      placeholder: uiField['ui:placeholder'] || '',
-      lookupTable: lookupTable,
-      lookupColumn: prop.enum?.column || '',
-      acceptedFileTypes: '.pdf',
-      lookupSchema: lookupSchema,
-      lookupNoId: prop.enum?.no_id || false,
-      defaultValue: prop.default || '',
-      dependsOn: prop.enum?.dependsOn || '',
-      dependsOnField: prop.enum?.dependsOnField || '',
-      dependsOnColumn: prop.enum?.dependsOnColumn || '',
-      lookupFilters: prop.enum?.filters || [],
-    };
-  });
-  
-  // Set fields and regenerate schemas using updateSchemas
-  setFields(newFields);
-  
-  // Update fieldInput title/description for future fields
-  setFieldInput(prev => ({
-    ...prev,
-    title: formTitle,
-    description: formDescription,
-  }));
-  
-  // Call updateSchemas to properly reconstruct dataSchema and uiSchema with enum objects
-  updateSchemas(newFields);
-  
-  setIsFormGeneratorVisible(false);
-  message.success(`Loaded ${newFields.length} fields from ${entityName}`);
-}, []);
+    }));
 
-console.log("iud6",uiSchema);
+    // Call updateSchemas to properly reconstruct dataSchema and uiSchema with enum objects
+    updateSchemas(newFields);
+
+    setIsFormGeneratorVisible(false);
+    message.success(`Loaded ${newFields.length} fields from ${entityName}`);
+  }, []);
+
+  console.log("iud6", uiSchema);
   return (
     <div className="space-y-6">
       <Row gutter={16}>
@@ -671,28 +698,28 @@ console.log("iud6",uiSchema);
                   </Col>
                 </Row>
                 <Row gutter={4} className="mt-2">
-  <Col span={8}>
-    <Switch
-      checked={fieldInput.required}
-      onChange={(checked) => handleFieldChange('required', checked)}
-    />
-    <label>Req</label>
-  </Col>
-  <Col span={8}>
-    <Switch
-      checked={fieldInput.readonly}
-      onChange={(checked) => handleFieldChange('readonly', checked)}
-    />
-    <label>Readonly</label>
-  </Col>
-  <Col span={8}>
-    <Switch
-      checked={fieldInput.hidden}
-      onChange={(checked) => handleFieldChange('hidden', checked)}
-    />
-    <label>Hidden</label>
-  </Col>
-</Row>
+                  <Col span={8}>
+                    <Switch
+                      checked={fieldInput.required}
+                      onChange={(checked) => handleFieldChange('required', checked)}
+                    />
+                    <label>Req</label>
+                  </Col>
+                  <Col span={8}>
+                    <Switch
+                      checked={fieldInput.readonly}
+                      onChange={(checked) => handleFieldChange('readonly', checked)}
+                    />
+                    <label>Readonly</label>
+                  </Col>
+                  <Col span={8}>
+                    <Switch
+                      checked={fieldInput.hidden}
+                      onChange={(checked) => handleFieldChange('hidden', checked)}
+                    />
+                    <label>Hidden</label>
+                  </Col>
+                </Row>
 
                 <Input
                   className="mt-2"
@@ -743,7 +770,7 @@ console.log("iud6",uiSchema);
                         />
                       </Col>
                     </Row>
-                    
+
                     {/* No ID Toggle */}
                     <Row gutter={4} className="mt-2">
                       <Col span={12}>
@@ -754,7 +781,7 @@ console.log("iud6",uiSchema);
                         <label className="ml-2">Use value as ID (no_id)</label>
                       </Col>
                     </Row>
-                    
+
                     {/* Cascading Select Configuration */}
                     <div className="mt-2 p-2 bg-gray-50 rounded">
                       <label className="text-xs text-gray-500">Cascading Select (Optional)</label>
@@ -793,7 +820,7 @@ console.log("iud6",uiSchema);
                         </Col>
                       </Row>
                     </div>
-                    
+
                     {/* Static Filters */}
                     <div className="mt-2 p-2 bg-gray-50 rounded">
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -813,86 +840,86 @@ console.log("iud6",uiSchema);
         <Col span={16}>
           {/* Main preview area */}
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
-             <h3>Form Preview</h3>
-             <Space>
-               <Button onClick={() => setIsPageManagerVisible(true)}>
-                 Manage Pages
-               </Button>
-               <Select
-                 style={{ width: 200 }}
-                 placeholder="Select a form to edit"
-                 onChange={handleFormChange}
-                 value={selectedForm?.id}
-                 allowClear
-               >
-                 {forms.map(form => (
-                   <Select.Option key={form.id} value={form.id}>{form.name}</Select.Option>
-                 ))}
-               </Select>
-             </Space>
+            <h3>Form Preview</h3>
+            <Space>
+              <Button onClick={() => setIsPageManagerVisible(true)}>
+                Manage Pages
+              </Button>
+              <Select
+                style={{ width: 200 }}
+                placeholder="Select a form to edit"
+                onChange={handleFormChange}
+                value={selectedForm?.id}
+                allowClear
+              >
+                {forms.map(form => (
+                  <Select.Option key={form.id} value={form.id}>{form.name}</Select.Option>
+                ))}
+              </Select>
+            </Space>
           </div>
-           
-           {/* JSON Schema Editors */}
-           <Card 
-             title="Schema Editor"
-             extra={
-               <Space>
-                 <Button onClick={() => setIsPageManagerVisible(true)} type="default" size="small">
-                   Manage Pages
-                 </Button>
-                 <Button onClick={() => setIsDrawerVisible(true)} type="primary" size="small">
-                   Show Form
-                 </Button>
-               </Space>
-             }
-           >
-               <div style={{ display: 'flex', gap: '16px' }}>
-                 <div style={{ flex: 1 }}>
-                   <h4 style={{ marginBottom: '8px' }}>Data Schema:</h4>
-                   <AceEditor
-                     mode="json"
-                     theme="monokai"
-                     value={JSON.stringify(dataSchema, null, 2)}
-                     onChange={(value) => {
-                       try {
-                         const parsedSchema = JSON.parse(value);
-                         setDataSchema(parsedSchema);
-                       } catch (error) {
-                         // Invalid JSON, don't update
-                       }
-                     }}
-                     editorProps={{ $blockScrolling: true }}
-                     setOptions={{
-                       tabSize: 2,
-                       useSoftTabs: true,
-                     }}
-                     style={{ width: '100%', height: '500px' }}
-                   />
-                 </div>
-                 <div style={{ flex: 1 }}>
-                   <h4 style={{ marginBottom: '8px' }}>UI Schema:</h4>
-                   <AceEditor
-                     mode="json"
-                     theme="monokai"
-                     value={JSON.stringify(uiSchema, null, 2)}
-                     onChange={(value) => {
-                       try {
-                         const parsedSchema = JSON.parse(value);
-                         setUiSchema(parsedSchema);
-                       } catch (error) {
-                         // Invalid JSON, don't update
-                       }
-                     }}
-                     editorProps={{ $blockScrolling: true }}
-                     setOptions={{
-                       tabSize: 2,
-                       useSoftTabs: true,
-                     }}
-                     style={{ width: '100%', height: '500px' }}
-                   />
-                 </div>
-               </div>
-           </Card>
+
+          {/* JSON Schema Editors */}
+          <Card
+            title="Schema Editor"
+            extra={
+              <Space>
+                <Button onClick={() => setIsPageManagerVisible(true)} type="default" size="small">
+                  Manage Pages
+                </Button>
+                <Button onClick={() => setIsDrawerVisible(true)} type="primary" size="small">
+                  Show Form
+                </Button>
+              </Space>
+            }
+          >
+            <div style={{ display: 'flex', gap: '16px' }}>
+              <div style={{ flex: 1 }}>
+                <h4 style={{ marginBottom: '8px' }}>Data Schema:</h4>
+                <AceEditor
+                  mode="json"
+                  theme="monokai"
+                  value={JSON.stringify(dataSchema, null, 2)}
+                  onChange={(value) => {
+                    try {
+                      const parsedSchema = JSON.parse(value);
+                      setDataSchema(parsedSchema);
+                    } catch (error) {
+                      // Invalid JSON, don't update
+                    }
+                  }}
+                  editorProps={{ $blockScrolling: true }}
+                  setOptions={{
+                    tabSize: 2,
+                    useSoftTabs: true,
+                  }}
+                  style={{ width: '100%', height: '500px' }}
+                />
+              </div>
+              <div style={{ flex: 1 }}>
+                <h4 style={{ marginBottom: '8px' }}>UI Schema:</h4>
+                <AceEditor
+                  mode="json"
+                  theme="monokai"
+                  value={JSON.stringify(uiSchema, null, 2)}
+                  onChange={(value) => {
+                    try {
+                      const parsedSchema = JSON.parse(value);
+                      setUiSchema(parsedSchema);
+                    } catch (error) {
+                      // Invalid JSON, don't update
+                    }
+                  }}
+                  editorProps={{ $blockScrolling: true }}
+                  setOptions={{
+                    tabSize: 2,
+                    useSoftTabs: true,
+                  }}
+                  style={{ width: '100%', height: '500px' }}
+                />
+              </div>
+            </div>
+          </Card>
         </Col>
       </Row>
 
@@ -909,22 +936,42 @@ console.log("iud6",uiSchema);
           onChange={(e) => setSaveFormName(e.target.value)}
         />
       </Modal>
-      
+
       {/* Form Preview Drawer */}
-      <Drawer 
-        width="50%" 
-        title="Form Preview" 
-        open={isDrawerVisible} 
-        onClose={() => setIsDrawerVisible(false)} 
+      <Drawer
+        width="50%"
+        title="Form Preview"
+        open={isDrawerVisible}
+        onClose={() => setIsDrawerVisible(false)}
         footer={null}
       >
+        <div style={{ marginBottom: 16 }}>
+          <Space direction="vertical" style={{ width: '100%' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <Text strong>Save Mode:</Text>
+              <Radio.Group
+                value={saveMode}
+                onChange={(e: any) => setSaveMode(e.target.value)}
+                buttonStyle="solid"
+              >
+                <Radio.Button value="form">Form Definition</Radio.Button>
+                <Radio.Button value="record">Entity Record</Radio.Button>
+              </Radio.Group>
+            </div>
+            <Alert
+              type="info"
+              message={saveMode === 'form' ? "Saves the JSON Schema definition to core.forms" : `Inserts a new record into the target table: ${entitySchema || 'unknown'}`}
+              showIcon
+            />
+          </Space>
+        </div>
         <DynamicForm
           formData={initData}
           schemas={{ data_schema: dataSchema, ui_schema: uiSchema }}
           onFinish={onFinish}
         />
       </Drawer>
-      
+
       {/* Page Manager Modal */}
       <PageManager
         visible={isPageManagerVisible}
@@ -938,7 +985,7 @@ console.log("iud6",uiSchema);
         }}
         onCancel={() => setIsPageManagerVisible(false)}
       />
-      
+
       {/* Form Generator Modal */}
       <Modal
         title="Generate Form"
@@ -947,10 +994,10 @@ console.log("iud6",uiSchema);
         onCancel={() => setIsFormGeneratorVisible(false)}
         width={800}
       >
-        <FormGenerator 
-           onGenerate={handleFormGeneratorGenerate}
-           onClose={() => setIsFormGeneratorVisible(false)}
-           defaultEntity={entitySchema}
+        <FormGenerator
+          onGenerate={handleFormGeneratorGenerate}
+          onClose={() => setIsFormGeneratorVisible(false)}
+          defaultEntity={entitySchema}
         />
       </Modal>
     </div>
