@@ -97,6 +97,7 @@ const FormBuilder: React.FC<FormBuilderProps> = ({ masterObjectInit, entitySchem
   const [isDrawerVisible, setIsDrawerVisible] = useState<boolean>(false);
   const [dataConfig, setDataConfig] = useState<any[]>([]);
   const [editItem, setEditItem] = useState<Form | null>(null);
+  const [selectedForm, setSelectedForm] = useState<Form | null>(null);
   const [dataSchema, setDataSchema] = useState<any>({
     type: "object",
     properties: {},
@@ -164,8 +165,8 @@ const FormBuilder: React.FC<FormBuilderProps> = ({ masterObjectInit, entitySchem
           ...prev,
           fieldName: value,
           fieldType: "SelectSingle",
-          lookupTable: selectedField.foreign_key.source_table,
-          lookupColumn: selectedField.foreign_key.display_column,
+          lookupTable: selectedField.foreign_key?.source_table || '',
+          lookupColumn: selectedField.foreign_key?.display_column || '',
         }));
         setShowLookup(true);
       } else {
@@ -357,19 +358,53 @@ const FormBuilder: React.FC<FormBuilderProps> = ({ masterObjectInit, entitySchem
     setSkipEffect(false); // Reset after effect runs
   }, [fields, skipEffect]);
 
+  const unflatten = (data: any) => {
+    const result: any = {};
+    for (const key in data) {
+      if (key.includes('.')) {
+        const parts = key.split('.');
+        let current = result;
+        for (let i = 0; i < parts.length; i++) {
+          const part = parts[i];
+          if (i === parts.length - 1) {
+            current[part] = data[key];
+          } else {
+            current[part] = current[part] || {};
+            current = current[part];
+          }
+        }
+      } else {
+        result[key] = data[key];
+      }
+    }
+    return result;
+  };
+
   const handleSaveRecord = async (values: any) => {
-    const targetTable = entitySchema || (dataSchema as any).db_schema?.table;
-    if (!targetTable) {
+    let schemaName = 'public';
+    let tableName = entitySchema || (dataSchema as any).db_schema?.table;
+
+    if (tableName?.includes('.')) {
+      const parts = tableName.split('.');
+      schemaName = parts[0];
+      tableName = parts[1];
+    }
+
+    if (!tableName) {
       return message.error('No target entity/table defined for this form');
     }
 
+    // Unflatten dots for nested JSONB support
+    const processedValues = unflatten(values);
+
     try {
       const { error } = await supabase
-        .from(targetTable)
-        .insert([{ ...values, organization_id: organization.id }]);
+        .schema(schemaName)
+        .from(tableName)
+        .insert([{ ...processedValues, organization_id: organization?.id }]);
 
       if (error) throw error;
-      message.success(`Record saved successfully to ${targetTable}`);
+      message.success(`Record saved successfully to ${schemaName}.${tableName}`);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to save record';
       message.error(errorMessage);
@@ -392,13 +427,16 @@ const FormBuilder: React.FC<FormBuilderProps> = ({ masterObjectInit, entitySchem
     };
 
     setFormToSave(payload);
-    setSaveFormName(selectedForm ? editItem?.name || "" : "");
+    setSaveFormName(selectedForm ? selectedForm.name : "");
     setIsSaveModalVisible(true);
   };
 
   const handleSaveForm = async () => {
     if (!saveFormName) {
       return message.error('Enter Form Name');
+    }
+    if (!organization?.id) {
+      return message.error('Organization not found');
     }
     try {
       let upsertData: any = {

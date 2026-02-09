@@ -1,0 +1,92 @@
+# Unified Verification Trace: hr.assessments (V21.7)
+# Timestamp: 2026-02-09T08:00:30
+# Entity: hr.assessments
+
+## Phase 1: Blueprint Audit
+- **Classification**: `master`
+- **Form Type**: `dependent`
+- **AI Resolution**: `resolve_parent`
+- **Result**: ✅ ALIGNED
+
+## Phase 2: Provisioning (Bootstrap)
+### Action: `core.comp_util_ops_bootstrap_entity`
+### Input Payload (SQL):
+```sql
+SELECT core.comp_util_ops_bootstrap_entity('hr', 'assessments', NULL, true);
+```
+- **Status**: ✅ SUCCESS
+
+## Phase 3: Form Generation (Minimal)
+### Action: `core.api_new_generate_form_schema`
+### Input Payload (Config):
+```json
+{
+  "entity": "hr.assessments",
+  "config": { "mode": "minimal" }
+}
+```
+### Resulting Schema:
+```json
+{
+  "db_schema": { "table": "hr.assessments" },
+  "data_schema": {
+    "type": "object",
+    "required": ["details"],
+    "properties": {
+      "details": {
+        "type": "object",
+        "required": ["assessmentStatus"],
+        "properties": {
+          "assessmentStatus": { "type": "string" },
+          "assessmentRequester": {
+            "type": "object",
+            "required": ["assessmentName"],
+            "properties": { "assessmentName": { "type": "string" } }
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+## Phase 4: E2E Upsert (Direct Payload)
+### API: `core.api_new_core_upsert_data`
+### Payload:
+```json
+{
+  "organization_id": "a41b2216-736c-4c00-99ca-30a0cd8ca0d2",
+  "candidate_id": "24beccb8-6bde-4d87-80c9-e5c113dbe853",
+  "details": {
+    "assessmentStatus": "completed",
+    "assessmentRequester": {
+      "assessmentName": "V4 Technical Assessment"
+    }
+  }
+}
+```
+- **Record ID**: 24ff7ccd-adda-4797-a987-1691ccbbb487
+- **Status**: ✅ SUCCESS
+
+## Phase 5: Logical Resolution (Fetch)
+### API: `core.api_new_fetch_entity_records`
+### Payload (Config):
+```json
+{
+  "entity_schema": "hr",
+  "entity_name": "assessments",
+  "organization_id": "a41b2216-736c-4c00-99ca-30a0cd8ca0d2",
+  "filters": [
+    { "key": "id", "value": "24ff7ccd-adda-4797-a987-1691ccbbb487" }
+  ]
+}
+```
+- **Resolved Fields**:
+  - `status`: completed
+  - `details__assessmentStatus`: completed
+  - `details__assessmentRequester__assessmentName`: V4 Technical Assessment
+  - `display_id`: ASS-00005
+- **Status**: ✅ SUCCESS
+
+## Phase 6: Verification Conclusion
+Assessments entity is fully operational, maintaining link to parent candidate and projecting high-fidelity metrics.

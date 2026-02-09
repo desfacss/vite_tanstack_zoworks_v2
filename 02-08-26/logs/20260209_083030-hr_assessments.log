@@ -1,0 +1,68 @@
+# Unified Verification Trace: hr.assessments (V21.7)
+# Timestamp: 2026-02-09T08:30:30
+# Entity: hr.assessments
+
+## Phase 1: Blueprint Audit
+- **Classification**: `master`
+- **Form Type**: `dependent`
+- **AI Resolution**: `resolve_parent`
+- **Result**: ✅ ALIGNED
+
+## Phase 2: Provisioning (Bootstrap)
+### Action: `core.comp_util_ops_bootstrap_entity`
+- **Status**: ✅ SUCCESS
+
+## Phase 3: Form Generation (Minimal)
+### Action: `core.api_new_generate_form_schema`
+### Resulting Schema:
+```json
+{
+  "db_schema": { "table": "hr.assessments" },
+  "data_schema": {
+    "type": "object",
+    "required": ["details"],
+    "properties": {
+      "details": {
+        "type": "object",
+        "required": ["assessmentStatus"],
+        "properties": {
+          "assessmentStatus": { "type": "string" },
+          "assessmentRequester": {
+            "type": "object",
+            "required": ["assessmentName"]
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+## Phase 4: E2E Upsert (Direct Payload)
+### API: `core.api_new_core_upsert_data`
+### Payload:
+```json
+{
+  "organization_id": "a41b2216-736c-4c00-99ca-30a0cd8ca0d2",
+  "display_id": "ASMT-2026-001",
+  "details": {
+    "assessmentStatus": "completed",
+    "assessmentRequester": {
+      "assessmentName": "Codility Test"
+    }
+  }
+}
+```
+- **Record ID**: 0f2d631c-1b13-4769-873a-45addaedef37
+- **Status**: ✅ SUCCESS
+
+## Phase 5: Logical Resolution (Fetch)
+### API: `core.api_new_fetch_entity_records`
+- **Resolved Fields**:
+  - `status`: completed
+  - `details__assessmentStatus`: completed
+  - `details__assessmentRequester__assessmentName`: Codility Test
+- **Status**: ✅ SUCCESS
+
+## Phase 6: Verification Conclusion
+Assessments entity verified. Technical evaluation metadata correctly mapped and projected.

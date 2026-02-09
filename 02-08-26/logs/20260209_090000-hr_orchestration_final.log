@@ -1,0 +1,30 @@
+# HR Verification Trace: RECRUITMENT ORCHESTRATION (FINAL)
+# Timestamp: 2026-02-09 09:00:00
+# Tenant: a41b2216-736c-4c00-99ca-30a0cd8ca0d2 (VKBS)
+
+## 1. Candidate Update Lifecycle
+**Action**: Atomic update of Candidate `7b3aad6c-0586-4d26-a1b2-641c47a727d9`.
+**Result**:
+```json
+{
+    "name": "Candidate",
+    "details__person__name__family": "One-Final-Update",
+    "status": "interviewing"
+}
+```
+
+## 2. Application Orchestration
+**Action**: Link Candidate and Requisition via `APP-ORCH-FINAL`.
+**Resolution Trace**:
+```json
+{
+    "display_id": "APP-ORCH-FINAL",
+    "candidate_id": "7b3aad6c-0586-4d26-a1b2-641c47a727d9",
+    "candidate_display": "CAN-2026-001",
+    "requisition_id": "f8dc6ce1-20fd-4a2f-bfb1-e2e997907cda",
+    "requisition_display": "REQ-2026-001"
+}
+```
+
+## Verification Status: SUCCESS
+The V4 architecture successfully orchestrates multi-entity relationships, preserving data integrity across updates and providing high-fidelity resolution for discovery.

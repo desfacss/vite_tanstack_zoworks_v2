@@ -1,0 +1,96 @@
+# Unified Verification Trace: hr.interviews (V21.7)
+# Timestamp: 2026-02-09T07:48:50
+# Entity: hr.interviews
+
+## Phase 1: Blueprint Audit
+- **Classification**: `master`
+- **Form Type**: `dependent`
+- **AI Resolution**: `resolve_parent`
+- **Result**: ✅ ALIGNED
+
+## Phase 2: Provisioning (Bootstrap)
+### Action: `core.comp_util_ops_bootstrap_entity`
+### Input Payload (SQL):
+```sql
+SELECT core.comp_util_ops_bootstrap_entity('hr', 'interviews', NULL, true);
+```
+- **Status**: ✅ SUCCESS
+- **Action**: Forced re-bootstrap to propagate V21.7 metadata.
+
+## Phase 3: Form Generation (Minimal)
+### Action: `core.api_new_generate_form_schema`
+### Input Payload (Config):
+```json
+{
+  "entity": "hr.interviews",
+  "config": { "mode": "minimal" }
+}
+```
+### Resulting Schema:
+```json
+{
+  "db_schema": { "table": "hr.interviews" },
+  "data_schema": {
+    "type": "object",
+    "required": ["details"],
+    "properties": {
+      "details": {
+        "type": "object",
+        "required": ["interviewStatus", "appointment"],
+        "properties": {
+          "appointment": {
+            "type": "object",
+            "required": ["validDatePeriod"],
+            "properties": { "validDatePeriod": { "type": "object", "required": ["start"] } }
+          },
+          "interviewStatus": { "type": "string" }
+        }
+      }
+    }
+  }
+}
+```
+
+## Phase 4: E2E Upsert (Direct Payload)
+### API: `core.api_new_core_upsert_data`
+### Payload:
+```json
+{
+  "organization_id": "a41b2216-736c-4c00-99ca-30a0cd8ca0d2",
+  "application_id": "fd958e18-5795-4d61-ba89-0e56f5b84f09",
+  "details": {
+    "interviewStatus": "scheduled",
+    "appointment": {
+      "validDatePeriod": {
+        "start": "2026-02-10T02:20:49+00:00"
+      }
+    }
+  }
+}
+```
+- **Record ID**: 39793f23-8d62-408c-b31f-f9f46a3b13e9
+- **Linkage**: Successfully linked to Application `fd958e18`.
+- **Status**: ✅ SUCCESS
+
+## Phase 5: Logical Resolution (Fetch)
+### API: `core.api_new_fetch_entity_records`
+### Payload (Config):
+```json
+{
+  "entity_schema": "hr",
+  "entity_name": "interviews",
+  "organization_id": "a41b2216-736c-4c00-99ca-30a0cd8ca0d2",
+  "filters": [
+    { "key": "id", "value": "39793f23-8d62-408c-b31f-f9f46a3b13e9" }
+  ]
+}
+```
+- **Resolved Fields**:
+  - `status`: scheduled
+  - `details__interviewStatus`: scheduled
+  - `display_id`: INT-00005
+  - `application_display`: APP-00007
+- **Status**: ✅ SUCCESS
+
+## Phase 6: Verification Conclusion
+The `hr.interviews` entity is fully operational under the V21.7 Unified Metadata Projection. The hybrid model correctly resolves L4 virtual fields from the L1/L2 physical shards via the L5 Logical View.

@@ -1,0 +1,78 @@
+# Unified Verification Trace: hr.policies (V21.7)
+# Timestamp: 2026-02-09T08:10:30
+# Entity: hr.policies
+
+## Phase 1: Blueprint Audit
+- **Classification**: `reference`
+- **Form Type**: `simple`
+- **AI Resolution**: `direct`
+- **Result**: ✅ ALIGNED (Note: Flat schema, no `details` JSONB)
+
+## Phase 2: Provisioning (Bootstrap)
+### Action: `core.comp_util_ops_bootstrap_entity`
+### Input Payload (SQL):
+```sql
+SELECT core.comp_util_ops_bootstrap_entity('hr', 'policies', NULL, true);
+```
+- **Status**: ✅ SUCCESS
+
+## Phase 3: Form Generation (Minimal)
+### Action: `core.api_new_generate_form_schema`
+### Input Payload (Config):
+```json
+{
+  "entity": "hr.policies",
+  "config": { "mode": "minimal" }
+}
+```
+### Resulting Schema:
+```json
+{
+  "db_schema": { "table": "hr.policies" },
+  "data_schema": {
+    "type": "object",
+    "required": ["rule_text"],
+    "properties": {
+      "rule_text": { "type": "string" },
+      "severity": { "type": "string" },
+      "scopes": { "type": "array", "items": { "type": "string" } }
+    }
+  }
+}
+```
+
+## Phase 4: E2E Upsert (Direct Payload)
+### API: `core.api_new_core_upsert_data`
+### Payload:
+```json
+{
+  "organization_id": "a41b2216-736c-4c00-99ca-30a0cd8ca0d2",
+  "rule_text": "V4 Standard Compliance: All API calls must be logged.",
+  "severity": "high",
+  "scopes": "{technical, audit}"
+}
+```
+- **Record ID**: 1d9bbd4c-cb5f-41f9-ba47-21cb05c199de
+- **Status**: ✅ SUCCESS (Verified array literal handling)
+
+## Phase 5: Logical Resolution (Fetch)
+### API: `core.api_new_fetch_entity_records`
+### Payload (Config):
+```json
+{
+  "entity_schema": "hr",
+  "entity_name": "policies",
+  "organization_id": "a41b2216-736c-4c00-99ca-30a0cd8ca0d2",
+  "filters": [
+    { "key": "severity", "value": "high" }
+  ]
+}
+```
+- **Resolved Fields**:
+  - `rule_text`: V4 Standard Compliance: All API calls must be logged.
+  - `severity`: high
+  - `scopes`: ["technical", "audit"]
+- **Status**: ✅ SUCCESS
+
+## Phase 6: Verification Conclusion
+Policies entity verified. Full support for flat reference schemas and native Postgres array types confirmed.

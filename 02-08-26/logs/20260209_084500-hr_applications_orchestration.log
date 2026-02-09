@@ -1,0 +1,36 @@
+# HR Verification Trace: hr.applications (ORCHESTRATION)
+# Timestamp: 2026-02-09 08:45:00
+# Tenant: a41b2216-736c-4c00-99ca-30a0cd8ca0d2 (VKBS)
+
+## Phase 4: Execute Orchestrated Upsert
+**Action**: Create Application APP-2026-V3 linking updated Candidate and closed Requisition.
+**Payload**:
+```json
+{
+    "organization_id": "a41b2216-736c-4c00-99ca-30a0cd8ca0d2",
+    "display_id": "APP-2026-V3",
+    "candidate_id": "7b3aad6c-0586-4d26-a1b2-641c47a727d9",
+    "requisition_id": "f8dc6ce1-20fd-4a2f-bfb1-e2e997907cda",
+    "status": "in_progress",
+    "details": {
+        "processStage": "Interview",
+        "disposition": {"status": "active"}
+    }
+}
+```
+
+## Phase 5: Resolve Multi-Entity Data
+**Resolved Application Record**:
+```json
+{
+    "display_id": "APP-2026-V3",
+    "candidate_id": "7b3aad6c-0586-4d26-a1b2-641c47a727d9",
+    "candidate_display": "CAN-2026-001",
+    "requisition_id": "f8dc6ce1-20fd-4a2f-bfb1-e2e997907cda",
+    "requisition_display": "REQ-2026-001",
+    "details__processStage": "Interview"
+}
+```
+
+## Verification Status: SUCCESS
+Application successfully links to both Candidate and Requisition, resolving their `display_id` prefixes via the V4 Unified Fetch layer.

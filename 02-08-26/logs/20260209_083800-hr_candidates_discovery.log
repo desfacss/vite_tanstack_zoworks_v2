@@ -1,0 +1,52 @@
+# HR Verification Trace: hr.candidates (DISCOVERY)
+# Timestamp: 2026-02-09 08:38:00
+# Tenant: a41b2216-736c-4c00-99ca-30a0cd8ca0d2 (VKBS)
+
+## Phase 3: Form Generation (UI Schema)
+**Result**:
+```json
+ {
+     "db_schema": { "table": "hr.candidates" },
+     "ui_schema": {
+         "name": { "ui:options": { "colSpan": 12 }, "ui:placeholder": "Enter Name" },
+         "status": { "ui:options": { "colSpan": 12 }, "ui:placeholder": "Enter Status" },
+         "details": { "ui:options": { "colSpan": 12 }, "ui:placeholder": "Enter Details" },
+         "contact_type": { "ui:options": { "colSpan": 12 }, "ui:placeholder": "Enter Contact Type" }
+     },
+     "data_schema": {
+         "type": "object",
+         "title": "Candidates",
+         "required": [ "contact_type", "details", "name", "status" ],
+         "properties": {
+             "name": { "type": "string" },
+             "status": { "type": "string" },
+             "details": {
+                 "type": "object",
+                 "required": [ "person" ],
+                 "properties": {
+                     "person": {
+                         "type": "object",
+                         "required": [ "name", "communication" ]
+                     }
+                 }
+             }
+         }
+     }
+ }
+```
+
+## Phase 5: Fetch Resolution (Discovery)
+**Query**: Find Candidate by ID (7b3aad6c-0586-4d26-a1b2-641c47a727d9)
+**Result**:
+```json
+{
+    "id": "7b3aad6c-0586-4d26-a1b2-641c47a727d9",
+    "display_id": "CAN-2026-001",
+    "name": "Candidate",
+    "details__person__name__family": "One-Updated",
+    "details__communication__email": "[\"updated@example.com\"]"
+}
+```
+
+## Verification Status: SUCCESS
+Candidates discovery is operational, correctly resolving both entity-specific and unified (name, display_id) fields.

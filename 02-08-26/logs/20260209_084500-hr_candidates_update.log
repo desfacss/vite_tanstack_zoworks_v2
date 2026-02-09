@@ -1,0 +1,34 @@
+# HR Verification Trace: hr.candidates (UPDATE)
+# Timestamp: 2026-02-09 08:45:00
+# Tenant: a41b2216-736c-4c00-99ca-30a0cd8ca0d2 (VKBS)
+
+## Phase 4: Execute Update
+**Action**: Update details for Candidate One (7b3aad6c-0586-4d26-a1b2-641c47a727d9).
+**Payload**:
+```json
+{
+    "id": "7b3aad6c-0586-4d26-a1b2-641c47a727d9",
+    "organization_id": "a41b2216-736c-4c00-99ca-30a0cd8ca0d2",
+    "details": {
+        "person": {
+            "name": {"given": "Candidate", "family": "One-Updated"},
+            "communication": {"email": ["updated@example.com"]}
+        }
+    }
+}
+```
+
+## Phase 5: Resolve Data
+**Resolved Record**:
+```json
+{
+    "id": "7b3aad6c-0586-4d26-a1b2-641c47a727d9",
+    "name": "Candidate One",
+    "details__person__name__family": "One-Updated",
+    "details__communication__email": "[\"updated@example.com\"]",
+    "updated_at": "2026-02-09T02:52:34.909062+00:00"
+}
+```
+
+## Verification Status: SUCCESS
+Update operation correctly modified the JSONB details without breaking the root contact record.

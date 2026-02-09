@@ -1,0 +1,78 @@
+# Unified Verification Trace: hr.policy_documents (V21.7)
+# Timestamp: 2026-02-09T08:11:30
+# Entity: hr.policy_documents
+
+## Phase 1: Blueprint Audit
+- **Classification**: `master`
+- **Form Type**: `simple`
+- **AI Resolution**: `direct`
+- **Result**: ✅ ALIGNED
+
+## Phase 2: Provisioning (Bootstrap)
+### Action: `core.comp_util_ops_bootstrap_entity`
+### Input Payload (SQL):
+```sql
+SELECT core.comp_util_ops_bootstrap_entity('hr', 'policy_documents', NULL, true);
+```
+- **Status**: ✅ SUCCESS
+
+## Phase 3: Form Generation (Minimal)
+### Action: `core.api_new_generate_form_schema`
+### Input Payload (Config):
+```json
+{
+  "entity": "hr.policy_documents",
+  "config": { "mode": "minimal" }
+}
+```
+### Resulting Schema:
+```json
+{
+  "db_schema": { "table": "hr.policy_documents" },
+  "data_schema": {
+    "type": "object",
+    "required": ["title"],
+    "properties": {
+      "title": { "type": "string" },
+      "status": { "type": "string" },
+      "source_url": { "type": "string" }
+    }
+  }
+}
+```
+
+## Phase 4: E2E Upsert (Direct Payload)
+### API: `core.api_new_core_upsert_data`
+### Payload:
+```json
+{
+  "organization_id": "a41b2216-736c-4c00-99ca-30a0cd8ca0d2",
+  "title": "V4 Standard Compliance Manual",
+  "status": "active",
+  "source_url": "https://example.works/policies/manual_v4.pdf"
+}
+```
+- **Record ID**: 54726e79-698f-4281-b00c-00365dff24b2
+- **Status**: ✅ SUCCESS
+
+## Phase 5: Logical Resolution (Fetch)
+### API: `core.api_new_fetch_entity_records`
+### Payload (Config):
+```json
+{
+  "entity_schema": "hr",
+  "entity_name": "policy_documents",
+  "organization_id": "a41b2216-736c-4c00-99ca-30a0cd8ca0d2",
+  "filters": [
+    { "key": "id", "value": "54726e79-698f-4281-b00c-00365dff24b2" }
+  ]
+}
+```
+- **Resolved Fields**:
+  - `title`: V4 Standard Compliance Manual
+  - `status`: active
+  - `source_url`: https://example.works/policies/manual_v4.pdf
+- **Status**: ✅ SUCCESS
+
+## Phase 6: Verification Conclusion
+Policy Documents entity verified. Content and linkage metadata confirmed working as intended.

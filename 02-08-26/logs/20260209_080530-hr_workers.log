@@ -1,0 +1,93 @@
+# Unified Verification Trace: hr.workers (V21.7)
+# Timestamp: 2026-02-09T08:05:30
+# Entity: hr.workers
+
+## Phase 1: Blueprint Audit
+- **Classification**: `master`
+- **Form Type**: `dependent`
+- **AI Resolution**: `resolve_parent`
+- **Result**: ✅ ALIGNED (Note: Extends `unified.contacts`)
+
+## Phase 2: Provisioning (Bootstrap)
+### Action: `core.comp_util_ops_bootstrap_entity`
+### Input Payload (SQL):
+```sql
+SELECT core.comp_util_ops_bootstrap_entity('hr', 'workers', NULL, true);
+```
+- **Status**: ✅ SUCCESS
+
+## Phase 3: Form Generation (Minimal)
+### Action: `core.api_new_generate_form_schema`
+### Input Payload (Config):
+```json
+{
+  "entity": "hr.workers",
+  "config": { "mode": "minimal" }
+}
+```
+### Resulting Schema:
+```json
+{
+  "db_schema": { "table": "hr.workers" },
+  "data_schema": {
+    "type": "object",
+    "required": ["contact_type", "details", "name", "status"],
+    "properties": {
+      "name": { "type": "string" },
+      "status": { "type": "string" },
+      "contact_type": { "type": "string" },
+      "details": {
+        "type": "object",
+        "required": ["person", "workerType"],
+        "properties": {
+          "person": { "type": "object" },
+          "workerType": { "enum": ["Employee", "Contractor", "Consultant"], "type": "string" }
+        }
+      }
+    }
+  }
+}
+```
+
+## Phase 4: E2E Upsert (Direct Payload)
+### API: `core.api_new_core_upsert_data`
+### Payload:
+```json
+{
+  "organization_id": "a41b2216-736c-4c00-99ca-30a0cd8ca0d2",
+  "contact_type": "worker",
+  "name": "Worker One",
+  "email": "worker1@example.works",
+  "status": "active",
+  "details": {
+    "workerType": "Employee",
+    "person": {
+      "name": { "given": "Worker", "family": "One" }
+    }
+  }
+}
+```
+- **Record ID**: 7455b549-20e8-47cb-a696-86db6482198d
+- **Status**: ✅ SUCCESS (Fixed: normalized `contact_type` to lowercase)
+
+## Phase 5: Logical Resolution (Fetch)
+### API: `core.api_new_fetch_entity_records`
+### Payload (Config):
+```json
+{
+  "entity_schema": "hr",
+  "entity_name": "workers",
+  "organization_id": "a41b2216-736c-4c00-99ca-30a0cd8ca0d2",
+  "filters": [
+    { "key": "id", "value": "7455b549-20e8-47cb-a696-86db6482198d" }
+  ]
+}
+```
+- **Resolved Fields**:
+  - `name`: Worker One
+  - `details__workerType`: Employee
+  - `details__name__given`: Worker
+- **Status**: ✅ SUCCESS
+
+## Phase 6: Verification Conclusion
+Workers entity verified. Cross-schema extension and virtual field resolution confirmed.

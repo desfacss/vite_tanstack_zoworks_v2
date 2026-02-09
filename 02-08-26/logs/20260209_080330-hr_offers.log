@@ -1,0 +1,103 @@
+# Unified Verification Trace: hr.offers (V21.7)
+# Timestamp: 2026-02-09T08:03:30
+# Entity: hr.offers
+
+## Phase 1: Blueprint Audit
+- **Classification**: `master`
+- **Form Type**: `dependent`
+- **AI Resolution**: `resolve_parent`
+- **Result**: ✅ ALIGNED
+
+## Phase 2: Provisioning (Bootstrap)
+### Action: `core.comp_util_ops_bootstrap_entity`
+### Input Payload (SQL):
+```sql
+SELECT core.comp_util_ops_bootstrap_entity('hr', 'offers', NULL, true);
+```
+- **Status**: ✅ SUCCESS
+
+## Phase 3: Form Generation (Minimal)
+### Action: `core.api_new_generate_form_schema`
+### Input Payload (Config):
+```json
+{
+  "entity": "hr.offers",
+  "config": { "mode": "minimal" }
+}
+```
+### Resulting Schema:
+```json
+{
+  "db_schema": { "table": "hr.offers" },
+  "data_schema": {
+    "type": "object",
+    "required": ["details"],
+    "properties": {
+      "details": {
+        "type": "object",
+        "required": ["offerStatus", "remunerationPackage"],
+        "properties": {
+          "offerStatus": { "type": "string" },
+          "startDate": { "type": "string" },
+          "remunerationPackage": {
+            "type": "object",
+            "required": ["basePay"],
+            "properties": {
+              "basePay": {
+                "type": "object",
+                "required": ["amount", "currencyCode"],
+                "properties": { "amount": { "type": "number" }, "currencyCode": { "type": "string" } }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+## Phase 4: E2E Upsert (Direct Payload)
+### API: `core.api_new_core_upsert_data`
+### Payload:
+```json
+{
+  "organization_id": "a41b2216-736c-4c00-99ca-30a0cd8ca0d2",
+  "candidate_id": "24beccb8-6bde-4d87-80c9-e5c113dbe853",
+  "details": {
+    "offerStatus": "sent",
+    "startDate": "2026-03-01",
+    "remunerationPackage": {
+      "basePay": {
+        "amount": 150000,
+        "currencyCode": "USD"
+      }
+    }
+  }
+}
+```
+- **Record ID**: cac8433d-be89-4c1b-8871-48445dd14301
+- **Status**: ✅ SUCCESS
+
+## Phase 5: Logical Resolution (Fetch)
+### API: `core.api_new_fetch_entity_records`
+### Payload (Config):
+```json
+{
+  "entity_schema": "hr",
+  "entity_name": "offers",
+  "organization_id": "a41b2216-736c-4c00-99ca-30a0cd8ca0d2",
+  "filters": [
+    { "key": "id", "value": "cac8433d-be89-4c1b-8871-48445dd14301" }
+  ]
+}
+```
+- **Resolved Fields**:
+  - `status`: sent
+  - `details__offerStatus`: sent
+  - `base_salary`: 150000
+  - `display_id`: OFFER-00009
+- **Status**: ✅ SUCCESS
+
+## Phase 6: Verification Conclusion
+Offers entity verified. Nesting and virtual field resolution for financial data (`base_salary`) are confirmed working with high fidelity.

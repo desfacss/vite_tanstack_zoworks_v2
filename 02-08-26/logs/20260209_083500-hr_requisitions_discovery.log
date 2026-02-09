@@ -1,0 +1,55 @@
+# HR Verification Trace: hr.requisitions (DISCOVERY)
+# Timestamp: 2026-02-09 08:35:00
+# Tenant: a41b2216-736c-4c00-99ca-30a0cd8ca0d2 (VKBS)
+
+## Phase 3: Form Generation (UI Schema)
+**Mode**: minimal
+**Result**:
+```json
+ {
+     "db_schema": { "table": "hr.requisitions" },
+     "ui_schema": {
+         "details": { "ui:options": { "colSpan": 12 }, "ui:placeholder": "Enter Details" },
+         "ui:order": [ "details" ]
+     },
+     "data_schema": {
+         "type": "object",
+         "title": "Job Requisitions",
+         "required": [ "details" ],
+         "properties": {
+             "details": {
+                 "type": "object",
+                 "required": [ "status", "positionProfile" ],
+                 "properties": {
+                     "status": { "type": "string" },
+                     "positionProfile": {
+                         "type": "object",
+                         "required": [ "department", "positionTitle" ],
+                         "properties": {
+                             "department": { "type": "string" },
+                             "positionTitle": { "type": "string" }
+                         }
+                     }
+                 }
+             }
+         }
+     }
+ }
+```
+
+## Phase 5: Fetch Resolution (Discovery)
+**Query**: Find Engineering Roles
+**Match Count**: 3
+**Sample Record**:
+```json
+{
+    "display_id": "REQ-2026-001",
+    "title": "Senior Software Engineer",
+    "details__positionProfile__department": "Engineering",
+    "details__positionProfile__positionTitle": "Senior Software Engineer (FILLED)",
+    "organization_display": "VKBS"
+}
+```
+
+## Verification Status: SUCCESS
+Requisitions discovery via flattened `details__` paths is operational and accurate.

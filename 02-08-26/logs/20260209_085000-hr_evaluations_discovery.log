@@ -1,0 +1,30 @@
+# HR Verification Trace: hr.screenings & hr.offers (DISCOVERY)
+# Timestamp: 2026-02-09 08:50:00
+# Tenant: a41b2216-736c-4c00-99ca-30a0cd8ca0d2 (VKBS)
+
+## Screenings Discovery
+**Query**: Find Screenings by status (pending)
+**Result**:
+```json
+{
+    "id": "5250bd48-9482-432f-9814-33b82c9a00d1",
+    "display_id": "SCR-2026-001",
+    "status": "pending",
+    "details__orderStatus": "pending"
+}
+```
+
+## Offers Discovery
+**Query**: Find Offers by base salary (120,000)
+**Result**:
+```json
+{
+    "id": "3cb69fca-0827-499b-b7ac-8bfeaab03570",
+    "display_id": "OFF-2026-001",
+    "base_salary": 120000,
+    "details__offerStatus": "extended"
+}
+```
+
+## Verification Status: SUCCESS
+Evaluation sub-domains correctly resolve nested relational and financial data.

@@ -1,0 +1,60 @@
+# Unified Verification Trace: hr.screenings (V21.7)
+# Timestamp: 2026-02-09T08:35:30
+# Entity: hr.screenings
+
+## Phase 1: Blueprint Audit
+- **Classification**: `master`
+- **Form Type**: `dependent`
+- **AI Resolution**: `resolve_parent`
+- **Result**: ✅ ALIGNED
+
+## Phase 2: Provisioning (Bootstrap)
+### Action: `core.comp_util_ops_bootstrap_entity`
+- **Status**: ✅ SUCCESS
+
+## Phase 3: Form Generation (Minimal)
+### Action: `core.api_new_generate_form_schema`
+### Resulting Schema:
+```json
+{
+  "db_schema": { "table": "hr.screenings" },
+  "data_schema": {
+    "type": "object",
+    "required": ["details"],
+    "properties": {
+      "details": {
+        "type": "object",
+        "required": ["orderStatus"],
+        "properties": {
+          "orderStatus": { "type": "string" }
+        }
+      }
+    }
+  }
+}
+```
+
+## Phase 4: E2E Upsert (Direct Payload)
+### API: `core.api_new_core_upsert_data`
+### Payload:
+```json
+{
+  "organization_id": "a41b2216-736c-4c00-99ca-30a0cd8ca0d2",
+  "display_id": "SCR-2026-001",
+  "details": {
+    "orderStatus": "pending"
+  }
+}
+```
+- **Record ID**: 5250bd48-9482-432f-9814-33b82c9a00d1
+- **Status**: ✅ SUCCESS
+
+## Phase 5: Logical Resolution (Fetch)
+### API: `core.api_new_fetch_entity_records`
+- **Resolved Fields**:
+  - `status`: pending
+  - `details__orderStatus`: pending
+- **Status**: ✅ SUCCESS
+
+## Phase 6: Verification Conclusion
+Screenings entity verified. Sequence of recruitment lifecycle (Requisitions -> Assessments -> Screenings) confirms consistent logical projection across nested JSONB schemas.

@@ -1,0 +1,69 @@
+# Unified Verification Trace: hr.contractors (V21.7)
+# Timestamp: 2026-02-09T08:20:30
+# Entity: hr.contractors
+
+## Phase 1: Blueprint Audit
+- **Classification**: `master` (Extension of `workers`)
+- **Form Type**: `dependent`
+- **AI Resolution**: `resolve_parent`
+- **Result**: ✅ ALIGNED
+
+## Phase 2: Provisioning (Bootstrap)
+### Action: `core.comp_util_ops_bootstrap_entity`
+- **Status**: ✅ SUCCESS (Followed by logical layer hotfix to restore standardized views/triggers)
+
+## Phase 3: Form Generation (Minimal)
+### Action: `core.api_new_generate_form_schema`
+### Resulting Schema:
+```json
+{
+  "db_schema": { "table": "hr.contractors" },
+  "data_schema": {
+    "type": "object",
+    "required": ["display_id", "name", "status", "user_id"],
+    "properties": {
+      "name": { "type": "string" },
+      "status": { "type": "string" },
+      "user_id": { "type": "string" },
+      "display_id": { "type": "string" }
+    }
+  }
+}
+```
+
+## Phase 4: E2E Upsert (Direct Payload)
+### API: `core.api_new_core_upsert_data`
+### Payload:
+```json
+{
+  "organization_id": "a41b2216-736c-4c00-99ca-30a0cd8ca0d2",
+  "contact_type": "worker",
+  "persona_type": "contractor",
+  "name": "Contractor One",
+  "email": "contractor1@example.works",
+  "status": "active",
+  "user_id": "c445f5c3-a8c0-4b36-953a-494703e27b13",
+  "display_id": "UNI-CON-2",
+  "details": {
+    "workerType": "Contractor",
+    "person": {
+      "name": { "given": "Contractor", "family": "One" }
+    }
+  }
+}
+```
+- **Record ID**: dac25801-e348-4435-8f2a-9ffe3ee71d2b
+- **Status**: ✅ SUCCESS
+
+## Phase 5: Logical Resolution (Fetch)
+### API: `core.api_new_fetch_entity_records`
+- **Resolved Fields**:
+  - `name`: Contractor One
+  - `persona_type`: contractor
+  - `contact_type`: worker
+  - `user_id`: c445f5c3-a8c0-4b36-953a-494703e27b13
+  - `hr_details`: {"person": {"name": {"family": "One", "given": "Contractor"}}, "workerType": "Contractor"}
+- **Status**: ✅ SUCCESS
+
+## Phase 6: Verification Conclusion
+Contractors entity verified. Automated bootstrapping regression handled via immediate re-standardization of logical layer.
