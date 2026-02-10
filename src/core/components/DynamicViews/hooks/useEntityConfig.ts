@@ -18,11 +18,11 @@ interface ViewConfig {
   tableview: Record<string, any>;
   gridview: Record<string, any>;
   kanbanview: Record<string, any>;
-  detailview: Record<string, any>;
+  details_overview: Record<string, any>;
   calendarview: Record<string, any>;
   ganttview: Record<string, any>;
   mapview: Record<string, any>;
-  details_overview: Record<string, any>;
+  detailview: Record<string, any>;
   metricsview?: Record<string, any> | null;
   dashboardview?: Record<string, any> | null;
   metadata?: any[] | null;

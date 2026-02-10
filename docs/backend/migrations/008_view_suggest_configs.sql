@@ -105,7 +105,7 @@ BEGIN
     
     -- DetailView (always generated)
     v_detailview := core.view_int_suggest_detailview(v_entity_metadata);
-    v_available_views := array_append(v_available_views, 'detailview');
+    v_available_views := array_append(v_available_views, 'details_overview');
     
     -- KanbanView (conditional - needs stage_id or blueprint)
     v_kanbanview := core.view_int_suggest_kanbanview(v_entity_metadata, v_entity.entity_type, v_entity.entity_schema);
@@ -162,7 +162,7 @@ BEGIN
         'tableview', v_tableview,
         'gridview', v_gridview,
         'kanbanview', v_kanbanview,
-        'detailview', v_detailview,
+        'details_overview', v_detailview,
         'calendarview', v_calendarview,
         'ganttview', NULL,  -- Not implemented yet
         'mapview', v_mapview,
@@ -259,7 +259,7 @@ BEGIN
         ASSERT v_result->'general' IS NOT NULL, 'Should have general config';
         ASSERT v_result->'tableview' IS NOT NULL, 'Should have tableview';
         ASSERT v_result->'gridview' IS NOT NULL, 'Should have gridview';
-        ASSERT v_result->'detailview' IS NOT NULL, 'Should have detailview';
+        ASSERT v_result->'details_overview' IS NOT NULL, 'Should have detailview';
         ASSERT (v_result->'_meta'->>'is_dry_run')::BOOLEAN = TRUE, 'Should be marked as dry run';
         
         RAISE NOTICE '✅ Test 1 PASSED: Dry run execution';

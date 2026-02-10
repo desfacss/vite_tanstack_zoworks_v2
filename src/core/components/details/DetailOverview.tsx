@@ -290,7 +290,7 @@ const DetailOverview: React.FC<DetailOverviewProps> = ({
   }, [editable, saveConfig]);
 
   const [templateData, setTemplateData] = useState<any>(null);
-  const templateName = viewConfig?.details_overview?.template;
+  const templateName = viewConfig?.detailview?.template;
 
   useEffect(() => {
     const fetchTemplate = async () => {
@@ -563,7 +563,7 @@ const DetailOverview: React.FC<DetailOverviewProps> = ({
   };
 
   const renderActions = () => {
-    const actions = viewConfig?.details_overview?.actions || [];
+    const actions = viewConfig?.detailview?.actions || [];
     const currentData = fetchedData || data;
     const allActions = [
       ...actions.map((action: ActionConfig) => (
@@ -609,7 +609,7 @@ const DetailOverview: React.FC<DetailOverviewProps> = ({
     <span>{cardTitleText}</span>
   ) : null;
 
-  const sortedGroups = viewConfig?.details_overview?.groups?.sort(
+  const sortedGroups = viewConfig?.detailview?.groups?.sort(
     (a: GroupConfig, b: GroupConfig) => (a.order || 0) - (b.order || 0),
   );
 
@@ -621,9 +621,9 @@ const DetailOverview: React.FC<DetailOverviewProps> = ({
       <Suspense fallback={<Spin />}>
         <DocView
           data={fetchedData}
-          templateSettings={viewConfig.detailview.print_template.settings}
-          templateStyles={viewConfig.detailview.print_template.styles}
-          templateConfig={viewConfig.detailview.print_template.config}
+          templateSettings={viewConfig.details_overview.print_template.settings}
+          templateStyles={viewConfig.details_overview.print_template.styles}
+          templateConfig={viewConfig.details_overview.print_template.config}
           _viewConfig={viewConfig}
         />
       </Suspense>
@@ -680,9 +680,9 @@ const DetailOverview: React.FC<DetailOverviewProps> = ({
           />
         </Suspense>
       )}
-      {viewConfig?.details_overview?.component && (
+      {viewConfig?.detailview?.component && (
         <DetailComponentRenderer
-          componentId={viewConfig.details_overview.component}
+          componentId={viewConfig.detailview.component}
           data={currentData}
         />
       )}
@@ -697,7 +697,7 @@ const DetailOverview: React.FC<DetailOverviewProps> = ({
       )}
       {sortedGroups?.map((group: any, index: number) => (
         <React.Fragment key={group?.name}>
-          {viewConfig?.details_overview?.dividers?.includes(group?.name) && index > 0 && (
+          {viewConfig?.detailview?.dividers?.includes(group?.name) && index > 0 && (
             <Divider />
           )}
           {/* Note: renderGroup is now called without the skipFirstField logic */}
@@ -705,7 +705,7 @@ const DetailOverview: React.FC<DetailOverviewProps> = ({
         </React.Fragment>
       ))}
       {!editable &&
-        viewConfig?.details_overview?.actions &&
+        viewConfig?.detailview?.actions &&
         viewConfig?.entity_type === 'users' && (
           <>
             <Divider />

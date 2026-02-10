@@ -44,7 +44,7 @@ const ClientDetails: React.FC<ClientDetailsProps> = ({ editItem }) => {
     const [error, setError] = useState<string | null>(null);
 
     const viewConfig = {
-        details_overview: {
+        detailview: {
             groups: [
                 {
                     name: "Client Details",

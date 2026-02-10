@@ -129,7 +129,7 @@ export async function register(
   });
 
   // 6. Register Detail Components (for DetailOverview)
-  // These are used when viewConfig.details_overview.component matches the id
+  // These are used when viewConfig.detailview.component matches the id
   registry.registerDetailComponent({
     id: 'expense_sheet',
     component: () => import('./components/Expensesheet'),

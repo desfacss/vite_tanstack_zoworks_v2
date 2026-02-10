@@ -34,8 +34,8 @@ const DetailsView: React.FC<DetailsViewProps> = ({
 
   const getDefaultTabKey = () => {
     const allTabs = [
-      ...(viewConfig?.detailview?.staticTabs || []),
-      ...(viewConfig?.detailview?.dynamicTabs || []),
+      ...(viewConfig?.details_overview?.staticTabs || []),
+      ...(viewConfig?.details_overview?.dynamicTabs || []),
     ];
     if (allTabs.length) {
       const sortedTabs = allTabs.sort((a, b) => Number(a.order) - Number(b.order));
@@ -67,7 +67,7 @@ const DetailsView: React.FC<DetailsViewProps> = ({
 
 
     // Process viewConfig-based static tabs
-    const processedStaticTabs = (viewConfig?.detailview?.staticTabs || [])
+    const processedStaticTabs = (viewConfig?.details_overview?.staticTabs || [])
       .map((tabConfig: any) => {
         const componentInfo = staticComponentMap[tabConfig.tab];
         if (!componentInfo) {
@@ -92,7 +92,7 @@ const DetailsView: React.FC<DetailsViewProps> = ({
       .filter(Boolean as any);
 
     // Process viewConfig-based dynamic tabs
-    const processedDynamicTabs = (viewConfig?.detailview?.dynamicTabs || []).map((tabConfig: any) => {
+    const processedDynamicTabs = (viewConfig?.details_overview?.dynamicTabs || []).map((tabConfig: any) => {
       const tabProps = tabConfig.props || {};
       const defaultFilters = (tabProps.filters || []).reduce((acc: Record<string, any>, filter: any) => {
         acc[filter.column] = (filter.value in safeEditItem) ? safeEditItem[filter.value] : filter.value;
@@ -110,7 +110,7 @@ const DetailsView: React.FC<DetailsViewProps> = ({
               entitySchema={tabProps.entitySchema}
               defaultFilters={defaultFilters}
               tabOptions={tabProps.tabs || []}
-              detailView={tabConfig.detailView || false}
+              details_overview={tabConfig.details_overview || false}
               parentRecord={editItem}
             // activeTabKey={activeKey} // Removed as it does not exist on DynamicTabProps
             // config={config} // Removed as it does not exist on DynamicTabProps

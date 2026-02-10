@@ -56,7 +56,7 @@ interface DocTemplateSettings {
 interface DocViewProps {
   data: Record<string, any>;
   _viewConfig: {
-    details_overview: {
+    detailview: {
       groups: GroupConfig[];
     };
   };

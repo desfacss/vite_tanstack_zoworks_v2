@@ -52,8 +52,8 @@ interface YViewConfig {
   tableview?: any;
   gridview?: any;
   kanbanview?: any;
-  detailview?: any;
   details_overview?: any;
+  detailview?: any;
   [key: string]: any;
 }
 
@@ -331,8 +331,8 @@ const YViewConfigManager: React.FC = () => {
                 tableview: viewConfig?.tableview || {},
                 gridview: viewConfig?.gridview || {},
                 kanbanview: viewConfig?.kanbanview || {},
-                detailview: viewConfig?.detailview || {},
                 details_overview: viewConfig?.details_overview || {},
+                detailview: viewConfig?.detailview || {},
                 // Add other views here
                 metricsview: metricConfig?.metrics?.metrics_config || {},
                 x_stages: metricConfig?.metrics?.stages_config || {},
@@ -551,17 +551,17 @@ const YViewConfigManager: React.FC = () => {
       />
     );
   }
-  if (viewName === 'detailview') {
+  if (viewName === 'details_overview') {
     return (
       <ConfigEditor
-        detailView={selectedConfig?.detailview}
+        detailView={selectedConfig?.details_overview}
         entityType={selectedConfig?.entity_type}
         onSave={(updatedData) => handleSave(viewName, updatedData)}
         entitySchema={selectedSchema} // Pass entity_schema
       />
     );
   }
-  if (viewName === 'details_overview') {
+  if (viewName === 'detailview') {
     return (
       <DetailsOverviewConfig
         configData={formData}
@@ -697,8 +697,8 @@ const YViewConfigManager: React.FC = () => {
         tableview: {},
         gridview: {},
         kanbanview: {},
-        detailview: {},
         details_overview: {},
+        detailview: {},
       }], { onConflict: 'entity_id' });
       
       await supabase.schema('core').from('metrics').upsert([{
@@ -854,14 +854,14 @@ const YViewConfigManager: React.FC = () => {
               ),
             },
             {
-              key: 'detailview',
+              key: 'details_overview',
               label: 'Detail View',
-              children: renderTabContent('detailview'),
+              children: renderTabContent('details_overview'),
             },
             {
-              key: 'details_overview',
+              key: 'detailview',
               label: 'Details Overview',
-              children: renderTabContent('details_overview'),
+              children: renderTabContent('detailview'),
             },
             {
               key: 'form_builder',

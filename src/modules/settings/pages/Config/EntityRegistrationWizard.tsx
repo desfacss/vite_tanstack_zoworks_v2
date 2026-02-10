@@ -307,8 +307,8 @@ const EntityRegistrationWizard: React.FC<EntityRegistrationWizardProps> = ({
             tableview: {},
             gridview: {},
             kanbanview: {},
-            detailview: {},
             details_overview: {},
+            detailview: {},
           }]);
         
         if (viewConfigError) {

@@ -17,7 +17,7 @@
 // //   editItem,
 // //   fetchFilters,
 // //   tabs,
-// //   detailView
+// //   details_overview
 // // }) => {
 // //   console.log('ddd2',fetchFilters);
 
@@ -32,7 +32,7 @@
 // //        tabOptions={fetchFilters}
 // //       //  defaultFilters={fetchFilters}
 // //       //  tabs={tabs} 
-// //       detailView={detailView}
+// //       details_overview={details_overview}
 // //       />
 // //     </div>
 // //   );
@@ -50,7 +50,7 @@
 // interface DynamicTabProps {
 //   entityType: string;
 //   entitySchema?: string;
-//   detailView?: boolean;
+//   details_overview?: boolean;
 //   defaultFilters?: Record<string, any>;
 //   tabOptions?: any[];
 // }
@@ -88,7 +88,7 @@ interface DynamicTabProps {
   entitySchema?: string;
 
   /** A flag to indicate if the view is part of a larger detail page. Optional. */
-  detailView?: boolean;
+  details_overview?: boolean;
 
   /** Default filters to apply to the view's data query. Optional. */
   defaultFilters?: Record<string, any>;

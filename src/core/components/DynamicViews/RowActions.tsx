@@ -396,7 +396,7 @@ const RowActions: React.FC<RowActionsProps> = ({
       if (a.name === 'Delete') return hasAccess('delete');
       if (a.name === 'Clone') return hasAccess('edit');
       if (a.name === 'Details' || a.name === 'View') {
-        return contextStack.length < 2 && hasAccess('details') && (viewConfig?.detailview || viewConfig?.detail_view);
+        return contextStack.length < 2 && hasAccess('details') && (viewConfig?.details_overview || viewConfig?.detail_view);
       }
       return false;
     });

@@ -43,7 +43,7 @@ const VIEW_ICONS: Record<string, React.ReactNode> = {
   tableview: <TableOutlined />,
   gridview: <AppstoreOutlined />,
   kanbanview: <ProjectOutlined />,
-  detailview: <UnorderedListOutlined />,
+  details_overview: <UnorderedListOutlined />,
   calendarview: <CalendarOutlined />,
   mapview: <EnvironmentOutlined />,
   metricsview: <BarChartOutlined />,
@@ -53,7 +53,7 @@ const VIEW_LABELS: Record<string, string> = {
   tableview: 'Table View',
   gridview: 'Grid View',
   kanbanview: 'Kanban View',
-  detailview: 'Detail View',
+  details_overview: 'Detail View',
   calendarview: 'Calendar View',
   mapview: 'Map View',
   metricsview: 'Metrics View',
@@ -159,7 +159,7 @@ const ViewSuggestionModal: React.FC<ViewSuggestionModalProps> = ({
 
   // Render DetailView Preview
   const renderDetailViewPreview = () => {
-    const config = suggestedConfigs?.detailview;
+    const config = suggestedConfigs?.details_overview;
     if (!config) return <Empty description="DetailView not generated" />;
 
     const groups = config.groups || [];
@@ -316,7 +316,7 @@ const ViewSuggestionModal: React.FC<ViewSuggestionModalProps> = ({
         return renderTableViewPreview();
       case 'gridview':
         return renderGridViewPreview();
-      case 'detailview':
+      case 'details_overview':
         return renderDetailViewPreview();
       case 'kanbanview':
         return renderKanbanViewPreview();

@@ -53,7 +53,7 @@ export interface ViewTypeDefinition {
 /**
  * DetailComponentDefinition - For custom detail view components
  * Used to render specialized views like Expensesheet, Timesheet, etc.
- * Registered by modules and rendered by DetailOverview when viewConfig.details_overview.component matches
+ * Registered by modules and rendered by DetailOverview when viewConfig.detailview.component matches
  */
 export interface DetailComponentDefinition {
     id: string;                    // e.g., 'expense_sheet', 'timesheet'

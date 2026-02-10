@@ -168,7 +168,7 @@ Config-driven entity views (tables, forms, details):
   titleField: 'subject',
   columns: [...],
   formFields: [...],
-  detailview: { staticTabs: [...], dynamicTabs: [...] }
+  details_overview: { staticTabs: [...], dynamicTabs: [...] }
 }
 ```
 

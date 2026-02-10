@@ -72,7 +72,7 @@ const ConfigEditor: React.FC<ConfigEditorProps> = ({ detailView, entityType, ent
         const { data: viewConfigData, error: viewConfigError } = await supabase
           .schema('core')
           .from('view_configs')
-          .select('id, detailview')
+          .select('id, details_overview')
           .eq('entity_id', entityData.id)
           .single();
 
@@ -80,7 +80,7 @@ const ConfigEditor: React.FC<ConfigEditorProps> = ({ detailView, entityType, ent
           throw viewConfigError;
         }
 
-        const currentDetailView = viewConfigData?.detailview || detailView;
+        const currentDetailView = viewConfigData?.details_overview || detailView;
         setViewConfigId(viewConfigData?.id || null);
 
         const normalizedDetailView = {
@@ -140,7 +140,7 @@ const ConfigEditor: React.FC<ConfigEditorProps> = ({ detailView, entityType, ent
       const { error } = await supabase
         .schema('core')
         .from('view_configs')
-        .update({ detailview: updatedDetailView })
+        .update({ details_overview: updatedDetailView })
         .eq('id', viewConfigId)
         .select();
 
