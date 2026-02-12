@@ -79,7 +79,7 @@ export const sendWhatsAppMessage = async (params: SendMessageParams): Promise<Me
 
   // Fetch conversation and contact details
   let convQuery = supabase
-    .from('wa_conversations')
+    .schema('wa').from('wa_conversations')
     .select(`
       id,
       contact_id,
@@ -199,7 +199,7 @@ export const updateConversationStatus = async (
   if (params.assigneeId !== undefined) updateData.assignee_id = params.assigneeId;
 
   let query = supabase
-    .from('wa_conversations')
+    .schema('wa').from('wa_conversations')
     .update(updateData)
     .eq('id', params.conversationId)
     .eq('organization_id', organizationId);

@@ -16,7 +16,7 @@ const fetchContactForConversation = async (conversationId: string): Promise<WaCo
     const { organizationId, locationId } = getAccessScope();
 
     let query = supabase
-        .from('wa_conversations')
+        .schema('wa').from('wa_conversations')
         .select(`
             id,
             contact_id,
@@ -107,7 +107,7 @@ const fetchConversationCount = async (contactId: string): Promise<number> => {
     const { organizationId, locationId } = getAccessScope();
 
     let query = supabase
-        .from('wa_conversations')
+        .schema('wa').from('wa_conversations')
         .select('*', { count: 'exact', head: true })
         .eq('organization_id', organizationId)
         .eq('contact_id', contactId);

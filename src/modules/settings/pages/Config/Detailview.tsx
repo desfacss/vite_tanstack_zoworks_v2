@@ -40,7 +40,7 @@ const ConfigEditor: React.FC<ConfigEditorProps> = ({ detailView, entityType, ent
   const [entityId, setEntityId] = useState<string | null>(null);
   const [viewConfigId, setViewConfigId] = useState<string | null>(null);
   const staticTabOptions = ['Overview', 'Files', 'Notes', 'Comments', 'Status', 'Activities', 'Logs'].sort();
-  const tabViewOptions = ['tableview', 'gridview', 'kanbanview', 'calendarview', 'timelineview', 'ganttview', 'dashboardview'].sort();
+  const tabViewOptions = ['tableview', 'gridview', 'kanbanview', 'calendarview', 'timelineview', 'ganttview', 'dashboardview', 'mapview'].sort();
 
   useEffect(() => {
     async function fetchViewConfig() {

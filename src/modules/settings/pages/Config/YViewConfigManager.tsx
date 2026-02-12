@@ -22,6 +22,7 @@ import FormBuilder from './FormBuilder';
 import StagesConfig from './StagesConfig';
 import GanttViewConfig from './GanttViewConfig';
 import CalendarViewConfig from './CalendarViewConfig';
+import MapViewConfig from './MapViewConfig';
 import ViewSuggestionModal from './ViewSuggestionModal';
 import DisplayIdConfig from './DisplayIdConfig';
 import EntityRegistrationWizard from './EntityRegistrationWizard';
@@ -29,8 +30,6 @@ import BlueprintConfig from './BlueprintConfig';
 import { ThunderboltOutlined, ReloadOutlined, DeleteOutlined, DatabaseOutlined, TableOutlined, PlusOutlined, ExperimentOutlined } from '@ant-design/icons';
 
 const { Sider, Content } = Layout;
-
-
 
 interface YViewConfig {
   id: string;
@@ -90,103 +89,173 @@ const YViewConfigManager: React.FC = () => {
     metrics: boolean;
   }>({ entities: true, view_configs: true, metrics: true });
 
-  const { organization, setOrganization, user, setUser } = useAuthStore();
+  const { organization } = useAuthStore();
 
   // Open the Entity Registration Wizard
   const handleAddNew = () => {
     setWizardVisible(true);
   };
 
-  // Delete entity handlers
-  const handleDeleteEntity = () => {
-    if (!selectedConfig?.id) {
-      message.warning('Please select an entity first');
-      return;
+  const fetchConfigs = async () => {
+    try {
+      // 1. Fetch configs from crm.entities
+      const { data: entityData, error: entityError } = await supabase
+        .schema('core')
+        .from('entities')
+        .select('*')
+        .order('entity_schema', { ascending: true })
+        .order('entity_type', { ascending: true });
+
+      if (entityError) throw entityError;
+
+      // 2. Fetch view_configs
+      const { data: viewData, error: viewError } = await supabase
+        .schema('core')
+        .from('view_configs')
+        .select('*');
+
+      if (viewError) throw viewError;
+
+      // 3. Merge
+      const mergedConfigs = entityData.map(entity => {
+        const viewConfig = viewData.find(v => v.entity_id === entity.id) || {};
+        return {
+          ...entity,
+          ...viewConfig,
+          id: entity.id, // Ensure we use entities.id
+          _needsSetup: !viewConfig.entity_id // Flag for auto-setup logic
+        };
+      });
+
+      setConfigs(mergedConfigs);
+      
+      // Update schema options
+      const schemas = Array.from(new Set(entityData.map(e => e.entity_schema))).filter(Boolean) as string[];
+      setSchemaOptions(schemas);
+
+      // Restore selection if exists
+      if (selectedRow) {
+        const updated = mergedConfigs.find(c => c.id === selectedRow);
+        if (updated) setSelectedConfig(updated);
+      }
+    } catch (error) {
+      console.error('Error fetching configurations:', error);
+      message.error('Failed to fetch configurations');
     }
-    // Reset checkboxes to all selected before opening modal
-    setDeleteFromTables({ entities: true, view_configs: true, metrics: true });
+  };
+
+  const fetchWorkflows = async () => {
+    try {
+      const { data, error } = await supabase
+        .schema('crm')
+        .from('workflows')
+        .select('*');
+      if (error) throw error;
+      setWorkflowConfigurations(data || []);
+    } catch (error) {
+      console.error('Error fetching workflows:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchConfigs();
+    fetchWorkflows();
+  }, []);
+
+  const handleGenerateViews = async () => {
+    if (!selectedConfig) return;
+    setGenerateLoading(true);
+    try {
+      const { data, error } = await supabase.rpc('suggest_view_configs', {
+        p_entity_id: selectedConfig.id
+      });
+      
+      if (error) throw error;
+      
+      setSuggestedConfigs(data);
+      setSuggestionModalVisible(true);
+    } catch (error: any) {
+      console.error('Error generating suggestions:', error);
+      message.error(error.message || 'Failed to generate suggestions');
+    } finally {
+      setGenerateLoading(false);
+    }
+  };
+
+  const handleApplyAllSuggestions = async () => {
+    if (!selectedConfig || !suggestedConfigs) return;
+    try {
+      const { error } = await supabase.schema('core').from('view_configs').update({
+        tableview: suggestedConfigs.tableview,
+        gridview: suggestedConfigs.gridview,
+        kanbanview: suggestedConfigs.kanbanview,
+        details_overview: suggestedConfigs.details_overview,
+        detailview: suggestedConfigs.detailview,
+      }).eq('entity_id', selectedConfig.id);
+
+      if (error) throw error;
+      message.success('All suggested views applied!');
+      setSuggestionModalVisible(false);
+      fetchConfigs();
+    } catch (error) {
+      console.error('Error applying suggestions:', error);
+    }
+  };
+
+  const handleApplySelectedViews = async (selectedViews: string[]) => {
+    if (!selectedConfig || !suggestedConfigs) return;
+    const updatePayload: any = {};
+    selectedViews.forEach(v => {
+      updatePayload[v] = suggestedConfigs[v];
+    });
+
+    try {
+      const { error } = await supabase.schema('core').from('view_configs').update(updatePayload).eq('entity_id', selectedConfig.id);
+      if (error) throw error;
+      message.success(`Applied ${selectedViews.length} views`);
+      setSuggestionModalVisible(false);
+      fetchConfigs();
+    } catch (error) {
+      console.error('Error applying selected views:', error);
+    }
+  };
+
+  const handleDeleteEntity = () => {
     setDeleteModalVisible(true);
   };
 
   const handleDeleteConfirm = async () => {
-    if (!selectedConfig?.id) return;
-    
-    const entityId = selectedConfig.id;
-    const tablesToDelete = Object.entries(deleteFromTables)
-      .filter(([_, selected]) => selected)
-      .map(([table]) => table);
-    
-    if (tablesToDelete.length === 0) {
-      message.warning('Please select at least one table to delete from');
-      return;
-    }
-    
+    if (!selectedConfig) return;
     setDeleteLoading(true);
-    const errors: string[] = [];
-    const successfulDeletes: string[] = [];
-    
     try {
-      // If entities is selected, just delete from entities 
-      // The ON DELETE CASCADE will automatically handle view_configs and metrics
+      const entityId = selectedConfig.id;
+
+      // 1. Delete from view_configs if checked
+      if (deleteFromTables.view_configs) {
+        const { error } = await supabase.schema('core').from('view_configs').delete().eq('entity_id', entityId);
+        if (error) throw error;
+      }
+
+      // 2. Delete from metrics if checked
+      if (deleteFromTables.metrics) {
+        const { error } = await supabase.schema('core').from('metrics').delete().eq('entity_id', entityId);
+        if (error) throw error;
+      }
+
+      // 3. Delete from entities if checked
       if (deleteFromTables.entities) {
-        const { error } = await supabase
-          .schema('core')
-          .from('entities')
-          .delete()
-          .eq('id', entityId);
-        
-        if (error) {
-          errors.push(`entities: ${error.message}`);
-        } else {
-          // CASCADE will handle these automatically
-          successfulDeletes.push('entities');
-          if (deleteFromTables.view_configs) successfulDeletes.push('view_configs (cascade)');
-          if (deleteFromTables.metrics) successfulDeletes.push('metrics (cascade)');
-        }
-      } else {
-        // Only manually delete from child tables if entities is NOT being deleted
-        if (deleteFromTables.view_configs) {
-          const { error } = await supabase
-            .schema('core')
-            .from('view_configs')
-            .delete()
-            .eq('entity_id', entityId);
-          if (error) {
-            errors.push(`view_configs: ${error.message}`);
-          } else {
-            successfulDeletes.push('view_configs');
-          }
-        }
-        
-        if (deleteFromTables.metrics) {
-          const { error } = await supabase
-            .schema('core')
-            .from('metrics')
-            .delete()
-            .eq('entity_id', entityId);
-          if (error) {
-            errors.push(`metrics: ${error.message}`);
-          } else {
-            successfulDeletes.push('metrics');
-          }
-        }
+        const { error } = await supabase.schema('core').from('entities').delete().eq('id', entityId);
+        if (error) throw error;
       }
-      
-      if (errors.length > 0) {
-        message.error(`Deletion errors: ${errors.join(', ')}`);
-      } else {
-        message.success(`Successfully deleted from: ${successfulDeletes.join(', ')}`);
-        // Reset selection
-        setSelectedConfig(null);
-        setSelectedRow(null);
-        setSelectedWorkflowConfiguration(null);
-      }
-      
+
+      message.success('Entity deleted successfully');
       setDeleteModalVisible(false);
-      fetchConfigs(); // Refresh the list
-    } catch (err) {
-      console.error('Error deleting entity:', err);
-      message.error('Failed to delete entity');
+      setSelectedRow(null);
+      setSelectedConfig(null);
+      fetchConfigs();
+    } catch (error: any) {
+      console.error('Error deleting entity:', error);
+      message.error(error.message || 'Failed to delete entity');
     } finally {
       setDeleteLoading(false);
     }
@@ -194,256 +263,15 @@ const YViewConfigManager: React.FC = () => {
 
   const handleDeleteCancel = () => {
     setDeleteModalVisible(false);
-    setDeleteFromTables({ entities: true, view_configs: true, metrics: true });
   };
-
-  // Generate view configurations using RPC
-  const handleGenerateViews = async () => {
-    if (!selectedConfig?.id) {
-      message.warning('Please select an entity first');
-      return;
-    }
-    
-    setGenerateLoading(true);
-    try {
-      const { data, error } = await supabase.schema('core').rpc('view_suggest_configs', {
-        p_entity_id: selectedConfig.id,
-        p_dry_run: true
-      });
-      
-      if (error) {
-        console.error('Generate views error:', error);
-        message.error(`Failed to generate views: ${error.message}`);
-        return;
-      }
-      
-      console.log('Generated configs:', data);
-      setSuggestedConfigs(data);
-      setSuggestionModalVisible(true);
-    } catch (err: any) {
-      console.error('Generate views exception:', err);
-      message.error('Failed to generate view configurations');
-    } finally {
-      setGenerateLoading(false);
-    }
-  };
-
-  // Apply all generated configs (persist to database)
-  const handleApplyAllSuggestions = async () => {
-    if (!selectedConfig?.id) return;
-    
-    setGenerateLoading(true);
-    try {
-      const { data, error } = await supabase.schema('core').rpc('view_suggest_configs', {
-        p_entity_id: selectedConfig.id,
-        p_dry_run: false
-      });
-      
-      if (error) {
-        message.error(`Failed to apply views: ${error.message}`);
-        return;
-      }
-      
-      message.success('View configurations applied successfully!');
-      setSuggestionModalVisible(false);
-      setSuggestedConfigs(null);
-      fetchConfigs(); // Refresh to show new configs
-    } catch (err: any) {
-      message.error('Failed to apply view configurations');
-    } finally {
-      setGenerateLoading(false);
-    }
-  };
-
-  // Apply selected views only
-  const handleApplySelectedViews = async (selectedViews: string[]) => {
-    if (!selectedConfig?.id || selectedViews.length === 0) {
-      message.warning('Please select at least one view to apply');
-      return;
-    }
-    
-    try {
-      // Build update object from selected views
-      const updateData: Record<string, any> = {};
-      selectedViews.forEach((viewName) => {
-        if (suggestedConfigs?.[viewName]) {
-          updateData[viewName] = suggestedConfigs[viewName];
-        }
-      });
-      
-      // Also update general if applying views
-      if (suggestedConfigs?.general) {
-        updateData.general = suggestedConfigs.general;
-      }
-      
-      const { error } = await supabase
-        .schema('core')
-        .from('view_configs')
-        .update(updateData)
-        .eq('entity_id', selectedConfig.id);
-      
-      if (error) {
-        message.error(`Failed to apply selected views: ${error.message}`);
-        return;
-      }
-      
-      message.success(`Applied ${selectedViews.length} view configuration(s)`);
-      setSuggestionModalVisible(false);
-      setSuggestedConfigs(null);
-      fetchConfigs();
-    } catch (err: any) {
-      message.error('Failed to apply selected views');
-    }
-  };
-
-  const fetchConfigs = async () => {
-    try {
-        const { data: entities, error: entitiesError } = await supabase.schema('core').from('entities').select('*');
-        if (entitiesError) throw entitiesError;
-
-        const { data: viewConfigs, error: viewConfigsError } = await supabase.schema('core').from('view_configs').select('*');
-        if (viewConfigsError) throw viewConfigsError;
-
-        const { data: metrics, error: metricsError } = await supabase.schema('core').from('metrics').select('*');
-        if (metricsError) throw metricsError;
-
-        // Create a map for quick lookups
-        const viewConfigMap = new Map(viewConfigs.map(item => [item.entity_id, item]));
-        const metricsMap = new Map(metrics.map(item => [item.entity_id, item]));
-
-        // Consolidate the data into the old YViewConfig structure
-        const consolidatedData = entities.map(entity => {
-            const viewConfig = viewConfigMap.get(entity.id);
-            const metricConfig = metricsMap.get(entity.id);
-
-            // Manually recreate the old structure (include entities even without view_configs)
-            return {
-                id: entity.id, // Use the new entity ID
-                entity_type: entity.entity_type,
-                entity_schema: entity.entity_schema,
-                // NEW: Logical-First entity fields
-                base_source_name: entity.base_source_name || null,
-                is_logical_variant: entity.is_logical_variant || false,
-                rules: entity.rules || null,
-                // Flag to indicate if this entity needs view_configs/metrics setup
-                _needsSetup: !viewConfig,
-                // Map fields from new tables to old YViewConfig structure (use defaults if missing)
-                tableview: viewConfig?.tableview || {},
-                gridview: viewConfig?.gridview || {},
-                kanbanview: viewConfig?.kanbanview || {},
-                details_overview: viewConfig?.details_overview || {},
-                detailview: viewConfig?.detailview || {},
-                // Add other views here
-                metricsview: metricConfig?.metrics?.metrics_config || {},
-                x_stages: metricConfig?.metrics?.stages_config || {},
-                ...(viewConfig?.general || {}), // Unpack the 'general' JSONB column
-                metadata: entity.metadata,
-                v_metadata: entity.v_metadata,
-                display_format: entity.display_format,
-                max_counter: entity.max_counter,
-                details: entity.semantics?.details,
-                // ... other fields as needed
-            };
-        }).sort((a, b) => a.entity_type.localeCompare(b.entity_type)); 
-        console.log("cd", consolidatedData);
-        setConfigs(consolidatedData);
-        const uniqueSchemas = [...new Set(entities.map(item => item.entity_schema).filter(Boolean))].sort();
-        setSchemaOptions(uniqueSchemas);
-
-        if (selectedConfig) {
-            setSelectedConfig(consolidatedData.find(item => item.id === selectedConfig.id) || null);
-        }
-    } catch (error) {
-        message.error(`Failed to fetch configurations: ${error.message}`);
-    }
-};
-
-  const fetchWorkflowConfigurations = async () => {
-    const { data, error } = await supabase.from('workflow_configurations').select('*');
-    if (error) {
-      // message.error(error?.message || 'Failed to fetch Workflow Configurations');
-    } else {
-      console.log('WC', data);
-      setWorkflowConfigurations(data);
-    }
-  };
-
-  useEffect(() => {
-    fetchConfigs();
-    fetchWorkflowConfigurations();
-  }, []);
-
-  // useEffect(() => {
-  //   const fetchTables = async () => {
-  //     const { data, error } = await supabase.rpc('get_public_tables');
-  //     if (error) {
-  //       message.error('Failed to fetch table names');
-  //     } else {
-  //       setDropdownOptions(data);
-  //     }
-  //   };
-  //   fetchTables();
-  // }, []);
-
-  // useEffect(() => {
-  //   const fetchColumns = async (tableName: string) => {
-  //     try {
-  //       if (!tableName) {
-  //         console.warn('No table name provided.');
-  //         return;
-  //       }
-  //       console.log('Fetching columns for table:', tableName);
-  //       const { data, error } = await supabase.rpc('get_table_columns', { tablename: tableName });
-  //       if (error) {
-  //         console.error('Error Fetching Columns:', error);
-  //         message.error(`Failed to fetch columns for ${tableName}`);
-  //         throw error;
-  //       }
-  //       console.log('Fetched Columns:', data);
-  //       setAvailableColumns(data || []);
-  //     } catch (err) {
-  //       console.error('Error Fetching Columns:', err);
-  //       message.error('Failed to fetch table columns');
-  //     }
-  //   };
-  //   fetchColumns(selectedConfig.entity_type);
-  // } else {
-  //     console.warn('No Entity Type found in selectedConfig');
-  //   }
-  // }, [selectedConfig]);
-
-  useEffect(() => {
-    handleFetchTable();
-  }, [selectedRow]);
-
-  useEffect(() => {
-    console.log('Selected config t:', selectedConfig?.metadata);
-  }, [selectedConfig]);
 
   const handleSave = async (viewName: string, formData: any) => {
+    if (!selectedConfig) return;
+    const entityId = selectedConfig.id;
+
     try {
-        if (!selectedConfig?.id) {
-            message.error('No configuration selected for saving.');
-            return;
-        }
-
-        const entityId = selectedConfig.id;
         let updatePromise;
-
-        // Handle updates for different views
         switch (viewName) {
-            case 'metadata':
-            case 'metadatav':
-                updatePromise = supabase.schema('core').from('entities')
-                    .update({ [viewName]: formData })
-                    .eq('id', entityId);
-                break;
-            case 'stages':
-                // stages is now part of the metrics JSONB column
-                updatePromise = supabase.schema('core').from('metrics')
-                    .update({ metrics: { stages_config: formData } })
-                    .eq('entity_id', entityId);
-                break;
             case 'viewConfig':
             case 'global_access':
                 // 'viewConfig' and 'global_access' update the 'general' JSONB column
@@ -475,13 +303,7 @@ const YViewConfigManager: React.FC = () => {
     }
 };
 
-  const handleEdit = (config: YViewConfig) => {
-    setSelectedConfig(config);
-    setActiveTab('tableview');
-  };
-
   const renderTabContent = (viewName: string) => {
-  console.log("cz", selectedConfig);
   const schema: RJSFSchema = selectedConfig?.master_data_schema || {};
   const uiSchema = selectedConfig?.ui_schema || {};
   const formData = selectedConfig?.[viewName] || {};
@@ -498,7 +320,8 @@ const YViewConfigManager: React.FC = () => {
         configData={formData}
         onSave={(updatedData) => handleSave(viewName, updatedData)}
         metadata={selectedConfig?.metadata}
-        entitySchema={selectedSchema} // Pass entity_schema
+        entitySchema={selectedSchema || undefined} // Pass entity_schema
+        availableColumns={data}
       />
     );
   }
@@ -507,7 +330,7 @@ const YViewConfigManager: React.FC = () => {
       <ViewConfigEditor
         entityType={selectedConfig?.entity_type}
         metadata={selectedConfig?.metadata}
-        entitySchema={selectedSchema} // Pass entity_schema
+        entitySchema={selectedSchema || undefined} // Pass entity_schema
       />
     );
   }
@@ -517,7 +340,7 @@ const YViewConfigManager: React.FC = () => {
         configData={formData}
         onSave={(updatedData) => handleSave(viewName, updatedData)}
         metadata={selectedConfig?.metadata}
-        entitySchema={selectedSchema} // Pass entity_schema
+        availableColumns={data}
       />
     );
   }
@@ -527,7 +350,7 @@ const YViewConfigManager: React.FC = () => {
         configData={formData}
         onSave={(updatedData) => handleSave(viewName, updatedData)}
         metadata={selectedConfig?.metadata}
-        entitySchema={selectedSchema} // Pass entity_schema
+        availableColumns={data}
       />
     );
   }
@@ -537,7 +360,7 @@ const YViewConfigManager: React.FC = () => {
         configData={formData}
         onSave={(updatedData) => handleSave(viewName, updatedData)}
         metadata={selectedConfig?.metadata}
-        entitySchema={selectedSchema} // Pass entity_schema
+        availableColumns={data}
       />
     );
   }
@@ -547,7 +370,17 @@ const YViewConfigManager: React.FC = () => {
         configData={formData}
         onSave={(updatedData) => handleSave(viewName, updatedData)}
         metadata={selectedConfig?.metadata}
-        entitySchema={selectedSchema} // Pass entity_schema
+        availableColumns={data}
+      />
+    );
+  }
+  if (viewName === 'mapview') {
+    return (
+      <MapViewConfig
+        configData={formData}
+        onSave={(updatedData) => handleSave(viewName, updatedData)}
+        metadata={selectedConfig?.metadata}
+        entityType={selectedConfig?.entity_type}
       />
     );
   }
@@ -555,9 +388,9 @@ const YViewConfigManager: React.FC = () => {
     return (
       <ConfigEditor
         detailView={selectedConfig?.details_overview}
-        entityType={selectedConfig?.entity_type}
+        entityType={selectedConfig?.entity_type || ''}
         onSave={(updatedData) => handleSave(viewName, updatedData)}
-        entitySchema={selectedSchema} // Pass entity_schema
+        entitySchema={selectedSchema || undefined} // Pass entity_schema
       />
     );
   }
@@ -567,7 +400,7 @@ const YViewConfigManager: React.FC = () => {
         configData={formData}
         onSave={(updatedData) => handleSave(viewName, updatedData)}
         metadata={selectedConfig?.metadata}
-        entitySchema={selectedSchema} // Pass entity_schema
+        availableColumns={data}
       />
     );
   }
@@ -587,7 +420,7 @@ const YViewConfigManager: React.FC = () => {
         }}
         onSave={(updatedData) => handleSave('global_access', updatedData)}
         entityType={selectedConfig?.entity_type}
-        entitySchema={selectedSchema} // Pass entity_schema
+        availableColumns={data.map(d => d.columnname)}
       />
     );
   }
@@ -823,7 +656,7 @@ const YViewConfigManager: React.FC = () => {
               children: (
                 <Metadata
                   entityType={selectedConfig?.entity_type}
-                  entitySchema={selectedSchema}
+                  entitySchema={selectedSchema || undefined}
                   entityMetadata={selectedConfig?.metadata || []}
                   fetchConfigs={fetchConfigs}
                   // NEW: Logical variant awareness
@@ -891,6 +724,11 @@ const YViewConfigManager: React.FC = () => {
               children: renderTabContent('calendarview'),
             },
             {
+              key: 'mapview',
+              label: 'Map View',
+              children: renderTabContent('mapview'),
+            },
+            {
               key: 'organizationProfile',
               label: 'Profile Config',
               children: <OrganizationProfileSettings />,
@@ -910,8 +748,8 @@ const YViewConfigManager: React.FC = () => {
               label: 'Workflow Config',
               children: (
                 <WorkflowConfigEditor
-                  workflowConfiguration={selectedWorkflowConfiguration}
-                  entityType={selectedConfig?.entity_type}
+                  entityType={selectedConfig?.entity_type || ''}
+                  organizationId={organization?.id || ''}
                 />
               ),
             },
@@ -927,7 +765,7 @@ const YViewConfigManager: React.FC = () => {
                 <DisplayIdConfig
                   entityType={selectedConfig?.entity_type || ''}
                   entitySchema={selectedSchema || ''}
-                  organizationId={organization?.id}
+                  organizationId={organization?.id || ''}
                 />
               ),
             },

@@ -36,7 +36,7 @@ const reopenConversation = async (conversationId: string) => {
     const { organizationId, locationId } = getAccessScope();
 
     let query = supabase
-        .from('wa_conversations')
+        .schema('wa').from('wa_conversations')
         .update({ status: 'open', updated_at: new Date().toISOString() })
         .eq('id', conversationId)
         .eq('organization_id', organizationId);
@@ -68,7 +68,7 @@ const snoozeConversation = async (conversationId: string, snoozeUntil?: string) 
     }
 
     let query = supabase
-        .from('wa_conversations')
+        .schema('wa').from('wa_conversations')
         .update(updateData)
         .eq('id', conversationId)
         .eq('organization_id', organizationId);

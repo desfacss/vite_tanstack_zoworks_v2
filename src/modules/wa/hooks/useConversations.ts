@@ -18,7 +18,7 @@ const fetchConversations = async (filters: ConversationFilters): Promise<Convers
     console.log(`[useConversations] Fetching for Scope: Org=${organizationId}, Loc=${locationId || 'Global'}`, filters);
 
     let query = supabase
-        .from('wa_conversations')
+        .schema('wa').from('wa_conversations')
         .select(`
             id,
             status,
@@ -148,7 +148,7 @@ export const useConversationCounts = () => {
         queryFn: async () => {
             const { organizationId, locationId } = getAccessScope();
             let query = supabase
-                .from('wa_conversations')
+                .schema('wa').from('wa_conversations')
                 .select('status')
                 .eq('organization_id', organizationId);
 

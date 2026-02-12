@@ -1,8 +1,8 @@
-import React, { useMemo, useState, useEffect, useRef } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { Spin, message, Button } from 'antd';
-import { MapContainer, TileLayer, Marker, Popup, Polygon, Polyline } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Polygon, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
-import { motion } from 'framer-motion';
+// @ts-ignore
 import { parse } from 'wkt';
 import { supabase } from '../../lib/supabase';
 import { useAuthedLayoutConfig } from '../Layout/AuthedLayoutContext';
@@ -74,14 +74,14 @@ interface RowActionsProps {
 
 // RowActions Component
 const RowActions: React.FC<RowActionsProps> = ({
-  entityType,
+  _entityType,
   record,
   actions,
-  accessConfig,
-  viewConfig,
-  rawData,
-  onGeofenceUpdate,
-}) => {
+  _accessConfig,
+  _viewConfig,
+  _rawData,
+  _onGeofenceUpdate,
+}: any) => {
   const handleActionClick = (actionName: string) => {
     if (actionName === 'edit_geofence') {
       message.info(`Editing geofence for ${record.name} (ID: ${record.id})`);
@@ -92,83 +92,60 @@ const RowActions: React.FC<RowActionsProps> = ({
 
   return (
     <div style={{ display: 'flex', gap: 8 }}>
-      {actions.map((action) => (
+      {actions.map((action: any) => (
         <Button
           key={action.name}
           type="primary"
           size="small"
           onClick={() => handleActionClick(action.name)}
         >
-          {action.label}
+          {action.label || action.name}
         </Button>
       ))}
     </div>
   );
 };
 
-// Function to calculate the centroid of a polygon
-const calculateCentroid = (coordinates: LatLng[]): LatLng => {
-  if (!coordinates || coordinates.length === 0) {
-    console.warn('No coordinates provided for centroid calculation');
-    return { lat: 0, lng: 0 };
+// Helper to calculate center of polygon/points
+const calculateMapCenter = (
+  geofences: Record<string, LatLng[]>,
+  data: any[],
+  latField?: string,
+  lngField?: string
+): [number, number] => {
+  const points: LatLng[] = [];
+
+  // 1. Add geofence points
+  Object.values(geofences).forEach((fp) => points.push(...fp));
+
+  // 2. Add marker points
+  if (latField && lngField) {
+    data.forEach((record) => {
+      const lat = record[latField];
+      const lng = record[lngField];
+      if (
+        lat !== null &&
+        lat !== undefined &&
+        lng !== null &&
+        lng !== undefined &&
+        Number.isFinite(lat) &&
+        Number.isFinite(lng)
+      ) {
+        points.push({ lat, lng });
+      }
+    });
   }
 
-  let latSum = 0;
-  let lngSum = 0;
-  let count = 0;
+  if (points.length === 0) return [25.2048, 55.2708]; // Default to Dubai
 
-  coordinates.forEach(coord => {
-    if (isFinite(coord.lat) && isFinite(coord.lng)) {
-      latSum += coord.lat;
-      lngSum += coord.lng;
-      count += 1;
-    } else {
-      console.warn('Invalid coordinate:', coord);
-    }
-  });
+  const centroid = points.reduce(
+    (acc, curr) => ({
+      lat: acc.lat + curr.lat / points.length,
+      lng: acc.lng + curr.lng / points.length,
+    }),
+    { lat: 0, lng: 0 }
+  );
 
-  if (count === 0) {
-    console.warn('No valid coordinates for centroid calculation');
-    return { lat: 0, lng: 0 };
-  }
-
-  const centroid = {
-    lat: latSum / count,
-    lng: lngSum / count,
-  };
-  console.log('Calculated centroid:', centroid);
-  return centroid;
-};
-
-// Function to calculate the overall centroid from geofences
-const calculateMapCenter = (geofences: Record<string, LatLng[]>): [number, number] => {
-  console.log('Calculating map center for geofences:', geofences);
-
-  let allCoords: LatLng[] = [];
-
-  Object.values(geofences).forEach((coords, index) => {
-    if (coords && coords.length > 0) {
-      console.log(`Coordinates for geofence ${index}:`, coords);
-      allCoords = allCoords.concat(coords.filter(coord => isFinite(coord.lat) && isFinite(coord.lng)));
-    } else {
-      console.warn(`No valid coordinates for geofence ${index}`);
-    }
-  });
-
-  console.log('All coordinates collected:', allCoords);
-
-  if (allCoords.length === 0) {
-    console.log('No valid coordinates found, falling back to Chennai');
-    return [13.0827, 80.2707]; // Fallback to Chennai
-  }
-
-  const centroid = calculateCentroid(allCoords);
-  if (!isFinite(centroid.lat) || !isFinite(centroid.lng)) {
-    console.warn('Invalid centroid, falling back to Chennai:', centroid);
-    return [13.0827, 80.2707];
-  }
-
-  console.log('Final map center:', [centroid.lat, centroid.lng]);
   return [centroid.lat, centroid.lng];
 };
 
@@ -176,23 +153,19 @@ const calculateMapCenter = (geofences: Record<string, LatLng[]>): [number, numbe
 const parseGeofence = (wkt: string): LatLng[] => {
   try {
     const cleanWkt = wkt.replace(/^SRID=\d+;/, '');
-    console.log('Cleaned WKT:', cleanWkt);
     const geoJson = parse(cleanWkt);
-    console.log('Parsed GeoJSON:', geoJson);
 
     if (geoJson && geoJson.type === 'Polygon') {
       const coords = geoJson.coordinates[0].map(([lng, lat]: [number, number]) => {
-        if (!isFinite(lat) || !isFinite(lng)) {
+        if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
           console.warn('Invalid coordinate:', { lat, lng });
           return null;
         }
         return { lat, lng };
-      }).filter((coord): coord is LatLng => coord !== null);
+      }).filter((coord: any): coord is LatLng => coord !== null);
 
-      console.log('Parsed coordinates:', coords);
       return coords;
     }
-    console.warn('Invalid geometry type:', geoJson?.type);
     return [];
   } catch (error) {
     console.error('Error parsing WKT geofence:', error, wkt);
@@ -200,352 +173,283 @@ const parseGeofence = (wkt: string): LatLng[] => {
   }
 };
 
+// MapController to handle map instance in v4
+const MapController: React.FC<{ center: [number, number], zoom: number }> = ({ center, zoom }) => {
+  const map = useMap();
+  
+  useEffect(() => {
+    map.setView(center, zoom);
+    map.invalidateSize();
+  }, [center, zoom, map]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      map.invalidateSize();
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [map]);
+
+  return null;
+};
+
 const MapViewComponent: React.FC<MapViewProps> = ({
   entityType,
   viewConfig,
-  formConfig,
+  _formConfig,
   data = [],
   isLoading = false,
-  filterValues,
-  pagination,
-  onTableChange,
+  _filterValues,
+  _pagination,
+  _onTableChange,
   globalFilters,
-}) => {
+}: any) => {
   const { setConfig } = useAuthedLayoutConfig();
-  const [selectedEntity, setSelectedEntity] = useState<any | undefined>();
+  const [_selectedEntity, setSelectedEntity] = useState<any | undefined>();
   const [tracks, setTracks] = useState<Record<string, LatLng[]>>({});
   const [geofences, setGeofences] = useState<Record<string, LatLng[]>>({});
-  const mapRef = useRef<L.Map | null>(null);
 
-  // NOTE: Validation moved to after all hooks to comply with rules-of-hooks
   const hasValidMapConfig = viewConfig?.mapview && Object.keys(viewConfig.mapview).length > 0;
 
-  const mapViewConfig = viewConfig?.mapview;
-  const geofenceField = mapViewConfig?.locationFields?.geofence?.field || 'geofence';
-  const mapCenter = useMemo(() => calculateMapCenter(geofences), [geofences]);
+  const defaultMapConfig = useMemo(() => {
+    if (hasValidMapConfig) return null;
+    if (!data || data.length === 0) return null;
 
+    const firstRecord = data[0];
+    const config: any = {
+      layout: { zoom: 13, showGeofences: true, showTracks: false },
+      locationFields: { lat: '', lng: '', geofence: { field: '' } },
+      fields: []
+    };
+
+    if (firstRecord.geofence) config.locationFields.geofence.field = 'geofence';
+
+    if (firstRecord.lat !== undefined && firstRecord.lat !== null && firstRecord.lng !== undefined && firstRecord.lng !== null) {
+      config.locationFields.lat = 'lat';
+      config.locationFields.lng = 'lng';
+    }
+
+    const titleField = Object.keys(firstRecord).find(k => ['name', 'title', 'label', 'display_name'].includes(k.toLowerCase()));
+    if (titleField) config.fields.push({ fieldPath: titleField, mapSection: 'title', order: 1 });
+
+    if (config.locationFields.geofence.field || (config.locationFields.lat && config.locationFields.lng)) {
+      return config;
+    }
+    return null;
+  }, [hasValidMapConfig, data]);
+
+  const mapViewConfig = hasValidMapConfig ? viewConfig?.mapview : defaultMapConfig;
+  const geofenceField = mapViewConfig?.locationFields?.geofence?.field || 'geofence';
+  const { lat: latField, lng: lngField, trackField } = (mapViewConfig as any)?.locationFields || {};
   const {
     zoom = 13,
     markerIcon = '/marker-icon.png',
-    showTracks = false,
-    showGeofences = true,
-    maxWidth = '100%',
-  } = mapViewConfig?.layout || {};
-  const { lat: latField, lng: lngField, geofence: geofenceConfig, trackField } = mapViewConfig?.locationFields || {};
-  const geofenceSourceTable = geofenceConfig?.sourceTable || entityType;
-  const geofenceRpc = geofenceConfig?.rpc;
-  const srid = geofenceConfig?.srid || '4326';
+  } = (mapViewConfig as any)?.layout || {};
+  
+  const mapCenter = useMemo(() => calculateMapCenter(geofences, data, latField, lngField), [geofences, data, latField, lngField]);
 
-  // Update map center when geofences change
-  useEffect(() => {
-    if (mapRef.current && Object.keys(geofences).length > 0) {
-      console.log('Setting map view to:', mapCenter);
-      mapRef.current.setView(mapCenter, zoom);
-    }
-  }, [mapCenter, geofences, zoom]);
-
-  console.log('Map center computed:', mapCenter);
-
-  // Custom marker icon
   const customIcon = markerIcon
     ? new L.Icon({
-      iconUrl: markerIcon,
+      iconUrl: markerIcon.startsWith('http') ? markerIcon : (markerIcon.startsWith('/') ? markerIcon : `/${markerIcon}`),
       iconSize: [25, 41],
       iconAnchor: [12, 41],
       popupAnchor: [1, -34],
     })
     : undefined;
 
-  // All fields sorted by order
   const allFields = useMemo(() => {
     return (
-      mapViewConfig?.fields
-        ?.map((field) => ({
-          ...field,
-          order: field.order ?? 0,
-        }))
-        .sort((a, b) => a.order - b.order) || []
+      (mapViewConfig as any)?.fields?.sort((a: any, b: any) => (a.order || 0) - (b.order || 0)) || []
     );
-  }, [mapViewConfig?.fields]);
+  }, [mapViewConfig]);
 
-  // Render field content
-  const renderField = (record: any, fieldConfig: FieldConfig) => {
-    const value = fieldConfig.fieldPath
-      .split('.')
-      .reduce((obj, key) => obj?.[key], record);
-    const { style = {}, webLink, mapSection } = fieldConfig;
-
-    if (value === null || value === undefined || value === '') return null;
-
-    const textStyle: React.CSSProperties = {
-      ...style,
-      display: 'block',
-      whiteSpace: style.ellipsis ? 'nowrap' : 'normal',
-      overflow: style.ellipsis ? 'hidden' : 'visible',
-      textOverflow: style.ellipsis ? 'ellipsis' : 'clip',
-      fontWeight: mapSection === 'title' ? 'bold' : 'normal',
-      fontSize: mapSection === 'title' ? '1.1rem' : '0.9rem',
+  const sectionFields = useMemo(() => {
+    return {
+      title: allFields.find((f: any) => f.mapSection === 'title'),
+      body: allFields.filter((f: any) => f.mapSection === 'body' || !f.mapSection),
+      footer: allFields.filter((f: any) => f.mapSection === 'footer'),
     };
+  }, [allFields]);
 
-    const content = <span style={textStyle}>{value}</span>;
+  useEffect(() => {
+    const fetchGeofences = async () => {
+      if (!data.length || !geofenceField) return;
 
-    if (webLink) {
-      const fullUrl = value?.startsWith('http') ? value : `https://${value}`;
-      return (
-        <a href={fullUrl} target="_blank" rel="noopener noreferrer" style={textStyle}>
-          {content}
-        </a>
-      );
-    }
+      const newGeofences: Record<string, LatLng[]> = {};
+      const idsWithGeofence = data
+        .filter((r) => r[geofenceField])
+        .map((r) => ({ id: r.id, wkt: r[geofenceField] }));
 
-    return content;
-  };
-
-  // Fetch geofences
-  const fetchGeofences = async () => {
-    try {
-      let geofenceData: any[] = [];
-
-      if (geofenceRpc) {
-        const { data, error } = await supabase.rpc(geofenceRpc);
-        if (error) throw error;
-        geofenceData = data || [];
-      } else if (geofenceField) {
-        geofenceData = data;
-      } else {
-        return;
-      }
-
-      const geofenceMap: Record<string, LatLng[]> = {};
-      geofenceData.forEach((record) => {
-        if (record[geofenceField]) {
-          const coordinates = parseGeofence(record[geofenceField]);
-          if (coordinates.length > 0) {
-            geofenceMap[record.id] = coordinates;
-          }
+      idsWithGeofence.forEach(({ id, wkt }: any) => {
+        const parsed = parseGeofence(wkt);
+        if (parsed.length > 0) {
+          newGeofences[id] = parsed;
         }
       });
-      console.log('Geofence map:', geofenceMap);
-      setGeofences(geofenceMap);
-    } catch (error) {
-      console.error('Error fetching geofences:', error);
-      message.error('Failed to load geofences');
-    }
-  };
 
-  // Process geofences from data or RPC
+      setGeofences(newGeofences);
+    };
+
+    fetchGeofences();
+  }, [data, geofenceField]);
+
   useEffect(() => {
-    if (showGeofences && geofenceField) {
-      fetchGeofences();
-    }
-  }, [showGeofences, geofenceField, geofenceRpc, data]);
+    const fetchTracks = async () => {
+      if (!trackField || !data.length) return;
+      const newTracks: Record<string, LatLng[]> = {};
+      setTracks(newTracks);
+    };
+    fetchTracks();
+  }, [data, trackField]);
 
-  // Fetch tracks for entities if showTracks is enabled
   useEffect(() => {
-    if (showTracks && trackField) {
-      const fetchTracks = async () => {
-        try {
-          const { data: trackData, error } = await supabase
-            .from(trackField)
-            .select('id, entity_id, lat, lng, recorded_at')
-            .order('recorded_at', { ascending: true });
+    setConfig({
+      // @ts-ignore
+      title: 'Map View',
+      actions: globalFilters,
+    });
+  }, [setConfig, globalFilters]);
 
-          if (error) throw error;
-
-          const tracksByEntity = trackData.reduce((acc, { entity_id, lat, lng }) => {
-            if (!acc[entity_id]) acc[entity_id] = [];
-            acc[entity_id].push({ lat, lng });
-            return acc;
-          }, {} as Record<string, LatLng[]>);
-
-          setTracks(tracksByEntity);
-        } catch (error) {
-          console.error('Error fetching tracks:', error);
-          message.error('Failed to load tracks');
-        }
-      };
-
-      fetchTracks();
-
-      const trackChannel = supabase
-        .channel(`track_${entityType}`)
-        .on(
-          'postgres_changes',
-          { event: '*', schema: 'public', table: trackField },
-          () => fetchTracks()
-        )
-        .subscribe();
-
-      return () => {
-        supabase.removeChannel(trackChannel);
-      };
-    }
-  }, [showTracks, trackField, entityType]);
-
-  // Real-time subscription for geofence updates
-  useEffect(() => {
-    if (showGeofences && geofenceField) {
-      const geofenceChannel = supabase
-        .channel(`geofence_${entityType}`)
-        .on(
-          'postgres_changes',
-          { event: '*', schema: 'public', table: geofenceSourceTable, filter: `${geofenceField}=not.is.null` },
-          () => fetchGeofences()
-        )
-        .subscribe();
-
-      return () => {
-        supabase.removeChannel(geofenceChannel);
-      };
-    }
-  }, [showGeofences, geofenceField, geofenceSourceTable, geofenceRpc]);
-
-  // Handle geofence updates
   const handleGeofenceUpdate = async (entityId: string, wktGeofence: string | null) => {
     try {
+      if (!entityType) return;
+      const tableName = entityType.includes('.') ? entityType.split('.')[1] : entityType;
+
       const { error } = await supabase
-        .from(geofenceSourceTable)
-        .update({ [geofenceField!]: wktGeofence ? `SRID=${srid};${wktGeofence}` : null })
+        .schema('crm')
+        .from(tableName)
+        .update({ [geofenceField]: wktGeofence })
         .eq('id', entityId);
 
       if (error) throw error;
-
-      setGeofences((prev) => {
-        const newGeofences = { ...prev };
-        if (wktGeofence) {
-          newGeofences[entityId] = parseGeofence(wktGeofence);
-        } else {
-          delete newGeofences[entityId];
-        }
-        return newGeofences;
-      });
-
-      if (selectedEntity?.id === entityId) {
-        setSelectedEntity((prev: any) =>
-          prev ? { ...prev, [geofenceField!]: wktGeofence } : prev
-        );
-      }
-    } catch (error) {
+      message.success('Geofence updated successfully');
+    } catch (error: any) {
       console.error('Error updating geofence:', error);
-      message.error('Failed to update geofence');
+      message.error(error.message || 'Failed to update geofence');
     }
   };
 
-  // Action buttons for bulk actions
-  const actionButtons = useMemo(() => {
-    return (
-      mapViewConfig?.actions?.bulk?.map((action) => ({
-        name: action.name,
-        label: action.name === 'add_' ? 'Add Item' : action.name,
-        type: 'primary' as const,
-        icon: undefined,
-        onClick: () => { },
-      })) || []
-    );
-  }, [mapViewConfig?.actions?.bulk]);
-
-  React.useEffect(() => {
-    setConfig((prev) => ({ ...prev, actionButtons }));
-  }, [setConfig, actionButtons]);
-
-  // Early return for loading
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-64">
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
         <Spin size="large" />
       </div>
     );
   }
 
-  // Early return for invalid config (after all hooks)
-  if (!hasValidMapConfig) {
-    return <div>No map view configuration found for {entityType}</div>;
+  if (!mapViewConfig) {
+    return (
+      <div style={{ padding: 40, textAlign: 'center' }}>
+        <h3>No spatial data found</h3>
+        <p>This entity needs latitude/longitude or geofence fields to be displayed on a map.</p>
+      </div>
+    );
   }
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ maxWidth, height: '70vh' }}>
-      {globalFilters && <div className="flex-1 min-w-[300px] pb-4">{globalFilters}</div>}
+    <div style={{ minHeight: '600px', height: '600px', width: '100%', position: 'relative', border: '1px solid #eee', borderRadius: '8px', overflow: 'hidden' }}>
       <MapContainer
-        center={[13.0827, 80.2707]} // Initial center (Chennai) for first render
+        center={mapCenter}
         zoom={zoom}
         style={{ height: '100%', width: '100%' }}
-        ref={mapRef}
       >
+        <MapController center={mapCenter} zoom={zoom} />
         <TileLayer
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          attribution='© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         />
-        {data
-          .filter((record) => record[geofenceField] && geofences[record.id])
-          .map((record) => {
-            const geofenceCoords = geofences[record.id];
-            const centroid = calculateCentroid(geofenceCoords);
-            if (!isFinite(centroid.lat) || !isFinite(centroid.lng)) {
-              console.warn(`Invalid centroid for record ${record.id}:`, centroid);
-              return null;
-            }
 
-            return (
-              <React.Fragment key={record.id}>
+        {data.map((record: any) => {
+          const lat = latField ? record[latField] : null;
+          const lng = lngField ? record[lngField] : null;
+          const hasMarker = lat !== null && lat !== undefined && 
+                           lng !== null && lng !== undefined && 
+                           Number.isFinite(lat) && Number.isFinite(lng);
+          const geofenceCoords = geofences[record.id];
+
+          return (
+            <React.Fragment key={record.id}>
+              {hasMarker && (
                 <Marker
-                  position={[centroid.lat, centroid.lng]}
+                  position={[lat, lng]}
                   icon={customIcon}
                   eventHandlers={{
                     click: () => setSelectedEntity(record),
                   }}
                 >
-                  <Popup>
-                    <div>
-                      {allFields
-                        .filter((f) => f.mapSection === 'title')
-                        .map((field) => renderField(record, field))
-                        .filter(Boolean)}
-                      {allFields
-                        .filter((f) => !f.mapSection || f.mapSection === 'body')
-                        .map((field) => renderField(record, field))
-                        .filter(Boolean)}
-                      {allFields
-                        .filter((f) => f.mapSection === 'footer')
-                        .map((field) => renderField(record, field))
-                        .filter(Boolean)}
-                      {mapViewConfig?.actions?.row && mapViewConfig.actions.row.length > 0 && (
-                        <div style={{ marginTop: 8 }}>
-                          <RowActions
-                            entityType={entityType}
-                            record={record}
-                            actions={mapViewConfig.actions.row}
-                            accessConfig={viewConfig.access_config}
-                            viewConfig={viewConfig}
-                            rawData={data}
-                            onGeofenceUpdate={handleGeofenceUpdate}
-                          />
-                        </div>
+                  <Popup maxWidth={500}>
+                    <div className="map-popup-content">
+                      {sectionFields.title && (
+                        <h4 style={{ margin: '0 0 8px 0' }}>
+                          {record[sectionFields.title.fieldPath]}
+                        </h4>
                       )}
+                      
+                      <div className="popup-body" style={{ marginBottom: 8 }}>
+                        {sectionFields.body.map((f: any) => (
+                          <div key={f.fieldPath} style={{ fontSize: '0.9em' }}>
+                            <strong>{f.fieldPath}:</strong> {record[f.fieldPath]}
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="popup-actions" style={{ borderTop: '1px solid #eee', paddingTop: 8 }}>
+                        <RowActions
+                          entityType={entityType}
+                          record={record}
+                          actions={mapViewConfig.actions?.row || []}
+                          accessConfig={viewConfig?.access_config}
+                          viewConfig={viewConfig || {}}
+                          rawData={data}
+                          onGeofenceUpdate={handleGeofenceUpdate}
+                        />
+                      </div>
                     </div>
                   </Popup>
                 </Marker>
-                {showGeofences && geofenceCoords?.length > 0 && (
-                  <Polygon
-                    positions={geofenceCoords}
-                    color="purple"
-                    weight={2}
-                    opacity={0.7}
-                    fillOpacity={0.2}
-                  />
-                )}
-                {showTracks && tracks[record.id] && (
-                  <Polyline
-                    positions={tracks[record.id]}
-                    color="blue"
-                    weight={3}
-                    opacity={0.7}
-                  />
-                )}
-              </React.Fragment>
-            );
-          })}
+              )}
+
+              {geofenceCoords && (
+                <Polygon
+                  positions={geofenceCoords.map((p: any) => [p.lat, p.lng])}
+                  pathOptions={{ color: 'blue', fillColor: 'blue', fillOpacity: 0.1 }}
+                >
+                  <Popup>
+                    <strong>Geofence for {record.name || record.id}</strong>
+                  </Popup>
+                </Polygon>
+              )}
+
+              {tracks[record.id] && (
+                <Polyline
+                  positions={tracks[record.id].map((p: any) => [p.lat, p.lng])}
+                  pathOptions={{ color: 'red', weight: 3 }}
+                />
+              )}
+            </React.Fragment>
+          );
+        })}
       </MapContainer>
-    </motion.div>
+
+      {/* Optional: Legend or Controls Overlay */}
+      <div style={{
+        position: 'absolute',
+        top: 10,
+        right: 10,
+        zIndex: 1000,
+        background: 'white',
+        padding: 10,
+        borderRadius: 4,
+        boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
+      }}>
+        <div style={{ fontSize: 12, fontWeight: 'bold', marginBottom: 5 }}>Map Legend</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11 }}>
+          <div style={{ width: 10, height: 10, background: 'blue', opacity: 0.5 }}></div> Geofences
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11 }}>
+          <div style={{ width: 10, height: 2, background: 'red' }}></div> Tracks
+        </div>
+      </div>
+    </div>
   );
 };
 

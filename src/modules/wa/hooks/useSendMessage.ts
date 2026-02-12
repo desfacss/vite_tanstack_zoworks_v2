@@ -89,7 +89,7 @@ const updateConversationStatus = async (params: {
     if (params.assigneeId !== undefined) updateData.assignee_id = params.assigneeId;
 
     let query = supabase
-        .from('wa_conversations')
+        .schema('wa').from('wa_conversations')
         .update(updateData)
         .eq('id', params.conversationId)
         .eq('organization_id', organizationId);
