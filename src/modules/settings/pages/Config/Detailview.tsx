@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Button, Form, Input, Popover, Select, Checkbox, Typography, message } from 'antd';
+import { Table, Button, Form, Input, Popover, Select, Checkbox, Typography, message, Tooltip } from 'antd';
 import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 import { supabase } from '@/core/lib/supabase';
 const { Title } = Typography;
@@ -137,15 +137,29 @@ const ConfigEditor: React.FC<ConfigEditorProps> = ({ detailView, entityType, ent
         dynamicTabs: values.dynamicTabs || [],
       };
 
-      const { error } = await supabase
+      // Save to core.view_configs
+      const { error: viewConfigError } = await supabase
         .schema('core')
         .from('view_configs')
         .update({ details_overview: updatedDetailView })
         .eq('id', viewConfigId)
         .select();
 
-      if (error) {
-        throw error;
+      if (viewConfigError) {
+        throw viewConfigError;
+      }
+
+      // Also save to core.entity_blueprints.ui_details_overview
+      const { error: blueprintError } = await supabase
+        .schema('core')
+        .from('entity_blueprints')
+        .update({ ui_details_overview: updatedDetailView })
+        .eq('entity_type', entityType)
+        .eq('entity_schema', entitySchema);
+
+      if (blueprintError) {
+        console.warn('Failed to update entity_blueprints:', blueprintError.message);
+        // Don't throw - this is a secondary save, view_configs is primary
       }
 
       message.success('Configuration saved successfully!');
@@ -336,7 +350,14 @@ const ConfigEditor: React.FC<ConfigEditorProps> = ({ detailView, entityType, ent
       key: 'entityType',
       render: (name: number) => (
         <Form.Item name={[name, 'props', 'entityType']} rules={[{ required: true, message: 'Please input the entity type!' }]}>
-          <Input placeholder="Entity Type" />
+          <Input 
+            placeholder="Entity Type" 
+            suffix={
+              <Tooltip title="Specify as 'schema.table' (e.g., 'hr.candidates') for custom schemas">
+                <PlusOutlined style={{ color: 'rgba(0,0,0,0.45)' }} />
+              </Tooltip>
+            }
+          />
         </Form.Item>
       ),
     },

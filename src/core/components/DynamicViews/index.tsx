@@ -1006,20 +1006,20 @@ const DynamicViews: React.FC<DynamicViewsProps> = ({
 
         if (filterType === 'date-range' && Array.isArray(value) && value[0] && value[1]) {
           filters.push({
-            column: key,
+            key: key,
             operator: 'BETWEEN',
             value: [dayjs(value[0]).startOf('day').format('YYYY-MM-DD'), dayjs(value[1]).endOf('day').format('YYYY-MM-DD')],
           });
         } else if (Array.isArray(value)) {
           filters.push({
-            column: key,
+            key: key,
             operator: 'IN',
             value: value,
             ...(joinTable && { join_table: joinTable }),
           });
         } else {
           filters.push({
-            column: key,
+            key: key,
             operator: filterType === 'text' ? 'ILIKE' : '=',
             value: value,
             ...(joinTable && { join_table: joinTable }),
@@ -1036,7 +1036,7 @@ const DynamicViews: React.FC<DynamicViewsProps> = ({
 
         if (filterValue !== null && filterValue !== undefined) {
           filters.push({
-            column: condition.field,
+            key: condition.field,
             operator: condition.filter_type || '=',
             value: filterValue,
             ...(condition.join_table && { join_table: condition.join_table }),
@@ -1060,13 +1060,22 @@ const DynamicViews: React.FC<DynamicViewsProps> = ({
 
       const tabRpcOverrides = currentTabOption?.queryConfig || {};
 
+      let finalEntityType = entityType;
+      let finalEntitySchema = entitySchema;
+
+      if (entityType.includes('.')) {
+        const parts = entityType.split('.');
+        finalEntitySchema = parts[0];
+        finalEntityType = parts[1];
+      }
+
       const rpcConfig = {
         is_pending_approval_view: false,
         manager_id: user?.id,
         current_time: new Date(),
         ...tabRpcOverrides,
-        entity_schema: entitySchema,
-        entity_name: entityType,
+        entity_schema: finalEntitySchema,
+        entity_name: finalEntityType,
         organization_id: organization.id,
         sorting: filterValues.sorter ? {
           column: filterValues.sorter.field,

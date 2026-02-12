@@ -752,7 +752,7 @@ const DetailsOverviewConfig: React.FC<DetailsOverviewConfigProps> = ({
 
   return (
     <div>
-      <Title level={2}>Details Overview Configuration</Title>
+      <Title level={2}>Detail View Configuration</Title>
       
       {/* --- Generate Defaults Button --- */}
       <Row justify="end" style={{ marginBottom: 20 }}>

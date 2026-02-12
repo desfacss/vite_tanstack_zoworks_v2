@@ -855,12 +855,12 @@ const YViewConfigManager: React.FC = () => {
             },
             {
               key: 'details_overview',
-              label: 'Detail View',
+              label: 'Details Overview',
               children: renderTabContent('details_overview'),
             },
             {
               key: 'detailview',
-              label: 'Details Overview',
+              label: 'Detail View',
               children: renderTabContent('detailview'),
             },
             {

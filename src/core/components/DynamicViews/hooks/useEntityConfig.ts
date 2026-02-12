@@ -55,13 +55,23 @@ export const useViewConfigEnhanced = (entityType: string, entitySchema: string) 
         return { config: null, viewConfig: null };
       }
 
+      // Support dotted entity types (e.g., 'hr.candidates')
+      let finalEntityType = entityType;
+      let finalEntitySchema = entitySchema;
+
+      if (entityType.includes('.')) {
+        const parts = entityType.split('.');
+        finalEntitySchema = parts[0];
+        finalEntityType = parts[1];
+      }
+
       // Fetch entity data from core.entities
       const { data: entityData, error: entityError } = await supabase
         .schema('core')
         .from('entities')
         .select('*')
-        .eq('entity_type', entityType)
-        .eq('entity_schema', entitySchema)
+        .eq('entity_type', finalEntityType)
+        .eq('entity_schema', finalEntitySchema)
         .single();
 
       if (entityError) {
