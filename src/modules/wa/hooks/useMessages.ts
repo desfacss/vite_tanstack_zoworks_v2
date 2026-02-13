@@ -1,18 +1,31 @@
+import { useAuthStore } from '@/core/lib/store';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import type { Message } from '../types';
-import { supabase } from '@/core/lib/supabase';
+import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/core/lib/store';
 
-const getAccessScope = () => {
-    const { organization, location } = useAuthStore.getState();
-    if (!organization?.id) throw new Error('No organization selected');
-    return {
-        organizationId: organization.id,
-        locationId: location?.id
-    };
+// Helper function to extract message body from content
+const extractMessageBody = (content: any): string => {
+    if (typeof content === 'string') return content;
+    if (!content) return '';
+
+    // Try different content structures
+    if (content.body) return content.body;
+    if (content.text?.body) return content.text.body;
+    if (content.image?.caption) return content.image.caption || '[Image]';
+    if (content.video?.caption) return content.video.caption || '[Video]';
+    if (content.audio) return '[Audio]';
+    if (content.document?.filename) return content.document.filename || '[Document]';
+    if (content.template?.name) return `Template: ${content.template.name}`;
+    if (content.interactive?.body?.text) return content.interactive.body.text;
+    if (content.button?.text) return content.button.text;
+    if (content.type === 'button' && content.button?.text) return content.button.text;
+
+    return '[Message]';
 };
 
+// Helper function to determine message type
 const getMessageType = (content: any): Message['type'] => {
     if (typeof content === 'string') return 'text';
     if (content?.image) return 'image';
@@ -27,9 +40,10 @@ const getMessageType = (content: any): Message['type'] => {
 };
 
 const fetchMessages = async (conversationId: string): Promise<Message[]> => {
-    const { organizationId, locationId } = getAccessScope();
+    const organizationId = useAuthStore.getState().organization?.id;
 
-    let query = supabase
+    const { data, error } = await supabase
+        .schema('wa')
         .from('wa_messages')
         .select(`
             id,
@@ -53,28 +67,24 @@ const fetchMessages = async (conversationId: string): Promise<Message[]> => {
             ) 
         `)
         .eq('organization_id', organizationId)
-        .eq('conversation_id', conversationId);
-
-    if (locationId) {
-        query = query.eq('location_id', locationId);
-    }
-
-    query = query.order('timestamp', { ascending: true });
-
-    const { data, error } = await query;
+        .eq('conversation_id', conversationId)
+        .order('timestamp', { ascending: true });
 
     if (error) {
         console.error('Error fetching messages:', error);
         throw error;
     }
 
+    // Transform to frontend format
     const messages: Message[] = (data || []).map((msg: any) => {
         const contact = msg.wa_contacts;
         let content = msg.content || msg.details || {};
 
+        // Parse content if it's a string (it often is from DB)
         if (typeof content === 'string') {
             try {
                 content = JSON.parse(content);
+                // Handle double-stringified JSON
                 if (typeof content === 'string') {
                     try {
                         content = JSON.parse(content);
@@ -83,18 +93,27 @@ const fetchMessages = async (conversationId: string): Promise<Message[]> => {
                     }
                 }
             } catch (e) {
+                // It's just a plain string message
                 content = { body: content };
             }
         }
 
+        // Use the type from the database if available, otherwise infer from content
         const messageType = msg.type || getMessageType(content);
+
+        // For text messages, we might still want to ensure 'body' is accessible directly if it's a string
+        // But for consistency, we'll try to keep the structure.
+        // If content is a string, we wrap it.
         const normalizedContent = typeof content === 'string' ? { body: content } : content;
+
+        // Ensure legacy body extraction doesn't lose data, but for rich types we use the whole object
+        // If it's a simple text message coming as { body: "msg" }, allow it.
 
         return {
             id: msg.id,
             conversation_id: msg.conversation_id,
             organization_id: msg.organization_id,
-            content: normalizedContent,
+            content: normalizedContent, // Pass the full object
             sender_type: msg.direction === 'inbound' ? 'participant' : 'user',
             sender_name: msg.direction === 'inbound' ? (contact?.name || contact?.wa_id || 'Contact') : 'You',
             sender_avatar: msg.direction === 'inbound' ? contact?.profile_picture_url : undefined,
@@ -112,30 +131,24 @@ const fetchMessages = async (conversationId: string): Promise<Message[]> => {
 
 export const useMessages = (conversationId: string | null) => {
     const queryClient = useQueryClient();
-    const { organization, location } = useAuthStore();
 
     const query = useQuery({
-        queryKey: ['messages', organization?.id, location?.id, conversationId],
+        queryKey: ['messages', conversationId],
         queryFn: () => fetchMessages(conversationId!),
         enabled: !!conversationId,
-        staleTime: 1000 * 60,
+        staleTime: 1000 * 60, // 1 minute
     });
 
+    // Set up real-time subscription for new messages
     useEffect(() => {
         if (!conversationId) return;
 
         let channel: any;
-        const organizationId = organization?.id;
-        const locationId = location?.id;
+        const organizationId = useAuthStore.getState().organization?.id;
 
         if (!organizationId) return;
 
         console.log(`[useMessages] Setting up subscription for Conversation: ${conversationId}`);
-
-        let filter = `conversation_id=eq.${conversationId},organization_id=eq.${organizationId}`;
-        if (locationId) {
-            filter += `,location_id=eq.${locationId}`;
-        }
 
         channel = supabase
             .channel(`messages-${conversationId}`)
@@ -143,11 +156,12 @@ export const useMessages = (conversationId: string | null) => {
                 'postgres_changes',
                 {
                     event: 'INSERT',
-                    schema: 'public',
+                    schema: 'wa',
                     table: 'wa_messages',
-                    filter: filter,
+                    filter: `conversation_id=eq.${conversationId}`,
                 },
                 () => {
+                    // Invalidate and refetch messages
                     queryClient.invalidateQueries({ queryKey: ['messages', conversationId] });
                 }
             )
@@ -155,11 +169,12 @@ export const useMessages = (conversationId: string | null) => {
                 'postgres_changes',
                 {
                     event: 'UPDATE',
-                    schema: 'public',
+                    schema: 'wa',
                     table: 'wa_messages',
-                    filter: filter,
+                    filter: `conversation_id=eq.${conversationId}`,
                 },
                 () => {
+                    // Update message status (e.g., delivered, read)
                     queryClient.invalidateQueries({ queryKey: ['messages', conversationId] });
                 }
             )
@@ -177,7 +192,7 @@ export const useMessages = (conversationId: string | null) => {
                 supabase.removeChannel(channel);
             }
         };
-    }, [queryClient, organization?.id, location?.id, conversationId]);
+    }, [queryClient, conversationId]);
 
     return query;
 };

@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import dayjs from 'dayjs';
 import type { Message } from '../types';
-import { supabase } from '@/core/lib/supabase';
+import { supabase } from '@/lib/supabase';
 
 const { Text, Paragraph, Link } = Typography;
 

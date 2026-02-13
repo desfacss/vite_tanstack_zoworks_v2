@@ -1,24 +1,17 @@
+import { useAuthStore } from '@/core/lib/store';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import type { Conversation, ConversationFilters } from '../types';
-import { supabase } from '@/core/lib/supabase';
+import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/core/lib/store';
 
-const getAccessScope = () => {
-    const { organization, location } = useAuthStore.getState();
-    if (!organization?.id) throw new Error('No organization selected');
-    return {
-        organizationId: organization.id,
-        locationId: location?.id
-    };
-};
-
 const fetchConversations = async (filters: ConversationFilters): Promise<Conversation[]> => {
-    const { organizationId, locationId } = getAccessScope();
-    console.log(`[useConversations] Fetching for Scope: Org=${organizationId}, Loc=${locationId || 'Global'}`, filters);
+    const organizationId = useAuthStore.getState().organization?.id;
+    console.log(`[useConversations] Fetching for Org: ${organizationId}`, filters);
 
     let query = supabase
-        .schema('wa').from('wa_conversations')
+        .schema('wa')
+        .from('wa_conversations')
         .select(`
             id,
             status,
@@ -35,14 +28,10 @@ const fetchConversations = async (filters: ConversationFilters): Promise<Convers
                 metadata
             )
         `)
-        .eq('organization_id', organizationId);
+        .eq('organization_id', organizationId)
+        .order('last_message_at', { ascending: false, nullsFirst: false });
 
-    if (locationId) {
-        query = query.eq('location_id', locationId);
-    }
-
-    query = query.order('last_message_at', { ascending: false, nullsFirst: false });
-
+    // Apply filters
     if (filters.status) {
         query = query.eq('status', filters.status);
     }
@@ -52,6 +41,7 @@ const fetchConversations = async (filters: ConversationFilters): Promise<Convers
     }
 
     if (filters.search) {
+        // Search in contact name or last message
         query = query.or(`wa_contacts.name.ilike.%${filters.search}%,last_message_summary.ilike.%${filters.search}%`);
     }
 
@@ -62,6 +52,7 @@ const fetchConversations = async (filters: ConversationFilters): Promise<Convers
         throw error;
     }
 
+    // Transform to frontend format
     const conversations: Conversation[] = (data || []).map((conv: any) => {
         const contact = conv.wa_contacts;
 
@@ -69,7 +60,7 @@ const fetchConversations = async (filters: ConversationFilters): Promise<Convers
             id: conv.id,
             participant_id: contact?.id || '',
             participant_name: contact?.name || contact?.wa_id || 'Unknown',
-            participant_email: '',
+            participant_email: '', // WhatsApp doesn't have email
             participant_phone: contact?.wa_id || '',
             participant_avatar: contact?.profile_picture_url,
             last_message: conv.last_message_summary || '',
@@ -77,8 +68,8 @@ const fetchConversations = async (filters: ConversationFilters): Promise<Convers
             channel: 'whatsapp' as const,
             status: conv.status as 'open' | 'closed' | 'snoozed',
             assignee_id: conv.assignee_id,
-            assignee_name: undefined,
-            unread_count: 0,
+            assignee_name: undefined, // TODO: Join with users table if needed
+            unread_count: 0, // TODO: Calculate from conversation_user_state if needed
             participant_type: 'contact' as const,
         };
     });
@@ -88,40 +79,35 @@ const fetchConversations = async (filters: ConversationFilters): Promise<Convers
 
 export const useConversations = (filters: ConversationFilters) => {
     const queryClient = useQueryClient();
-    const { organization, location } = useAuthStore();
 
     const query = useQuery({
-        queryKey: ['conversations', organization?.id, location?.id, filters],
+        queryKey: ['conversations', filters],
         queryFn: () => fetchConversations(filters),
-        staleTime: 1000 * 30,
+        staleTime: 1000 * 30, // 30 seconds
         placeholderData: (previousData: Conversation[] | undefined) => previousData,
     });
 
+    // Set up real-time subscription for conversation updates
     useEffect(() => {
         let channel: any;
-        const organizationId = organization?.id;
-        const locationId = location?.id;
+        const organizationId = useAuthStore.getState().organization?.id;
 
         if (!organizationId) return;
 
-        console.log(`[useConversations] Setting up subscription for Scope: Org=${organizationId}, Loc=${locationId || 'Global'}`);
-
-        let filter = `organization_id=eq.${organizationId}`;
-        if (locationId) {
-            filter += `,location_id=eq.${locationId}`;
-        }
+        console.log(`[useConversations] Setting up subscription for Org: ${organizationId}`);
 
         channel = supabase
-            .channel(`conversations-${organizationId}-${locationId || 'global'}`)
+            .channel(`conversations-${organizationId}`)
             .on(
                 'postgres_changes',
                 {
                     event: '*',
-                    schema: 'public',
+                    schema: 'wa',
                     table: 'wa_conversations',
-                    filter: filter,
+                    filter: `organization_id=eq.${organizationId}`,
                 },
                 () => {
+                    // Invalidate queries to refetch data
                     queryClient.invalidateQueries({ queryKey: ['conversations'] });
                 }
             )
@@ -129,11 +115,11 @@ export const useConversations = (filters: ConversationFilters) => {
 
         return () => {
             if (channel) {
-                console.log(`[useConversations] Cleaning up subscription for Scope: Org=${organizationId}, Loc=${locationId || 'Global'}`);
+                console.log(`[useConversations] Cleaning up subscription for Org: ${organizationId}`);
                 supabase.removeChannel(channel);
             }
         };
-    }, [queryClient, organization?.id, location?.id]);
+    }, [queryClient, useAuthStore.getState().organization?.id]);
 
     return query;
 };
@@ -141,22 +127,15 @@ export const useConversations = (filters: ConversationFilters) => {
 export const useConversationCounts = () => {
     const queryClient = useQueryClient();
 
-    const { organization, location } = useAuthStore();
-
     const query = useQuery({
-        queryKey: ['conversation-counts', organization?.id, location?.id],
+        queryKey: ['conversation-counts'],
         queryFn: async () => {
-            const { organizationId, locationId } = getAccessScope();
-            let query = supabase
-                .schema('wa').from('wa_conversations')
+            const organizationId = useAuthStore.getState().organization?.id;
+            const { data, error } = await supabase
+                .schema('wa')
+                .from('wa_conversations')
                 .select('status')
                 .eq('organization_id', organizationId);
-
-            if (locationId) {
-                query = query.eq('location_id', locationId);
-            }
-
-            const { data, error } = await query;
 
             if (error) throw error;
 
@@ -170,27 +149,22 @@ export const useConversationCounts = () => {
         staleTime: 1000 * 30,
     });
 
+    // Set up real-time subscription for counts
     useEffect(() => {
         let channel: any;
-        const organizationId = organization?.id;
-        const locationId = location?.id;
+        const organizationId = useAuthStore.getState().organization?.id;
 
         if (!organizationId) return;
 
-        let filter = `organization_id=eq.${organizationId}`;
-        if (locationId) {
-            filter += `,location_id=eq.${locationId}`;
-        }
-
         channel = supabase
-            .channel(`conversation-counts-${organizationId}-${locationId || 'global'}`)
+            .channel(`conversation-counts-${organizationId}`)
             .on(
                 'postgres_changes',
                 {
                     event: '*',
-                    schema: 'public',
+                    schema: 'wa',
                     table: 'wa_conversations',
-                    filter: filter,
+                    filter: `organization_id=eq.${organizationId}`,
                 },
                 () => {
                     queryClient.invalidateQueries({ queryKey: ['conversation-counts'] });
@@ -203,7 +177,7 @@ export const useConversationCounts = () => {
                 supabase.removeChannel(channel);
             }
         };
-    }, [queryClient, organization?.id, location?.id]);
+    }, [queryClient, useAuthStore.getState().organization?.id]);
 
     return query;
 };

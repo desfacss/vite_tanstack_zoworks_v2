@@ -54,7 +54,7 @@ const ViewConfigEditor = ({ entityType, metadata, entitySchema }) => {
                 .schema('core')
                 .from('entities')
                 .select('id')
-                .eq('entity_type', entityType)
+                .eq('entity_type', entityType?.split('.')?.pop())
                 .eq('entity_schema', schema)
                 .maybeSingle();
 

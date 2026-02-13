@@ -138,6 +138,16 @@ export interface Campaign {
     participant_count: number;
 }
 
+export interface KnowledgeBaseArticle {
+    id: string;
+    title: string;
+    content: string;
+    category: string;
+    tags: string[];
+    url: string;
+    last_updated: string;
+}
+
 export interface ConversationFilters {
     status?: string;
     assignee?: string;
@@ -176,6 +186,108 @@ export interface InboxState {
     setSelectedTicketId: (id: string | null) => void;
     setBulkSelectedItems: (items: string[]) => void;
     setPanelSizes: (sizes: { left: number; middle: number; right: number }) => void;
+}
+
+export interface Contact {
+    id: string;
+    name: string;
+    email: string;
+    phone?: string;
+    avatar?: string;
+    company?: string;
+    title?: string;
+    account_id?: string;
+    account_name?: string;
+    status: 'active' | 'inactive' | 'prospect';
+    created_at: string;
+    last_activity_at: string;
+    total_conversations: number;
+    lifetime_value?: number;
+}
+
+export interface Account {
+    id: string;
+    name: string;
+    domain?: string;
+    industry?: string;
+    size?: string;
+    status: 'active' | 'inactive' | 'prospect' | 'high-value';
+    created_at: string;
+    last_activity_at: string;
+    total_contacts: number;
+    total_contacts_count?: number;
+    total_deals: number;
+    total_value: number;
+    primary_contact_id?: string;
+    primary_contact_name?: string;
+}
+
+export interface Segment {
+    id: string;
+    name: string;
+    description: string;
+    criteria: Record<string, any>;
+    contact_count: number;
+    created_at: string;
+    updated_at: string;
+    created_by: string;
+    status: 'active' | 'draft';
+}
+
+export interface Ticket {
+    id: string;
+    title: string;
+    description: string;
+    status: 'open' | 'in-progress' | 'resolved' | 'closed';
+    priority: 'low' | 'medium' | 'high' | 'urgent';
+    assignee_id?: string;
+    assignee_name?: string;
+    requester_id: string;
+    requester_name: string;
+    requester_email: string;
+    created_at: string;
+    updated_at: string;
+    due_date?: string;
+    tags: string[];
+    conversation_id?: string;
+}
+
+export interface InternalNote {
+    id: string;
+    conversation_id: string;
+    content: string;
+    author_id: string;
+    author_name: string;
+    created_at: string;
+    mentions: string[];
+}
+
+export interface DripStep {
+    id: string;
+    type: 'message' | 'wait' | 'condition';
+    content?: string;
+    templateId?: string;
+    delay?: {
+        value: number;
+        unit: 'minutes' | 'hours' | 'days';
+    };
+    condition?: {
+        type: string;
+        value: string;
+    };
+}
+
+export interface DripSequence {
+    id: string;
+    name: string;
+    description: string;
+    status: 'active' | 'paused' | 'draft';
+    trigger: string;
+    enrolled: number;
+    completed: number;
+    steps: DripStep[];
+    created_at: string;
+    updated_at: string;
 }
 
 export interface QuickReply {

@@ -18,6 +18,11 @@ interface NavigationItem {
   icon?: React.ReactNode;
   children?: NavigationItem[];
 }
+interface MobilePreferences {
+  bottomNavEnabled: boolean;
+  bottomNavItems: any[];
+}
+
 interface ViewPreferences {
   [userId: string]: {
     [entityType: string]: {
@@ -77,7 +82,7 @@ export interface UserSessionData extends RpcSessionData {
  * @interface AuthState
  * @description Defines the structure of the authentication slice in the Zustand store.
  */
-interface AuthState {
+export interface AuthState {
   // --- Core Session State (dynamically fetched, not persisted) ---
   user: User | null;
   organization: Organization | null;

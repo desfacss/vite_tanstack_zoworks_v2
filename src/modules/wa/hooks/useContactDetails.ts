@@ -1,22 +1,29 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/core/lib/supabase';
 import { useAuthStore } from '@/core/lib/store';
-import type { WaContact } from '../types';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/lib/supabase';
 
-const getAccessScope = () => {
-    const { organization, location } = useAuthStore.getState();
-    if (!organization?.id) throw new Error('No organization selected');
-    return {
-        organizationId: organization.id,
-        locationId: location?.id
-    };
-};
+export interface WaContact {
+    id: string;
+    wa_id: string;
+    name: string;
+    profile_picture_url?: string;
+    linked_entity_id?: string;
+    linked_entity_type?: string;
+    tags: string[];
+    opt_in_status: boolean;
+    metadata?: Record<string, any>;
+    created_at: string;
+    updated_at: string;
+}
 
+// Fetch contact details for a conversation
 const fetchContactForConversation = async (conversationId: string): Promise<WaContact | null> => {
-    const { organizationId, locationId } = getAccessScope();
+    const organizationId = useAuthStore.getState().organization?.id;
 
-    let query = supabase
-        .schema('wa').from('wa_conversations')
+    // Get the conversation with contact
+    const { data: conversation, error: convError } = await supabase
+        .schema('wa')
+        .from('wa_conversations')
         .select(`
             id,
             contact_id,
@@ -39,13 +46,8 @@ const fetchContactForConversation = async (conversationId: string): Promise<WaCo
             )
         `)
         .eq('organization_id', organizationId)
-        .eq('id', conversationId);
-
-    if (locationId) {
-        query = query.eq('location_id', locationId);
-    }
-
-    const { data: conversation, error: convError } = await query.maybeSingle();
+        .eq('id', conversationId)
+        .maybeSingle();
 
     if (convError) {
         console.error('Error fetching conversation contact:', convError);
@@ -61,28 +63,27 @@ const fetchContactForConversation = async (conversationId: string): Promise<WaCo
         wa_id: contact.wa_id,
         name: contact.name || contact.wa_id,
         profile_picture_url: contact.profile_picture_url,
+        linked_entity_id: contact.linked_entity_id,
+        linked_entity_type: contact.linked_entity_type,
         tags: contact.tags || [],
         opt_in_status: contact.opt_in_status ?? true,
+        metadata: contact.metadata || {},
         created_at: contact.created_at,
         updated_at: contact.updated_at,
-        organization_id: organizationId,
     };
 };
 
+// Fetch contact by ID directly
 const fetchContactById = async (contactId: string): Promise<WaContact | null> => {
-    const { organizationId, locationId } = getAccessScope();
+    const organizationId = useAuthStore.getState().organization?.id;
 
-    let query = supabase
+    const { data, error } = await supabase
+        .schema('wa')
         .from('wa_contacts')
         .select('*')
         .eq('organization_id', organizationId)
-        .eq('id', contactId);
-
-    if (locationId) {
-        query = query.eq('location_id', locationId);
-    }
-
-    const { data, error } = await query.maybeSingle();
+        .eq('id', contactId)
+        .maybeSingle();
 
     if (error) {
         console.error('Error fetching contact:', error);
@@ -95,28 +96,26 @@ const fetchContactById = async (contactId: string): Promise<WaContact | null> =>
         wa_id: data.wa_id,
         name: data.name || data.wa_id,
         profile_picture_url: data.profile_picture_url,
+        linked_entity_id: data.linked_entity_id,
+        linked_entity_type: data.linked_entity_type,
         tags: data.tags || [],
         opt_in_status: data.opt_in_status ?? true,
+        metadata: data.metadata || {},
         created_at: data.created_at,
         updated_at: data.updated_at,
-        organization_id: organizationId,
     };
 };
 
+// Fetch conversation count for a contact
 const fetchConversationCount = async (contactId: string): Promise<number> => {
-    const { organizationId, locationId } = getAccessScope();
+    const organizationId = useAuthStore.getState().organization?.id;
 
-    let query = supabase
-        .schema('wa').from('wa_conversations')
+    const { count, error } = await supabase
+        .schema('wa')
+        .from('wa_conversations')
         .select('*', { count: 'exact', head: true })
         .eq('organization_id', organizationId)
         .eq('contact_id', contactId);
-
-    if (locationId) {
-        query = query.eq('location_id', locationId);
-    }
-
-    const { count, error } = await query;
 
     if (error) {
         console.error('Error fetching conversation count:', error);
@@ -126,20 +125,16 @@ const fetchConversationCount = async (contactId: string): Promise<number> => {
     return count || 0;
 };
 
+// Fetch message count for a contact
 const fetchMessageCount = async (contactId: string): Promise<number> => {
-    const { organizationId, locationId } = getAccessScope();
+    const organizationId = useAuthStore.getState().organization?.id;
 
-    let query = supabase
+    const { count, error } = await supabase
+        .schema('wa')
         .from('wa_messages')
         .select('*', { count: 'exact', head: true })
         .eq('organization_id', organizationId)
         .eq('contact_id', contactId);
-
-    if (locationId) {
-        query = query.eq('location_id', locationId);
-    }
-
-    const { count, error } = await query;
 
     if (error) {
         console.error('Error fetching message count:', error);
@@ -149,36 +144,36 @@ const fetchMessageCount = async (contactId: string): Promise<number> => {
     return count || 0;
 };
 
+// Hook to fetch contact for a conversation
 export const useContactForConversation = (conversationId: string | null) => {
-    const { organization, location } = useAuthStore();
     return useQuery({
-        queryKey: ['conversationContact', organization?.id, location?.id, conversationId],
+        queryKey: ['conversationContact', conversationId],
         queryFn: () => fetchContactForConversation(conversationId!),
         enabled: !!conversationId,
-        staleTime: 1000 * 60,
+        staleTime: 1000 * 60, // 1 minute
     });
 };
 
+// Hook to fetch contact by ID
 export const useContact = (contactId: string | null) => {
-    const { organization, location } = useAuthStore();
     return useQuery({
-        queryKey: ['contact', organization?.id, location?.id, contactId],
+        queryKey: ['contact', contactId],
         queryFn: () => fetchContactById(contactId!),
         enabled: !!contactId,
-        staleTime: 1000 * 60,
+        staleTime: 1000 * 60, // 1 minute
     });
 };
 
+// Hook to fetch contact statistics
 export const useContactStats = (contactId: string | null) => {
-    const { organization, location } = useAuthStore();
     const conversationCountQuery = useQuery({
-        queryKey: ['contactConversationCount', organization?.id, location?.id, contactId],
+        queryKey: ['contactConversationCount', contactId],
         queryFn: () => fetchConversationCount(contactId!),
         enabled: !!contactId,
     });
 
     const messageCountQuery = useQuery({
-        queryKey: ['contactMessageCount', organization?.id, location?.id, contactId],
+        queryKey: ['contactMessageCount', contactId],
         queryFn: () => fetchMessageCount(contactId!),
         enabled: !!contactId,
     });
@@ -189,6 +184,9 @@ export const useContactStats = (contactId: string | null) => {
         isLoading: conversationCountQuery.isLoading || messageCountQuery.isLoading,
     };
 };
+
+// Hook to update contact tags - uses the wa_update_contact_tags DB function
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 export const useUpdateContactTags = () => {
     const queryClient = useQueryClient();
@@ -203,7 +201,9 @@ export const useUpdateContactTags = () => {
             tagsToAdd?: string[];
             tagsToRemove?: string[];
         }) => {
+            // Use the DB function
             const { data, error } = await supabase
+                .schema('wa')
                 .rpc('wa_update_contact_tags', {
                     p_wa_contact_id: contactId,
                     p_tags_to_add: tagsToAdd,
@@ -211,15 +211,17 @@ export const useUpdateContactTags = () => {
                 });
 
             if (error) throw error;
-            return data as string[];
+            return data as string[]; // Returns the new tags array
         },
         onSuccess: (_, variables) => {
+            // Invalidate contact queries
             queryClient.invalidateQueries({ queryKey: ['contact', variables.contactId] });
             queryClient.invalidateQueries({ queryKey: ['conversationContact'] });
         }
     });
 };
 
+// Hook to add a single tag (convenience wrapper)
 export const useAddContactTag = () => {
     const updateTags = useUpdateContactTags();
 
@@ -230,6 +232,7 @@ export const useAddContactTag = () => {
     });
 };
 
+// Hook to remove a single tag (convenience wrapper)
 export const useRemoveContactTag = () => {
     const updateTags = useUpdateContactTags();
 
@@ -239,3 +242,4 @@ export const useRemoveContactTag = () => {
         }
     });
 };
+

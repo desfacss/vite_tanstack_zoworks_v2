@@ -1,8 +1,9 @@
+import { useAuthStore } from '@/core/lib/store';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { message } from 'antd';
-import { supabase } from '@/core/lib/supabase';
-import { useAuthStore } from '@/core/lib/store';
+import { supabase } from '@/lib/supabase';
 
+// Types for conversation actions
 interface TeamMember {
     id: string;
     name: string;
@@ -10,17 +11,9 @@ interface TeamMember {
     avatar?: string;
 }
 
-const getAccessScope = () => {
-    const { organization, location } = useAuthStore.getState();
-    if (!organization?.id) throw new Error('No organization selected');
-    return {
-        organizationId: organization.id,
-        locationId: location?.id
-    };
-};
-
+// Close a conversation using RPC
 const closeConversation = async (conversationId: string) => {
-    const { error } = await supabase.rpc('wa_close_conversation', {
+    const { error } = await supabase.schema('wa').rpc('wa_close_conversation', {
         p_conversation_id: conversationId,
     });
 
@@ -32,20 +25,16 @@ const closeConversation = async (conversationId: string) => {
     return { success: true };
 };
 
+// Reopen a conversation (set status back to 'open')
 const reopenConversation = async (conversationId: string) => {
-    const { organizationId, locationId } = getAccessScope();
+    const organizationId = useAuthStore.getState().organization?.id;
 
-    let query = supabase
-        .schema('wa').from('wa_conversations')
+    const { error } = await supabase
+        .schema('wa')
+        .from('wa_conversations')
         .update({ status: 'open', updated_at: new Date().toISOString() })
         .eq('id', conversationId)
         .eq('organization_id', organizationId);
-
-    if (locationId) {
-        query = query.eq('location_id', locationId);
-    }
-
-    const { error } = await query;
 
     if (error) {
         console.error('Error reopening conversation:', error);
@@ -55,8 +44,12 @@ const reopenConversation = async (conversationId: string) => {
     return { success: true };
 };
 
-const snoozeConversation = async (conversationId: string, snoozeUntil?: string) => {
-    const { organizationId, locationId } = getAccessScope();
+// Snooze a conversation
+const snoozeConversation = async (
+    conversationId: string,
+    snoozeUntil?: string
+) => {
+    const organizationId = useAuthStore.getState().organization?.id;
 
     const updateData: Record<string, any> = {
         status: 'snoozed',
@@ -67,17 +60,12 @@ const snoozeConversation = async (conversationId: string, snoozeUntil?: string) 
         updateData.snoozed_until = snoozeUntil;
     }
 
-    let query = supabase
-        .schema('wa').from('wa_conversations')
+    const { error } = await supabase
+        .schema('wa')
+        .from('wa_conversations')
         .update(updateData)
         .eq('id', conversationId)
         .eq('organization_id', organizationId);
-
-    if (locationId) {
-        query = query.eq('location_id', locationId);
-    }
-
-    const { error } = await query;
 
     if (error) {
         console.error('Error snoozing conversation:', JSON.stringify(error, null, 2));
@@ -87,8 +75,12 @@ const snoozeConversation = async (conversationId: string, snoozeUntil?: string) 
     return { success: true };
 };
 
-const assignAgent = async (conversationId: string, agentId: string | null) => {
-    const { error } = await supabase.rpc('wa_assign_agent', {
+// Assign an agent to a conversation 
+const assignAgent = async (
+    conversationId: string,
+    agentId: string | null
+) => {
+    const { error } = await supabase.schema('wa').rpc('wa_assign_agent', {
         p_conversation_id: conversationId,
         p_agent_user_id: agentId,
     });
@@ -101,9 +93,11 @@ const assignAgent = async (conversationId: string, agentId: string | null) => {
     return { success: true };
 };
 
+// Fetch team members for assignment dropdown
 const fetchTeamMembers = async (): Promise<TeamMember[]> => {
-    const { organizationId } = getAccessScope();
+    const organizationId = useAuthStore.getState().organization?.id;
 
+    // Fetch users from identity.users who belong to this organization
     const { data, error } = await supabase
         .schema('identity')
         .from('users')
@@ -118,21 +112,22 @@ const fetchTeamMembers = async (): Promise<TeamMember[]> => {
 
     return (data || []).map((user: any) => ({
         id: user.id,
-        name: user.email,
+        name: user.email, // Fallback to email since name column is uncertain
         email: user.email,
         avatar: undefined,
     }));
 };
 
+// Hook for team members
 export const useTeamMembers = () => {
-    const { organization, location } = useAuthStore();
     return useQuery({
-        queryKey: ['teamMembers', organization?.id, location?.id],
+        queryKey: ['teamMembers'],
         queryFn: fetchTeamMembers,
-        staleTime: 1000 * 60 * 5,
+        staleTime: 1000 * 60 * 5, // 5 minutes
     });
 };
 
+// Hook for closing conversation
 export const useCloseConversation = () => {
     const queryClient = useQueryClient();
 
@@ -148,6 +143,7 @@ export const useCloseConversation = () => {
     });
 };
 
+// Hook for reopening conversation
 export const useReopenConversation = () => {
     const queryClient = useQueryClient();
 
@@ -163,6 +159,7 @@ export const useReopenConversation = () => {
     });
 };
 
+// Hook for snoozing conversation
 export const useSnoozeConversation = () => {
     const queryClient = useQueryClient();
 
@@ -179,6 +176,7 @@ export const useSnoozeConversation = () => {
     });
 };
 
+// Hook for assigning agent
 export const useAssignAgent = () => {
     const queryClient = useQueryClient();
 
@@ -195,6 +193,7 @@ export const useAssignAgent = () => {
     });
 };
 
+// Combined hook for all conversation actions
 export const useConversationActions = (conversationId: string | null) => {
     const closeConv = useCloseConversation();
     const reopenConv = useReopenConversation();
@@ -203,6 +202,7 @@ export const useConversationActions = (conversationId: string | null) => {
     const { data: teamMembers = [] } = useTeamMembers();
 
     return {
+        // Actions
         close: () => conversationId && closeConv.mutateAsync(conversationId),
         reopen: () => conversationId && reopenConv.mutateAsync(conversationId),
         snooze: (until?: string) =>
@@ -210,11 +210,13 @@ export const useConversationActions = (conversationId: string | null) => {
         assign: (agentId: string | null) =>
             conversationId && assignAgentMutation.mutateAsync({ conversationId, agentId }),
 
+        // Loading states
         isClosing: closeConv.isPending,
         isReopening: reopenConv.isPending,
         isSnoozing: snoozeConv.isPending,
         isAssigning: assignAgentMutation.isPending,
 
+        // Team members for assignment
         teamMembers,
     };
 };

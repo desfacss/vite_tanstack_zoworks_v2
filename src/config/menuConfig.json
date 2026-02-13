@@ -357,6 +357,69 @@
         "translationKey": "inbox",
         "key": "inbox",
         "submoduleKey": "wa-inbox"
+      },
+      {
+        "filePath": "src/modules/wa/pages/SequencesPage.tsx",
+        "routePath": "/wa/sequences",
+        "translationKey": "sequences",
+        "key": "sequences",
+        "submoduleKey": "wa-sequences"
+      },
+      {
+        "filePath": "src/modules/wa/pages/TemplatesPage.tsx",
+        "routePath": "/wa/templates",
+        "translationKey": "templates",
+        "key": "templates",
+        "submoduleKey": "wa-templates"
+      },
+      {
+        "filePath": "src/modules/wa/pages/QuickRepliesPage.tsx",
+        "routePath": "/wa/quick-replies",
+        "translationKey": "quick-replies",
+        "key": "quick-replies",
+        "submoduleKey": "wa-quick-replies"
+      },
+      {
+        "filePath": "src/modules/wa/pages/ContactsPage.tsx",
+        "routePath": "/wa/contacts",
+        "translationKey": "wa-contacts",
+        "key": "wa-contacts",
+        "submoduleKey": "wa-contacts"
+      },
+      {
+        "filePath": "src/modules/wa/pages/SegmentsPage.tsx",
+        "routePath": "/wa/segments",
+        "translationKey": "segments",
+        "key": "segments",
+        "submoduleKey": "wa-segments"
+      },
+      {
+        "filePath": "src/modules/wa/pages/WaCampaignsPage.tsx",
+        "routePath": "/wa/campaigns",
+        "translationKey": "campaigns",
+        "key": "campaigns",
+        "submoduleKey": "wa-campaigns"
+      },
+      {
+        "filePath": "src/modules/wa/pages/CatalogPage.tsx",
+        "routePath": "/wa/catalog",
+        "translationKey": "catalog",
+        "key": "catalog",
+        "submoduleKey": "wa-catalog"
+      },
+      {
+        "filePath": "src/modules/wa/pages/SettingsPage.tsx",
+        "routePath": "/wa/settings",
+        "translationKey": "wa-settings",
+        "key": "wa-settings",
+        "submoduleKey": "wa-settings"
+      },
+      {
+        "filePath": "src/modules/wa/pages/VariablesPage.tsx",
+        "routePath": "/wa/variables",
+        "translationKey": "variables",
+        "key": "variables",
+        "submoduleKey": "wa-variables"
       }
     ],
     "settings": [

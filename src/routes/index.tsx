@@ -35,6 +35,18 @@ const AdminFormElements = lazy(() => import('@/modules/admin/pages/Settings/Form
 const Profile = lazy(() => import('../pages/core/Profile'));
 const Settings = lazy(() => import('../pages/core/UserSetting'));
 const WaInbox = lazy(() => import('@/modules/wa/pages/InboxPage'));
+const WaSequences = lazy(() => import('@/modules/wa/pages/SequencesPage'));
+const WaTemplates = lazy(() => import('@/modules/wa/pages/TemplatesPage'));
+const WaQuickReplies = lazy(() => import('@/modules/wa/pages/QuickRepliesPage'));
+const WaContacts = lazy(() => import('@/modules/wa/pages/ContactsPage'));
+const WaSegments = lazy(() => import('@/modules/wa/pages/SegmentsPage'));
+const WaCampaigns = lazy(() => import('@/modules/wa/pages/WaCampaignsPage'));
+const WaCatalog = lazy(() => import('@/modules/wa/pages/CatalogPage'));
+const WaSettings = lazy(() => import('@/modules/wa/pages/SettingsPage'));
+const WaVariables = lazy(() => import('@/modules/wa/pages/VariablesPage'));
+const DripCampaignBuilder = lazy(() => import('@/modules/wa/pages/DripCampaignBuilder'));
+const WaTemplateEditor = lazy(() => import('@/modules/wa/pages/TemplateEditor'));
+const WaLayout = lazy(() => import('@/modules/wa/components/WaLayout'));
 const SettingsConfig = lazy(() => import('@/modules/settings/pages/Config'));
 
 // Workforce pages
@@ -148,8 +160,21 @@ export const AppRoutes: FC = () => {
                         {/* External - Service Assets */}
                         <Route path="/external/service-assets" element={<ServiceAssets />} />
 
-                        {/* WhatsApp - Inbox */}
-                        <Route path="/wa/inbox" element={<WaInbox />} />
+                        {/* WhatsApp */}
+                        <Route element={<WaLayout />}>
+                            <Route path="/wa/inbox" element={<WaInbox />} />
+                            <Route path="/wa/sequences" element={<WaSequences />} />
+                            <Route path="/wa/sequences/:id" element={<DripCampaignBuilder />} />
+                            <Route path="/wa/templates" element={<WaTemplates />} />
+                            <Route path="/wa/templates/:id" element={<WaTemplateEditor onSubmit={async () => {}} />} />
+                            <Route path="/wa/quick-replies" element={<WaQuickReplies />} />
+                            <Route path="/wa/contacts" element={<WaContacts />} />
+                            <Route path="/wa/segments" element={<WaSegments />} />
+                            <Route path="/wa/campaigns" element={<WaCampaigns />} />
+                            <Route path="/wa/catalog" element={<WaCatalog />} />
+                            <Route path="/wa/settings" element={<WaSettings />} />
+                            <Route path="/wa/variables" element={<WaVariables />} />
+                        </Route>
                         <Route path="/settings/config" element={<SettingsConfig />} />
 
                         {/* Workforce */}
