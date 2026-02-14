@@ -593,6 +593,27 @@
         "translationKey": "agents",
         "key": "ai-agents",
         "submoduleKey": "ai-agents"
+      },
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/ai/action_approvals",
+        "translationKey": "action_approvals",
+        "key": "ai-action-approvals",
+        "submoduleKey": "ai-action_approvals"
+      },
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/ai_mcp/tenant_tier_configs",
+        "translationKey": "tenant_tier_configs",
+        "key": "ai-tenant-tier-configs",
+        "submoduleKey": "ai-tenant_tier_configs"
+      },
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/ai_mcp/playbooks",
+        "translationKey": "playbooks",
+        "key": "ai-playbooks",
+        "submoduleKey": "ai-playbooks"
       }
     ],
     "analytics": [

@@ -114,3 +114,58 @@ export interface AgentFormData {
     config: string; // JSON string
     semantics: string; // JSON string
 }
+export interface ActionApprovalRecord {
+    id: string;
+    organization_id: string;
+    session_id: string;
+    action_type: string;
+    description?: string;
+    parameters?: Record<string, any>;
+    status: 'pending' | 'approved' | 'rejected' | string;
+    decided_by?: string;
+    decision_note?: string;
+    decided_at?: string;
+    created_at?: string;
+    search_vector?: any;
+}
+
+export interface TenantTierConfigRecord {
+    id: string;
+    organization_id: string;
+    tier: 'mini' | 'med' | 'max' | string;
+    provider: string;
+    model_name: string;
+    api_key?: string;
+    temperature?: number;
+    max_tokens?: number;
+    created_at?: string;
+    updated_at?: string;
+    search_vector?: any;
+}
+
+export interface PlaybookRecord {
+    id: string;
+    organization_id?: string;
+    name: string;
+    description?: string;
+    trigger_command?: string;
+    created_at?: string;
+    search_vector?: any;
+    // Relationship
+    steps?: PlaybookStepRecord[];
+}
+
+export interface PlaybookStepRecord {
+    id: string;
+    playbook_id?: string;
+    position: number;
+    name: string;
+    instruction: string;
+    required_tool_key?: string;
+    is_auto_execute?: boolean;
+    step_key?: string;
+    execution_logic?: Record<string, any>;
+    dependencies?: string[];
+    created_at?: string;
+    search_vector?: any;
+}

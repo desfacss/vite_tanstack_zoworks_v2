@@ -142,7 +142,10 @@
         "agents": "Agents",
         "ai-agents": "AI Agents",
         "core": "Core",
-        "entity_blueprints": "Entity Blueprints"
+        "entity_blueprints": "Entity Blueprints",
+        "action_approvals": "Action Approvals",
+        "tenant_tier_configs": "Tenant Tier Configs",
+        "playbooks": "Playbooks"
       }
     },
     "settings": {

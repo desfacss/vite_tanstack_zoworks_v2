@@ -176,6 +176,7 @@ export const AppRoutes: FC = () => {
                         <Route path="/unified/:entity" element={<GenericDynamicPage schema="unified" />} />
                         <Route path="/identity/:entity" element={<GenericDynamicPage schema="identity" />} />
                         <Route path="/core/:entity" element={<GenericDynamicPage schema="core" />} />
+                        <Route path="/ai/:entity" element={<GenericDynamicPage schema="ai_mcp" />} />
                         <Route path="/ai_mcp/:entity" element={<GenericDynamicPage schema="ai_mcp" />} />
                         <Route path="/crm/:entity" element={<GenericDynamicPage schema="crm" />} />
                         <Route path="/esm/:entity" element={<GenericDynamicPage schema="esm" />} />

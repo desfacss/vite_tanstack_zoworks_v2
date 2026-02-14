@@ -1,0 +1,4 @@
+id,organization_id,tier,provider,model_name,api_key,temperature,max_tokens,search_vector
+1d418f67-3a1f-4924-b8a5-0525e9bdab1c,f2d37c75-14c6-44d8-be84-55253c60bdff,max,gemini,gemini-3-pro-preview,,0.9,8192,'-3':2A 'gemini':1A 'preview':5A 'pro':4A 'pro-preview':3A
+6346112c-262f-4d8a-b26e-47712c134485,f2d37c75-14c6-44d8-be84-55253c60bdff,med,gemini,gemini-exp-1206,,0.7,4096,'1206':4A 'exp':3A 'gemini':2A 'gemini-exp':1A
+a116ca28-069e-4a59-999e-c8b52d4fa756,f2d37c75-14c6-44d8-be84-55253c60bdff,mini,gemini,gemini-2.0-flash-lite,,0.1,1024,'-2.0':2A 'flash':4A 'flash-lite':3A 'gemini':1A 'lite':5A
