@@ -7,6 +7,92 @@
         "translationKey": "crm-contacts",
         "key": "crm-contacts",
         "submoduleKey": "crm-contacts"
+      },
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/crm/accounts",
+        "translationKey": "accounts",
+        "key": "crm-accounts",
+        "submoduleKey": "crm-accounts"
+      },
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/crm/leads",
+        "translationKey": "leads",
+        "key": "crm-leads",
+        "submoduleKey": "crm-leads"
+      },
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/crm/deals",
+        "translationKey": "deals",
+        "key": "crm-deals",
+        "submoduleKey": "crm-deals"
+      },
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/crm/prospects",
+        "translationKey": "prospects",
+        "key": "crm-prospects",
+        "submoduleKey": "crm-prospects"
+      },
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/crm/quotes",
+        "translationKey": "quotes",
+        "key": "crm-quotes",
+        "submoduleKey": "crm-quotes"
+      },
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/crm/vendors",
+        "translationKey": "vendors",
+        "key": "crm-vendors",
+        "submoduleKey": "crm-vendors"
+      },
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/crm/customer_segments",
+        "translationKey": "customer_segments",
+        "key": "crm-customer-segments",
+        "submoduleKey": "crm-customer_segments"
+      },
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/crm/customers_business",
+        "translationKey": "customers_business",
+        "key": "crm-customers-business",
+        "submoduleKey": "crm-customers_business"
+      }
+    ],
+    "esm": [
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/esm/contracts",
+        "translationKey": "contracts",
+        "key": "esm-contracts",
+        "submoduleKey": "esm-contracts"
+      },
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/esm/service_assets",
+        "translationKey": "service_assets",
+        "key": "esm-service-assets",
+        "submoduleKey": "esm-service_assets"
+      },
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/esm/service_catalog",
+        "translationKey": "service_catalog",
+        "key": "esm-service-catalog",
+        "submoduleKey": "esm-service_catalog"
+      },
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/esm/service_requests",
+        "translationKey": "service_requests",
+        "key": "esm-service-requests",
+        "submoduleKey": "esm-service_requests"
       }
     ],
     "support": [
@@ -216,6 +302,13 @@
         "translationKey": "workers",
         "key": "hr-workers",
         "submoduleKey": "hr-workers"
+      },
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/hr/profiles",
+        "translationKey": "profiles",
+        "key": "hr-profiles",
+        "submoduleKey": "hr-profiles"
       }
     ],
     "unified": [
@@ -459,6 +552,20 @@
         "translationKey": "teams-users",
         "key": "teams-users",
         "submoduleKey": "workforce-teams-users"
+      },
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/workforce/leave_applications",
+        "translationKey": "leave_applications",
+        "key": "workforce-leave-applications",
+        "submoduleKey": "workforce-leave_applications"
+      },
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/workforce/expense_sheets",
+        "translationKey": "expense_sheets",
+        "key": "workforce-expense-sheets",
+        "submoduleKey": "workforce-expense_sheets"
       }
     ],
     "erp": [
@@ -482,10 +589,142 @@
     "ai": [
       {
         "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
-        "routePath": "/ai/agents",
+        "routePath": "/ai_mcp/agents",
         "translationKey": "agents",
         "key": "ai-agents",
         "submoduleKey": "ai-agents"
+      }
+    ],
+    "analytics": [
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/analytics/deals_summary",
+        "translationKey": "deals_summary",
+        "key": "analytics-deals-summary",
+        "submoduleKey": "analytics-deals_summary"
+      },
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/analytics/payroll_summary",
+        "translationKey": "payroll_summary",
+        "key": "analytics-payroll-summary",
+        "submoduleKey": "analytics-payroll_summary"
+      },
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/analytics/stage_duration_summary",
+        "translationKey": "stage_duration_summary",
+        "key": "analytics-stage-duration-summary",
+        "submoduleKey": "analytics-stage_duration_summary"
+      },
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/analytics/team_payroll",
+        "translationKey": "team_payroll",
+        "key": "analytics-team-payroll",
+        "submoduleKey": "analytics-team_payroll"
+      },
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/analytics/tickets_summary",
+        "translationKey": "tickets_summary",
+        "key": "analytics-tickets-summary",
+        "submoduleKey": "analytics-tickets_summary"
+      }
+    ],
+    "ctrm": [
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/ctrm/contracts",
+        "translationKey": "contracts",
+        "key": "ctrm-contracts",
+        "submoduleKey": "ctrm-contracts"
+      },
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/ctrm/counterparties",
+        "translationKey": "counterparties",
+        "key": "ctrm-counterparties",
+        "submoduleKey": "ctrm-counterparties"
+      },
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/ctrm/curves",
+        "translationKey": "curves",
+        "key": "ctrm-curves",
+        "submoduleKey": "ctrm-curves"
+      },
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/ctrm/erp_invoices",
+        "translationKey": "erp_invoices",
+        "key": "ctrm-erp-invoices",
+        "submoduleKey": "ctrm-erp_invoices"
+      },
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/ctrm/erp_payments",
+        "translationKey": "erp_payments",
+        "key": "ctrm-erp-payments",
+        "submoduleKey": "ctrm-erp_payments"
+      },
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/ctrm/exposures",
+        "translationKey": "exposures",
+        "key": "ctrm-exposures",
+        "submoduleKey": "ctrm-exposures"
+      },
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/ctrm/inspections",
+        "translationKey": "inspections",
+        "key": "ctrm-inspections",
+        "submoduleKey": "ctrm-inspections"
+      },
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/ctrm/inventory",
+        "translationKey": "inventory",
+        "key": "ctrm-inventory",
+        "submoduleKey": "ctrm-inventory"
+      },
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/ctrm/positions",
+        "translationKey": "positions",
+        "key": "ctrm-positions",
+        "submoduleKey": "ctrm-positions"
+      },
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/ctrm/prices",
+        "translationKey": "prices",
+        "key": "ctrm-prices",
+        "submoduleKey": "ctrm-prices"
+      },
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/ctrm/shipments",
+        "translationKey": "shipments",
+        "key": "ctrm-shipments",
+        "submoduleKey": "ctrm-shipments"
+      },
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/ctrm/trades",
+        "translationKey": "trades",
+        "key": "ctrm-trades",
+        "submoduleKey": "ctrm-trades"
+      }
+    ],
+    "construction": [
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/construction/projects",
+        "translationKey": "projects",
+        "key": "construction-projects",
+        "submoduleKey": "construction-projects"
       }
     ]
   },

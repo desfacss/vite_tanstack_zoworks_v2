@@ -67,9 +67,10 @@ const GenericDynamicPage = lazy(() => import('@/core/components/DynamicViews/Gen
 
 
 export const AppRoutes: FC = () => {
-    const { user, permissions, setNavigationItems } = useAuthStore(state => ({
+    const { user, permissions, bypass, setNavigationItems } = useAuthStore(state => ({
         user: state.user,
         permissions: state.permissions,
+        bypass: state.bypass,
         setNavigationItems: state.setNavigationItems,
     }));
     const { t, i18n } = useTranslation();
@@ -79,14 +80,14 @@ export const AppRoutes: FC = () => {
     // Set navigation items when user is authenticated
     useEffect(() => {
         if (permissions && user) {
-            console.log('>>> [AppRoutes] Permissions and User exist. Setting Nav Items.');
-            const navItems = getNavigationItems(t, permissions) || [];
+            console.log('>>> [AppRoutes] Permissions and User exist. Setting Nav Items. Bypass:', bypass);
+            const navItems = getNavigationItems(t, permissions, bypass) || [];
             setNavigationItems(navItems as any);
         } else {
             console.log('>>> [AppRoutes] Permissions or User missing. Clearing nav items.');
             setNavigationItems([]);
         }
-    }, [permissions, user, setNavigationItems, t, i18n.language, i18n.isInitialized]);
+    }, [permissions, user, bypass, setNavigationItems, t, i18n.language, i18n.isInitialized]);
 
     return (
         <Suspense fallback={<LoadingFallback />}>
@@ -140,7 +141,7 @@ export const AppRoutes: FC = () => {
                             <Route path="/wa/sequences" element={<WaSequences />} />
                             <Route path="/wa/sequences/:id" element={<DripCampaignBuilder />} />
                             <Route path="/wa/templates" element={<WaTemplates />} />
-                            <Route path="/wa/templates/:id" element={<WaTemplateEditor onSubmit={async () => {}} />} />
+                            <Route path="/wa/templates/:id" element={<WaTemplateEditor onSubmit={async () => { }} />} />
                             <Route path="/wa/quick-replies" element={<WaQuickReplies />} />
                             <Route path="/wa/contacts" element={<WaContacts />} />
                             <Route path="/wa/segments" element={<WaSegments />} />
@@ -176,6 +177,14 @@ export const AppRoutes: FC = () => {
                         <Route path="/identity/:entity" element={<GenericDynamicPage schema="identity" />} />
                         <Route path="/core/:entity" element={<GenericDynamicPage schema="core" />} />
                         <Route path="/ai_mcp/:entity" element={<GenericDynamicPage schema="ai_mcp" />} />
+                        <Route path="/crm/:entity" element={<GenericDynamicPage schema="crm" />} />
+                        <Route path="/esm/:entity" element={<GenericDynamicPage schema="esm" />} />
+                        <Route path="/catalog/:entity" element={<GenericDynamicPage schema="catalog" />} />
+                        <Route path="/ctrm/:entity" element={<GenericDynamicPage schema="ctrm" />} />
+                        <Route path="/analytics/:entity" element={<GenericDynamicPage schema="analytics" />} />
+                        <Route path="/construction/:entity" element={<GenericDynamicPage schema="construction" />} />
+                        <Route path="/workforce/:entity" element={<GenericDynamicPage schema="workforce" />} />
+                        <Route path="/blueprint/:entity" element={<GenericDynamicPage schema="blueprint" />} />
 
                         {/* 404 */}
                         <Route path="*" element={<NotFound />} />

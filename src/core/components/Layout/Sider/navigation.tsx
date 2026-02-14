@@ -28,7 +28,16 @@ import {
   Store,
   FileBadge,
   Bot,
-  Database
+  Database,
+  TrendingUp,
+  HardHat,
+  Ship,
+  DollarSign,
+  Boxes,
+  Target,
+  ClipboardList,
+  Receipt,
+  UserSearch
 } from 'lucide-react';
 import type { MenuProps } from 'antd';
 import type { TFunction } from 'i18next';
@@ -51,7 +60,7 @@ const iconMap: Record<string, React.ReactNode> = {
   'service-reports': <FileText size={18} />,
   projects: <FolderOpen size={18} />,
   process: <GitBranch size={18} />,
-  analytics: <BarChart3 size={18} />,
+  // analytics moved to new module icons section below
   tracking: <MapPin size={18} />,
   'my-tickets': <List size={18} />,
   'service-types': <LayoutGrid size={18} />,
@@ -79,6 +88,22 @@ const iconMap: Record<string, React.ReactNode> = {
   core: <Database size={18} />,
   'core-blueprints': <Database size={18} />,
   entity_blueprints: <Database size={18} />,
+  // New module icons
+  esm: <HeadphonesIcon size={18} />,
+  ctrm: <Ship size={18} />,
+  analytics: <TrendingUp size={18} />,
+  construction: <HardHat size={18} />,
+  // Entity-level icons
+  deals: <DollarSign size={18} />,
+  leads: <Target size={18} />,
+  prospects: <UserSearch size={18} />,
+  accounts: <Building size={18} />,
+  contacts: <Users size={18} />,
+  trades: <TrendingUp size={18} />,
+  shipments: <Ship size={18} />,
+  expenses: <Receipt size={18} />,
+  inventory: <Boxes size={18} />,
+  positions: <ClipboardList size={18} />,
   default: <FileText size={18} />,
 };
 
@@ -139,6 +164,7 @@ const iconMap: Record<string, React.ReactNode> = {
 export const getNavigationItems = (
   t: TFunction,
   permissions: any, // This now holds the 'new' structure
+  bypass: boolean = false, // SassAdmin wildcard — show everything
 ): MenuProps['items'] => {
   const items: MenuProps['items'] = [];
   // Add root level items (like Dashboard)
@@ -153,11 +179,6 @@ export const getNavigationItems = (
 
   // Add module items with their children
   Object.entries(menuConfig.modules).forEach(([module, routes]) => {
-    // // The SassAdmin check (commented out in your original) remains here if needed
-    // if (module === 'settings' && user?.role_id?.name !== 'SassAdmin') {
-    //   return;
-    // }
-
     const moduleItems: MenuProps['items'] = [];
 
     // Check if module has permissions defined
@@ -168,12 +189,13 @@ export const getNavigationItems = (
       const perms = modulePerms?.[feature];
 
       // Show item if:
-      // 1. Has explicit read permission ['r', ...], OR
-      // 2. No permission check exists for this module (fallback to show)
+      // 1. bypass is true (SassAdmin — God Mode), OR
+      // 2. Has explicit read permission ['r', ...], OR
+      // 3. No permission check exists for this module (fallback to show)
       const hasReadPermission = Array.isArray(perms) && perms.includes('r');
       const noPermissionDefined = !modulePerms;
 
-      if (hasReadPermission || noPermissionDefined) {
+      if (bypass || hasReadPermission || noPermissionDefined) {
         moduleItems.push({
           key: route.routePath,
           icon: iconMap[route.key.replace('-view', '')] || iconMap.default,
@@ -221,7 +243,7 @@ export const getNavigationItems = (
 // };
 
 
-export const getAllowedRoutes = (permissions: any, _user: any): string[] => {
+export const getAllowedRoutes = (permissions: any, _user: any, bypass: boolean = false): string[] => {
   const routes = [...menuConfig.root.map((route) => route.routePath)];
 
   Object.entries(menuConfig.modules).forEach(([module, moduleRoutes]) => {
@@ -231,11 +253,11 @@ export const getAllowedRoutes = (permissions: any, _user: any): string[] => {
       const feature = route.key.replace('-view', '');
       const perms = modulePerms?.[feature];
 
-      // Allow route if has read permission OR no permissions defined
+      // Allow route if bypass OR has read permission OR no permissions defined
       const hasReadPermission = Array.isArray(perms) && perms.includes('r');
       const noPermissionDefined = !modulePerms;
 
-      if (hasReadPermission || noPermissionDefined) {
+      if (bypass || hasReadPermission || noPermissionDefined) {
         routes.push(route.routePath);
       }
     });

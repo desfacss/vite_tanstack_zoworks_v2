@@ -63,6 +63,8 @@ export interface RpcSessionData {
   org_id: string;
   location_id?: string;
   permissions: any;
+  bypass?: boolean; // SassAdmin wildcard — skip all permission checks
+  is_saas_admin?: boolean;
   locations?: Location[];
   roles?: { id: string; name: string }[];
   teams?: { id: string; name: string }[];
@@ -88,6 +90,7 @@ export interface AuthState {
   organization: Organization | null;
   location: Location | null;
   permissions: any; // Consider defining a more specific type for permissions
+  bypass: boolean; // SassAdmin wildcard — skip all permission checks
   roles?: { id: string; name: string }[];
   teams?: { id: string; name: string }[];
   locations?: Location[];
@@ -129,11 +132,12 @@ export interface AuthState {
 // --- INITIALIZATION ---
 
 const secureStorage = createJSONStorage(() => localStorage);
-const defaultSessionState: Pick<AuthState, 'user' | 'organization' | 'location' | 'permissions' | 'roles' | 'teams' | 'locations'> = {
+const defaultSessionState: Pick<AuthState, 'user' | 'organization' | 'location' | 'permissions' | 'bypass' | 'roles' | 'teams' | 'locations'> = {
   user: null,
   organization: null,
   location: null,
   permissions: null,
+  bypass: false,
   roles: [],
   teams: [],
   locations: [],
@@ -237,6 +241,7 @@ export const useAuthStore = create<AuthState>()(
           organization: sessionData.organization,
           location: sessionData.location,
           permissions: sessionData.permissions,
+          bypass: sessionData.bypass || sessionData.is_saas_admin || false,
           roles: sessionData.roles,
           teams: sessionData.teams,
           locations: sessionData.locations,
