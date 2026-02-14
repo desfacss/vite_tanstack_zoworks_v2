@@ -683,7 +683,8 @@ body {
   width: 100% !important;
 }
 
-.ant-input-group {
+.ant-input-group,
+.ant-input-number-group {
   display: flex !important;
   align-items: stretch !important;
   border: 1px solid rgba(var(--color-primary-rgb, var(--color-secondary-rgb)), 0.5) !important;
@@ -694,7 +695,8 @@ body {
 }
 
 /* Flatten internal components in groups and ensure they don't overlap */
-.ant-input-group>* {
+.ant-input-group>*,
+.ant-input-number-group>* {
   border: none !important;
   background: transparent !important;
   box-shadow: none !important;
@@ -707,13 +709,16 @@ body {
 .ant-input-group .ant-input,
 .ant-input-group .ant-input-affix-wrapper,
 .ant-input-group .ant-input-number,
-.ant-input-group .ant-input-number-affix-wrapper {
+.ant-input-group .ant-input-number-affix-wrapper,
+.ant-input-number-group .ant-input-number,
+.ant-input-number-group .ant-input-number-input {
   flex: 1 !important;
   width: 100% !important;
 }
 
 /* Special handling for addons to keep their width consistent */
-.ant-input-group .ant-input-group-addon {
+.ant-input-group .ant-input-group-addon,
+.ant-input-number-group .ant-input-number-group-addon {
   flex: 0 0 auto !important;
   width: auto !important;
   background: rgba(var(--color-primary-rgb), 0.08) !important;
@@ -722,7 +727,7 @@ body {
   align-items: center !important;
   color: var(--color-text-secondary) !important;
   font-weight: 500;
-  border-right: none !important;
+  border: none !important;
 }
 
 /* Special handling for search button to ensure visibility and flat look */
@@ -736,7 +741,8 @@ body {
   box-shadow: none !important;
 }
 
-.ant-input-group-addon:last-child {
+.ant-input-group-addon:last-child,
+.ant-input-number-group-addon:last-child {
   border-right: none !important;
   border-left: none !important;
 }
@@ -5211,30 +5217,7 @@ legend {
   --neon-primary: var(--color-primary, #00E599);
   --neon-secondary: var(--color-secondary, #4F46E5);
   --neon-glow: rgba(var(--color-primary-rgb), 0.4);
-  --lightning-speed: 3s;
-}
-
-/* --- Lightning Border Animation --- */
-@keyframes lightning-stroke {
-  0% {
-    transform: translate(-100%, -100%) rotate(0deg);
-  }
-
-  100% {
-    transform: translate(100%, 100%) rotate(360deg);
-  }
-}
-
-@keyframes lightning-glow {
-
-  0%,
-  100% {
-    filter: brightness(1) drop-shadow(0 0 5px var(--neon-glow));
-  }
-
-  50% {
-    filter: brightness(1.5) drop-shadow(0 0 15px var(--neon-primary));
-  }
+  --lightning-speed: 10s;
 }
 
 /* --- Layout Grid --- */
@@ -5246,50 +5229,71 @@ legend {
   position: relative;
 }
 
-/* --- Card & Sidebar Lightning Borders --- */
+/* --- Card Lightning Borders (no sidebar) --- */
 [data-theme-preset="neon_zo"] .page-card,
-[data-theme-preset="neon_zo"] .ant-layout-sider,
 [data-theme-preset="neon_zo"] .ant-card {
   position: relative;
   overflow: hidden;
   border: 1px solid rgba(var(--color-primary-rgb), 0.1) !important;
 }
 
+[data-theme-preset="neon_zo"] .ant-layout-sider {
+  border: 1px solid rgba(var(--color-primary-rgb), 0.1) !important;
+}
+
+/* Single trace element that follows the border path: top → right → bottom */
 [data-theme-preset="neon_zo"] .page-card::before,
-[data-theme-preset="neon_zo"] .ant-layout-sider::before,
 [data-theme-preset="neon_zo"] .ant-card::before {
   content: '';
   position: absolute;
-  top: -2px;
-  left: -2px;
-  right: -2px;
-  bottom: -2px;
-  background: linear-gradient(90deg,
-      transparent 0%,
-      transparent 40%,
-      var(--neon-primary) 50%,
-      transparent 60%,
-      transparent 100%);
-  background-size: 200% 200%;
-  z-index: 0;
+  width: 100px;
+  height: 3px;
+  background: linear-gradient(90deg, transparent 0%, var(--neon-primary) 30%, var(--neon-primary) 70%, transparent 100%);
+  box-shadow:
+    0 0 4px var(--neon-primary),
+    0 0 12px var(--neon-primary),
+    0 0 30px var(--neon-primary),
+    0 0 60px var(--neon-glow);
+  z-index: 2;
   pointer-events: none;
-  opacity: 0.15;
-  animation: lightning-sweep var(--lightning-speed) linear infinite;
+  will-change: offset-distance, opacity;
+  /* Trace the rectangle border edges */
+  offset-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%);
+  offset-rotate: auto;
+  animation: neon-trace-border var(--lightning-speed) linear infinite;
 }
 
-@keyframes lightning-sweep {
+/* 3-sided trace: top edge → right edge → bottom edge, then fade out */
+@keyframes neon-trace-border {
   0% {
-    background-position: 200% 0;
+    offset-distance: 0%;
+    opacity: 0;
+  }
+
+  2% {
+    opacity: 1;
+  }
+
+  /* Glide along top, right, and bottom edges */
+  70% {
+    offset-distance: 75%;
+    opacity: 0.9;
+  }
+
+  /* Fade out smoothly */
+  82% {
+    offset-distance: 75%;
+    opacity: 0;
   }
 
   100% {
-    background-position: -200% 0;
+    offset-distance: 75%;
+    opacity: 0;
   }
 }
 
-/* Ensure content stays above the lightning sweep */
+/* Ensure content stays above the lightning trace */
 [data-theme-preset="neon_zo"] .page-card>*,
-[data-theme-preset="neon_zo"] .ant-layout-sider>*,
 [data-theme-preset="neon_zo"] .ant-card>* {
   position: relative;
   z-index: 1;
@@ -5328,6 +5332,14 @@ legend {
 
 [data-theme-preset="neon_zo"].dark .ant-layout-header {
   border-bottom: 1px solid rgba(var(--color-primary-rgb), 0.2) !important;
+}
+
+/* Light-mode lightning: darker primary for visibility on light backgrounds */
+[data-theme-preset="neon_zo"]:not(.dark) .page-card::before,
+[data-theme-preset="neon_zo"]:not(.dark) .ant-card::before {
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--neon-primary), #000 40%), transparent);
+  box-shadow: 0 0 6px color-mix(in srgb, var(--neon-primary), #000 30%),
+    0 0 14px color-mix(in srgb, var(--neon-primary), #000 20%);
 }
 
 /* --- Light Mode Refinement --- */
