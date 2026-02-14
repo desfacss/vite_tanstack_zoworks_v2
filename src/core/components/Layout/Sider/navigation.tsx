@@ -14,7 +14,6 @@ import {
   Building,
   Headphones,
   Calendar,
-  Clock,
   UserPlus,
   FolderOpen,
   FileCheck,
@@ -28,7 +27,8 @@ import {
   BookOpen,
   Store,
   FileBadge,
-  Shield
+  Bot,
+  Database
 } from 'lucide-react';
 import type { MenuProps } from 'antd';
 import type { TFunction } from 'i18next';
@@ -73,6 +73,12 @@ const iconMap: Record<string, React.ReactNode> = {
   shopping: <Store size={18} />,
   reports: <FileBadge size={18} />,
   invoices: <FileText size={18} />,
+  ai: <Bot size={18} />,
+  'ai-agents': <Bot size={18} />,
+  agents: <Bot size={18} />,
+  core: <Database size={18} />,
+  'core-blueprints': <Database size={18} />,
+  entity_blueprints: <Database size={18} />,
   default: <FileText size={18} />,
 };
 
@@ -133,7 +139,6 @@ const iconMap: Record<string, React.ReactNode> = {
 export const getNavigationItems = (
   t: TFunction,
   permissions: any, // This now holds the 'new' structure
-  user: any,
 ): MenuProps['items'] => {
   const items: MenuProps['items'] = [];
   // Add root level items (like Dashboard)

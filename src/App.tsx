@@ -100,6 +100,10 @@ const checkConfigVersion = async () => {
 // Check config version on module load (before React renders)
 checkConfigVersion();
 
+// Register AI and Core modules (custom forms and components)
+import('@/modules/ai/registry').then(module => module.register());
+import('@/modules/core/registry').then(module => module.register());
+
 function App() {
   useEffect(() => {
     if (window.ReactNativeWebView) {

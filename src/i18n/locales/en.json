@@ -89,7 +89,7 @@
       "data": "Data",
       "expenses": "Expenses",
       "timesheets": "Timesheets",
-      "ai": "Ai",
+      "ai": "AI",
       "nlp": "Nlp",
       "select_organization": "Select Organization",
       "branding_saved": "Theme settings saved successfully",
@@ -137,7 +137,12 @@
         "teams": "Teams",
         "user_roles": "User Roles",
         "user_teams": "User Teams",
-        "users": "Users"
+        "users": "Users",
+        "ai": "AI",
+        "agents": "Agents",
+        "ai-agents": "AI Agents",
+        "core": "Core",
+        "entity_blueprints": "Entity Blueprints"
       }
     },
     "settings": {

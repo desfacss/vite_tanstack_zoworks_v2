@@ -64,33 +64,7 @@ const Invoices = lazy(() => import('@/modules/erp/pages/Invoices'));
 const AIWorkbench = lazy(() => import('@/modules/ai/pages/AIWorkbench'));
 const GenericDynamicPage = lazy(() => import('@/core/components/DynamicViews/GenericDynamicPage'));
 
-const generateNavItems = (t: (key: string) => string) => {
-    // For mini-project, we return a static set of nav items
-    // In the full app, this would be dynamically generated based on permissions
-    const items = [
-        {
-            key: '/welcome',
-            label: t('core.navigation.home'),
-            path: '/welcome',
-        },
-        {
-            key: '/dashboard',
-            label: t('core.navigation.dashboard'),
-            path: '/dashboard',
-        },
-        {
-            key: '/crm/contacts',
-            label: t('core.navigation.contacts'),
-            path: '/crm/contacts',
-        },
-        {
-            key: '/sample',
-            label: t('core.navigation.sample'),
-            path: '/sample',
-        },
-    ];
-    return items;
-};
+
 
 export const AppRoutes: FC = () => {
     const { user, permissions, setNavigationItems } = useAuthStore(state => ({
@@ -106,7 +80,7 @@ export const AppRoutes: FC = () => {
     useEffect(() => {
         if (permissions && user) {
             console.log('>>> [AppRoutes] Permissions and User exist. Setting Nav Items.');
-            const navItems = getNavigationItems(t, permissions, user) || [];
+            const navItems = getNavigationItems(t, permissions) || [];
             setNavigationItems(navItems as any);
         } else {
             console.log('>>> [AppRoutes] Permissions or User missing. Clearing nav items.');
@@ -200,6 +174,8 @@ export const AppRoutes: FC = () => {
                         <Route path="/hr/:entity" element={<GenericDynamicPage schema="hr" />} />
                         <Route path="/unified/:entity" element={<GenericDynamicPage schema="unified" />} />
                         <Route path="/identity/:entity" element={<GenericDynamicPage schema="identity" />} />
+                        <Route path="/core/:entity" element={<GenericDynamicPage schema="core" />} />
+                        <Route path="/ai_mcp/:entity" element={<GenericDynamicPage schema="ai_mcp" />} />
 
                         {/* 404 */}
                         <Route path="*" element={<NotFound />} />

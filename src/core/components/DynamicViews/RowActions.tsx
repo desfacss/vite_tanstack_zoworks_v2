@@ -414,10 +414,15 @@ const RowActions: React.FC<RowActionsProps> = ({
     filteredActions.builtIn.forEach(a => {
       if (a.name === 'Edit') {
         // If a form field is provided, check if it matches a registered action ID for this entity
+        // Or fuzzy match from the entity's registered actions
         const registeredAction = a.form ? (
           filteredActions.registered.find(reg => reg.id === a.form)
           || (registry as any).getActionById?.(a.form)
-        ) : null;
+        ) : filteredActions.registered.find(reg => 
+            reg.id.toLowerCase().includes('edit') || 
+            reg.id.toLowerCase().includes('form') || 
+            (typeof reg.label === 'string' && reg.label.toLowerCase().includes('edit'))
+        );
 
         if (registeredAction) {
           handledRegistryIds.add(registeredAction.id);
@@ -511,11 +516,19 @@ const RowActions: React.FC<RowActionsProps> = ({
         open={!!activeRegistryActionId}
         onClose={() => { setActiveRegistryActionId(null); setLoadedActionComponent(null); }}
         width={window.innerWidth <= 768 ? '100%' : '50%'}
+        destroyOnClose
       >
         {LoadedActionComponent && (
           <Suspense fallback={<Spin />}>
             <LoadedActionComponent
-              record={enhancedRecord}
+              entityType={entityType}
+              parentEditItem={enhancedRecord}
+              onSuccess={() => {
+                queryClient.invalidateQueries({ queryKey: [entityType, organization?.id] });
+                message.success(`${entityType} updated successfully`);
+                setActiveRegistryActionId(null);
+                setLoadedActionComponent(null);
+              }}
               onClose={() => { setActiveRegistryActionId(null); setLoadedActionComponent(null); }}
             />
           </Suspense>

@@ -469,6 +469,24 @@
         "key": "invoices",
         "submoduleKey": "erp-invoices"
       }
+    ],
+    "core": [
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/core/entity_blueprints",
+        "translationKey": "entity_blueprints",
+        "key": "core-blueprints",
+        "submoduleKey": "core-blueprints"
+      }
+    ],
+    "ai": [
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/ai/agents",
+        "translationKey": "agents",
+        "key": "ai-agents",
+        "submoduleKey": "ai-agents"
+      }
     ]
   },
   "root": [

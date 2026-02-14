@@ -157,15 +157,18 @@ const GlobalActions: React.FC<GlobalActionsProps> = ({
 
     // 1. Config actions (Add, New, etc)
     globalActionsFromConfig.forEach((a, idx) => {
-      // Check if this is a component path (starts with .. or ./) OR a component name (pascal case, no extension)
+      // Check if this is a component path (starts with ../ or ./) OR a component name (pascal case, no extension)
       const isComponentPath = a.form.startsWith('../') || a.form.startsWith('./');
       // Simple component name like "TicketForm" - no slashes, no dots (not a file path or form schema)
       const isComponentName = !a.form.includes('/') && !a.form.includes('.') && /^[A-Z]/.test(a.form);
       const isComponent = isComponentPath || isComponentName;
 
+      // Check if the form ID exists in the registry
+      const registryAction = registry.getActionById(a.form);
+
       list.push({
-        type: isComponent ? 'component' : 'config',
-        id: `config-${idx}`,
+        type: registryAction ? 'registry' : (isComponent ? 'component' : 'config'),
+        id: registryAction ? a.form : `config-${idx}`,
         label: a.label === "add_user" ? "Add User" : a.label,
         form: a.form,
         isComponentPath: isComponent,
