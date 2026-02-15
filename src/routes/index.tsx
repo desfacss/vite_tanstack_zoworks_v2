@@ -54,6 +54,8 @@ const WorkforceLeaves = lazy(() => import('@/modules/workforce/pages/Leaves'));
 const WorkforceTimesheets = lazy(() => import('@/modules/workforce/pages/Timesheets'));
 const WorkforceExpenses = lazy(() => import('@/modules/workforce/pages/Expenses'));
 const TeamsUsers = lazy(() => import('@/modules/workforce/pages/TeamsUsers'));
+const TestRJSFCoreForm = lazy(() => import('../pages/TestRJSFCoreForm'));
+
 
 // Tickets & Documents
 const ServiceReports = lazy(() => import('@/modules/workforce/pages/ServiceReports'));
@@ -169,6 +171,8 @@ export const AppRoutes: FC = () => {
 
                         {/* Sample page for new module development */}
                         <Route path="/sample" element={<SamplePage />} />
+                        <Route path="/rjsf" element={<TestRJSFCoreForm />} />
+
 
                         {/* Dynamic routes for schemas */}
                         <Route path="/external/:entity" element={<GenericDynamicPage schema="external" />} />
