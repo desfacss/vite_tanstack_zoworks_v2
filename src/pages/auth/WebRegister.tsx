@@ -1,225 +1,220 @@
-import { useEffect, useState } from 'react';
-import { notification, Row, Col, Spin, message } from 'antd';
+import { useState } from 'react';
+import { notification, Row, Col, Spin, message, Card, Form, Input, Button } from 'antd';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
-import DynamicForm from '../../core/components/DynamicForm';
+import { Building2, User, Mail, Phone, Globe } from 'lucide-react';
 
-interface FormSchema {
-  id: string;
-  name: string;
-  data_schema: any;
-  ui_schema?: any;
-  db_schema?: {
-    table: string;
-    column: string;
-    multiple_rows?: boolean;
-  };
-  [key: string]: any;
-}
-
-interface Role {
-  id: string;
-  role_name: string;
-  [key: string]: any;
-}
-
-interface FormValues {
-  email: string;
-  password: string;
-  retypePassword?: string;
-  orgName?: string;
-  role?: string;
-  mobile?: string | number;
-  workspace?: string;
-  [key: string]: any;
-}
+const PREFILL_DATA = {
+  orgName: "Testing Org " + Math.floor(Math.random() * 1000),
+  workspace: "testorg" + Math.floor(Math.random() * 1000),
+  fullName: "John Tester",
+  email: `test${Math.floor(Math.random() * 1000)}@example.com`,
+  mobile: "919999999999"
+};
 
 const WebRegister: React.FC = () => {
   const { t } = useTranslation();
-  const [signIn, setSignIn] = useState<boolean>(false);
-  const [schema, setSchema] = useState<FormSchema | null>(null);
-  const [roles, setRoles] = useState<Role[] | null>(null);
+  const [form] = Form.useForm();
   const [loading, setLoading] = useState<boolean>(false);
 
-  const getForms = async () => {
-    const { data, error } = await supabase
-      .schema('core').from('forms')
-      .select('*')
-      .eq('name', 'web_admin_registration_form')
-      .single();
-
-    if (error) {
-      console.error('Error fetching form schema:', error);
-      return;
-    }
-    if (data) {
-      setSchema(data);
-    }
-  };
-
-  const getRoles = async () => {
-    const { data, error } = await supabase.schema('identity').from('roles').select('*');
-    console.log("rol", data);
-    if (error) {
-      console.error('Error fetching roles:', error);
-      return;
-    }
-    if (data) {
-      setRoles(data);
-    }
-  };
-
-  useEffect(() => {
-    getForms();
-    getRoles();
-  }, []);
-
-  //   const PREFIX_PATH = surveyLayout ? SURVEY_PREFIX_PATH : APP_PREFIX_PATH;
-
-  const onFinish = async (values: FormValues) => {
-    if (values?.password !== values?.retypePassword) {
-      message.error(t('core.auth.message.password_mismatch'));
-      return;
-    }
+  const onFinish = async (values: typeof PREFILL_DATA) => {
     setLoading(true);
-
-    let user_id: string | null = null;
-    let org_id: string | null = null;
-    const orgName = values?.orgName;
-    const userName = orgName ? `${orgName} ${values?.role}` : t('common.label.user');
-
     try {
-      // Step 1: Sign up the user
-      const { data, error } = await supabase.auth.signUp({
-        email: values?.email,
-        password: values?.password,
-        options: {
-          data: {
-            display_name: userName,
-            phone: values?.mobile ? String(values.mobile) : '',
-            email_confirmed_at: new Date().toISOString(),
-          },
-        },
-      });
-
-      if (error) {
-        setSignIn(true);
-        notification.error({ message: error.message || 'Registration Error' });
-        return;
-      }
-
-      if (data?.user) {
-        user_id = data.user.id;
-
-        // Step 2: Insert organization
-        const { data: orgData, error: insertError2 } = await supabase
-          .schema('identity').from('organizations')
-          .insert([
-            {
-              auth_id: user_id,
-              name: orgName || 'Dev',
-              subdomain: values?.workspace?.toLowerCase() || 'dev',
-              details: { name: orgName || '' },
-              app_settings: {
-                name: orgName?.toLowerCase().replace(/\s+/g, '_') || 'dev',
-                workspace: values?.workspace?.toLowerCase() || 'dev',
-              },
-            },
-          ])
-          .select();
-
-        if (insertError2) {
-          throw new Error(insertError2.message || 'Error inserting organization');
-        }
-
-        if (orgData?.length > 0) {
-          org_id = orgData[0].id;
-
-          // Step 3: Insert user
-          const { error: insertError3 } = await supabase.schema('identity').from('users').insert([
-            {
-              id: user_id,
-              auth_id: user_id,
-              organization_id: org_id,
-              details: { ...values, user_name: orgName },
-              name: userName,
-              role_id: roles?.find((i) => i.name === values?.role)?.id,
-              // role_type: values?.role,
-              password_confirmed: true,
-            },
-          ]);
-
-          if (insertError3) {
-            throw new Error(insertError3.message || 'Error inserting user');
+      // Step 1: Create a "Shell" organization in identity.organizations
+      // This is necessary to satisfy foreign key constraints in crm.accounts
+      const { data: orgData, error: orgError } = await supabase
+        .schema('identity')
+        .from('organizations')
+        .insert([
+          {
+            name: values.orgName,
+            subdomain: values.workspace.toLowerCase(),
+            is_active: false, // Inactive until approved
+            details: {
+              registration_source: 'web_register',
+              requested_at: new Date().toISOString(),
+              admin_contact: {
+                fullName: values.fullName,
+                email: values.email,
+                mobile: values.mobile
+              }
+            }
           }
-        }
+        ])
+        .select()
+        .single();
 
-        message.success(t('core.auth.message.registration_success'));
-      }
+      if (orgError) throw orgError;
+
+      const orgId = orgData.id;
+
+      // Step 1.5: Create record in unified.organizations (To satisfy crm.accounts FK)
+      const { error: unifiedError } = await supabase
+        .schema('unified')
+        .from('organizations')
+        .insert([
+          {
+            id: orgId,
+            organization_id: orgId,
+            name: values.orgName,
+            status: 'requested',
+            details: {
+              registration_source: 'web_register',
+              requested_at: new Date().toISOString()
+            }
+          }
+        ]);
+
+      if (unifiedError) throw unifiedError;
+
+      // Step 2: Insert into crm.accounts (Linked to the shell organization)
+      const { data: accountData, error: accountError } = await supabase
+        .schema('crm')
+        .from('accounts')
+        .insert([
+          {
+            id: orgId, // Use the same ID if possible, or link via organization_id
+            name: values.orgName,
+            organization_id: orgId,
+            short_code: values.workspace.toLowerCase(),
+            status: 'requested',
+            intent_category: 'ONBOARDING_PENDING',
+            details: {
+              source: 'web_register',
+              requested_at: new Date().toISOString()
+            }
+          }
+        ])
+        .select()
+        .single();
+
+      if (accountError) throw accountError;
+
+      // Step 3: Insert into crm.contacts (Linked to the shell organization)
+      const { error: contactError } = await supabase
+        .schema('crm')
+        .from('contacts')
+        .insert([
+          {
+            name: values.fullName,
+            email: values.email,
+            phone: values.mobile,
+            account_id: accountData.id,
+            organization_id: orgId,
+            status: 'requested',
+            intent_category: 'ONBOARDING_PENDING',
+            details: {
+              source: 'web_register',
+              requested_at: new Date().toISOString()
+            }
+          }
+        ]);
+
+      if (contactError) throw contactError;
+
+      message.success(t('core.auth.message.registration_request_success') || 'Registration request submitted successfully! Pending admin approval.');
+      form.resetFields();
     } catch (error: any) {
-      // Rollback logic
-      if (user_id) {
-        // Delete the authenticated user
-        await supabase.rpc('auth_user_rollback', { user_id });
-        console.log('Rollback auth');
-
-        // Delete the organization if it was created
-        if (org_id) {
-          console.log('Rollback org');
-          // await supabase.from('organizations').delete().eq('id', org_id);
-          await supabase.schema('identity').from('organizations').delete().eq('id', org_id);
-        }
-
-        console.log('Rollback user');
-        const { error: signOutError } = await supabase.auth.signOut({ scope: 'local' });
-        if (signOutError) {
-          notification.error({ message: 'Error signing out' });
-          return;
-        }
-        await supabase.schema('identity').from('users').delete().eq('id', user_id);
-      }
-
-      notification.error({ message: error.message || 'Registration Error' });
+      console.error('Registration Error:', error);
+      notification.error({ 
+        message: 'Registration Error',
+        description: error.message || 'An error occurred during registration.'
+      });
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div>
-      {loading ? (
-        <Row>
-          <Col offset={10}>
-            <Spin size="large" />
-          </Col>
-        </Row>
-      ) : (
-        <>
-          <h2 className="mb-4">{t('core.auth.label.registration')}</h2>
-          <p>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+      <Card className="w-full max-w-lg shadow-md">
+        <div className="text-center mb-8">
+          <h2 className="text-2xl font-bold">{t('core.auth.label.registration')}</h2>
+          <p className="text-gray-500 mt-2">
             {t('core.auth.label.already_registered')}{' '}
-            <Link to={'/login'}>{t('core.auth.action.login_here')}</Link>
+            <Link to={'/login'} className="text-primary hover:underline">{t('core.auth.action.login_here')}</Link>
           </p>
-          {schema ? (
-            <DynamicForm schemas={schema} onFinish={onFinish} />
-          ) : (
-            <Row>
-              <Col offset={10}>
-                <Spin size="large" />
-              </Col>
-            </Row>
-          )}
-          {signIn && (
-            <>
-              {t('core.auth.label.email_already_added')}{' '}
-              <Link to={'/login'}>{t('core.auth.action.login_continue')}</Link>
-              <br />
-              <br />
-            </>
-          )}
-        </>
-      )}
+        </div>
+
+        <Spin spinning={loading}>
+          <Form
+            form={form}
+            layout="vertical"
+            onFinish={onFinish}
+            initialValues={PREFILL_DATA}
+            requiredMark={false}
+          >
+            <div className="bg-gray-50/50 p-4 rounded-lg mb-6 border border-gray-100">
+              <h3 className="text-sm font-semibold mb-4 flex items-center gap-2">
+                <Building2 size={16} /> Organization Information
+              </h3>
+              <Row gutter={16}>
+                <Col span={12}>
+                  <Form.Item
+                    label="Organization Name"
+                    name="orgName"
+                    rules={[{ required: true, message: 'Please enter organization name' }]}
+                  >
+                    <Input prefix={<Building2 size={16} className="text-gray-400" />} placeholder="Acme Inc" />
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item
+                    label="Workspace (Subdomain)"
+                    name="workspace"
+                    rules={[{ required: true, message: 'Please enter workspace name' }]}
+                  >
+                    <Input prefix={<Globe size={16} className="text-gray-400" />} placeholder="acme" />
+                  </Form.Item>
+                </Col>
+              </Row>
+            </div>
+
+            <div className="bg-gray-50/50 p-4 rounded-lg mb-6 border border-gray-100">
+              <h3 className="text-sm font-semibold mb-4 flex items-center gap-2">
+                <User size={16} /> Admin User Information
+              </h3>
+              <Form.Item
+                label="Full Name"
+                name="fullName"
+                rules={[{ required: true, message: 'Please enter full name' }]}
+              >
+                <Input prefix={<User size={16} className="text-gray-400" />} placeholder="John Doe" />
+              </Form.Item>
+              <Row gutter={16}>
+                <Col span={12}>
+                  <Form.Item
+                    label="Email Address"
+                    name="email"
+                    rules={[
+                      { required: true, message: 'Please enter email' },
+                      { type: 'email', message: 'Please enter a valid email' }
+                    ]}
+                  >
+                    <Input prefix={<Mail size={16} className="text-gray-400" />} placeholder="john@example.com" />
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item
+                    label="Mobile Number"
+                    name="mobile"
+                    rules={[{ required: true, message: 'Please enter mobile number' }]}
+                  >
+                    <Input prefix={<Phone size={16} className="text-gray-400" />} placeholder="919999999999" />
+                  </Form.Item>
+                </Col>
+              </Row>
+            </div>
+
+            <Form.Item className="mb-0">
+              <Button type="primary" htmlType="submit" size="large" block loading={loading}>
+                Submit Registration Request
+              </Button>
+            </Form.Item>
+          </Form>
+        </Spin>
+      </Card>
     </div>
   );
 };
