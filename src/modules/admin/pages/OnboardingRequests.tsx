@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Table, Button, Space, Card, Tag, message, Modal, Typography } from 'antd';
 import { CheckCircle, XCircle, Info, Building2, User, Mail, Phone } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { useAuthStore } from '@/core/lib/store';
 import type { ColumnsType } from 'antd/es/table';
 
 const { Title, Text } = Typography;
@@ -19,7 +18,6 @@ interface OnboardingRequest {
 }
 
 const OnboardingRequests: React.FC = () => {
-  const { organization } = useAuthStore();
   const [requests, setRequests] = useState<OnboardingRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState<string | null>(null);
@@ -30,12 +28,20 @@ const OnboardingRequests: React.FC = () => {
       // Use the L4 Fetcher for standardized data retrieval
       const { data, error } = await supabase.schema('core').rpc('api_new_fetch_entity_records', {
         config: {
-          entity_name: 'accounts', // Or 'v_accounts' if you want the enriched view
-          entity_schema: 'crm',
-          organization_id: organization?.id,
+          entity_name: 'organizations',
+          entity_schema: 'identity',
+          // No organization_id needed here since this is a global admin view of organizations
           filters: [
-            // { key: 'intent_category', operator: 'eq', value: 'ONBOARDING_PENDING' },
-            // { key: 'status', operator: 'eq', value: 'requested' }
+            // { key: 'is_active', operator: '=', value: false }
+          ],
+          // Join with the contact who claimed/requested this organization
+          include: [
+            {
+              entity_name: 'contacts',
+              entity_schema: 'crm',
+              on: 'claimed_by_contact_id',
+              select: ['id', 'email', 'phone', 'details', 'created_at', 'name']
+            }
           ],
           pagination: { limit: 100 },
           sorting: { column: 'created_at', direction: 'DESC' }
@@ -46,33 +52,29 @@ const OnboardingRequests: React.FC = () => {
 
       // The L4 fetcher returns data in a 'data' property
       const records = data?.data || [];
-
-      // Note: Since api_new_fetch_entity_records might not support 'include' yet
-      // we may need to fall back to the enriched v_accounts view or handle joins differently.
-      // If records don't have contacts, we might need a separate fetch or use v_accounts.
       
-      const formattedRequests: OnboardingRequest[] = records.map((acc: any) => {
-        // Contacts might be joined if using v_accounts or if include is supported
-        const contact = acc.contacts?.[0] || acc.primary_contact || {};
+      const formattedRequests: OnboardingRequest[] = records.map((org: any) => {
+        const contact = org.contacts?.[0] || {};
         
-        // Account Name Mapping (standardized field)
-        const orgName = acc.name || acc.details?.name || 'Unnamed Organization';
+        // Organization Name & Code
+        const orgName = org.name || 'Unnamed Organization';
+        const shortCode = org.subdomain || 'no-code';
         
         // Contact Name Mapping from nested details (L4 pattern)
-        const contactName = acc.contact_name || contact.name || 
+        const contactName = contact.name || 
                            (contact.details?.first_name ? `${contact.details.first_name} ${contact.details.last_name || ''}`.trim() : null) ||
                            contact.details?.name || 
                            'Unnamed Contact';
 
         return {
-          id: acc.id,
+          id: org.id,
           name: orgName,
-          short_code: acc.short_code,
-          contact_id: contact.id || acc.contact_id,
+          short_code: shortCode,
+          contact_id: contact.id,
           contact_name: contactName,
-          contact_email: acc.contact_email || contact.email,
-          contact_phone: acc.contact_phone || contact.phone,
-          requested_at: acc.created_at || contact.created_at
+          contact_email: contact.email,
+          contact_phone: contact.phone,
+          requested_at: org.created_at || contact.created_at
         };
       });
 
@@ -120,11 +122,10 @@ const OnboardingRequests: React.FC = () => {
         try {
           // Use L4 Upsert for standardized state updates
           const { error } = await supabase.schema('core').rpc('api_new_core_upsert_data', {
-            table_name: 'crm.v_accounts',
+            table_name: 'identity.organizations',
             data: {
               id: request.id,
-              status: 'rejected',
-              intent_category: 'ONBOARDING_REJECTED'
+              is_active: false // Already false, but we can set a rejection flag in details if needed
             }
           });
 
