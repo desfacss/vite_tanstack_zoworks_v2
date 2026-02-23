@@ -48,7 +48,7 @@ const RolePermissions: React.FC<RolePermissionsProps> = ({ organization }) => {
       }
       setLoading(true);
       try {
-        const { data: configData, error: configError } = await supabase.rpc(
+        const { data: configData, error: configError } = await supabase.schema('identity').rpc(
           'get_organization_module_configs',
           {
             p_organization_id: organization.id,

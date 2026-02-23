@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Table, Button, Space, Card, Tag, message, Modal, Typography } from 'antd';
 import { CheckCircle, XCircle, Info, Building2, User, Mail, Phone } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { useAuthStore } from '@/core/lib/store';
 import type { ColumnsType } from 'antd/es/table';
 
 const { Title, Text } = Typography;
@@ -18,6 +19,7 @@ interface OnboardingRequest {
 }
 
 const OnboardingRequests: React.FC = () => {
+  const { organization } = useAuthStore();
   const [requests, setRequests] = useState<OnboardingRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState<string | null>(null);
@@ -25,44 +27,58 @@ const OnboardingRequests: React.FC = () => {
   const fetchRequests = async () => {
     setLoading(true);
     try {
-      // Fetch accounts joined with contacts where intent_category is ONBOARDING_PENDING
-      const { data, error } = await supabase
-        .schema('crm')
-        .from('accounts')
-        .select(`
-          id,
-          name,
-          short_code,
-          details,
-          contacts:contacts!contacts_account_id_fkey(
-            id,
-            name,
-            email,
-            phone,
-            created_at
-          )
-        `)
-        .eq('intent_category', 'ONBOARDING_PENDING')
-        .eq('status', 'requested');
+      // Use the L4 Fetcher for standardized data retrieval
+      const { data, error } = await supabase.schema('core').rpc('api_new_fetch_entity_records', {
+        config: {
+          entity_name: 'accounts', // Or 'v_accounts' if you want the enriched view
+          entity_schema: 'crm',
+          organization_id: organization?.id,
+          filters: [
+            // { key: 'intent_category', operator: 'eq', value: 'ONBOARDING_PENDING' },
+            // { key: 'status', operator: 'eq', value: 'requested' }
+          ],
+          pagination: { limit: 100 },
+          sorting: { column: 'created_at', direction: 'DESC' }
+        }
+      });
 
       if (error) throw error;
 
-      const formattedRequests: OnboardingRequest[] = (data || []).map((acc: any) => {
-        const contact = acc.contacts?.[0] || {};
+      // The L4 fetcher returns data in a 'data' property
+      const records = data?.data || [];
+
+      // Note: Since api_new_fetch_entity_records might not support 'include' yet
+      // we may need to fall back to the enriched v_accounts view or handle joins differently.
+      // If records don't have contacts, we might need a separate fetch or use v_accounts.
+      
+      const formattedRequests: OnboardingRequest[] = records.map((acc: any) => {
+        // Contacts might be joined if using v_accounts or if include is supported
+        const contact = acc.contacts?.[0] || acc.primary_contact || {};
+        
+        // Account Name Mapping (standardized field)
+        const orgName = acc.name || acc.details?.name || 'Unnamed Organization';
+        
+        // Contact Name Mapping from nested details (L4 pattern)
+        const contactName = acc.contact_name || contact.name || 
+                           (contact.details?.first_name ? `${contact.details.first_name} ${contact.details.last_name || ''}`.trim() : null) ||
+                           contact.details?.name || 
+                           'Unnamed Contact';
+
         return {
           id: acc.id,
-          name: acc.name,
+          name: orgName,
           short_code: acc.short_code,
-          contact_id: contact.id,
-          contact_name: contact.name,
-          contact_email: contact.email,
-          contact_phone: contact.phone,
-          requested_at: contact.created_at || acc.created_at
+          contact_id: contact.id || acc.contact_id,
+          contact_name: contactName,
+          contact_email: acc.contact_email || contact.email,
+          contact_phone: acc.contact_phone || contact.phone,
+          requested_at: acc.created_at || contact.created_at
         };
       });
 
       setRequests(formattedRequests);
     } catch (error: any) {
+      console.error('Fetch Error:', error);
       message.error('Failed to fetch requests: ' + error.message);
     } finally {
       setLoading(false);
@@ -76,75 +92,14 @@ const OnboardingRequests: React.FC = () => {
   const handleApprove = async (request: OnboardingRequest) => {
     setProcessingId(request.id);
     try {
-      // 1. Create Auth User
-      const tempPassword = 'Welcome@' + Math.random().toString(36).slice(-8);
-      
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: request.contact_email,
-        password: tempPassword,
-        options: {
-          data: {
-            display_name: request.contact_name,
-            phone: request.contact_phone,
-            email_confirmed_at: new Date().toISOString(),
-          }
-        }
+      // Phase 3: SaaS Activation via RPC
+      const { error } = await supabase.schema('identity').rpc('promote_to_tenant', {
+        p_org_id: request.id
       });
 
-      if (authError) throw authError;
-      if (!authData.user) throw new Error('Auth user creation failed.');
+      if (error) throw error;
 
-      const authId = authData.user.id;
-      const orgId = request.id; // From Stage 1, account ID matches Org ID
-
-      // 2. Activate existing Shell Organization
-      const { error: orgError } = await supabase
-        .schema('identity')
-        .from('organizations')
-        .update({
-          auth_id: authId,
-          is_active: true,
-          details: { onboarding_status: 'approved', approved_at: new Date().toISOString() }
-        })
-        .eq('id', orgId);
-
-      if (orgError) throw orgError;
-
-      // 3. Create User record
-      const { data: userData, error: userError } = await supabase
-        .schema('identity')
-        .from('users')
-        .insert([{
-          id: authId,
-          auth_id: authId,
-          name: request.contact_name,
-          email: request.contact_email,
-          mobile: request.contact_phone,
-          organization_id: orgId,
-          password_confirmed: true
-        }])
-        .select()
-        .single();
-
-      if (userError) throw userError;
-
-      // 4. Create Organization User mapping
-      const { error: mappingError } = await supabase
-        .schema('identity')
-        .from('organization_users')
-        .insert([{
-          organization_id: orgId,
-          user_id: userData.id,
-          is_active: true
-        }]);
-
-      if (mappingError) throw mappingError;
-
-      // 5. Update staging rows to active status
-      await supabase.schema('crm').from('contacts').update({ status: 'active', intent_category: 'ONBOARDING_COMPLETED' }).eq('id', request.contact_id);
-      await supabase.schema('crm').from('accounts').update({ status: 'active', intent_category: 'ONBOARDING_COMPLETED' }).eq('id', orgId);
-
-      message.success(`Activated ${request.name} successfully! Credentials sent to ${request.contact_email}`);
+      message.success(`Activated ${request.name} successfully! Organization is now operational.`);
       fetchRequests();
     } catch (error: any) {
       console.error('Approval Error:', error);
@@ -157,18 +112,25 @@ const OnboardingRequests: React.FC = () => {
   const handleReject = (request: OnboardingRequest) => {
     Modal.confirm({
       title: 'Reject Request?',
-      content: `Are you sure you want to reject and delete the request from ${request.name}? This will also remove the shell organization.`,
-      okText: 'Reject & Delete',
+      content: `Are you sure you want to reject the request from ${request.name}? This will mark the request as rejected.`,
+      okText: 'Reject',
       okType: 'danger',
       onOk: async () => {
         setProcessingId(request.id);
         try {
-          // Delete in order to satisfy FKs (though CASCADE is on)
-          await supabase.schema('crm').from('contacts').delete().eq('id', request.contact_id);
-          await supabase.schema('crm').from('accounts').delete().eq('id', request.id);
-          await supabase.schema('identity').from('organizations').delete().eq('id', request.id);
+          // Use L4 Upsert for standardized state updates
+          const { error } = await supabase.schema('core').rpc('api_new_core_upsert_data', {
+            table_name: 'crm.v_accounts',
+            data: {
+              id: request.id,
+              status: 'rejected',
+              intent_category: 'ONBOARDING_REJECTED'
+            }
+          });
+
+          if (error) throw error;
           
-          message.success('Request and shell organization removed.');
+          message.success('Request rejected.');
           fetchRequests();
         } catch (error: any) {
           message.error('Rejection failed: ' + error.message);

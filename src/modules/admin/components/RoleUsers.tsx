@@ -25,7 +25,7 @@ const RoleMembers: React.FC<RoleMembersProps> = ({ editItem }) => {
         .schema('identity').from('users')
         .select('*')
         .eq('organization_id', organization?.id)
-        .eq('is_active', true);
+        // .eq('is_active', true);
 
       if (error) throw error;
       return data;

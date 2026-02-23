@@ -69,7 +69,7 @@ const SettingsWorkforce: React.FC = () => {
       }
 
       const { data: moduleConfigsData, error: configError } = await supabase
-        .schema('organization').from('module_configs')
+        .schema('identity').from('org_module_configs')
         .select('id, module_id, settings')
         .eq('organization_id', organization.id);
 
@@ -210,7 +210,7 @@ const SettingsWorkforce: React.FC = () => {
     deepMerge(updatedSettings, newSettingsFromForm);
 
     const { error } = await supabase
-      .schema('organization').from('module_configs')
+      .schema('identity').from('org_module_configs')
       .update({
         settings: updatedSettings,
         updated_at: new Date().toISOString(),
@@ -245,7 +245,7 @@ const SettingsWorkforce: React.FC = () => {
     setLoading(true);
 
     const { error } = await supabase
-      .schema('organization').from('module_configs')
+      .schema('identity').from('org_module_configs')
       .update({
         settings: null,
         updated_at: new Date().toISOString(),

@@ -118,7 +118,6 @@ const Users: React.FC = () => {
           location_id,
           manager_id,
           is_active,
-          status,
           created_at,
           user:users!organization_users_user_id_fkey(id, name, email, mobile),
           location:locations!organization_users_location_id_fkey(id, name)
