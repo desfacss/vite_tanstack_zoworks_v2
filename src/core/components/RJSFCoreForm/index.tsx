@@ -181,23 +181,37 @@ const RJSFCoreForm: React.FC<RJSFCoreFormProps> = ({
         selectColumns = noId ? displaySelect : `id, ${displaySelect}`;
       }
 
-      let query = supabase.schema(actualSchema).from(actualTable).select(selectColumns).eq('organization_id', organization?.id);
+      console.log(`[RJSFCoreForm] Fetching enums for ${actualSchema}.${actualTable}`, { selectColumns, filters });
+
+      // First try with organization_id filter
+      let query = supabase.schema(actualSchema).from(actualTable).select(selectColumns);
+      
+      // Only add organization_id if it exists in store
+      if (organization?.id) {
+        query = query.eq('organization_id', organization.id);
+      }
+      
       filters.forEach(f => { query = applyFilter(query, f); });
 
-      let result: any = await query;
-      let data = result.data;
-      let error = result.error;
+      let { data, error } = await query;
       
-      if (error) throw error;
-
-      if (!data || data.length === 0) {
-        query = supabase.schema(actualSchema).from(actualTable).select(selectColumns).is('organization_id', null);
-        filters.forEach(f => { query = applyFilter(query, f); });
-        const retryRes: any = await query;
-        if (retryRes.error) throw retryRes.error;
+      // If error (likely column missing) or no data, try without organization_id
+      if (error || !data || data.length === 0) {
+        if (error) console.warn(`[RJSFCoreForm] Org filter failed for ${actualTable}, retrying without it.`, error.message);
+        
+        let retryQuery = supabase.schema(actualSchema).from(actualTable).select(selectColumns);
+        filters.forEach(f => { retryQuery = applyFilter(retryQuery, f); });
+        
+        const retryRes = await retryQuery;
+        if (retryRes.error) {
+            console.error(`[RJSFCoreForm] Fetch failed for ${actualTable} after retry:`, retryRes.error.message);
+            throw retryRes.error;
+        }
         data = retryRes.data;
       }
 
+      console.log(`[RJSFCoreForm] Fetched ${data?.length || 0} options for ${actualTable}`);
+      
       setEnumCache(prev => ({ ...prev, [cacheKey]: data || [] }));
       return data || [];
     } catch (err) {
@@ -214,10 +228,12 @@ const RJSFCoreForm: React.FC<RJSFCoreFormProps> = ({
     for (const key of keys) {
       const enumValue = obj[key]?.enum as EnumSchema;
       if (enumValue && typeof enumValue === 'object' && enumValue.table && enumValue.column) {
+        console.log(`[RJSFCoreForm] Found lookup field: ${key}`, enumValue);
         const noId = enumValue.no_id || false;
         let filterConditions = [...(enumValue.filters || [])] as FilterType[];
 
         if (enumValue.dependsOnColumn && formData[enumValue.dependsOnField || '']) {
+          console.log(`[RJSFCoreForm] Applying dependency for ${key} from ${enumValue.dependsOnField}`);
           filterConditions.push({
             key: enumValue.dependsOnColumn,
             operator: 'eq',
@@ -227,10 +243,18 @@ const RJSFCoreForm: React.FC<RJSFCoreFormProps> = ({
 
         promises.push(
           fetchDataForDropdown(enumValue.schema, enumValue.table, enumValue.column, filterConditions, noId, enumValue.display_column).then((options) => {
+            console.log(`[RJSFCoreForm] Replacing enum for ${key} with ${options?.length || 0} items`);
             obj[key] = {
               ...obj[key],
-              enum: options?.map((item: any) => (noId ? item[enumValue.column] : item.id)),
-              enumNames: options?.map((item: any) => item[enumValue.column] || item.id),
+              enum: options?.map((item: any) => {
+                  const val = noId ? item[enumValue.column] : item.id;
+                  if (val === undefined) console.warn(`[RJSFCoreForm] Value missing for ${key} in item:`, item);
+                  return val;
+              }),
+              enumNames: options?.map((item: any) => {
+                  const label = item[enumValue.display_column || enumValue.column] || item.id;
+                  return label;
+              }),
             };
           })
         );

@@ -6,6 +6,7 @@ import { Check, HelpCircle } from "lucide-react";
 import { WidgetProps } from "@rjsf/utils";
 
 const { RangePicker } = DatePicker;
+// Typography components used directly to avoid name conflicts
 
 interface InfoWidgetOptions {
   text?: string;
@@ -30,16 +31,16 @@ const InfoWidget: React.FC<WidgetProps & { options: InfoWidgetOptions }> = ({
 
   if (type === "description") {
     return (
-      <Text style={defaultStyles}>
+      <Typography.Text style={defaultStyles}>
         {text || schema.description || schema.title || "Description"}
-      </Text>
+      </Typography.Text>
     );
   }
 
   return (
-    <Title level={level} style={defaultStyles}>
+    <Typography.Title level={level} style={defaultStyles}>
       {text || schema.title || "Section Header"}
-    </Title>
+    </Typography.Title>
   );
 };
 
@@ -130,37 +131,40 @@ const TagsWidget: React.FC<WidgetProps & { options: SelectOptions }> = ({
   );
 };
 
-// Select Custom Widget
-const SelectCustomWidget: React.FC<WidgetProps & { options: SelectOptions }> = ({
+const SelectCustomWidget: React.FC<WidgetProps & { options: any }> = ({
+  id,
   options,
   value,
   onChange,
   onBlur,
   onFocus,
   readonly,
+  schema,
 }) => {
-  const { enumOptions, placeholder, allowClear, mode, showSearch, optionFilterProp } = options;
+  const { enumOptions, placeholder, allowClear, mode: optionMode, showSearch, optionFilterProp } = options;
+
+  // Determine mode: check options, then schema type
+  const mode = optionMode || (schema?.type === "array" ? "multiple" : undefined);
 
   return (
     <Select
+      id={id}
       value={value}
-      onChange={readonly ? undefined : onChange}
-      onBlur={onBlur}
-      onFocus={onFocus}
-      placeholder={placeholder}
+      onChange={readonly ? undefined : (val) => onChange(val)}
+      onBlur={() => onBlur(id, value)}
+      onFocus={() => onFocus(id, value)}
+      placeholder={placeholder || (schema?.title ? `Select ${schema.title}` : "Select...")}
       allowClear={allowClear ?? true}
-      mode={mode || "multiple"}
+      mode={mode}
       showSearch={showSearch ?? true}
       optionFilterProp={optionFilterProp || "children"}
       style={{ width: "100%" }}
       disabled={readonly}
-    >
-      {enumOptions?.map(({ value, label }) => (
-        <Select.Option key={value} value={value}>
-          {label}
-        </Select.Option>
-      ))}
-    </Select>
+      options={enumOptions?.map((opt: any) => ({
+          label: opt.label || opt.value,
+          value: opt.value
+      }))}
+    />
   );
 };
 
@@ -201,7 +205,7 @@ const SelectableTags: React.FC<WidgetProps & { options: TagOptions }> = ({
   onChange,
   readonly,
 }) => {
-  const { enumOptions, maxItems, title } = options;
+  const { enumOptions, maxItems } = options;
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
   useEffect(() => {
@@ -289,7 +293,7 @@ const SelectableTags: React.FC<WidgetProps & { options: TagOptions }> = ({
 // };
 
 
-const CustomDescriptionWidget = ({ options }) => {
+const CustomDescriptionWidget = ({ options }: { options: any }) => {
   const { name, description, helpText } = options;
   const [isMobile, setIsMobile] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
