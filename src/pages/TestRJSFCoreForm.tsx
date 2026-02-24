@@ -12,7 +12,6 @@ import 'ace-builds/src-noconflict/mode-json';
 import 'ace-builds/src-noconflict/theme-monokai';
 
 const { Text } = Typography;
-const { TabPane } = Tabs;
 
 const TestRJSFCoreForm = () => {
     const { organization } = useAuthStore();
@@ -20,12 +19,12 @@ const TestRJSFCoreForm = () => {
     const [selectedEntity, setSelectedEntity] = useState<string | null>(null);
     const [mode, setMode] = useState<'minimal' | 'recommended' | 'all'>('recommended');
     const [generatedSchema, setGeneratedSchema] = useState<any>(null);
-    
+
     // Editable schemas as JSON strings
     const [dataSchemaStr, setDataSchemaStr] = useState<string>('');
     const [uiSchemaStr, setUiSchemaStr] = useState<string>('');
     const [dbSchemaStr, setDbSchemaStr] = useState<string>('');
-    
+
     const [loading, setLoading] = useState(false);
     const [generating, setGenerating] = useState(false);
     const [saving, setSaving] = useState(false);
@@ -47,7 +46,7 @@ const TestRJSFCoreForm = () => {
                     .eq('is_active', true);
 
                 if (error) throw error;
-                
+
                 const formatted = data?.map((item: any) => {
                     const schema = item.entities?.entity_schema || 'public';
                     const type = item.entity_type;
@@ -57,7 +56,7 @@ const TestRJSFCoreForm = () => {
                         value: fullName,
                     };
                 }) || [];
-                
+
                 formatted.sort((a, b) => a.label.localeCompare(b.label));
                 setEntities(formatted);
             } catch (err: any) {
@@ -108,7 +107,7 @@ const TestRJSFCoreForm = () => {
 
     const handleSaveToForms = async () => {
         if (!selectedEntity || !organization?.id) return;
-        
+
         setSaving(true);
         try {
             // Parse current edited strings
@@ -128,7 +127,7 @@ const TestRJSFCoreForm = () => {
             let suffix = 'form';
             if (mode === 'minimal') suffix = 'min';
             else if (mode === 'all') suffix = 'custom';
-            
+
             const formName = `${schemaName}_${entityName}_${suffix}`;
 
             // Check for existing form to get its ID
@@ -137,13 +136,13 @@ const TestRJSFCoreForm = () => {
                 .from('forms')
                 .select('id')
                 .eq('name', formName);
-            
+
             if (isGlobal) {
                 query.is('organization_id', null);
             } else {
                 query.eq('organization_id', organization.id);
             }
-            
+
             const { data: existingForm } = await query.maybeSingle();
 
             // Upsert to core.forms
@@ -176,10 +175,10 @@ const TestRJSFCoreForm = () => {
         try {
             const currentData = JSON.parse(dataSchemaStr);
             const currentUi = JSON.parse(uiSchemaStr);
-            
+
             if (currentData.properties && currentData.properties[fieldName]) {
                 delete currentData.properties[fieldName];
-                
+
                 // Also remove from required array if present
                 if (Array.isArray(currentData.required)) {
                     currentData.required = currentData.required.filter((f: string) => f !== fieldName);
@@ -192,8 +191,8 @@ const TestRJSFCoreForm = () => {
 
                 // Update layout if it exists
                 if (currentUi['ui:layout']) {
-                    currentUi['ui:layout'] = currentUi['ui:layout'].map((page: any) => 
-                        page.map((row: any) => 
+                    currentUi['ui:layout'] = currentUi['ui:layout'].map((page: any) =>
+                        page.map((row: any) =>
                             row.filter((f: string) => f !== fieldName)
                         ).filter((row: any) => row.length > 0)
                     ).filter((page: any) => page.length > 0);
@@ -201,16 +200,16 @@ const TestRJSFCoreForm = () => {
 
                 const newDataStr = JSON.stringify(currentData, null, 2);
                 const newUiStr = JSON.stringify(currentUi, null, 2);
-                
+
                 setDataSchemaStr(newDataStr);
                 setUiSchemaStr(newUiStr);
-                
+
                 setGeneratedSchema((prev: any) => ({
                     ...prev,
                     data_schema: currentData,
                     ui_schema: currentUi
                 }));
-                
+
                 message.info(`Field "${fieldName}" removed`);
             }
         } catch (e) {
@@ -232,8 +231,8 @@ const TestRJSFCoreForm = () => {
         }
     }, [dataSchemaStr, uiSchemaStr, dbSchemaStr]);
 
-    const fieldList = generatedSchema?.data_schema?.properties 
-        ? Object.keys(generatedSchema.data_schema.properties) 
+    const fieldList = generatedSchema?.data_schema?.properties
+        ? Object.keys(generatedSchema.data_schema.properties)
         : [];
 
     return (
@@ -263,16 +262,16 @@ const TestRJSFCoreForm = () => {
                                 </Radio.Group>
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                <Switch 
-                                    checked={isGlobal} 
-                                    onChange={setIsGlobal} 
+                                <Switch
+                                    checked={isGlobal}
+                                    onChange={setIsGlobal}
                                     size="small"
                                 />
                                 <Text strong>Global Form (No Org ID)</Text>
                             </div>
-                            <Button 
-                                type="primary" 
-                                icon={<ThunderboltOutlined />} 
+                            <Button
+                                type="primary"
+                                icon={<ThunderboltOutlined />}
                                 onClick={handleGenerate}
                                 loading={generating}
                                 disabled={!selectedEntity}
@@ -288,18 +287,18 @@ const TestRJSFCoreForm = () => {
                                 <Card size="small" title="Form Fields" style={{ height: '100%', overflowY: 'auto', maxHeight: '1000px' }}>
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                                         {fieldList.map(field => (
-                                            <div key={field} style={{ 
-                                                display: 'flex', 
-                                                justifyContent: 'space-between', 
+                                            <div key={field} style={{
+                                                display: 'flex',
+                                                justifyContent: 'space-between',
                                                 alignItems: 'center',
                                                 padding: '8px',
                                                 background: '#f5f5f5',
                                                 borderRadius: '4px'
                                             }}>
                                                 <Text ellipsis style={{ maxWidth: '80%' }}>{field}</Text>
-                                                <Button 
-                                                    type="text" 
-                                                    danger 
+                                                <Button
+                                                    type="text"
+                                                    danger
                                                     size="small"
                                                     icon={<Trash2 size={16} />}
                                                     onClick={() => handleDeleteField(field)}
@@ -313,60 +312,75 @@ const TestRJSFCoreForm = () => {
                             <Col span={18}>
                                 <Space direction="vertical" style={{ width: '100%' }} size="large">
                                     <Card size="small" type="inner" title="Schema Editors" extra={
-                                        <Button 
-                                            type="primary" 
-                                            icon={<SaveOutlined />} 
+                                        <Button
+                                            type="primary"
+                                            icon={<SaveOutlined />}
                                             onClick={handleSaveToForms}
                                             loading={saving}
                                         >
                                             Save to Forms Table
                                         </Button>
                                     }>
-                                        <Tabs defaultActiveKey="data">
-                                            <TabPane tab="Data Schema" key="data">
-                                                <AceEditor
-                                                    mode="json"
-                                                    theme="monokai"
-                                                    value={dataSchemaStr}
-                                                    onChange={(val) => { setDataSchemaStr(val); updatePreview(); }}
-                                                    width="100%"
-                                                    height="300px"
-                                                    fontSize={12}
-                                                    setOptions={{ useWorker: false }}
-                                                />
-                                            </TabPane>
-                                            <TabPane tab="UI Schema" key="ui">
-                                                <AceEditor
-                                                    mode="json"
-                                                    theme="monokai"
-                                                    value={uiSchemaStr}
-                                                    onChange={(val) => { setUiSchemaStr(val); updatePreview(); }}
-                                                    width="100%"
-                                                    height="300px"
-                                                    fontSize={12}
-                                                    setOptions={{ useWorker: false }}
-                                                />
-                                            </TabPane>
-                                            <TabPane tab="DB Schema" key="db">
-                                                <AceEditor
-                                                    mode="json"
-                                                    theme="monokai"
-                                                    value={dbSchemaStr}
-                                                    onChange={(val) => { setDbSchemaStr(val); updatePreview(); }}
-                                                    width="100%"
-                                                    height="100px"
-                                                    fontSize={12}
-                                                    setOptions={{ useWorker: false }}
-                                                />
-                                            </TabPane>
-                                        </Tabs>
+                                        <Tabs
+                                            defaultActiveKey="data"
+                                            items={[
+                                                {
+                                                    label: 'Data Schema',
+                                                    key: 'data',
+                                                    children: (
+                                                        <AceEditor
+                                                            mode="json"
+                                                            theme="monokai"
+                                                            value={dataSchemaStr}
+                                                            onChange={(val) => { setDataSchemaStr(val); updatePreview(); }}
+                                                            width="100%"
+                                                            height="300px"
+                                                            fontSize={12}
+                                                            setOptions={{ useWorker: false }}
+                                                        />
+                                                    )
+                                                },
+                                                {
+                                                    label: 'UI Schema',
+                                                    key: 'ui',
+                                                    children: (
+                                                        <AceEditor
+                                                            mode="json"
+                                                            theme="monokai"
+                                                            value={uiSchemaStr}
+                                                            onChange={(val) => { setUiSchemaStr(val); updatePreview(); }}
+                                                            width="100%"
+                                                            height="300px"
+                                                            fontSize={12}
+                                                            setOptions={{ useWorker: false }}
+                                                        />
+                                                    )
+                                                },
+                                                {
+                                                    label: 'DB Schema',
+                                                    key: 'db',
+                                                    children: (
+                                                        <AceEditor
+                                                            mode="json"
+                                                            theme="monokai"
+                                                            value={dbSchemaStr}
+                                                            onChange={(val) => { setDbSchemaStr(val); updatePreview(); }}
+                                                            width="100%"
+                                                            height="100px"
+                                                            fontSize={12}
+                                                            setOptions={{ useWorker: false }}
+                                                        />
+                                                    )
+                                                }
+                                            ]}
+                                        />
                                     </Card>
 
                                     <Divider>Live Preview</Divider>
 
                                     <Card size="small" type="inner" title={`Form Preview: ${selectedEntity}`}>
-                                        <RJSFCoreForm 
-                                            schema={generatedSchema} 
+                                        <RJSFCoreForm
+                                            schema={generatedSchema}
                                             onSuccess={(data) => console.log('Saved successfully:', data)}
                                             key={selectedEntity + mode + dataSchemaStr.length + uiSchemaStr.length} // Force re-mount on changes
                                         />
@@ -375,7 +389,7 @@ const TestRJSFCoreForm = () => {
                             </Col>
                         </Row>
                     )}
-                    
+
                     {!generatedSchema && (
                         <Card>
                             <Text type="secondary">Select an entity and click "Generate Form" to begin.</Text>

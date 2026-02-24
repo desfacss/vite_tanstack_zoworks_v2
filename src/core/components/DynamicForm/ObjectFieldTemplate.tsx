@@ -1,39 +1,38 @@
-import classNames from 'classnames';
-import isObject from 'lodash/isObject';
-import isNumber from 'lodash/isNumber';
-import isString from 'lodash/isString';
+import React from 'react';
 import {
-    FormContextType, GenericObjectType, ObjectFieldTemplateProps, ObjectFieldTemplatePropertyType, RJSFSchema, StrictRJSFSchema, UiSchema, canExpand, descriptionId, getTemplate, getUiOptions, titleId,
+    FormContextType,
+    ObjectFieldTemplateProps,
+    RJSFSchema,
+    StrictRJSFSchema,
+    canExpand,
+    getUiOptions,
 } from '@rjsf/utils';
-import { Col, Row, ConfigProvider, Grid } from 'antd';
-import Utils from './utils';
+import { Col, Row, ConfigProvider } from 'antd';
 
-const { ConfigContext: ConfigConsumer } = ConfigProvider;
-type ConfigConsumerProps = any; // ConfigConsumerProps is internal, using any for compatibility if not easily exported
+const { ConfigContext } = ConfigProvider;
 
-const DESCRIPTION_COL_STYLE = {
-    paddingBottom: '8px',
-};
-
-/** The `ObjectFieldTemplate` is the template to use to render all the inner properties of an object along with the
- * title and description if available. If the object is expandable, then an `AddButton` is also rendered after all
- * the properties.
- *
- * @param props - The `ObjectFieldTemplateProps` for this component
- */
-export default function ObjectFieldTemplate<
+const ObjectFieldTemplate = <
     T = any,
     S extends StrictRJSFSchema = RJSFSchema,
     F extends FormContextType = any
->(props: ObjectFieldTemplateProps<T, S, F>) {
-    const { description, disabled, formContext, formData, idSchema, onAddClick, properties, readonly, required, registry, schema, title, uiSchema,
+>(
+    props: ObjectFieldTemplateProps<T, S, F>
+) => {
+    const { disabled, formData, idSchema, onAddClick, properties, readonly, registry, schema, uiSchema,
     } = props;
 
-    function validateAndFixGridOrder(uiGrid, uiOrder) {
+    function validateAndFixGridOrder(uiGrid: any[], uiOrder: string[]) {
+        if (!uiOrder) return uiGrid;
         return uiGrid?.map((row) => {
-            const orderedRow = {};
+            const orderedRow: any = {};
             Object.keys(row)
-                ?.sort((a, b) => uiOrder?.indexOf(a) - uiOrder?.indexOf(b)) // Sort keys based on uiOrder
+                ?.sort((a, b) => {
+                    const indexA = uiOrder.indexOf(a);
+                    const indexB = uiOrder.indexOf(b);
+                    if (indexA === -1) return 1;
+                    if (indexB === -1) return -1;
+                    return indexA - indexB;
+                })
                 ?.forEach((key) => {
                     orderedRow[key] = row[key];
                 });
@@ -41,151 +40,102 @@ export default function ObjectFieldTemplate<
         });
     }
 
-    uiSchema["ui:grid"] = validateAndFixGridOrder(uiSchema["ui:grid"], uiSchema["ui:order"]);
-
-    const { useBreakpoint } = Grid;
-    const screens = Utils.getBreakPoint(useBreakpoint());
-    const isMobile = screens.length === 0 ? false : !screens.includes("lg");
-    const spanMultiplier = isMobile ? 2 : 1
-
-    // console.log('ObjectFieldTemplate props: ')
-    // console.log(props)
     const uiOptions = getUiOptions<T, S, F>(uiSchema);
-    const TitleFieldTemplate = getTemplate<'TitleFieldTemplate', T, S, F>('TitleFieldTemplate', registry, uiOptions);
-    const DescriptionFieldTemplate = getTemplate<'DescriptionFieldTemplate', T, S, F>(
-        'DescriptionFieldTemplate',
-        registry,
-        uiOptions
-    );
-    // Button templates are not overridden in the uiSchema
-    const {
-        ButtonTemplates: { AddButton },
-    } = registry.templates;
-    const { colSpan = 24, labelAlign = 'right', rowGutter = 24 } = formContext as GenericObjectType;
+    const rowGutter = (uiOptions.gutter as any) || 24;
+    const uiGrid = uiOptions.grid as any[];
+    const uiOrder = uiOptions.order as string[];
 
-    const findSchema = (element: ObjectFieldTemplatePropertyType): S => element.content.props.schema;
+    const processedGrid = uiGrid ? validateAndFixGridOrder(uiGrid, uiOrder || []) : null;
 
-    const findSchemaType = (element: ObjectFieldTemplatePropertyType) => findSchema(element).type;
+    const getColSpan = (property: any) => {
+        const fieldUiOptions = getUiOptions(property.content.props.uiSchema);
+        const defaultColSpan = 24;
 
-    const findUiSchema = (element: ObjectFieldTemplatePropertyType): UiSchema<T, S, F> | undefined =>
-        element.content.props.uiSchema;
-
-    const findUiSchemaField = (element: ObjectFieldTemplatePropertyType) => getUiOptions(findUiSchema(element)).field;
-
-    const findUiSchemaWidget = (element: ObjectFieldTemplatePropertyType) => getUiOptions(findUiSchema(element)).widget;
-
-    const calculateColSpan = (element: ObjectFieldTemplatePropertyType) => {
-        const type = findSchemaType(element);
-        const field = findUiSchemaField(element);
-        const widget = findUiSchemaWidget(element);
-
-        const defaultColSpan =
-            properties.length < 2 || // Single or no field in object.
-                type === 'object' ||
-                type === 'array' ||
-                widget === 'textarea'
-                ? 24
-                : 12;
-
-        if (isObject(colSpan)) {
-            const colSpanObj: GenericObjectType = colSpan;
-            if (isString(widget)) {
-                return colSpanObj[widget];
-            }
-            if (isString(field)) {
-                return colSpanObj[field];
-            }
-            if (isString(type)) {
-                return colSpanObj[type];
-            }
+        if (fieldUiOptions && fieldUiOptions.colSpan) {
+            return fieldUiOptions.colSpan;
         }
-        if (isNumber(colSpan)) {
-            return colSpan;
-        }
+
         return defaultColSpan;
     };
 
+    const configProps = React.useContext(ConfigContext);
+    const { getPrefixCls } = configProps;
+    const prefixCls = getPrefixCls('form');
+    console.debug('[ObjectFieldTemplate] Using prefixCls:', prefixCls);
+
     return (
-        <ConfigConsumer>
-            {(configProps: ConfigConsumerProps) => {
-                // console.log('config props are')
-                // console.log(configProps)
-                const { getPrefixCls } = configProps;
-                const prefixCls = getPrefixCls('form');
-                const labelClsBasic = `${prefixCls}-item-label`;
-                const labelColClassName = classNames(
-                    labelClsBasic,
-                    labelAlign === 'left' && `${labelClsBasic}-left`
-                    // labelCol.className,
-                );
+        <fieldset id={idSchema.$id}>
+            <Row gutter={rowGutter}>
+                {properties.map((property) => {
+                    if (processedGrid) {
+                        return null; // Handled by grid logic
+                    }
+                    return (
+                        <Col key={property.name} span={getColSpan(property) as any}>
+                            {property.content}
+                        </Col>
+                    );
+                })}
 
-                return (
-                    <fieldset id={idSchema.$id}>
-                        <Row gutter={rowGutter}>
-                            {/* {title && (
-                                <Col className={labelColClassName} span={24}>
-                                    <TitleFieldTemplate
-                                        id={titleId<T>(idSchema)}
-                                        title={title}
-                                        required={required}
-                                        schema={schema}
-                                        uiSchema={uiSchema}
-                                        registry={registry}
-                                    />
-                                </Col>
-                            )} */}
-                            {/* {description && (
-                                <Col span={24} style={DESCRIPTION_COL_STYLE}>
-                                    <DescriptionFieldTemplate
-                                        id={descriptionId<T>(idSchema)}
-                                        description={description}
-                                        schema={schema}
-                                        uiSchema={uiSchema}
-                                        registry={registry}
-                                    />
-                                </Col>
-                            )} */}
-                            {uiSchema?.['ui:grid'] && Array.isArray(uiSchema['ui:grid']) ?
-                                uiSchema['ui:grid'].map((ui_row) => {
-                                    return Object.keys(ui_row).map((row_item) => {
-                                        const element = properties.find((p => p.name == row_item))
-                                        if (element) {
-                                            return <Col key={element.name} span={ui_row[row_item] * spanMultiplier}>
-                                                {element.content}
-                                            </Col>
-                                        } else {
-                                            return <></>
-                                        }
-                                    })
-
-                                })
-                                : properties
-                                    .filter((e) => !e.hidden)
-                                    .map((element: ObjectFieldTemplatePropertyType) => (
-                                        <Col key={element.name} span={calculateColSpan(element)}>
-                                            {element.content}
+                {processedGrid &&
+                    processedGrid.map((row, rowIndex) => (
+                        <Col key={rowIndex} span={24}>
+                            <Row gutter={rowGutter}>
+                                {Object.keys(row).map((key) => {
+                                    const property = properties.find((p) => p.name === key);
+                                    if (!property) return null;
+                                    return (
+                                        <Col key={key} span={row[key]}>
+                                            {property.content}
                                         </Col>
-                                    ))}
-                        </Row>
+                                    );
+                                })}
+                            </Row>
+                        </Col>
+                    ))}
 
-                        {canExpand(schema, uiSchema, formData) && (
-                            <Col span={24}>
-                                <Row gutter={rowGutter} justify='end'>
-                                    <Col flex='192px'>
-                                        <AddButton
-                                            className='object-property-expand'
-                                            disabled={disabled || readonly}
-                                            onClick={onAddClick(schema)}
-                                            uiSchema={uiSchema}
-                                            registry={registry}
-                                        />
-                                    </Col>
-                                </Row>
+                {canExpand(schema, uiSchema, formData) && (
+                    <Col span={24}>
+                        <Row gutter={rowGutter} justify='end'>
+                            <Col flex='192px'>
+                                <AddButton
+                                    className='object-property-expand'
+                                    disabled={!!(disabled || readonly)}
+                                    onClick={onAddClick(schema)}
+                                    registry={registry}
+                                />
                             </Col>
-                        )}
-                    </fieldset>
-                );
-            }}
-        </ConfigConsumer>
+                        </Row>
+                    </Col>
+                )}
+            </Row>
+        </fieldset>
     );
-}
+};
+
+const AddButton = ({
+    className,
+    disabled,
+    onClick,
+    registry,
+}: {
+    className: string;
+    disabled: boolean;
+    onClick: (event: any) => void;
+    registry: any;
+}) => {
+    const {
+        templates: { ButtonTemplates },
+    } = registry;
+    const { AddButton: RJSFAddButton } = ButtonTemplates;
+    return (
+        <RJSFAddButton
+            className={className}
+            onClick={onClick}
+            disabled={disabled}
+            registry={registry}
+        />
+    );
+};
+
+export default ObjectFieldTemplate;

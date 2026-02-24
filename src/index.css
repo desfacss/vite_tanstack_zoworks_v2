@@ -617,6 +617,7 @@ body {
   height: 40px !important;
   display: flex !important;
   align-items: center !important;
+  padding: 0 12px !important;
 }
 
 /* Force children to fill height and inherit font for global consistency */
@@ -5330,22 +5331,66 @@ legend {
   backdrop-filter: blur(10px);
 }
 
+/* Form Elements - Consistent White Text & Neon Focus */
+[data-theme-preset="neon_zo"].dark .ant-input,
+[data-theme-preset="neon_zo"].dark .ant-select-selector,
+[data-theme-preset="neon_zo"].dark .ant-input-number,
+[data-theme-preset="neon_zo"].dark .ant-picker,
+[data-theme-preset="neon_zo"].dark .ant-input-overlay {
+  background: rgba(255, 255, 255, 0.03) !important;
+  border: 1px solid rgba(var(--color-primary-rgb), 0.2) !important;
+  color: #ffffff !important;
+}
+
+[data-theme-preset="neon_zo"].dark .ant-input::placeholder,
+[data-theme-preset="neon_zo"].dark .ant-select-selection-placeholder {
+  color: rgba(255, 255, 255, 0.3) !important;
+}
+
+[data-theme-preset="neon_zo"].dark .ant-input:focus,
+[data-theme-preset="neon_zo"].dark .ant-input-focused,
+[data-theme-preset="neon_zo"].dark .ant-select-focused .ant-select-selector,
+[data-theme-preset="neon_zo"].dark .ant-input-affix-wrapper-focused {
+  border-color: var(--neon-primary) !important;
+  box-shadow: 0 0 0 2px rgba(var(--color-primary-rgb), 0.2), inset 0 0 0 1px var(--neon-primary) !important;
+  background: rgba(var(--color-primary-rgb), 0.05) !important;
+  color: #ffffff !important;
+}
+
+[data-theme-preset="neon_zo"].dark .ant-select-arrow {
+  color: var(--neon-primary) !important;
+}
+
+[data-theme-preset="neon_zo"].dark .custom-select-flat .ant-select-selection-item {
+  color: #ffffff !important;
+}
+
 [data-theme-preset="neon_zo"].dark .ant-layout-header {
   border-bottom: 1px solid rgba(var(--color-primary-rgb), 0.2) !important;
 }
 
-/* Light-mode lightning: darker primary for visibility on light backgrounds */
+/* Light-mode lightning: white core with neon glow for true neon tube look */
 [data-theme-preset="neon_zo"]:not(.dark) .page-card::before,
 [data-theme-preset="neon_zo"]:not(.dark) .ant-card::before {
-  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--neon-primary), #000 40%), transparent);
-  box-shadow: 0 0 6px color-mix(in srgb, var(--neon-primary), #000 30%),
-    0 0 14px color-mix(in srgb, var(--neon-primary), #000 20%);
+  background: linear-gradient(90deg, transparent 0%, #fff 30%, #fff 70%, transparent 100%);
+  box-shadow:
+    0 0 4px #fff,
+    0 0 10px var(--neon-primary),
+    0 0 25px var(--neon-primary),
+    0 0 50px var(--neon-glow);
 }
 
 /* --- Light Mode Refinement --- */
 [data-theme-preset="neon_zo"]:not(.dark) .ant-layout {
   background-color: #F9F7F2 !important;
   /* Claude Base */
+}
+
+/* Light-mode cards: neon-tinted borders and subtle glow */
+[data-theme-preset="neon_zo"]:not(.dark) .page-card,
+[data-theme-preset="neon_zo"]:not(.dark) .ant-card {
+  border: 1px solid rgba(var(--color-primary-rgb), 0.25) !important;
+  box-shadow: 0 2px 12px rgba(var(--color-primary-rgb), 0.08);
 }
 
 [data-theme-preset="neon_zo"]:not(.dark) .ant-btn-primary {

@@ -25,7 +25,7 @@ interface RJSFCoreFormProps {
   updateId?: string | number;
   onSuccess?: (data: any) => void;
   onError?: (error: any) => void;
-  entityType?: string; 
+  entityType?: string;
   entitySchema?: string;
 }
 
@@ -40,6 +40,7 @@ interface EnumSchema {
   column: string;
   schema?: string;
   filters?: FilterType[];
+  filter?: { [key: string]: any };
   no_id?: boolean;
   dependsOn?: string;
   dependsOnField?: string;
@@ -129,9 +130,9 @@ const transformUiSchema = (uiSchema: any, dataSchemaProperties: string[]) => {
   };
 };
 
-const RJSFCoreForm: React.FC<RJSFCoreFormProps> = ({ 
-  schema: inputSchema, 
-  formData: initialFormDataProp, 
+const RJSFCoreForm: React.FC<RJSFCoreFormProps> = ({
+  schema: inputSchema,
+  formData: initialFormDataProp,
   updateId,
   onSuccess,
   onError,
@@ -183,35 +184,45 @@ const RJSFCoreForm: React.FC<RJSFCoreFormProps> = ({
 
       console.log(`[RJSFCoreForm] Fetching enums for ${actualSchema}.${actualTable}`, { selectColumns, filters });
 
-      // First try with organization_id filter
+      // Build query to fetch both tenant-specific and global records
       let query = supabase.schema(actualSchema).from(actualTable).select(selectColumns);
-      
-      // Only add organization_id if it exists in store
-      if (organization?.id) {
-        query = query.eq('organization_id', organization.id);
+
+      // Important: Ensure we select organization_id for post-processing priority logic
+      // But avoid adding it if it's already there (e.g. via relation)
+      if (!selectColumns.includes('organization_id')) {
+        query = supabase.schema(actualSchema).from(actualTable).select(`${selectColumns}, organization_id`);
       }
-      
+
+      if (organization?.id) {
+        // Fetch rows belonging to current tenant OR global rows
+        query = query.or(`organization_id.eq.${organization.id},organization_id.is.null`);
+      } else {
+        query = query.is('organization_id', null);
+      }
+
       filters.forEach(f => { query = applyFilter(query, f); });
 
       let { data, error } = await query;
-      
-      // If error (likely column missing) or no data, try without organization_id
-      if (error || !data || data.length === 0) {
-        if (error) console.warn(`[RJSFCoreForm] Org filter failed for ${actualTable}, retrying without it.`, error.message);
-        
-        let retryQuery = supabase.schema(actualSchema).from(actualTable).select(selectColumns);
-        filters.forEach(f => { retryQuery = applyFilter(retryQuery, f); });
-        
-        const retryRes = await retryQuery;
-        if (retryRes.error) {
-            console.error(`[RJSFCoreForm] Fetch failed for ${actualTable} after retry:`, retryRes.error.message);
-            throw retryRes.error;
-        }
-        data = retryRes.data;
+
+      if (error) {
+        console.error(`[RJSFCoreForm] Fetch failed for ${actualTable}:`, error.message);
+        throw error;
       }
 
-      console.log(`[RJSFCoreForm] Fetched ${data?.length || 0} options for ${actualTable}`);
-      
+      if (data && data.length > 0 && organization?.id) {
+        // Priority logic: If tenant-specific rows exist, use ONLY those.
+        // Otherwise, use ONLY global rows.
+        const tenantSpecificData = data.filter(item => item.organization_id === organization.id);
+        if (tenantSpecificData.length > 0) {
+          console.log(`[RJSFCoreForm] Found ${tenantSpecificData.length} tenant-specific overrides for ${actualTable}. Prioritizing them.`);
+          data = tenantSpecificData;
+        } else {
+          data = data.filter(item => item.organization_id === null);
+        }
+      }
+
+      console.log(`[RJSFCoreForm] Final list has ${data?.length || 0} options for ${actualTable}`);
+
       setEnumCache(prev => ({ ...prev, [cacheKey]: data || [] }));
       return data || [];
     } catch (err) {
@@ -232,6 +243,13 @@ const RJSFCoreForm: React.FC<RJSFCoreFormProps> = ({
         const noId = enumValue.no_id || false;
         let filterConditions = [...(enumValue.filters || [])] as FilterType[];
 
+        // Handle single 'filter' object if present
+        if (enumValue.filter && typeof enumValue.filter === 'object') {
+          Object.entries(enumValue.filter).forEach(([k, v]) => {
+            filterConditions.push({ key: k, operator: 'eq', value: v });
+          });
+        }
+
         if (enumValue.dependsOnColumn && formData[enumValue.dependsOnField || '']) {
           console.log(`[RJSFCoreForm] Applying dependency for ${key} from ${enumValue.dependsOnField}`);
           filterConditions.push({
@@ -247,13 +265,13 @@ const RJSFCoreForm: React.FC<RJSFCoreFormProps> = ({
             obj[key] = {
               ...obj[key],
               enum: options?.map((item: any) => {
-                  const val = noId ? item[enumValue.column] : item.id;
-                  if (val === undefined) console.warn(`[RJSFCoreForm] Value missing for ${key} in item:`, item);
-                  return val;
+                const val = noId ? item[enumValue.column] : item.id;
+                if (val === undefined) console.warn(`[RJSFCoreForm] Value missing for ${key} in item:`, item);
+                return val;
               }),
               enumNames: options?.map((item: any) => {
-                  const label = item[enumValue.display_column || enumValue.column] || item.id;
-                  return label;
+                const label = item[enumValue.display_column || enumValue.column] || item.id;
+                return label;
               }),
             };
           })
@@ -273,7 +291,7 @@ const RJSFCoreForm: React.FC<RJSFCoreFormProps> = ({
 
       let tableName = inputSchema.db_schema?.table || fallbackEntityType;
       let schemaName = inputSchema.db_schema?.schema || fallbackEntitySchema;
-      
+
       if (!tableName) throw new Error("Table name is required for upsert");
 
       // If tableName already contains a dot, it likely has the schema prefix
@@ -351,19 +369,19 @@ const RJSFCoreForm: React.FC<RJSFCoreFormProps> = ({
       setLoading(false);
     };
     init();
-  }, [inputSchema, organization]); 
+  }, [inputSchema, organization]);
 
   useEffect(() => {
     if (!inputSchema || !localFormData || loading) return;
     const updateEnums = async () => {
-        const schemaCopy = JSON.parse(JSON.stringify(inputSchema));
-        if (schemaCopy.ui_schema) {
-          schemaCopy.ui_schema = transformUiSchema(schemaCopy.ui_schema, Object.keys(schemaCopy.data_schema.properties));
-        }
-        await replaceEnums(schemaCopy.data_schema, localFormData);
-        setSchema(schemaCopy);
+      const schemaCopy = JSON.parse(JSON.stringify(inputSchema));
+      if (schemaCopy.ui_schema) {
+        schemaCopy.ui_schema = transformUiSchema(schemaCopy.ui_schema, Object.keys(schemaCopy.data_schema.properties));
+      }
+      await replaceEnums(schemaCopy.data_schema, localFormData);
+      setSchema(schemaCopy);
     };
-    const timer = setTimeout(updateEnums, 300); 
+    const timer = setTimeout(updateEnums, 300);
     return () => clearTimeout(timer);
   }, [localFormData, inputSchema, replaceEnums]);
 
@@ -400,7 +418,7 @@ const RJSFCoreForm: React.FC<RJSFCoreFormProps> = ({
     if (currentPage > 0) setCurrentPage(currentPage - 1);
   };
 
-  if (loading || !schema) return <Spin spinning={true} tip="Loading form..."/>;
+  if (loading || !schema) return <Spin spinning={true} tip="Loading form..." />;
 
   return (
     <Form
