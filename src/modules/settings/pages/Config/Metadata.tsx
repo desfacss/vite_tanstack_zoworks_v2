@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Select, Button, Form, Table, message, Input, Popconfirm, Checkbox, Card, Typography, Dropdown, Space, Tag, Alert } from 'antd';
-import { DeleteOutlined, DownOutlined, ApartmentOutlined } from '@ant-design/icons';
+import { DeleteOutlined, DownOutlined, ApartmentOutlined, SyncOutlined } from '@ant-design/icons';
 import { supabase } from '@/core/lib/supabase';
 import _ from 'lodash'; 
 import EntityVersionManager from './EntityVersionManager';
 
-const { Option } = Select;
 const { Title, Paragraph } = Typography;
 
 // --- INTERFACES ---
@@ -68,6 +67,11 @@ interface MetadataItem {
   is_template: boolean;
   is_virtual: boolean;
   format?: 'array'; 
+  tier1?: string;
+  tier2?: string;
+  tier3?: string;
+  is_phy_column?: boolean;
+  is_visible?: boolean;
 }
 
 /**
@@ -113,20 +117,21 @@ const Metadata: React.FC<MetadataProps> = ({
   baseSourceName,
   partitionFilter,
 }) => {
+  const shortEntityType = entityType.includes('.') ? entityType.split('.').pop()! : entityType;
+
   // State for columns displayed in the UI tables
   const [displayColumns, setDisplayColumns] = useState<DisplayColumn[]>([]);
   // Loading state
   const [loading, setLoading] = useState<boolean>(true);
   const [form] = Form.useForm();
   const [formValues, setFormValues] = useState<any>({});
-  const [entityRecord, setEntityRecord] = useState<any>(null);
 
   const originalMetadataRef = useRef<Map<string, MetadataItem>>(new Map());
 
   const [visibleKeys, setVisibleKeys] = useState<string[]>([
-    'key', 'display_name', 'type', 'semantic_type_sub_type',
+    'key', 'display_name', 'type', 'tier1', 'tier2', 'tier3', 'is_phy_column', 'is_visible', 'semantic_type_sub_type',
     'source_table', 'source_column', 'display_column', 'action',
-    'semantic_type_default_aggregation','is_searchable','is_displayable','is_mandatory','is_virtual','is_template','is_visible','order'
+    'semantic_type_default_aggregation','is_searchable','is_displayable','is_mandatory','is_virtual','is_template','order'
   ]);
 
   // --- Static Options for Select dropdowns ---
@@ -154,103 +159,64 @@ const Metadata: React.FC<MetadataProps> = ({
     originalMetadataRef.current.clear(); 
 
     try {
-      // 1. Fetch existing saved configuration from 'core.entities' table
-      const { data: savedEntityConfig, error: configError } = await supabase
-        .schema('core').from('entities').select('id, metadata').eq('entity_type', entityType).eq('entity_schema', entitySchema).single();
+      // 1. Fetch metadata directly from 'core.entities'
+      const { data: entityData, error: configError } = await supabase
+        .schema('core')
+        .from('entities')
+        .select('id, v_metadata, metadata')
+        .eq('entity_type', shortEntityType)
+        .eq('entity_schema', entitySchema)
+        .single();
 
       if (configError && configError.code !== 'PGRST116') throw configError;
-
-      const savedMetadata: MetadataItem[] = savedEntityConfig?.metadata || [];
-      setEntityRecord(savedEntityConfig); 
-
-      // 2. Fetch the current schema information using the DB function
-      const { data: currentSchemaResult, error: rpcError } = await supabase
-        .schema('core') 
-        .rpc('met_scan_schema_columns', { 
-          p_table_name: entityType,
-          p_schema_name: entitySchema,
-          p_is_aggressive: true,
-        });
-
-      if (rpcError) throw rpcError;
-      const currentSchema: MetadataItem[] = currentSchemaResult || [];
+      
+      // Use v_metadata if available, fallback to metadata or empty array
+      const currentMetadata: MetadataItem[] = entityData?.v_metadata || entityData?.metadata || [];
 
       const mergedColumns: DisplayColumn[] = [];
-      const currentSchemaMap = new Map(currentSchema.map(item => [item.key, item]));
       
-      // 3. Merge saved config with current schema
-      
-      // Store the *complete* fetched schema or saved metadata in the ref
-      currentSchema.forEach(item => {
-          const savedItem = savedMetadata.find(s => s.key === item.key);
-          // Use the saved version if it exists, otherwise use the schema version
-          originalMetadataRef.current.set(item.key, _.cloneDeep(savedItem || item));
-      });
-      
-      // Handle orphaned items in savedMetadata
-      savedMetadata.forEach(item => {
-          if (!currentSchemaMap.has(item.key)) {
-              originalMetadataRef.current.set(item.key, _.cloneDeep(item));
-          }
+      // Store complete items in the ref
+      currentMetadata.forEach(item => {
+          originalMetadataRef.current.set(item.key, _.cloneDeep(item));
       });
 
-
-      // Process columns from current schema and merge with saved data
-      for (const colSchema of currentSchema) {
-        const savedItem = savedMetadata.find(item => item.key === colSchema.key);
-        const baseItem: MetadataItem = savedItem 
-          ? {...colSchema, ...savedItem} // Saved overrides schema
-          : colSchema;
-        
-        const status = savedItem ? 'current' : 'new';
-        
-        // 3a. Add the Parent Column
+      // Process columns from current metadata
+      for (const item of currentMetadata) {
+        // Add the Main Column
         mergedColumns.push({
-          ...baseItem,
-          status,
-          is_polymorphic_parent: !!baseItem.polymorphic,
+          ...item,
+          status: 'current',
+          is_polymorphic_parent: !!item.polymorphic,
         });
 
-        // 3b. Extract and add Polymorphic Targets
-        if (baseItem.polymorphic) {
-          baseItem.polymorphic.targets.forEach(target => {
-            // Create a composite key for the target row: parentKey:targetKey
-            const targetRowKey = `${baseItem.key}:${target.key}`;
-            
+        // Extract and add Polymorphic Targets
+        if (item.polymorphic) {
+          item.polymorphic.targets.forEach(target => {
+            const targetRowKey = `${item.key}:${target.key}`;
             mergedColumns.push({
-              ...target, // Target contains its own metadata fields (type, FK info, display_name)
-              key: targetRowKey, // Use the composite key for the row/form field
-              status, 
+              ...target,
+              key: targetRowKey,
+              status: 'current',
               is_polymorphic_target: true,
-              parent_key: baseItem.key,
+              parent_key: item.key,
               target_key: target.key,
-              // Ensure boolean fields are explicitly set to avoid undefined
               is_searchable: target.is_searchable ?? false, 
               is_displayable: target.is_displayable ?? false,
               is_mandatory: target.is_mandatory ?? true,
               is_template: target.is_template ?? true,
               is_virtual: target.is_virtual ?? false,
+              tier1: (target as any).tier1,
+              tier2: (target as any).tier2,
+              tier3: (target as any).tier3,
+              is_phy_column: (target as any).is_phy_column,
             });
-          });
-        }
-      }
-
-      // 3c. Process columns only in saved config (Orphaned)
-      for (const savedItem of savedMetadata) {
-        if (!currentSchemaMap.has(savedItem.key)) {
-          mergedColumns.push({
-            ...savedItem, 
-            status: 'orphaned',
-            key: savedItem.key,
-            type: savedItem.type || 'unknown',
-            display_name: savedItem.display_name || savedItem.key,
           });
         }
       }
       
       setDisplayColumns(mergedColumns);
 
-      // 4. Set initial form values based on the merged data (what user will edit)
+      // 4. Set initial form values based on the data
       const initialValues = mergedColumns.reduce((acc: any, col) => {
         const key = col.key;
         
@@ -273,6 +239,11 @@ const Metadata: React.FC<MetadataProps> = ({
           is_mandatory: col.is_mandatory ?? false,
           is_template: col.is_template ?? false,
           is_virtual: col.is_virtual ?? false,
+          tier1: col.tier1 || '',
+          tier2: col.tier2 || '',
+          tier3: col.tier3 || '',
+          is_phy_column: col.is_phy_column ?? false,
+          is_visible: (col as any).is_visible ?? true,
         };
         return acc;
       }, {});
@@ -359,7 +330,12 @@ const Metadata: React.FC<MetadataProps> = ({
           is_displayable: formFieldValues.is_displayable,
           is_mandatory: formFieldValues.is_mandatory,
           is_template: formFieldValues.is_template,
-          is_virtual: formFieldValues.is_virtual, 
+          is_virtual: formFieldValues.is_virtual,
+          tier1: formFieldValues.tier1,
+          tier2: formFieldValues.tier2,
+          tier3: formFieldValues.tier3,
+          is_phy_column: formFieldValues.is_phy_column, 
+          is_visible: formFieldValues.is_visible,
         };
 
         if (fkValueToSend) {
@@ -395,28 +371,61 @@ const Metadata: React.FC<MetadataProps> = ({
           }
       }
 
-      // --- 3. Execute Save RPC ---
-      const { data: savedData, error: saveError } = await supabase
-        .schema('core').rpc('met_save_schema_draft', {
-          p_entity_schema: entitySchema,
-          p_entity_type: entityType,
-          p_metadata: metadataToSave,
-          p_skip_merge: true 
-        });
+      // --- 3. Execute Save (Update v_metadata) ---
+      const { error: saveError } = await supabase
+        .schema('core')
+        .from('entities')
+        .update({ v_metadata: metadataToSave })
+        .eq('entity_schema', entitySchema)
+        .eq('entity_type', shortEntityType);
         
       if (saveError) throw saveError;
       
-      message.success('Metadata configuration saved successfully! (Draft Version)');
+      message.loading({ content: 'Provisioning entity structure...', key: 'bootstrap' });
       
-      // --- 4. Update State & Refs ---
+      // --- 4. Complete Provisioning (Bootstrap RPC) ---
+      const { error: bootstrapError } = await supabase
+        .schema('core')
+        .rpc('comp_util_ops_bootstrap_entity', {
+          p_schema_name: entitySchema,
+          p_entity_type: shortEntityType,
+          p_config: null,
+          p_force_refresh: false // Ensures it uses Registry Corrections
+        });
+
+      if (bootstrapError) throw bootstrapError;
+
+      message.success({ content: 'Metadata configuration saved and provisioned successfully!', key: 'bootstrap' });
       
-      // FIX: Call the now-accessible fetchData function
+      // --- 5. Update State & Refs ---
       await fetchData(); 
       fetchConfigs(); 
 
     } catch (error: any) {
       console.error("Error saving metadata:", error);
       message.error(`Failed to save metadata: ${error.message || error.details}`);
+    }
+  };
+
+  /** Syncs logical metadata from registry without overwriting manual edits */
+  const handleSyncRegistry = async () => {
+    try {
+      message.loading({ content: 'Syncing registry metadata...', key: 'sync' });
+      const { error } = await supabase
+        .schema('core')
+        .rpc('util_ops_metadata_sync', {
+          p_schema_name: entitySchema,
+          p_entity_type: shortEntityType,
+          p_overwrite_manual: false
+        });
+
+      if (error) throw error;
+      
+      message.success({ content: 'Registry sync completed successfully!', key: 'sync' });
+      await fetchData();
+    } catch (error: any) {
+      console.error("Error syncing registry:", error);
+      message.error({ content: `Sync failed: ${error.message}`, key: 'sync' });
     }
   };
 
@@ -485,6 +494,18 @@ const Metadata: React.FC<MetadataProps> = ({
               </Form.Item>
           );
       }
+    },
+    { title: 'Tier 1', key: 'tier1', width: 150,
+      render: (_: any, record: DisplayColumn) => (<Form.Item name={[record.key, 'tier1']} noStyle><Input placeholder="Tier 1 Group" /></Form.Item>)
+    },
+    { title: 'Tier 2', key: 'tier2', width: 150,
+      render: (_: any, record: DisplayColumn) => (<Form.Item name={[record.key, 'tier2']} noStyle><Input placeholder="Tier 2 Group" /></Form.Item>)
+    },
+    { title: 'Tier 3', key: 'tier3', width: 150,
+      render: (_: any, record: DisplayColumn) => (<Form.Item name={[record.key, 'tier3']} noStyle><Input placeholder="Tier 3 Group" /></Form.Item>)
+    },
+    { title: 'Phy Col', key: 'is_phy_column', width: 80, align: 'center' as 'center',
+      render: (_: any, record: DisplayColumn) => (<Form.Item name={[record.key, 'is_phy_column']} valuePropName="checked" noStyle><Checkbox /></Form.Item>)
     },
     { title: 'Sub Type', key: 'semantic_type_sub_type', width: 130,
       render: (_: any, record: DisplayColumn) => (<Form.Item name={[record.key, 'semantic_type_sub_type']} noStyle><Select style={{ width: '100%' }} options={fieldOptions.semantic_type_sub_type_options.map(o => ({label: o, value: o}))} /></Form.Item>)
@@ -566,11 +587,12 @@ const Metadata: React.FC<MetadataProps> = ({
   if (loading) return <div>Loading configuration...</div>;
   if (!entityType || !entitySchema) return <Card>Please select an entity and schema to begin.</Card>;
 
+  const sortedDisplayColumns = _.sortBy(displayColumns, ['tier1', 'tier2', 'tier3', 'key']);
   const filteredColumnsDef = allColumnsDef.filter(colDef => visibleKeys.includes(colDef.key));
 
-  const synchedColumns = displayColumns.filter(c => c.status === 'current');
-  const newColumns = displayColumns.filter(c => c.status === 'new');
-  const orphanedColumns = displayColumns.filter(c => c.status === 'orphaned');
+  const synchedColumns = sortedDisplayColumns.filter(c => c.status === 'current');
+  const newColumns = sortedDisplayColumns.filter(c => c.status === 'new');
+  const orphanedColumns = sortedDisplayColumns.filter(c => c.status === 'orphaned');
 
   return (
     <Form form={form} onFinish={onFinish} onValuesChange={handleValuesChange} autoComplete="off">
@@ -599,7 +621,14 @@ const Metadata: React.FC<MetadataProps> = ({
           style={{ marginBottom: 16 }}
         />
       )}
-        <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'flex-end' }}>
+        <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+            <Button 
+                icon={<SyncOutlined />} 
+                onClick={handleSyncRegistry}
+                title="Sync from Registry (won't overwrite manual edits)"
+            >
+                Sync Registry
+            </Button>
             <Dropdown overlay={columnMenu} trigger={['click']}>
                 <Button>
                     <Space>Configure Columns <DownOutlined /></Space>
