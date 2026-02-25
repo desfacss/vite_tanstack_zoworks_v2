@@ -23,7 +23,7 @@ import {
     SaveOutlined, PlusOutlined, DeleteOutlined, SettingOutlined,
     CopyOutlined, HolderOutlined, MenuOutlined, TeamOutlined, MoreOutlined
 } from '@ant-design/icons';
-import { useRoute, useLocation } from 'wouter';
+import { useParams, useNavigate } from 'react-router-dom';
 import {
     useDripCampaign,
     useUpdateDripSteps,
@@ -122,9 +122,8 @@ const StepCard: React.FC<{
 
 const DripCampaignBuilder: React.FC = () => {
     const { token } = theme.useToken();
-    const [, params] = useRoute('/sequences/:id');
-    const campaignId = params?.id;
-    const [, setLocation] = useLocation();
+    const { id: campaignId } = useParams();
+    const navigate = useNavigate();
     const { message } = App.useApp();
     const { isMobile, drawerWidth } = useResponsive();
 
@@ -417,7 +416,7 @@ const DripCampaignBuilder: React.FC = () => {
         try {
             await deleteCampaign.mutateAsync(campaignId);
             message.success('Sequence deleted');
-            setLocation('/sequences');
+            navigate('/sequences');
         } catch (e) {
             message.error('Failed to delete sequence');
         }
@@ -429,7 +428,7 @@ const DripCampaignBuilder: React.FC = () => {
         subtitle: campaign?.is_active ? 'Active' : 'Draft',
         backButton: {
             label: 'Sequences',
-            onClick: () => setLocation('/sequences'),
+            onClick: () => navigate('/sequences'),
         },
         actions: isMobile ? (
             <Dropdown
