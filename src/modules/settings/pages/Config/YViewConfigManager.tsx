@@ -319,7 +319,7 @@ const YViewConfigManager: React.FC = () => {
       <TableViewConfig
         configData={formData}
         onSave={(updatedData) => handleSave(viewName, updatedData)}
-        metadata={selectedConfig?.metadata}
+        metadata={selectedConfig?.v_metadata}
         entitySchema={selectedSchema || undefined} // Pass entity_schema
         availableColumns={data}
       />
@@ -339,7 +339,7 @@ const YViewConfigManager: React.FC = () => {
       <GridViewConfig
         configData={formData}
         onSave={(updatedData) => handleSave(viewName, updatedData)}
-        metadata={selectedConfig?.metadata}
+        metadata={selectedConfig?.v_metadata}
         availableColumns={data}
       />
     );
@@ -349,7 +349,7 @@ const YViewConfigManager: React.FC = () => {
       <KanbanViewConfig
         configData={formData}
         onSave={(updatedData) => handleSave(viewName, updatedData)}
-        metadata={selectedConfig?.metadata}
+        metadata={selectedConfig?.v_metadata}
         availableColumns={data}
       />
     );
@@ -359,7 +359,7 @@ const YViewConfigManager: React.FC = () => {
       <GanttViewConfig
         configData={formData}
         onSave={(updatedData) => handleSave(viewName, updatedData)}
-        metadata={selectedConfig?.metadata}
+        metadata={selectedConfig?.v_metadata}
         availableColumns={data}
       />
     );
@@ -369,7 +369,7 @@ const YViewConfigManager: React.FC = () => {
       <CalendarViewConfig
         configData={formData}
         onSave={(updatedData) => handleSave(viewName, updatedData)}
-        metadata={selectedConfig?.metadata}
+        metadata={selectedConfig?.v_metadata}
         availableColumns={data}
       />
     );
@@ -379,7 +379,7 @@ const YViewConfigManager: React.FC = () => {
       <MapViewConfig
         configData={formData}
         onSave={(updatedData) => handleSave(viewName, updatedData)}
-        metadata={selectedConfig?.metadata}
+        metadata={selectedConfig?.v_metadata}
         entityType={selectedConfig?.entity_type}
       />
     );
@@ -399,7 +399,7 @@ const YViewConfigManager: React.FC = () => {
       <DetailsOverviewConfig
         configData={formData}
         onSave={(updatedData) => handleSave(viewName, updatedData)}
-        metadata={selectedConfig?.metadata}
+        metadata={selectedConfig?.v_metadata}
         availableColumns={data}
       />
     );
@@ -475,7 +475,7 @@ const YViewConfigManager: React.FC = () => {
   };
 
   // Construct Menu items from schemas and configs
-  const menuItems = schemaOptions.map(schema => ({
+  const menuItems = schemaOptions?.map(schema => ({
     key: `schema:${schema}`,
     label: schema,
     icon: <DatabaseOutlined />,

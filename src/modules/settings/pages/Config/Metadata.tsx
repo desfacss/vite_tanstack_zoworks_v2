@@ -67,9 +67,7 @@ interface MetadataItem {
   is_template: boolean;
   is_virtual: boolean;
   format?: 'array'; 
-  tier1?: string;
-  tier2?: string;
-  tier3?: string;
+  tier?: number;
   is_phys_generated?: boolean;
   is_visible?: boolean;
   is_read_only?: boolean;
@@ -133,7 +131,7 @@ const Metadata: React.FC<MetadataProps> = ({
   const originalMetadataRef = useRef<Map<string, MetadataItem>>(new Map());
 
   const [visibleKeys, setVisibleKeys] = useState<string[]>([
-    'key', 'display_name', 'type', 'tier1', 'tier2', 'tier3', 'is_phys_generated', 'is_read_only', 'is_visible', 'semantic_type_sub_type',
+    'key', 'display_name', 'type', 'tier', 'is_phys_generated', 'is_read_only', 'is_visible', 'semantic_type_sub_type',
     'source_table', 'source_column', 'display_column', 'action',
     'semantic_type_default_aggregation','is_searchable','is_displayable','is_mandatory','is_virtual','is_template','order'
   ]);
@@ -209,14 +207,12 @@ const Metadata: React.FC<MetadataProps> = ({
               is_mandatory: target.is_mandatory ?? true,
               is_template: target.is_template ?? true,
               is_virtual: target.is_virtual ?? false,
-              tier1: (target as any).tier1,
-              tier2: (target as any).tier2,
-              tier3: (target as any).tier3,
               is_phys_generated: (target as any).is_phys_generated,
               is_read_only: (target as any).is_read_only,
               jsonb_path: (target as any).jsonb_path,
               jsonb_column: (target as any).jsonb_column,
               source_table: (target as any).source_table,
+              tier: (target as any).tier,
             });
           });
         }
@@ -247,9 +243,7 @@ const Metadata: React.FC<MetadataProps> = ({
           is_mandatory: col.is_mandatory ?? false,
           is_template: col.is_template ?? false,
           is_virtual: col.is_virtual ?? false,
-          tier1: col.tier1 || '',
-          tier2: col.tier2 || '',
-          tier3: col.tier3 || '',
+          tier: col.tier,
           is_phys_generated: col.is_phys_generated ?? false,
           is_visible: (col as any).is_visible ?? true,
           is_read_only: col.is_read_only ?? false,
@@ -340,9 +334,7 @@ const Metadata: React.FC<MetadataProps> = ({
           is_mandatory: formFieldValues.is_mandatory,
           is_template: formFieldValues.is_template,
           is_virtual: formFieldValues.is_virtual,
-          tier1: formFieldValues.tier1,
-          tier2: formFieldValues.tier2,
-          tier3: formFieldValues.tier3,
+          tier: formFieldValues.tier,
           is_phys_generated: formFieldValues.is_phys_generated, 
           is_visible: formFieldValues.is_visible,
           is_read_only: formFieldValues.is_read_only,
@@ -385,20 +377,34 @@ const Metadata: React.FC<MetadataProps> = ({
       }
 
       // --- 3. Execute Unified Save ---
-      message.loading({ content: 'Saving configuration and provisioning...', key: 'save' });
+      message.loading({ content: 'Saving configuration...', key: 'save' });
       const { error: saveError } = await supabase
         .schema('core')
         .rpc('api_new_save_entity_config', {
           p_schema_name: entitySchema,
           p_entity_type: shortEntityType,
-          p_config: metadataToSave
+          p_config: { metadata: metadataToSave }
         });
         
       if (saveError) throw saveError;
 
+      message.loading({ content: 'Provisioning entity structure...', key: 'save' });
+      
+      // --- 4. Complete Provisioning (Bootstrap RPC) ---
+      const { error: bootstrapError } = await supabase
+        .schema('core')
+        .rpc('comp_util_ops_bootstrap_entity', {
+          p_schema_name: entitySchema,
+          p_entity_type: shortEntityType,
+          p_config: null,
+          p_force_refresh: false
+        });
+
+      if (bootstrapError) throw bootstrapError;
+
       message.success({ content: 'Metadata configuration saved and provisioned successfully!', key: 'save' });
       
-      // --- 4. Update State & Refs ---
+      // --- 5. Update State & Refs ---
       await fetchData(); 
       fetchConfigs(); 
 
@@ -451,6 +457,28 @@ const Metadata: React.FC<MetadataProps> = ({
     } catch (error: any) {
       console.error("Error during cleanup:", error);
       message.error({ content: `Cleanup failed: ${error.message}`, key: 'cleanup' });
+    }
+  };
+
+  /** Automatically suggests views based on metadata */
+  const handleAutoSuggestViews = async () => {
+    try {
+      message.loading({ content: 'Auto suggesting views...', key: 'suggest' });
+      const { error } = await supabase
+        .schema('core')
+        .rpc('util_auto_suggest_views', {
+          p_schema_name: entitySchema,
+          p_entity_type: shortEntityType,
+          p_dry_run: false
+        });
+
+      if (error) throw error;
+      
+      message.success({ content: 'Views suggested successfully! Check the Registry Versions to review.', key: 'suggest' });
+      fetchConfigs();
+    } catch (error: any) {
+      console.error("Error suggesting views:", error);
+      message.error({ content: `Suggestion failed: ${error.message}`, key: 'suggest' });
     }
   };
 
@@ -520,14 +548,8 @@ const Metadata: React.FC<MetadataProps> = ({
           );
       }
     },
-    { title: 'Tier 1', key: 'tier1', width: 150,
-      render: (_: any, record: DisplayColumn) => (<Form.Item name={[record.key, 'tier1']} noStyle><Input placeholder="Tier 1 Group" /></Form.Item>)
-    },
-    { title: 'Tier 2', key: 'tier2', width: 150,
-      render: (_: any, record: DisplayColumn) => (<Form.Item name={[record.key, 'tier2']} noStyle><Input placeholder="Tier 2 Group" /></Form.Item>)
-    },
-    { title: 'Tier 3', key: 'tier3', width: 150,
-      render: (_: any, record: DisplayColumn) => (<Form.Item name={[record.key, 'tier3']} noStyle><Input placeholder="Tier 3 Group" /></Form.Item>)
+    { title: 'Tier', key: 'tier', width: 100,
+      render: (_: any, record: DisplayColumn) => (<Form.Item name={[record.key, 'tier']} noStyle><Input type="number" placeholder="Tier" /></Form.Item>)
     },
     { title: 'Phys Gen', key: 'is_phys_generated', width: 90, align: 'center' as 'center',
       render: (_: any, record: DisplayColumn) => (<Form.Item name={[record.key, 'is_phys_generated']} valuePropName="checked" noStyle><Checkbox /></Form.Item>)
@@ -615,7 +637,7 @@ const Metadata: React.FC<MetadataProps> = ({
   if (loading) return <div>Loading configuration...</div>;
   if (!entityType || !entitySchema) return <Card>Please select an entity and schema to begin.</Card>;
 
-  const sortedDisplayColumns = _.sortBy(displayColumns, ['tier1', 'tier2', 'tier3', 'key']);
+  const sortedDisplayColumns = _.sortBy(displayColumns, ['tier', 'key']);
   const filteredColumnsDef = allColumnsDef.filter(colDef => visibleKeys.includes(colDef.key));
 
   const synchedColumns = sortedDisplayColumns.filter(c => c.status === 'current');
@@ -738,9 +760,18 @@ const Metadata: React.FC<MetadataProps> = ({
         </Card>
       )}
 
-      {/* Save Button */}
+      {/* Action Buttons */}
       {displayColumns.length > 0 && (
-        <Button type="primary" htmlType="submit" style={{ marginTop: '10px' }}>Save Configuration</Button>
+        <Space style={{ marginTop: '10px' }}>
+          <Button type="primary" htmlType="submit">Save Configuration</Button>
+          <Button 
+            icon={<ApartmentOutlined />} 
+            onClick={handleAutoSuggestViews}
+            title="Auto-suggest view configurations based on metadata"
+          >
+            Auto Suggest Views
+          </Button>
+        </Space>
       )}
     </Form>
   );

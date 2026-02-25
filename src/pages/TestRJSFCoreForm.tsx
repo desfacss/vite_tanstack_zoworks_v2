@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import RJSFCoreForm from '@/core/components/RJSFCoreForm';
 import { Card, Select, Radio, Button, Space, message, Typography, Tabs, Divider, Row, Col, Switch } from 'antd';
 import { supabase } from '@/core/lib/supabase';
@@ -217,14 +217,18 @@ const TestRJSFCoreForm = () => {
         }
     };
 
-    // Update preview when JSON editors change
-    const updatePreview = useCallback(() => {
+    // Use useEffect to sync schema strings to the preview object safely
+    useEffect(() => {
         try {
+            const data_schema = JSON.parse(dataSchemaStr);
+            const ui_schema = JSON.parse(uiSchemaStr);
+            const db_schema = JSON.parse(dbSchemaStr);
+
             setGeneratedSchema((prev: any) => ({
                 ...prev,
-                data_schema: JSON.parse(dataSchemaStr),
-                ui_schema: JSON.parse(uiSchemaStr),
-                db_schema: JSON.parse(dbSchemaStr)
+                data_schema,
+                ui_schema,
+                db_schema
             }));
         } catch (e) {
             // Silence parse errors during typing
@@ -332,7 +336,7 @@ const TestRJSFCoreForm = () => {
                                                             mode="json"
                                                             theme="monokai"
                                                             value={dataSchemaStr}
-                                                            onChange={(val) => { setDataSchemaStr(val); updatePreview(); }}
+                                                            onChange={(val) => { setDataSchemaStr(val); }}
                                                             width="100%"
                                                             height="300px"
                                                             fontSize={12}
@@ -348,7 +352,7 @@ const TestRJSFCoreForm = () => {
                                                             mode="json"
                                                             theme="monokai"
                                                             value={uiSchemaStr}
-                                                            onChange={(val) => { setUiSchemaStr(val); updatePreview(); }}
+                                                            onChange={(val) => { setUiSchemaStr(val); }}
                                                             width="100%"
                                                             height="300px"
                                                             fontSize={12}
@@ -364,7 +368,7 @@ const TestRJSFCoreForm = () => {
                                                             mode="json"
                                                             theme="monokai"
                                                             value={dbSchemaStr}
-                                                            onChange={(val) => { setDbSchemaStr(val); updatePreview(); }}
+                                                            onChange={(val) => { setDbSchemaStr(val); }}
                                                             width="100%"
                                                             height="100px"
                                                             fontSize={12}
