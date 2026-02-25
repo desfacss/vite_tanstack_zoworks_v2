@@ -329,7 +329,7 @@ const YViewConfigManager: React.FC = () => {
     return (
       <ViewConfigEditor
         entityType={selectedConfig?.entity_type}
-        metadata={selectedConfig?.metadata}
+        metadata={selectedConfig?.v_metadata}
         entitySchema={selectedSchema || undefined} // Pass entity_schema
       />
     );

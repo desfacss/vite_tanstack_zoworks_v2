@@ -70,8 +70,12 @@ interface MetadataItem {
   tier1?: string;
   tier2?: string;
   tier3?: string;
-  is_phy_column?: boolean;
+  is_phys_generated?: boolean;
   is_visible?: boolean;
+  is_read_only?: boolean;
+  jsonb_path?: string | null;
+  jsonb_column?: string | null;
+  source_table?: string | null; // Host table
 }
 
 /**
@@ -129,7 +133,7 @@ const Metadata: React.FC<MetadataProps> = ({
   const originalMetadataRef = useRef<Map<string, MetadataItem>>(new Map());
 
   const [visibleKeys, setVisibleKeys] = useState<string[]>([
-    'key', 'display_name', 'type', 'tier1', 'tier2', 'tier3', 'is_phy_column', 'is_visible', 'semantic_type_sub_type',
+    'key', 'display_name', 'type', 'tier1', 'tier2', 'tier3', 'is_phys_generated', 'is_read_only', 'is_visible', 'semantic_type_sub_type',
     'source_table', 'source_column', 'display_column', 'action',
     'semantic_type_default_aggregation','is_searchable','is_displayable','is_mandatory','is_virtual','is_template','order'
   ]);
@@ -163,15 +167,15 @@ const Metadata: React.FC<MetadataProps> = ({
       const { data: entityData, error: configError } = await supabase
         .schema('core')
         .from('entities')
-        .select('id, v_metadata, metadata')
+        .select('id, v_metadata')
         .eq('entity_type', shortEntityType)
         .eq('entity_schema', entitySchema)
         .single();
 
       if (configError && configError.code !== 'PGRST116') throw configError;
       
-      // Use v_metadata if available, fallback to metadata or empty array
-      const currentMetadata: MetadataItem[] = entityData?.v_metadata || entityData?.metadata || [];
+      // Use v_metadata if available, fallback to empty array
+      const currentMetadata: MetadataItem[] = entityData?.v_metadata || [];
 
       const mergedColumns: DisplayColumn[] = [];
       
@@ -208,7 +212,11 @@ const Metadata: React.FC<MetadataProps> = ({
               tier1: (target as any).tier1,
               tier2: (target as any).tier2,
               tier3: (target as any).tier3,
-              is_phy_column: (target as any).is_phy_column,
+              is_phys_generated: (target as any).is_phys_generated,
+              is_read_only: (target as any).is_read_only,
+              jsonb_path: (target as any).jsonb_path,
+              jsonb_column: (target as any).jsonb_column,
+              source_table: (target as any).source_table,
             });
           });
         }
@@ -242,8 +250,9 @@ const Metadata: React.FC<MetadataProps> = ({
           tier1: col.tier1 || '',
           tier2: col.tier2 || '',
           tier3: col.tier3 || '',
-          is_phy_column: col.is_phy_column ?? false,
+          is_phys_generated: col.is_phys_generated ?? false,
           is_visible: (col as any).is_visible ?? true,
+          is_read_only: col.is_read_only ?? false,
         };
         return acc;
       }, {});
@@ -334,8 +343,12 @@ const Metadata: React.FC<MetadataProps> = ({
           tier1: formFieldValues.tier1,
           tier2: formFieldValues.tier2,
           tier3: formFieldValues.tier3,
-          is_phy_column: formFieldValues.is_phy_column, 
+          is_phys_generated: formFieldValues.is_phys_generated, 
           is_visible: formFieldValues.is_visible,
+          is_read_only: formFieldValues.is_read_only,
+          jsonb_path: baseOriginal.jsonb_path,
+          jsonb_column: baseOriginal.jsonb_column,
+          source_table: baseOriginal.source_table,
         };
 
         if (fkValueToSend) {
@@ -371,33 +384,21 @@ const Metadata: React.FC<MetadataProps> = ({
           }
       }
 
-      // --- 3. Execute Save (Update v_metadata) ---
+      // --- 3. Execute Unified Save ---
+      message.loading({ content: 'Saving configuration and provisioning...', key: 'save' });
       const { error: saveError } = await supabase
         .schema('core')
-        .from('entities')
-        .update({ v_metadata: metadataToSave })
-        .eq('entity_schema', entitySchema)
-        .eq('entity_type', shortEntityType);
-        
-      if (saveError) throw saveError;
-      
-      message.loading({ content: 'Provisioning entity structure...', key: 'bootstrap' });
-      
-      // --- 4. Complete Provisioning (Bootstrap RPC) ---
-      const { error: bootstrapError } = await supabase
-        .schema('core')
-        .rpc('comp_util_ops_bootstrap_entity', {
+        .rpc('api_new_save_entity_config', {
           p_schema_name: entitySchema,
           p_entity_type: shortEntityType,
-          p_config: null,
-          p_force_refresh: false // Ensures it uses Registry Corrections
+          p_config: metadataToSave
         });
+        
+      if (saveError) throw saveError;
 
-      if (bootstrapError) throw bootstrapError;
-
-      message.success({ content: 'Metadata configuration saved and provisioned successfully!', key: 'bootstrap' });
+      message.success({ content: 'Metadata configuration saved and provisioned successfully!', key: 'save' });
       
-      // --- 5. Update State & Refs ---
+      // --- 4. Update State & Refs ---
       await fetchData(); 
       fetchConfigs(); 
 
@@ -416,7 +417,7 @@ const Metadata: React.FC<MetadataProps> = ({
         .rpc('util_ops_metadata_sync', {
           p_schema_name: entitySchema,
           p_entity_type: shortEntityType,
-          p_overwrite_manual: false
+          p_overwrite_manual: true
         });
 
       if (error) throw error;
@@ -426,6 +427,30 @@ const Metadata: React.FC<MetadataProps> = ({
     } catch (error: any) {
       console.error("Error syncing registry:", error);
       message.error({ content: `Sync failed: ${error.message}`, key: 'sync' });
+    }
+  };
+
+  /** Drops view, cleans up generated columns, and clears registry */
+  const handleCleanup = async () => {
+    try {
+      message.loading({ content: 'Performing cleanup/reset...', key: 'cleanup' });
+      const { error } = await supabase
+        .schema('core')
+        .rpc('comp_util_ops_cleanup_entity', {
+          p_schema_name: entitySchema,
+          p_entity_type: shortEntityType,
+          p_drop_phys_cols: true,
+          p_clear_registry: true
+        });
+
+      if (error) throw error;
+      
+      message.success({ content: 'Entity reset successfully!', key: 'cleanup' });
+      await fetchData();
+      fetchConfigs();
+    } catch (error: any) {
+      console.error("Error during cleanup:", error);
+      message.error({ content: `Cleanup failed: ${error.message}`, key: 'cleanup' });
     }
   };
 
@@ -504,8 +529,11 @@ const Metadata: React.FC<MetadataProps> = ({
     { title: 'Tier 3', key: 'tier3', width: 150,
       render: (_: any, record: DisplayColumn) => (<Form.Item name={[record.key, 'tier3']} noStyle><Input placeholder="Tier 3 Group" /></Form.Item>)
     },
-    { title: 'Phy Col', key: 'is_phy_column', width: 80, align: 'center' as 'center',
-      render: (_: any, record: DisplayColumn) => (<Form.Item name={[record.key, 'is_phy_column']} valuePropName="checked" noStyle><Checkbox /></Form.Item>)
+    { title: 'Phys Gen', key: 'is_phys_generated', width: 90, align: 'center' as 'center',
+      render: (_: any, record: DisplayColumn) => (<Form.Item name={[record.key, 'is_phys_generated']} valuePropName="checked" noStyle><Checkbox /></Form.Item>)
+    },
+    { title: 'Read Only', key: 'is_read_only', width: 90, align: 'center' as 'center',
+      render: (_: any, record: DisplayColumn) => (<Form.Item name={[record.key, 'is_read_only']} valuePropName="checked" noStyle><Checkbox /></Form.Item>)
     },
     { title: 'Sub Type', key: 'semantic_type_sub_type', width: 130,
       render: (_: any, record: DisplayColumn) => (<Form.Item name={[record.key, 'semantic_type_sub_type']} noStyle><Select style={{ width: '100%' }} options={fieldOptions.semantic_type_sub_type_options.map(o => ({label: o, value: o}))} /></Form.Item>)
@@ -622,6 +650,17 @@ const Metadata: React.FC<MetadataProps> = ({
         />
       )}
         <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+            <Popconfirm 
+                title="Are you sure you want to reset this entity? This will drop the logical view, remove generated columns, and clear the registry." 
+                onConfirm={handleCleanup} 
+                okText="Yes, Reset" 
+                cancelText="No"
+                okButtonProps={{ danger: true }}
+            >
+                <Button danger type="dashed" icon={<DeleteOutlined />}>
+                    Reset Entity
+                </Button>
+            </Popconfirm>
             <Button 
                 icon={<SyncOutlined />} 
                 onClick={handleSyncRegistry}
