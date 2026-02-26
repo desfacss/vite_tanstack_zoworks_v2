@@ -72,7 +72,7 @@ const TestRJSFCoreForm = () => {
         if (!selectedEntity) return;
         setGenerating(true);
         try {
-            const { data, error } = await supabase.schema('core').rpc('api_new_generate_form_schema', {
+            const { data, error } = await supabase.schema('core').rpc('api_new_generate_form_schema_v3', {
                 p_entity_name: selectedEntity,
                 p_options: {
                     mode,
