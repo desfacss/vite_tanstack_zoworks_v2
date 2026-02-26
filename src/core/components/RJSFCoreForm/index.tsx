@@ -209,16 +209,32 @@ const RJSFCoreForm: React.FC<RJSFCoreFormProps> = ({
         throw error;
       }
 
-      if (data && data.length > 0 && organization?.id) {
-        // Priority logic: If tenant-specific rows exist, use ONLY those.
-        // Otherwise, use ONLY global rows.
-        const tenantSpecificData = data.filter(item => item.organization_id === organization.id);
-        if (tenantSpecificData.length > 0) {
-          console.log(`[RJSFCoreForm] Found ${tenantSpecificData.length} tenant-specific overrides for ${actualTable}. Prioritizing them.`);
-          data = tenantSpecificData;
+      if (data && data.length > 0) {
+        if (organization?.id) {
+          const tenantSpecificData = data.filter((item: any) => item.organization_id === organization.id);
+          if (tenantSpecificData.length > 0) {
+            console.log(`[RJSFCoreForm] Found ${tenantSpecificData.length} tenant-specific overrides for ${actualTable}. Prioritizing them.`);
+            data = tenantSpecificData;
+          } else {
+            console.log(`[RJSFCoreForm] No tenant overrides found for ${actualTable}. Using global values.`);
+            data = data.filter((item: any) => item.organization_id === null);
+          }
         } else {
-          data = data.filter(item => item.organization_id === null);
+          data = data.filter((item: any) => item.organization_id === null);
         }
+
+        // --- Deduplication ---
+        // Use a Map to keep unique items based on their value/label
+        const uniqueOptions = new Map();
+        data.forEach((item: any) => {
+          const val = noId ? item[column] : item.id;
+          const label = item[displayColumn || column] || item.id;
+          const key = `${val}:${label}`;
+          if (!uniqueOptions.has(key)) {
+            uniqueOptions.set(key, item);
+          }
+        });
+        data = Array.from(uniqueOptions.values());
       }
 
       console.log(`[RJSFCoreForm] Final list has ${data?.length || 0} options for ${actualTable}`);
@@ -243,11 +259,19 @@ const RJSFCoreForm: React.FC<RJSFCoreFormProps> = ({
         const noId = enumValue.no_id || false;
         let filterConditions = [...(enumValue.filters || [])] as FilterType[];
 
-        // Handle single 'filter' object if present
-        if (enumValue.filter && typeof enumValue.filter === 'object') {
-          Object.entries(enumValue.filter).forEach(([k, v]) => {
-            filterConditions.push({ key: k, operator: 'eq', value: v });
-          });
+        // Handle 'filter' if present (supports both object and array formats)
+        if (enumValue.filter) {
+          if (Array.isArray(enumValue.filter)) {
+            enumValue.filter.forEach((f: any) => {
+              if (f.key && f.operator) {
+                filterConditions.push(f as FilterType);
+              }
+            });
+          } else if (typeof enumValue.filter === 'object') {
+            Object.entries(enumValue.filter).forEach(([k, v]) => {
+              filterConditions.push({ key: k, operator: 'eq', value: v });
+            });
+          }
         }
 
         if (enumValue.dependsOnColumn && formData[enumValue.dependsOnField || '']) {

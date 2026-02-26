@@ -209,6 +209,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ schemas, formData, updateId, 
     column: string; // The ID column to select (e.g., 'id' or 'user_id')
     schema?: string;
     filters?: FilterType[];
+    filter?: FilterType[]; // Add support for autonomic singular filter
     no_id?: boolean;
     dependsOn?: string;
     dependsOnField?: string;
@@ -335,8 +336,14 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ schemas, formData, updateId, 
         let query = supabase
           .schema(actualSchema)
           .from(actualTable)
-          .select(selectColumns) // Use the constructed select string
-          .eq('organization_id', organization?.id);
+          .select(selectColumns);
+
+        // NOTE: For views like core.v_enums_tenanted, RLS and the view's internal logic (DISTINCT ON)
+        // already handle the "Mine OR Global" resolution. Adding a manual filter here
+        // can break the fallback to global values if the organization context is missing or specific.
+        if (organization?.id && actualTable !== 'v_enums_tenanted') {
+          query = query.or(`organization_id.eq.${organization.id},organization_id.is.null`);
+        }
 
         filters.forEach(filter => {
           query = applyFilter(query, filter);
@@ -390,7 +397,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ schemas, formData, updateId, 
     for (const key of keys) {
       const enumValue = obj[key]?.enum as EnumSchema;
       const noId = enumValue?.no_id || false;
-      let filterConditions: FilterType[] = enumValue?.filters || [];
+      let filterConditions: FilterType[] = enumValue?.filter || enumValue?.filters || [];
 
       if (enumValue?.dependsOnColumn && formData[enumValue?.dependsOnField]) {
         filterConditions = [
