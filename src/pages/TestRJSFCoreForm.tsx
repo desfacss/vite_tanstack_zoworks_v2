@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import RJSFCoreForm from '@/core/components/RJSFCoreForm';
-import { Card, Select, Radio, Button, Space, message, Typography, Tabs, Divider, Row, Col, Switch } from 'antd';
+import { Card, Select, Radio, Button, Space, message, Typography, Tabs, Divider, Row, Col, Switch, Input } from 'antd';
 import { supabase } from '@/core/lib/supabase';
 import { ThunderboltOutlined, SaveOutlined } from '@ant-design/icons';
-import { Trash2 } from 'lucide-react';
+import { Trash2, Settings2 } from 'lucide-react';
 import AceEditor from 'react-ace';
 import { useAuthStore } from '@/core/lib/store';
 
@@ -29,6 +29,25 @@ const TestRJSFCoreForm = () => {
     const [generating, setGenerating] = useState(false);
     const [saving, setSaving] = useState(false);
     const [isGlobal, setIsGlobal] = useState(true); // Default to true as requested
+    const [formName, setFormName] = useState<string>('');
+
+    const WIDGET_OPTIONS = [
+        { label: 'Default', value: 'default' },
+        { label: 'Input', value: 'input' },
+        { label: 'Textarea', value: 'textarea' },
+        { label: 'Password', value: 'password' },
+        { label: 'Select Custom', value: 'SelectCustomWidget' },
+        { label: 'Date', value: 'date' },
+        { label: 'Date-Time', value: 'date-time' },
+        { label: 'Date Range', value: 'DateRangePickerWidget' },
+        { label: 'Date-Time Range', value: 'DateTimeRangePickerWidget' },
+        { label: 'Switch', value: 'checkbox' },
+        { label: 'Radio', value: 'radio' },
+        { label: 'File', value: 'file' },
+        { label: 'Web Widget', value: 'WebWidget' },
+        { label: 'Editable Table', value: 'EditableTableWidget' },
+        { label: 'Hidden', value: 'hidden' }
+    ];
 
     useEffect(() => {
         const fetchEntities = async () => {
@@ -96,6 +115,14 @@ const TestRJSFCoreForm = () => {
                 setDataSchemaStr(JSON.stringify(schemas.data_schema, null, 2));
                 setUiSchemaStr(JSON.stringify(schemas.ui_schema, null, 2));
                 setDbSchemaStr(JSON.stringify(schemas.db_schema, null, 2));
+
+                // Set default form name
+                const [schemaName, entityName] = selectedEntity.split('.');
+                let suffix = 'form';
+                if (mode === 'minimal') suffix = 'min';
+                else if (mode === 'all') suffix = 'custom';
+                setFormName(`${schemaName}_${entityName}_${suffix}`);
+
                 message.success('Schema generated successfully');
             }
         } catch (err: any) {
@@ -122,13 +149,11 @@ const TestRJSFCoreForm = () => {
                 return;
             }
 
-            // Determine form name
-            const [schemaName, entityName] = selectedEntity.split('.');
-            let suffix = 'form';
-            if (mode === 'minimal') suffix = 'min';
-            else if (mode === 'all') suffix = 'custom';
-
-            const formName = `${schemaName}_${entityName}_${suffix}`;
+            if (!formName) {
+                message.warning('Please enter a form name');
+                setSaving(false);
+                return;
+            }
 
             // Check for existing form to get its ID
             const query = supabase
@@ -217,6 +242,32 @@ const TestRJSFCoreForm = () => {
         }
     };
 
+    const handleWidgetChange = (fieldName: string, widget: string) => {
+        try {
+            const currentUi = JSON.parse(uiSchemaStr);
+            if (!currentUi[fieldName]) currentUi[fieldName] = {};
+            
+            if (widget === 'default') {
+                delete currentUi[fieldName]['ui:widget'];
+            } else {
+                currentUi[fieldName]['ui:widget'] = widget;
+                // Add default options for some widgets if they don't exist
+                if (widget === 'SelectCustomWidget' && !currentUi[fieldName]['ui:options']) {
+                    currentUi[fieldName]['ui:options'] = { 
+                        mode: 'single', 
+                        colSpan: 12,
+                        reference_api: '/api/v4/logical/fetch/...'
+                    };
+                }
+            }
+
+            setUiSchemaStr(JSON.stringify(currentUi, null, 2));
+            message.info(`Widget for "${fieldName}" updated to ${widget}`);
+        } catch (e) {
+            message.error('Error updating widget: ' + (e as Error).message);
+        }
+    };
+
     // Use useEffect to sync schema strings to the preview object safely
     useEffect(() => {
         try {
@@ -290,25 +341,40 @@ const TestRJSFCoreForm = () => {
                             <Col span={6}>
                                 <Card size="small" title="Form Fields" style={{ height: '100%', overflowY: 'auto', maxHeight: '1000px' }}>
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                                        {fieldList.map(field => (
-                                            <div key={field} style={{
-                                                display: 'flex',
-                                                justifyContent: 'space-between',
-                                                alignItems: 'center',
-                                                padding: '8px',
-                                                background: '#f5f5f5',
-                                                borderRadius: '4px'
-                                            }}>
-                                                <Text ellipsis style={{ maxWidth: '80%' }}>{field}</Text>
-                                                <Button
-                                                    type="text"
-                                                    danger
-                                                    size="small"
-                                                    icon={<Trash2 size={16} />}
-                                                    onClick={() => handleDeleteField(field)}
-                                                />
-                                            </div>
-                                        ))}
+                                        {fieldList.map(field => {
+                                            const currentUi = JSON.parse(uiSchemaStr || '{}');
+                                            const currentWidget = currentUi[field]?.['ui:widget'] || 'default';
+                                            
+                                            return (
+                                                <div key={field} style={{
+                                                    display: 'flex',
+                                                    flexDirection: 'column',
+                                                    gap: 4,
+                                                    padding: '8px',
+                                                    background: '#f5f5f5',
+                                                    borderRadius: '4px'
+                                                }}>
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                        <Text strong ellipsis style={{ maxWidth: '80%' }}>{field}</Text>
+                                                        <Button
+                                                            type="text"
+                                                            danger
+                                                            size="small"
+                                                            icon={<Trash2 size={14} />}
+                                                            onClick={() => handleDeleteField(field)}
+                                                        />
+                                                    </div>
+                                                    <Select
+                                                        size="small"
+                                                        value={currentWidget}
+                                                        options={WIDGET_OPTIONS}
+                                                        onChange={(val) => handleWidgetChange(field, val)}
+                                                        style={{ width: '100%' }}
+                                                        suffixIcon={<Settings2 size={12} />}
+                                                    />
+                                                </div>
+                                            );
+                                        })}
                                         {fieldList.length === 0 && <Text type="secondary">No fields in schema</Text>}
                                     </div>
                                 </Card>
@@ -316,14 +382,22 @@ const TestRJSFCoreForm = () => {
                             <Col span={18}>
                                 <Space direction="vertical" style={{ width: '100%' }} size="large">
                                     <Card size="small" type="inner" title="Schema Editors" extra={
-                                        <Button
-                                            type="primary"
-                                            icon={<SaveOutlined />}
-                                            onClick={handleSaveToForms}
-                                            loading={saving}
-                                        >
-                                            Save to Forms Table
-                                        </Button>
+                                        <Space>
+                                            <Input 
+                                                placeholder="Form Name" 
+                                                value={formName} 
+                                                onChange={(e) => setFormName(e.target.value)}
+                                                style={{ width: 250 }}
+                                            />
+                                            <Button
+                                                type="primary"
+                                                icon={<SaveOutlined />}
+                                                onClick={handleSaveToForms}
+                                                loading={saving}
+                                            >
+                                                Save
+                                            </Button>
+                                        </Space>
                                     }>
                                         <Tabs
                                             defaultActiveKey="data"
