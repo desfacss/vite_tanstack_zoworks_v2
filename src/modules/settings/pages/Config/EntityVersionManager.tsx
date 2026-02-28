@@ -663,12 +663,12 @@ const EntityVersionManager: React.FC<EntityVersionManagerProps> = ({ entity_sche
               )}
             </Descriptions>
             
-            {selectedVersion.metadata && selectedVersion.metadata.length > 0 && (
+            {selectedVersion.v_metadata && selectedVersion.v_metadata.length > 0 && (
               <>
-                <Divider>Metadata Fields ({selectedVersion.metadata.length})</Divider>
+                <Divider>Metadata Fields ({selectedVersion.v_metadata.length})</Divider>
                 <div style={{ maxHeight: 200, overflow: 'auto' }}>
                   <Space wrap>
-                    {selectedVersion.metadata.map((field: any, idx: number) => (
+                    {selectedVersion.v_metadata.map((field: any, idx: number) => (
                       <Tag key={idx}>{field.key} ({field.type})</Tag>
                     ))}
                   </Space>

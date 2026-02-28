@@ -417,7 +417,7 @@ export const fetchAvailableEntities = async () => {
   try {
     const { data, error } = await supabase.from('y_view_config').select('entity_type, metadata');
     if (error) throw error;
-    return (data || []).map((item) => ({ type: item.entity_type, metadata: item.metadata || [] }));
+    return (data || []).map((item) => ({ type: item.entity_type, metadata: item.v_metadata || [] }));
   } catch (error) {
     console.error('Error fetching available entities:', error);
     return [];
@@ -435,7 +435,7 @@ export const fetchMetadata = async (entityType: string): Promise<MasterDataSchem
       .maybeSingle(); // Use maybeSingle for safety
 
     if (error) throw error;
-    return data?.metadata || []; // Return metadata or empty array if not found
+    return data?.v_metadata || []; // Return metadata or empty array if not found
   } catch (error) {
     console.error(`Error fetching metadata for ${entityType}:`, error);
     return []; // Return empty array on error

@@ -103,7 +103,7 @@ export const useViewConfigEnhanced = (entityType: string, entitySchema: string) 
 
       const mergedViewConfig: ViewConfig = {
         ...viewConfigData,
-        metadata: entityData?.metadata,
+        metadata: entityData?.v_metadata,
         v_metadata: entityData?.v_metadata,
       };
 

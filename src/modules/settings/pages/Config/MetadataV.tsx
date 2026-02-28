@@ -117,7 +117,7 @@ const ViewMetadata: React.FC<MetadataProps> = ({ entityType, entitySchema, fetch
         if (configError && configError.code !== 'PGRST116') throw configError;
 
         setEntityRecord(savedEntityConfig);
-        const baseMetadata: MetadataItem[] = savedEntityConfig?.metadata || [];
+        const baseMetadata: MetadataItem[] = savedEntityConfig?.v_metadata || [];
         const savedViewOverrides: MetadataItem[] = savedEntityConfig?.v_metadata || [];
 
         // Store the base metadata in the ref for later comparison

@@ -657,7 +657,7 @@ const YViewConfigManager: React.FC = () => {
                 <Metadata
                   entityType={selectedConfig?.entity_type}
                   entitySchema={selectedSchema || undefined}
-                  entityMetadata={selectedConfig?.metadata || []}
+                  entityMetadata={selectedConfig?.v_metadata || []}
                   fetchConfigs={fetchConfigs}
                   // NEW: Logical variant awareness
                   isLogicalVariant={selectedConfig?.is_logical_variant || false}
@@ -701,7 +701,7 @@ const YViewConfigManager: React.FC = () => {
               label: 'Form Builder',
               children: (
                 <FormBuilder
-                  masterObjectInit={selectedConfig?.metadata}
+                  masterObjectInit={selectedConfig?.v_metadata}
                   entitySchema={selectedConfig?.entity_schema && selectedConfig?.entity_type 
                     ? `${selectedConfig.entity_schema}.${selectedConfig.entity_type}` 
                     : undefined}

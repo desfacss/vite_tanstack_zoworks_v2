@@ -120,7 +120,7 @@ const FormGenerator: React.FC<FormGeneratorProps> = ({ onGenerate, onClose, defa
     setGenerating(true);
     try {
       // Prefer v_metadata if available, fallback to metadata
-      const metadata: EntityField[] = selectedEntity.v_metadata || selectedEntity.metadata || [];
+      const metadata: EntityField[] = selectedEntity.v_metadata || selectedEntity.v_metadata || [];
 
       if (!metadata || metadata.length === 0) {
         message.warning('Selected entity has no metadata fields');
@@ -252,7 +252,7 @@ const FormGenerator: React.FC<FormGeneratorProps> = ({ onGenerate, onClose, defa
             description={
               <Space direction="vertical" size={0}>
                 <Text type="secondary">
-                  {(selectedEntity.v_metadata || selectedEntity.metadata)?.length || 0} fields in metadata
+                  {(selectedEntity.v_metadata || selectedEntity.v_metadata)?.length || 0} fields in metadata
                 </Text>
                 {selectedEntity.description && (
                   <Text type="secondary">{selectedEntity.description}</Text>

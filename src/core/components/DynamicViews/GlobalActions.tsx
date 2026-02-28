@@ -49,7 +49,7 @@ const GlobalActions: React.FC<GlobalActionsProps> = ({
   const queryClient = useQueryClient();
   const path = useLocation();
   const globalActionsFromConfig = config?.global_actions || [];
-  const metadata = viewConfig?.metadata;
+  const metadata = viewConfig?.v_metadata;
 
   // Actions from both Config and Registry
   const registeredActions = useMemo(() => registry.getActionsForEntity(entityType, 'global'), [entityType]);

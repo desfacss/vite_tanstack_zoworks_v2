@@ -66,13 +66,13 @@ const MetricsView: React.FC<MetricsViewProps> = ({ entitySchema, entityType, vie
     }
 
     return options.map((groupBy: string) => {
-      const metadata = viewConfig?.metadata?.find((m: any) => m.key === groupBy);
+      const metadata = viewConfig?.v_metadata?.find((m: any) => m.key === groupBy);
       return {
         value: groupBy,
         label: metadata?.display_name || snakeToTitleCase(groupBy),
       };
     });
-  }, [metricsViewConfig?.supported_group_by, viewConfig?.metadata, organization?.id, location?.id]);
+  }, [metricsViewConfig?.supported_group_by, viewConfig?.v_metadata, organization?.id, location?.id]);
 
   const getGroupByColumns = () => {
     if (selectedGroupBy.length > 0) {

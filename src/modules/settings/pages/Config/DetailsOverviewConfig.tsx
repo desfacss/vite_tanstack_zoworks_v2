@@ -119,8 +119,8 @@ const fetchRelatedMetadataFromSupabase = async (sourceTable: string): Promise<Me
       return null;
     }
 
-    if (data && data.metadata) {
-      const metadataSource = typeof data.metadata === 'string' ? JSON.parse(data.metadata) : data.metadata;
+    if (data && data.v_metadata) {
+      const metadataSource = typeof data.v_metadata === 'string' ? JSON.parse(data.v_metadata) : data.v_metadata;
       
       if (Array.isArray(metadataSource)) {
            return (metadataSource as MetadataItem[]).map((item) => ({

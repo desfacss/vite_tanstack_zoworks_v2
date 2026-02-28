@@ -142,7 +142,7 @@ const ImportExportComponent: React.FC<ImportExportProps> = ({
         scale: 100,
     });
 
-    const metadata = useMemo(() => viewConfig?.metadata || viewConfig?.v_metadata || [], [viewConfig]);
+    const metadata = useMemo(() => viewConfig?.v_metadata || viewConfig?.v_metadata || [], [viewConfig]);
     const features = useMemo(() => viewConfig?.general?.features || config?.features || {}, [viewConfig, config]);
     const qrForm = useMemo(() => features?.qr_form || config?.features_settings?.qr_form, [features, config]);
 

@@ -240,8 +240,8 @@
 
 //   // Memoize all available columns from metadata
 //   const allDisplayableColumns = useMemo(() => {
-//     if (!viewConfig?.metadata) return [];
-//     return viewConfig.metadata
+//     if (!viewConfig?.v_metadata) return [];
+//     return viewConfig.v_metadata
 //       .filter(field => field.is_displayable)
 //       .map(field => {
 //         const fieldPath = field.foreign_key ? `${field.key}_${field.foreign_key.display_column}` : field.key;
@@ -250,7 +250,7 @@
 //           fieldPath: fieldPath,
 //         };
 //       });
-//   }, [viewConfig?.metadata]);
+//   }, [viewConfig?.v_metadata]);
 
 //   const { data: tableData, isLoading: isDataLoading } = useQuery({
 //     queryKey: [entityType, organization?.id, location, JSON.stringify(filterValues), pagination.current, pagination.pageSize, currentTab, parentEditItem?.id, viewConfig],
@@ -343,8 +343,8 @@
 //         filters,
 //         search, //TODO: Re-enable full search later
 //         location_id: locationId,
-//         metadata: viewConfig?.v_metadata || viewConfig?.metadata, // TODO:RAVi REVISIT
-//         // metadata: viewConfig?.metadata, // Correctly use the specific viewConfig object
+//         metadata: viewConfig?.v_metadata || viewConfig?.v_metadata, // TODO:RAVi REVISIT
+//         // metadata: viewConfig?.v_metadata, // Correctly use the specific viewConfig object
 //         // include_jsonb:["details"],
 //         include_jsonb:true,
 //         mode:'fast'
@@ -961,9 +961,9 @@ const DynamicViews: React.FC<DynamicViewsProps> = ({
   }, [initialVisibleColumns]);
 
   const allDisplayableColumns = useMemo(() => {
-    if (!viewConfig?.metadata) return [];
-    return viewConfig.metadata
-      .filter((field: any) => field.is_displayable)
+    if (!viewConfig?.v_metadata) return [];
+    return viewConfig.v_metadata
+      // .filter((field: any) => field.is_displayable)
       .map((field: any) => {
         const fieldPath = field.foreign_key ? `${field.key}_${field.foreign_key.display_column}` : field.key;
         return {
@@ -972,7 +972,7 @@ const DynamicViews: React.FC<DynamicViewsProps> = ({
           dataType: field.data_type,
         };
       });
-  }, [viewConfig?.metadata]);
+  }, [viewConfig?.v_metadata]);
 
   // --- DATA FETCHING (CURSOR BASED) ---
   const { data: tableData, isLoading: isDataLoading } = useQuery({
@@ -1092,7 +1092,7 @@ const DynamicViews: React.FC<DynamicViewsProps> = ({
         filters,
         search,
         location_id: locationId,
-        metadata: viewConfig?.v_metadata || viewConfig?.metadata,
+        metadata: viewConfig?.v_metadata || viewConfig?.v_metadata,
         include_jsonb: true,
         mode: 'fast'
       };

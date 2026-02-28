@@ -3,7 +3,7 @@
  * Type definitions for entity metadata and generated form schemas
  */
 
-// Entity metadata field structure from core.entities.metadata
+// Entity metadata field structure from core.entities.v_metadata
 export interface EntityField {
   key: string;              // Field name e.g., "name", "details.zip"
   type: string;             // PostgreSQL type: text, uuid, boolean, date, timestamptz, etc.

@@ -28,7 +28,7 @@ interface AgentBubbleProps {
 const AgentBubble: React.FC<AgentBubbleProps> = ({ message, isSelected, onClick }) => {
     const isUser = message.role === 'user';
     const [viewMode, setViewMode] = React.useState<'rendered' | 'source'>('rendered');
-    const isClickable = !!onClick && (!isUser || !!(message.metadata?.tool_names?.length));
+    const isClickable = !!onClick && (!isUser || !!(message.v_metadata?.tool_names?.length));
 
     // Sanitize content to replace long URLs with clickable [Link] text
     const sanitizeContent = (content: string): string => {
@@ -221,7 +221,7 @@ const AgentBubble: React.FC<AgentBubbleProps> = ({ message, isSelected, onClick 
                 </div>
 
                 {/* Tool Usage Badge (Clickable for Data Panel) */}
-                {message.metadata?.tool_names && message.metadata.tool_names.length > 0 && (
+                {message.v_metadata?.tool_names && message.v_metadata.tool_names.length > 0 && (
                     <div
                         onClick={onClick}
                         style={{
@@ -235,8 +235,8 @@ const AgentBubble: React.FC<AgentBubbleProps> = ({ message, isSelected, onClick 
                         className="hover:opacity-100 hover:bg-gray-50 rounded"
                     >
                         <Text type="secondary" style={{ fontSize: 11 }}>
-                            🛠️ {message.metadata.tool_names.length} tools: {message.metadata.tool_names.slice(0, 3).join(', ')}
-                            {message.metadata.tool_names.length > 3 && ` +${message.metadata.tool_names.length - 3} more`}
+                            🛠️ {message.v_metadata.tool_names.length} tools: {message.v_metadata.tool_names.slice(0, 3).join(', ')}
+                            {message.v_metadata.tool_names.length > 3 && ` +${message.v_metadata.tool_names.length - 3} more`}
                         </Text>
                     </div>
                 )}

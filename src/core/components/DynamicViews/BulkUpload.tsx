@@ -256,7 +256,7 @@ const BulkUpload: React.FC<BulkUploadProps> = ({ supabase }) => {
 
   useEffect(() => {
     if (selectedEntity) {
-      fetchForeignKeyOptions(selectedEntity.metadata);
+      fetchForeignKeyOptions(selectedEntity.v_metadata);
     }
   }, [selectedEntity]);
 
@@ -396,12 +396,12 @@ const BulkUpload: React.FC<BulkUploadProps> = ({ supabase }) => {
       const parsedData = await parseFile(file);
       const transformedData = transformDataKeys(
         parsedData,
-        selectedEntity.metadata,
+        selectedEntity.v_metadata,
       );
 
       const dataWithUuidsAndErrors = mapDisplayToUuids(
         transformedData,
-        selectedEntity.metadata,
+        selectedEntity.v_metadata,
       );
 
       const initialData = dataWithUuidsAndErrors.map((row, index) => ({
@@ -438,7 +438,7 @@ const BulkUpload: React.FC<BulkUploadProps> = ({ supabase }) => {
 
   const getColumns = (): ColumnsType<ParsedRow> => {
     if (!selectedEntity || data.length === 0) return [];
-    const metadata = selectedEntity.metadata as EntityMetadata[];
+    const metadata = selectedEntity.v_metadata as EntityMetadata[];
 
     const templateColumns = metadata.filter(
       (col) => col.is_displayable && col.is_template,

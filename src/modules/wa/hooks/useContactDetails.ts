@@ -67,7 +67,7 @@ const fetchContactForConversation = async (conversationId: string): Promise<WaCo
         linked_entity_type: contact.linked_entity_type,
         tags: contact.tags || [],
         opt_in_status: contact.opt_in_status ?? true,
-        metadata: contact.metadata || {},
+        metadata: contact.v_metadata || {},
         created_at: contact.created_at,
         updated_at: contact.updated_at,
     };
@@ -100,7 +100,7 @@ const fetchContactById = async (contactId: string): Promise<WaContact | null> =>
         linked_entity_type: data.linked_entity_type,
         tags: data.tags || [],
         opt_in_status: data.opt_in_status ?? true,
-        metadata: data.metadata || {},
+        metadata: data.v_metadata || {},
         created_at: data.created_at,
         updated_at: data.updated_at,
     };

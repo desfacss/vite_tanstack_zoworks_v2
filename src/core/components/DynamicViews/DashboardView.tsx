@@ -200,7 +200,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({ entitySchema, entityType,
     : 'N/A';
 
   const groupByOptions = viewConfig?.metricsview?.stages_config?.supported_group_by?.map((groupBy: string) => {
-    const metadata = viewConfig?.metadata?.find((m: any) => m.key === groupBy);
+    const metadata = viewConfig?.v_metadata?.find((m: any) => m.key === groupBy);
     return {
       value: groupBy,
       label: metadata?.display_name || snakeToTitleCase(groupBy),

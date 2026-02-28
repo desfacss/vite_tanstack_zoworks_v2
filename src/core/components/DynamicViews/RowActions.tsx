@@ -110,7 +110,7 @@ const RowActions: React.FC<RowActionsProps> = ({
       if (!organization?.id || !user?.id) throw new Error('Authentication required');
       if (!record?.id) throw new Error('No record selected for update');
 
-      const metadata = viewConfig?.metadata || [];
+      const metadata = viewConfig?.v_metadata || [];
       const relatedTable = config?.details?.related_table;
       // Extract schema from entity_type or use entity_schema
       const entityTypeWithSchema = viewConfig?.entity_type || entityType;
