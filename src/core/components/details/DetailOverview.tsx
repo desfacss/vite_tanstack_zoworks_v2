@@ -1,6 +1,6 @@
 // DetailOverview.tsx
 import React, { useState, useEffect, useCallback, lazy, Suspense } from 'react';
-import { Card, Divider, Tag, Button, Typography, Switch, message, Spin } from 'antd';
+import { Card, Divider, Tag, Button, Typography, Switch, message, Spin, Tooltip } from 'antd';
 import {
   Eye,
   EyeOff,
@@ -15,9 +15,11 @@ import {
   User,
   Settings,
   Folder,
-  FileText
+  FileText,
+  Star
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { useFavorite } from '@/core/hooks/useFavorite';
 const QRCard = lazy(() => import('./QRCard'));
 const RowActions = lazy(() => import('../DynamicViews/RowActions'));
 const DocView = lazy(() => import('./DocView'));
@@ -216,6 +218,9 @@ const DetailOverview: React.FC<DetailOverviewProps> = ({
   const [toggledGroups, setToggledGroups] = useState<Set<string>>(new Set());
   const { organization } = useAuthStore();
   const recordId = data?.id;
+  const showFavorite = viewConfig?.detailview?.show_favorite;
+  console.log("showFavorite", viewConfig);
+  const { isFavorited, toggleFavorite } = useFavorite(viewConfig?.entity_type || '', recordId || '');
   // Function to render icon based on name
   const getIcon = (iconName?: string) => {
     if (!iconName) return null;
@@ -606,7 +611,23 @@ const DetailOverview: React.FC<DetailOverviewProps> = ({
   const cardTitleText = getCardTitleText(currentData);
 
   const cardTitle = cardTitleText !== ' - - ' ? (
-    <span>{cardTitleText}</span>
+    <div className="flex items-center gap-2">
+      <span>{cardTitleText}</span>
+      {showFavorite && (
+        <Tooltip title={isFavorited ? "Unfavorite" : "Favorite"}>
+          <Button
+            type="text"
+            size="small"
+            icon={<Star size={18} fill={isFavorited ? "#eab308" : "none"} className={isFavorited ? "text-yellow-500" : "text-gray-400"} />}
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleFavorite();
+            }}
+            className="flex items-center justify-center p-0 h-6 w-6 hover:bg-transparent"
+          />
+        </Tooltip>
+      )}
+    </div>
   ) : null;
 
   const sortedGroups = viewConfig?.detailview?.groups?.sort(

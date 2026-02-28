@@ -89,10 +89,31 @@
       },
       {
         "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
-        "routePath": "/esm/service_requests",
-        "translationKey": "service_requests",
-        "key": "esm-service-requests",
-        "submoduleKey": "esm-service_requests"
+        "routePath": "/esm/tickets",
+        "translationKey": "tickets",
+        "key": "esm-tickets",
+        "submoduleKey": "esm-tickets"
+      },
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/esm/service_reports",
+        "translationKey": "service_reports",
+        "key": "esm-service_reports",
+        "submoduleKey": "esm-service_reports"
+      },
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/esm/work_orders",
+        "translationKey": "work_orders",
+        "key": "esm-work_orders",
+        "submoduleKey": "esm-work_orders"
+      },
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/esm/projects",
+        "translationKey": "projects",
+        "key": "esm-projects",
+        "submoduleKey": "esm-projects"
       }
     ],
     "support": [

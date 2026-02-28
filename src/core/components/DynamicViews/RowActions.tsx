@@ -14,10 +14,18 @@ import { RowActions as RowActionsStandard } from '@/core/components/ActionBar';
 // Legacy Component Map Removed - Use Registry or Dynamic Forms
 const legacyComponentMap: Record<string, React.ComponentType<any>> = {};
 
+interface ActionConfig {
+  name: string;
+  label?: string;
+  form?: string;
+  entity?: string;
+  id_column?: string;
+}
+
 interface RowActionsProps {
   entityType: string;
   record: any;
-  actions: Array<{ name: string; form?: string }>;
+  actions: ActionConfig[];
   accessConfig?: any;
   viewConfig?: any;
   rawData?: any[];
@@ -134,14 +142,20 @@ const RowActions: React.FC<RowActionsProps> = ({
 
       const dataPayload = {
         ...processedValues,
-        id: record.id, // Include id in data object for update
+        id: values.id || record.id, // Include id in data object for update
         ...(metadata.some((field: any) => field.key === 'organization_id') ? { organization_id: organization.id } : {}),
         ...(metadata.some((field: any) => field.key === 'updated_by') ? { updated_by: user.id } : {}),
       };
 
-      // Update main record
+      // 1. Update main record
+      // Use targetEntity if available, otherwise fallback to entityType
+      const targetAction = actions.find(a => a.form === formName);
+      const targetTable = (currentAction === 'Edit' && formName && targetAction?.entity)
+        ? targetAction.entity
+        : fullTableName;
+
       const { data, error } = await (supabase as any).schema('core').rpc('api_new_core_upsert_data', {
-        table_name: fullTableName,
+        table_name: targetTable,
         data: dataPayload
       });
 
@@ -202,12 +216,12 @@ const RowActions: React.FC<RowActionsProps> = ({
     onError: (error: any) => message.error(error.message || 'Failed to update ' + entityType),
   });
 
-  const fetchFullRecord = useCallback(async (recordId: string) => {
+  const fetchFullRecord = useCallback(async (recordId: string, entityName?: string) => {
     try {
       // Prioritize explicit select, fallback to basic items for timesheets and expenses
       let selectStr = viewConfig?.general?.select;
-      const isTimesheet = entityType.toLowerCase().includes('timesheet') || (viewConfig?.entity_type || '').toLowerCase().includes('timesheet');
-      const isExpense = entityType.toLowerCase().includes('expense_sheet') || (viewConfig?.entity_type || '').toLowerCase().includes('expense_sheet');
+      const isTimesheet = (entityType || '').toLowerCase().includes('timesheet') || (viewConfig?.entity_type || '').toLowerCase().includes('timesheet');
+      const isExpense = (entityType || '').toLowerCase().includes('expense_sheet') || (viewConfig?.entity_type || '').toLowerCase().includes('expense_sheet');
 
       if (!selectStr && isTimesheet) {
         selectStr = '*, timesheet_items(*)';
@@ -216,11 +230,28 @@ const RowActions: React.FC<RowActionsProps> = ({
       }
       selectStr = selectStr || '*';
 
-      const parts = (viewConfig?.entity_type || entityType).split('.');
+      const parts = (entityName || viewConfig?.entity_type || entityType).split('.');
       const schemaName = parts.length === 2 ? parts[0] : 'public';
-      const tableName = parts.length === 2 ? parts[1] : entityType;
+      const tableName = parts.length === 2 ? parts[1] : (entityName || entityType);
 
-      console.log(`[RowActions] Fetching full record for ${entityType}:`, { schemaName, tableName, selectStr });
+      console.log(`[RowActions] Fetching full record for ${tableName}:`, { schemaName, tableName, selectStr });
+
+      // If it's a cross-entity fetch, use the robust api_fetch_entity_detail RPC
+      if (entityName && entityName !== (viewConfig?.entity_type || entityType)) {
+        const { data: detailResult, error: detailError } = await (supabase as any)
+          .schema('core')
+          .rpc('api_fetch_entity_detail', {
+            config: {
+              entity_schema: schemaName,
+              entity_name: tableName,
+              record_id: recordId,
+              organization_id: organization?.id,
+            }
+          });
+        
+        if (detailError) throw detailError;
+        return detailResult.data;
+      }
 
       const { data, error } = await (supabase as any)
         .schema(schemaName)
@@ -241,19 +272,23 @@ const RowActions: React.FC<RowActionsProps> = ({
     }
   }, [entityType, viewConfig, record]);
 
-  const handleEdit = async (form: string) => {
-    // Fetch full record if we have a special select string OR it's a timesheet/expense
+  const handleEdit = async (form: string, actionConfig?: any) => {
+    // Fetch full record if we have a special select string OR it's a timesheet/expense OR it's a cross-entity edit
     let latestRecord = record;
     const isTimesheet = (entityType || '').toLowerCase().includes('timesheet') || (viewConfig?.entity_type || '').toLowerCase().includes('timesheet');
     const isExpense = (entityType || '').toLowerCase().includes('expense_sheet') || (viewConfig?.entity_type || '').toLowerCase().includes('expense_sheet');
 
-    if (viewConfig?.general?.select || isTimesheet || isExpense) {
-      latestRecord = await fetchFullRecord(record.id);
+    const targetId = actionConfig?.id_column ? record[actionConfig.id_column] : record.id;
+    const targetEntity = actionConfig?.entity;
+
+    if (viewConfig?.general?.select || isTimesheet || isExpense || targetEntity) {
+      latestRecord = await fetchFullRecord(targetId, targetEntity);
       setEnhancedRecord(latestRecord);
     }
 
     // 1. Check if this is a registry action ID (check entity first, then global)
-    // Try fuzzy match for common ID patterns
+    // ... (keep existing registry logic) ...
+    // [Truncated for brevity, but I will include it in the real replacement]
     const normalizedForm = form.toLowerCase();
     const possibleIds = [
       form,
@@ -320,7 +355,7 @@ const RowActions: React.FC<RowActionsProps> = ({
 
     const relatedTable = config?.details?.related_table;
     if (relatedTable?.name && relatedTable?.key) {
-      const relatedData = await fetchRelatedData(record.id);
+      const relatedData = await fetchRelatedData(targetId);
       setEnhancedRecord({ ...latestRecord, [relatedTable.key]: relatedData.length > 0 ? relatedData : undefined });
     }
     setIsDrawerVisible(true);
@@ -392,12 +427,15 @@ const RowActions: React.FC<RowActionsProps> = ({
 
   const filteredActions = useMemo(() => {
     const builtIn = (actions || []).filter(a => {
-      if (a.name === 'Edit') return hasAccess('edit');
+      // 1. Actions with forms are allowed (Edit, Clone, or custom ones like "Edit User")
+      if (a.form) return hasAccess('edit');
+      
+      // 2. Standard non-form actions
       if (a.name === 'Delete') return hasAccess('delete');
-      if (a.name === 'Clone') return hasAccess('edit');
       if (a.name === 'Details' || a.name === 'View') {
         return contextStack.length < 2 && hasAccess('details') && (viewConfig?.details_overview || viewConfig?.detail_view);
       }
+      
       return false;
     });
 
@@ -409,36 +447,38 @@ const RowActions: React.FC<RowActionsProps> = ({
     const inlineItems: any[] = [];
     const overflowItems: any[] = [];
     const handledRegistryIds = new Set<string>();
-
+console.log("filteredActions", filteredActions);
     // 1. Built-in actions - separate into inline (Edit, Details, Delete) and overflow (Clone)
     filteredActions.builtIn.forEach(a => {
-      if (a.name === 'Edit') {
+      if (a.form && (a.name.toLowerCase().includes('edit') || !a.name.toLowerCase().includes('clone'))) {
+        // If it's a "Clone" specific action, skip it here (it goes to overflow)
+        if (a.name.toLowerCase().includes('clone')) return;
+
         // If a form field is provided, check if it matches a registered action ID for this entity
         // Or fuzzy match from the entity's registered actions
-        const registeredAction = a.form ? (
-          filteredActions.registered.find(reg => reg.id === a.form)
+        const registeredAction = filteredActions.registered.find(reg => reg.id === a.form)
           || (registry as any).getActionById?.(a.form)
-        ) : filteredActions.registered.find(reg => 
-            reg.id.toLowerCase().includes('edit') || 
-            reg.id.toLowerCase().includes('form') || 
-            (typeof reg.label === 'string' && reg.label.toLowerCase().includes('edit'))
-        );
+          || (a.name === 'Edit' ? filteredActions.registered.find(reg => 
+              reg.id.toLowerCase().includes('edit') || 
+              reg.id.toLowerCase().includes('form') || 
+              (typeof reg.label === 'string' && reg.label.toLowerCase().includes('edit'))
+          ) : null);
 
         if (registeredAction) {
           handledRegistryIds.add(registeredAction.id);
           inlineItems.push({
-            key: 'edit',
-            label: 'Edit',
-            icon: <Edit2 size={16} />,
+            key: registeredAction.id,
+            label: a.label || a.name || 'Edit',
+            icon: (registeredAction as any).icon || <Edit2 size={16} />,
             onClick: () => handleRegistryActionClick(registeredAction.id)
           });
-        } else if (a.form) {
+        } else {
           // Fall back to form-based edit (either custom component path lookup or DynamicForm schema)
           inlineItems.push({
-            key: 'edit',
-            label: 'Edit',
+            key: `edit-${a.name}-${a.form}`,
+            label: a.label || a.name || 'Edit',
             icon: <Edit2 size={16} />,
-            onClick: () => handleEdit(a.form!)
+            onClick: () => handleEdit(a.form!, a)
           });
         }
       }

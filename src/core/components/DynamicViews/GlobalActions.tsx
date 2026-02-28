@@ -108,7 +108,7 @@ const GlobalActions: React.FC<GlobalActionsProps> = ({
 
   const handleFormActionClick = (form: string) => {
     setSelectedForm(form);
-    trackAndSaveLocation("New", user?.id);
+    // trackAndSaveLocation("New", user?.id);
     setIsDrawerVisible(true);
   };
 
@@ -123,7 +123,7 @@ const GlobalActions: React.FC<GlobalActionsProps> = ({
 
   // Handler for component-type actions (custom components from relative paths)
   const handleComponentActionClick = useCallback(async (formPath: string) => {
-    trackAndSaveLocation("New", user?.id);
+    // trackAndSaveLocation("New", user?.id);
     try {
       // Use Vite's dynamic import with glob patterns to load component from path
       const pageModules = import.meta.glob('@/pages/**/*.tsx');
