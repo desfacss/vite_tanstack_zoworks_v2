@@ -995,22 +995,34 @@ const DynamicViews: React.FC<DynamicViewsProps> = ({
 
       const filters = [];
 
+      let locationId = undefined;
+      if (location?.id && isLocationPartition(permissions, path?.pathname)) {
+        locationId = location.id;
+      }
+
       const allFilters = { ...propDefaultFilters, ...filterValues };
       for (const key in allFilters) {
         const value = allFilters[key];
         if (value === null || value === undefined || key === 'sorter' || key === 'search') continue;
 
-        const customFieldConfig = customFilters.find(f => f.name === key);
+        const customFieldConfig = customFilters.find((f) => f.name === key);
         const filterType = customFieldConfig?.type || 'eq';
         const joinTable = customFieldConfig?.join_table;
 
         if (filterType === 'date-range' && Array.isArray(value) && value[0] && value[1]) {
+          // Split into two filters since the backend hasn't implemented BETWEEN/Array handling yet
           filters.push({
             key: key,
-            operator: 'BETWEEN',
-            value: [dayjs(value[0]).startOf('day').format('YYYY-MM-DD'), dayjs(value[1]).endOf('day').format('YYYY-MM-DD')],
+            operator: '>=',
+            value: dayjs(value[0]).startOf('day').format('YYYY-MM-DD HH:mm:ss'),
+          });
+          filters.push({
+            key: key,
+            operator: '<=',
+            value: dayjs(value[1]).endOf('day').format('YYYY-MM-DD HH:mm:ss'),
           });
         } else if (Array.isArray(value)) {
+          // Note: Backend might need update for 'IN' as well, but keeping it for now
           filters.push({
             key: key,
             operator: 'IN',
@@ -1020,11 +1032,19 @@ const DynamicViews: React.FC<DynamicViewsProps> = ({
         } else {
           filters.push({
             key: key,
-            operator: filterType === 'text' ? 'ILIKE' : '=',
+            operator: customFieldConfig?.operator || (filterType === 'text' ? 'ILIKE' : '='),
             value: value,
             ...(joinTable && { join_table: joinTable }),
           });
         }
+      }
+
+      if (locationId) {
+        filters.push({
+          key: 'location_id',
+          operator: '=',
+          value: locationId,
+        });
       }
 
       const currentTabOption = tabOptions.find((tab) => tab.key === currentTab);
@@ -1051,11 +1071,6 @@ const DynamicViews: React.FC<DynamicViewsProps> = ({
           value: filterValues.search,
           columns: searchFilterConfig?.search_columns || ['name'],
         };
-      }
-
-      let locationId = undefined;
-      if (location?.id && isLocationPartition(permissions, path?.pathname)) {
-        locationId = location.id;
       }
 
       const tabRpcOverrides = currentTabOption?.queryConfig || {};
@@ -1110,11 +1125,21 @@ const DynamicViews: React.FC<DynamicViewsProps> = ({
         throw new Error(errorMessage);
       }
 
+      // Fallback for missing nextCursor if hasMore is true
+      let nextCursor = data?.nextCursor || null;
+      if (!nextCursor && data?.hasMore && data?.data?.length > 0) {
+        const lastRecord = data.data[data.data.length - 1];
+        nextCursor = lastRecord?.id;
+        if (nextCursor) {
+          console.log("Frontend Fallback: Derived nextCursor from last record ID:", nextCursor);
+        }
+      }
+
       // Return structure matches the new v6 cursor logic
       return {
         data: data?.data || [],
         hasMore: data?.hasMore || false,
-        nextCursor: data?.nextCursor || null
+        nextCursor: nextCursor
       };
     },
     enabled: !!organization?.id && !!viewConfig && !!config && (!detailView || (detailView && !!parentEditItem)),
@@ -1197,21 +1222,36 @@ const DynamicViews: React.FC<DynamicViewsProps> = ({
   const handleTableChange = (pagination: any, filters: any, sorter: any) => {
     console.log("handleTableChange triggered", { pagination, filters, sorter });
 
+    // 1. Handle Pagination Change (if page changed)
+    if (pagination && pagination.current && pagination.current !== currentPageIndex + 1) {
+      handlePaginationChange(pagination.current, pagination.pageSize);
+      return; // Stop here if pagination changed
+    }
+
+    // 2. Handle Sort Change
     // Ant Design's sorter can be an object or an array of objects
     const activeSorter = Array.isArray(sorter) ? sorter[0] : sorter;
     const field = activeSorter?.field || activeSorter?.columnKey;
     const order = activeSorter?.order;
 
-    const newSorter = field && order ? { field, order } : null;
-    console.log("New sorter state:", newSorter);
+    if (field && typeof field === 'string' && field.endsWith('_id_name')) {
+      console.log("Ignoring sort for display field:", field);
+      return; 
+    }
 
-    // Sort change resets pagination to start
-    setFilterValues((prev) => ({
-      ...prev,
-      sorter: newSorter,
-    }));
-    setCurrentPageIndex(0);
-    setCursorStack([null]);
+    const newSorter = field && order ? { field, order } : null;
+
+    // Only update and reset if sort actually changed
+    if (JSON.stringify(newSorter) !== JSON.stringify(filterValues.sorter)) {
+      console.log("New sorter state applied:", newSorter);
+      setFilterValues((prev) => ({
+        ...prev,
+        sorter: newSorter,
+      }));
+      // Sort change resets pagination to start
+      setCurrentPageIndex(0);
+      setCursorStack([null]);
+    }
   };
 
   const handleTabChange = (newTab: string) => {
@@ -1245,16 +1285,20 @@ const DynamicViews: React.FC<DynamicViewsProps> = ({
       // NEXT Clicked
       const nextCursor = tableData?.nextCursor;
       if (nextCursor) {
+        console.log("Navigating to NEXT page with cursor:", nextCursor);
         setCursorStack(prev => {
           const newStack = [...prev];
-          // Ensure we don't create holes if user clicks fast, though simple mode prevents jump
           newStack[targetIndex] = nextCursor;
           return newStack;
         });
         setCurrentPageIndex(targetIndex);
+      } else {
+        console.warn("Cannot navigate to NEXT page: nextCursor is missing even though navigation was requested.", { tableData, hasMore });
+        message.warning("Unable to load next page: cursor missing from server response.");
       }
     } else if (targetIndex < currentPageIndex) {
       // PREV Clicked (Cursor already exists in stack at targetIndex)
+      console.log("Navigating to PREV page using existing stack cursor:", cursorStack[targetIndex]);
       setCurrentPageIndex(targetIndex);
     }
   };

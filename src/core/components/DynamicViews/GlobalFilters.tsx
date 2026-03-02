@@ -165,12 +165,14 @@ const GlobalFilters: React.FC<GlobalFiltersProps> = ({
 
     const mergedSearchConfig = { ...defaultSearchConfig, ...searchConfig };
 
+    const [debounceTimer, setDebounceTimer] = useState<NodeJS.Timeout | null>(null);
+
     const handleFilterChange = (changedValues: any, allValues: any) => {
         const changedField = Object.keys(changedValues)[0];
+        const fieldConfig = customFilters.find(f => f.name === changedField);
 
         if (changedField === 'dateRange') {
             const dateValue = changedValues.dateRange;
-            // Check if the date range was cleared
             if (dateValue === null || (Array.isArray(dateValue) && dateValue.length === 0)) {
                 setIsDateCleared(true);
             } else {
@@ -184,6 +186,19 @@ const GlobalFilters: React.FC<GlobalFiltersProps> = ({
             }
         }
 
+        // Debounce text inputs
+        if (fieldConfig?.type === 'text') {
+            if (debounceTimer) clearTimeout(debounceTimer);
+            const timer = setTimeout(() => {
+                applyFilterChange(changedField, changedValues, allValues);
+            }, 500);
+            setDebounceTimer(timer);
+        } else {
+            applyFilterChange(changedField, changedValues, allValues);
+        }
+    };
+
+    const applyFilterChange = (changedField: string, changedValues: any, allValues: any) => {
         if (!mergedSearchConfig.serverSideFilters.includes(changedField)) {
             onFilterChange(allValues);
             return;

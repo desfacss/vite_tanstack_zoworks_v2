@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/core/lib/supabase';
 import { Form, Input, Select, Button, Checkbox, Space, message } from 'antd';
 import { SaveOutlined, PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 
-const ViewConfigEditor = ({ entityType, metadata, entitySchema }) => {
+const ViewConfigEditor = ({ entityType, metadata, entitySchema }: any) => {
   console.log("yq",entityType, metadata, entitySchema);
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
@@ -23,10 +23,13 @@ const ViewConfigEditor = ({ entityType, metadata, entitySchema }) => {
     { label: 'Bulk Actions', value: 'bulk_actions' },
   ];
 
-  const filterableFields = metadata?.filter((field) => field.is_searchable)?.map((field) => ({
-    value: field.key,
-    label: field.display_name,
-  }));
+  const filterableFields = [
+    { value: 'search', label: 'Global Search' },
+    ...(metadata?.map((field: any) => ({
+      value: field.key,
+      label: field.display_name,
+    })) || [])
+  ];
 
   useEffect(() => {
     const fetchData = async () => {
@@ -136,15 +139,15 @@ const ViewConfigEditor = ({ entityType, metadata, entitySchema }) => {
     }
 }, [entityType, entitySchema, form]);
 
-  const handleFilterNameChange = (value, index) => {
-    const selectedField = metadata.find((field) => field.key === value);
+  const handleFilterNameChange = (value: any, index: any) => {
+    const selectedField = metadata.find((field: any) => field.key === value);
     if (selectedField) {
       const currentFilters = form.getFieldValue('filters');
       const updatedFilter = {
         ...currentFilters[index],
-        label: selectedField.display_name,
-        placeholder: selectedField.display_name,
-        type: selectedField.foreign_key ? 'select' : 'text',
+        label: value === 'search' ? 'Search' : selectedField.display_name,
+        placeholder: value === 'search' ? 'Search...' : selectedField.display_name,
+        type: value === 'search' ? 'text' : (selectedField.foreign_key ? 'select' : 'text'),
       };
       form.setFieldsValue({
         filters: {
@@ -154,7 +157,7 @@ const ViewConfigEditor = ({ entityType, metadata, entitySchema }) => {
     }
   };
 
-  const onFinish = async (values) => {
+  const onFinish = async (values: any) => {
     if (!entityId) {
       message.error('Cannot save. Entity ID not found.');
       return;
@@ -163,21 +166,25 @@ const ViewConfigEditor = ({ entityType, metadata, entitySchema }) => {
     try {
       setLoading(true);
 
-      const featuresObject = featureOptions.reduce((acc, option) => {
+      const featuresObject: any = featureOptions.reduce((acc: any, option) => {
         acc[option.value] = values.features?.includes(option.value);
         return acc;
       }, {});
 
-      const updatedFilters = values.filters.map((filter) => {
-        const metaField = metadata.find((field) => field.key === filter.name);
+      const updatedFilters = values.filters?.map((filter: any) => {
+        const metaField = metadata.find((field: any) => field.key === filter.name);
+        const updatedFilter = {
+          ...filter,
+          isServerSide: !!filter.isServerSide,
+          join_table: filter.join_table || undefined,
+          search_columns: filter.search_columns || undefined,
+        };
+
         if (filter.type === 'select' && metaField?.foreign_key) {
-          return {
-            ...filter,
-            options: metaField.foreign_key,
-          };
+          updatedFilter.options = metaField.foreign_key;
         }
-        return filter;
-      });
+        return updatedFilter;
+      }) || [];
 
       const details = {
         name: values.details?.name,
@@ -199,7 +206,7 @@ const ViewConfigEditor = ({ entityType, metadata, entitySchema }) => {
         }
       };
 
-      let query = supabase.schema('core').from('view_configs');
+      let query: any = supabase.schema('core').from('view_configs');
 
       if (viewConfigId) {
         // Update existing record
@@ -342,41 +349,151 @@ const ViewConfigEditor = ({ entityType, metadata, entitySchema }) => {
                   Add Filter
                 </Button>
               </Form.Item>
-              {fields.map(({ key, name, ...restField }, index) => (
+              {fields.map(({ key, name, ...restField }) => (
                 <Space key={key} style={{ display: 'flex', marginBottom: 8 }} align="baseline">
-                  <Form.Item
-                    {...restField}
-                    name={[name, 'name']}
-                    rules={[{ required: true, message: 'Filter name is required' }]}
-                  >
-                    <Select
-                      placeholder="Select filter field"
-                      options={filterableFields}
-                      onChange={(value) => handleFilterNameChange(value, name)}
-                    />
-                  </Form.Item>
                   <Form.Item
                     {...restField}
                     name={[name, 'type']}
                     rules={[{ required: true, message: 'Filter type is required' }]}
                   >
-                    <Select placeholder="Filter type">
+                    <Select 
+                      placeholder="Filter type" 
+                      onChange={() => {
+                        // Reset the field name when type changes
+                        const currentFilters = form.getFieldValue('filters');
+                        currentFilters[name].name = undefined;
+                        form.setFieldsValue({ filters: currentFilters });
+                      }}
+                    >
                       <Select.Option value="text">Text</Select.Option>
                       <Select.Option value="date-range">Date Range</Select.Option>
                       <Select.Option value="select">Select</Select.Option>
                     </Select>
                   </Form.Item>
+
+                  <Form.Item 
+                    noStyle
+                    shouldUpdate={(prevValues, currentValues) => {
+                      const prevType = prevValues.filters?.[name]?.type;
+                      const currentType = currentValues.filters?.[name]?.type;
+                      return prevType !== currentType;
+                    }}
+                  >
+                    {({ getFieldValue }) => {
+                      const filterType = getFieldValue(['filters', name, 'type']);
+                      
+                      let filteredOptions = [];
+                      if (filterType === 'text') {
+                        filteredOptions = filterableFields.filter((f: any) => {
+                          if (f.value === 'search') return true;
+                          const meta = metadata.find((m: any) => m.key === f.value);
+                          if (!meta) return false;
+                          // Include searchable fields or virtual text fields explicitly mentioned
+                          return meta.is_searchable || (meta.type === 'text');
+                        });
+                      } else if (filterType === 'date-range') {
+                        filteredOptions = filterableFields.filter((f: any) => {
+                          const meta = metadata.find((m: any) => m.key === f.value);
+                          if (!meta) return false;
+                          // Match temporal subtype or database timestamp/date types
+                          const isTemporal = meta.semantic_type?.sub_type === 'temporal' || 
+                                           meta.type?.includes('timestamp') || 
+                                           meta.type?.includes('date');
+                          return isTemporal && !meta.is_virtual;
+                        });
+                      } else if (filterType === 'select') {
+                        filteredOptions = filterableFields.filter((f: any) => {
+                          const meta = metadata.find((m: any) => m.key === f.value);
+                          if (!meta) return false;
+                          // Decision Matrix: foreign_key, bool, array, or categorical subtypes
+                          const isSelect = meta.foreign_key || 
+                                          ['bool', 'boolean', 'text[]'].includes(meta.type) || 
+                                          ['nominal', 'discrete', 'boolean'].includes(meta.semantic_type?.sub_type);
+                          
+                          // Allow virtual booleans (like results from JSONB) but exclude other virtuals
+                          if (meta.is_virtual && meta.type !== 'boolean' && meta.type !== 'bool') return false;
+                          
+                          return isSelect;
+                        });
+                      }
+
+                      return (
+                        <Form.Item
+                          {...restField}
+                          name={[name, 'name']}
+                          rules={[{ required: true, message: 'Filter field is required' }]}
+                        >
+                          <Select
+                            placeholder="Select field"
+                            style={{ minWidth: '150px' }}
+                            options={filteredOptions}
+                            onChange={(value) => handleFilterNameChange(value, name)}
+                            disabled={!filterType}
+                          />
+                        </Form.Item>
+                      );
+                    }}
+                  </Form.Item>
                   <Form.Item
                     {...restField}
                     name={[name, 'label']}
                     rules={[{ required: true, message: 'Label is required' }]}
+                    style={{ minWidth: '120px' }}
                   >
                     <Input placeholder="Label" />
                   </Form.Item>
-                  <Form.Item {...restField} name={[name, 'placeholder']}>
+                  <Form.Item {...restField} name={[name, 'placeholder']} style={{ minWidth: '120px' }}>
                     <Input placeholder="Placeholder" />
                   </Form.Item>
-                  <Button danger icon={<DeleteOutlined />} onClick={() => remove(name)} />
+                  
+                  <Form.Item 
+                    {...restField} 
+                    name={[name, 'isServerSide']} 
+                    valuePropName="checked" 
+                    tooltip="If checked, search/filters will only apply when Search button is clicked"
+                  >
+                    <Checkbox>Server-Side</Checkbox>
+                  </Form.Item>
+
+                  <Form.Item 
+                    {...restField} 
+                    name={[name, 'join_table']}
+                    tooltip="Optional: join table name for complex filters"
+                  >
+                    <Input placeholder="Join Table" style={{ width: '120px' }} />
+                  </Form.Item>
+
+                  <Form.Item 
+                    noStyle
+                    shouldUpdate={(prevValues, currentValues) => {
+                      const prevName = prevValues.filters?.[name]?.name;
+                      const currentName = currentValues.filters?.[name]?.name;
+                      return prevName !== currentName;
+                    }}
+                  >
+                    {({ getFieldValue }) => {
+                      const filterName = getFieldValue(['filters', name, 'name']);
+                      if (filterName === 'search') {
+                        return (
+                          <Form.Item 
+                            {...restField} 
+                            name={[name, 'search_columns']}
+                            tooltip="Columns to include in global search"
+                          >
+                            <Select 
+                              mode="multiple" 
+                              placeholder="Search Columns" 
+                              style={{ minWidth: '200px' }}
+                              options={filterableFields.filter(f => f.value !== 'search')}
+                            />
+                          </Form.Item>
+                        );
+                      }
+                      return null;
+                    }}
+                  </Form.Item>
+
+                  <Button danger icon={<DeleteOutlined />} onClick={() => remove(name)} style={{ marginLeft: 'auto' }} />
                 </Space>
               ))}
             </>

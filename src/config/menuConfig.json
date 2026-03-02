@@ -20,7 +20,12 @@
         "routePath": "/crm/leads",
         "translationKey": "leads",
         "key": "crm-leads",
-        "submoduleKey": "crm-leads"
+        "submoduleKey": "crm-leads",
+        "tabs": [
+          { "key": "all", "label": "All Leads" },
+          { "key": "new", "label": "New", "condition": { "field": "status", "value": "new" } },
+          { "key": "contacted", "label": "Contacted", "condition": { "field": "status", "value": "contacted" } }
+        ]
       },
       {
         "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
@@ -92,7 +97,13 @@
         "routePath": "/esm/tickets",
         "translationKey": "tickets",
         "key": "esm-tickets",
-        "submoduleKey": "esm-tickets"
+        "submoduleKey": "esm-tickets",
+        "tabs": [
+          { "key": "all", "label": "All" },
+          { "key": "open", "label": "Open", "condition": { "field": "status", "value": "open" } },
+          { "key": "in_progress", "label": "In Progress", "condition": { "field": "status", "value": "in_progress" } },
+          { "key": "resolved", "label": "Resolved", "condition": { "field": "status", "value": "resolved" } }
+        ]
       },
       {
         "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
