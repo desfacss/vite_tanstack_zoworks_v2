@@ -5,6 +5,7 @@ import { MoreHorizontal, Plus, ChevronLeft, ChevronRight, GripVertical } from 'l
 import { DragDropContext, Droppable, Draggable, DropResult, DraggableProvided, DraggableStateSnapshot } from '@hello-pangea/dnd';
 import styled from 'styled-components';
 import { motion } from 'framer-motion';
+import _ from 'lodash';
 import RowActions from './RowActions';
 import { useAuthedLayoutConfig } from '../Layout/AuthedLayoutContext';
 import { supabase } from '../../lib/supabase';
@@ -282,7 +283,7 @@ const KanbanView: React.FC<KanbanViewProps> = ({
     processedLanes.forEach((lane) => {
       newBoard[lane.id] = { // Key by the lane's determined 'id'
         ...lane,
-        cards: data.filter((item) => item[fieldPath!] === lane.id), // Filter by lane.id
+        cards: data.filter((item) => _.get(item, fieldPath!) === lane.id), // Filter by lane.id
       };
     });
 
@@ -437,7 +438,7 @@ const KanbanView: React.FC<KanbanViewProps> = ({
 
   // Get card field values
   const getFieldValue = (record: any, fieldPath: string) => {
-    return record[fieldPath] || '-';
+    return _.get(record, fieldPath) || '-';
   };
 
   // Get the label for the selected groupByType

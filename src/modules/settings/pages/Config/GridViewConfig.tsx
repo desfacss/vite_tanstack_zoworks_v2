@@ -48,6 +48,14 @@ interface ConfigData {
 interface metadataItem {
   key: string;
   display_name: string;
+  nested_schema?: {
+    type: string;
+    properties: Record<string, any>;
+  };
+  foreign_key?: {
+    source_table: string;
+    display_column: string;
+  };
 }
 
 interface GridViewConfigProps {
@@ -157,7 +165,25 @@ const GridViewConfig: React.FC<GridViewConfigProps> = ({
     // }
   }, [configData]);
 
-  const transformedColumns = metadata?.filter(col=>col?.is_displayable===true)?.map(col => col.key) || [];
+  const getFlattenedColumns = (metadata: metadataItem[]) => {
+    const columns: { key: string; display_name: string }[] = [];
+    metadata.forEach(item => {
+      columns.push({ key: item.key, display_name: item.display_name });
+      
+      // Handle nested_schema
+      if (item.nested_schema?.properties) {
+        Object.entries(item.nested_schema.properties).forEach(([propKey, propValue]: [string, any]) => {
+          const nestedKey = `${item.key}.${propKey}`;
+          const nestedDisplayName = propValue.title || `${item.display_name} ${propKey.charAt(0).toUpperCase() + propKey.slice(1)}`;
+          columns.push({ key: nestedKey, display_name: nestedDisplayName });
+        });
+      }
+    });
+    return columns;
+  };
+
+  const flattenedColumns = getFlattenedColumns(metadata || []);
+  const transformedColumns = flattenedColumns.map(col => col.key);
 
   const handleAddGroup = () => {
     setGroups([...groups, { name: `Group ${groups.length + 1}`, order: groups.length + 1, fields: [] }]);
@@ -195,17 +221,18 @@ const GridViewConfig: React.FC<GridViewConfigProps> = ({
 
   const handleFieldChange = (groupIndex: number, fieldIndex: number, key: keyof Field, value: any) => {
   const updatedGroups = [...groups];
-  updatedGroups[groupIndex].fields[fieldIndex] = {
-    ...updatedGroups[groupIndex].fields[fieldIndex],
-    [key]: value,
-  };
+    const updatedFields = [...updatedGroups[groupIndex].fields];
+    if (key === 'order') {
+      (updatedFields[fieldIndex] as any)[key] = Number(value);
+    } else {
+      (updatedFields[fieldIndex] as any)[key] = value;
+    }
+    updatedGroups[groupIndex].fields = updatedFields;
   if (key === 'fieldPath') {
-    const selectedColumn = metadata?.find(col => col.key === value);
+    const selectedColumn = flattenedColumns.find(col => col.key === value);
     if (selectedColumn) {
       updatedGroups[groupIndex].fields[fieldIndex].fieldName = selectedColumn.display_name;
-      updatedGroups[groupIndex].fields[fieldIndex].fieldPath = selectedColumn.foreign_key
-        ? `${value}_name`
-        : value;
+      updatedGroups[groupIndex].fields[fieldIndex].fieldPath = value;
     }
   }
   setGroups(updatedGroups);
@@ -301,12 +328,10 @@ const GridViewConfig: React.FC<GridViewConfigProps> = ({
     [key]: value,
   };
   if (key === 'fieldPath') {
-    const selectedColumn = metadata?.find(col => col.key === value);
+    const selectedColumn = flattenedColumns.find(col => col.key === value);
     if (selectedColumn) {
       updatedGroups[currentGroupIndex].fields[currentFieldIndex].subFields[subIndex].fieldName = selectedColumn.display_name;
-      updatedGroups[currentGroupIndex].fields[currentFieldIndex].subFields[subIndex].fieldPath = selectedColumn.foreign_key
-        ? `${value}_name`
-        : value;
+      updatedGroups[currentGroupIndex].fields[currentFieldIndex].subFields[subIndex].fieldPath = value;
     }
   }
   setGroups(updatedGroups);
@@ -589,7 +614,7 @@ const GridViewConfig: React.FC<GridViewConfigProps> = ({
 
   return (
     <>
-    {metadata?.length>0?(<div>
+    {(metadata?.length ?? 0) > 0 ? (<div>
       <h2>Grid View Configuration</h2>
        <Title level={4}>Groups </Title>
       <Table
@@ -856,7 +881,7 @@ const GridViewConfig: React.FC<GridViewConfigProps> = ({
             dataSource={groups[currentGroupIndex].fields[currentFieldIndex].subFields || []}
             columns={subFieldColumns}
             pagination={false}
-            rowKey={(record, index) => index?.toString()}
+            rowKey={(_, index) => index?.toString() ?? ''}
           />
         )}
       </Modal>

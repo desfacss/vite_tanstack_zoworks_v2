@@ -962,16 +962,31 @@ const DynamicViews: React.FC<DynamicViewsProps> = ({
 
   const allDisplayableColumns = useMemo(() => {
     if (!viewConfig?.v_metadata) return [];
-    return viewConfig.v_metadata
-      // .filter((field: any) => field.is_displayable)
-      .map((field: any) => {
-        const fieldPath = field.foreign_key ? `${field.key}_${field.foreign_key.display_column}` : field.key;
-        return {
-          fieldName: field.display_name,
-          fieldPath: fieldPath,
-          dataType: field.data_type,
-        };
+    const columns: any[] = [];
+
+    viewConfig.v_metadata.forEach((field: any) => {
+      const fieldPath = field.foreign_key ? `${field.key}_${field.foreign_key.display_column}` : field.key;
+      columns.push({
+        fieldName: field.display_name,
+        fieldPath: fieldPath,
+        dataType: field.data_type,
       });
+
+      // Handle nested_schema
+      if (field.nested_schema?.properties) {
+        Object.entries(field.nested_schema.properties).forEach(([propKey, propValue]: [string, any]) => {
+          const nestedPath = `${field.key}.${propKey}`;
+          const nestedDisplayName = propValue.title || `${field.display_name} ${propKey.charAt(0).toUpperCase() + propKey.slice(1)}`;
+          columns.push({
+            fieldName: nestedDisplayName,
+            fieldPath: nestedPath,
+            dataType: propValue.type,
+          });
+        });
+      }
+    });
+
+    return columns;
   }, [viewConfig?.v_metadata]);
 
   // --- DATA FETCHING (CURSOR BASED) ---

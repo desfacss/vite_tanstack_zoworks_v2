@@ -26,6 +26,10 @@ interface ConfigData {
 interface metadataItem {
   key: string;
   display_name: string;
+  nested_schema?: {
+    type: string;
+    properties: Record<string, any>;
+  };
   foreign_key?: {
     source_table: string;
     display_column: string;
@@ -92,7 +96,24 @@ const TableViewConfig: React.FC<TableViewConfigProps> = ({
     ]);
   }, [configData]);
 
-  const transformedColumns = metadata?.map(col => col.key) || [];
+  const getFlattenedColumns = (metadata: metadataItem[]) => {
+    const columns: { key: string; display_name: string }[] = [];
+    metadata.forEach(item => {
+      columns.push({ key: item.key, display_name: item.display_name });
+      
+      // Handle nested_schema
+      if (item.nested_schema?.properties) {
+        Object.entries(item.nested_schema.properties).forEach(([propKey, propValue]: [string, any]) => {
+          const nestedKey = `${item.key}.${propKey}`;
+          const nestedDisplayName = propValue.title || `${item.display_name} ${propKey.charAt(0).toUpperCase() + propKey.slice(1)}`;
+          columns.push({ key: nestedKey, display_name: nestedDisplayName });
+        });
+      }
+    });
+    return columns;
+  };
+
+  const flattenedColumns = getFlattenedColumns(metadata || []);
 
   const handleAddField = () => {
     setFields([...fields, { order: fields.length + 1, fieldName: '', fieldPath: '' }]);
@@ -101,13 +122,10 @@ const TableViewConfig: React.FC<TableViewConfigProps> = ({
   const handleFieldChange = (index: number, key: keyof Field, value: string) => {
     const updatedFields = [...fields];
     if (key === 'fieldPath') {
-      const selectedColumn = metadata?.find(col => col?.key === value);
+      const selectedColumn = flattenedColumns.find(col => col.key === value);
       if (selectedColumn) {
         updatedFields[index].fieldName = selectedColumn.display_name;
-        // Check if the selected column has a foreign_key
-        updatedFields[index].fieldPath = selectedColumn.foreign_key
-          ? `${value}_name`
-          : value;
+        updatedFields[index].fieldPath = value;
       } else {
         updatedFields[index].fieldName = value;
         updatedFields[index].fieldPath = value;
@@ -164,9 +182,9 @@ const TableViewConfig: React.FC<TableViewConfigProps> = ({
           onChange={(value) => handleFieldChange(index, 'fieldPath', value)}
           style={{ width: '100%' }}
         >
-          {transformedColumns?.map((col) => (
-            <Option key={col} value={col}>
-              {col}
+          {flattenedColumns?.map((col) => (
+            <Option key={col.key} value={col.key}>
+              {col.key}
             </Option>
           ))}
         </Select>

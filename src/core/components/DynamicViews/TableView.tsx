@@ -2,6 +2,7 @@ import React, { useMemo, useEffect } from 'react';
 import { message, Table, Tag, List } from 'antd';
 import { motion } from 'framer-motion';
 import { UserIcon } from 'lucide-react';
+import _ from 'lodash';
 
 import { useAuthedLayoutConfig } from '../Layout/AuthedLayoutContext';
 import dayjs from 'dayjs';
@@ -88,11 +89,12 @@ const TableView: React.FC<TableViewProps> = ({
       .filter(field => !hiddenFields.includes(field.fieldPath))
       .map((field: any) => ({
         title: field.fieldName,
-        dataIndex: field.fieldPath,
+        dataIndex: field.fieldPath.includes('.') ? field.fieldPath.split('.') : field.fieldPath,
         key: field.fieldPath,
         sorter: viewConfig?.tableview?.showFeatures ? viewConfig.tableview.showFeatures.includes('sorting') : true,
         sortOrder: filterValues?.sorter?.field === field.fieldPath ? (filterValues?.sorter?.order || null) : null,
-        render: (value: any) => {
+        render: (text: any, record: any) => {
+          const value = _.get(record, field.fieldPath);
           const autoRenderer = getAutoRenderer(field.fieldPath, field.dataType);
           if (autoRenderer) {
             const rendered = autoRenderer(value);
@@ -147,7 +149,7 @@ const TableView: React.FC<TableViewProps> = ({
       tableColumns.push({
         title: 'Actions',
         key: 'actions',
-        render: (_: any, record: any) => (
+        render: (text: any, record: any) => (
           <RowActions
             entityType={entityType}
             record={record}

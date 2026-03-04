@@ -47,6 +47,10 @@ interface MetadataItem {
   key: string;
   display_name: string;
   is_displayable?: boolean;
+  nested_schema?: {
+    type: string;
+    properties: Record<string, any>;
+  };
   foreign_key?: {
     source_table: string;
     source_column: string;
@@ -91,7 +95,25 @@ const KanbanViewConfig: React.FC<KanbanViewConfigProps> = ({
   const [currentLaneIndex, setCurrentLaneIndex] = useState<number | null>(null);
   const [form] = Form.useForm();
 
-  const transformedColumns = metadata?.filter(col => col?.is_displayable === true)?.map(col => col.key) || [];
+  const getFlattenedColumns = (metadata: MetadataItem[]) => {
+    const columns: { key: string; display_name: string }[] = [];
+    metadata.forEach(item => {
+      columns.push({ key: item.key, display_name: item.display_name });
+      
+      // Handle nested_schema
+      if (item.nested_schema?.properties) {
+        Object.entries(item.nested_schema.properties).forEach(([propKey, propValue]: [string, any]) => {
+          const nestedKey = `${item.key}.${propKey}`;
+          const nestedDisplayName = propValue.title || `${item.display_name} ${propKey.charAt(0).toUpperCase() + propKey.slice(1)}`;
+          columns.push({ key: nestedKey, display_name: nestedDisplayName });
+        });
+      }
+    });
+    return columns;
+  };
+
+  const flattenedColumns = getFlattenedColumns(metadata || []);
+  const transformedColumns = flattenedColumns.map(col => col.key);
 
   useEffect(() => {
     if (configData) {
@@ -118,12 +140,16 @@ const KanbanViewConfig: React.FC<KanbanViewConfigProps> = ({
 
   const handleFieldChange = (index: number, key: keyof Field, value: string) => {
     const updatedFields = [...fields];
-    updatedFields[index][key] = value;
+    if (key === 'order') {
+      (updatedFields[index] as any)[key] = Number(value);
+    } else {
+      (updatedFields[index] as any)[key] = value;
+    }
     if (key === 'fieldPath') {
-      const selectedColumn = metadata?.find(col => col.key === value);
+      const selectedColumn = flattenedColumns.find(col => col.key === value);
       if (selectedColumn) {
         updatedFields[index].fieldName = selectedColumn.display_name;
-        updatedFields[index].fieldPath = selectedColumn.foreign_key ? `${value}_name` : value;
+        updatedFields[index].fieldPath = value;
       }
     }
     setFields(updatedFields);
@@ -141,15 +167,15 @@ const KanbanViewConfig: React.FC<KanbanViewConfigProps> = ({
   };
 
   const handleAddType = () => {
-    const availableKeys = metadata?.filter(col => col.is_displayable && !Object.keys(types).includes(col.key))?.map(col => col.key) || [];
+    const availableKeys = flattenedColumns.filter(col => !Object.keys(types).includes(col.key))?.map(col => col.key) || [];
     if (availableKeys.length === 0) return;
     const newTypeKey = availableKeys[0];
-    const selectedColumn = metadata?.find(col => col.key === newTypeKey);
+    const selectedColumn = flattenedColumns.find(col => col.key === newTypeKey);
     setTypes({
       ...types,
       [newTypeKey]: {
         name: selectedColumn?.display_name || newTypeKey,
-        fieldPath: selectedColumn?.foreign_key ? `${newTypeKey}_name` : newTypeKey,
+        fieldPath: newTypeKey,
         lanes: [],
       },
     });
@@ -158,11 +184,11 @@ const KanbanViewConfig: React.FC<KanbanViewConfigProps> = ({
   const handleTypeChange = (typeKey: string, key: keyof Type, value: any) => {
     const updatedTypes = { ...types };
     if (key === 'fieldPath') {
-      const selectedColumn = metadata?.find(col => col.key === value);
+      const selectedColumn = flattenedColumns.find(col => col.key === value);
       updatedTypes[typeKey] = {
         ...updatedTypes[typeKey],
         name: selectedColumn?.display_name || value,
-        fieldPath: selectedColumn?.foreign_key ? `${value}_name` : value,
+        fieldPath: value,
       };
     } else {
       updatedTypes[typeKey] = {
@@ -485,7 +511,7 @@ const KanbanViewConfig: React.FC<KanbanViewConfigProps> = ({
             <Table
               columns={laneColumns(record.key)}
               dataSource={record.lanes}
-              rowKey="sequence"
+                rowKey={(record) => record.sequence?.toString() ?? ''}
               pagination={false}
             />
           ),

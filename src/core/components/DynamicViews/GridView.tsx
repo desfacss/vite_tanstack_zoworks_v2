@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { ArrowRight, LayoutGrid, List as ListIcon } from 'lucide-react';
 import { useAuthedLayoutConfig } from '../Layout/AuthedLayoutContext';
 import dayjs from 'dayjs';
+import _ from 'lodash';
 import RowActions from './RowActions';
 import { getAutoRenderer } from '@/core/components/utils/columnRenderers';
 
@@ -97,7 +98,7 @@ const GridView: React.FC<GridViewProps> = ({
     });
 
     const renderField = (record: any, fieldConfig: FieldConfig) => {
-        let value = record[fieldConfig.fieldPath];
+        let value = _.get(record, fieldConfig.fieldPath);
         const { style = {}, subFields = [], webLink, cardSection, renderType } = fieldConfig;
 
         // Try smart auto-renderer first (unless webLink or custom renderType is specified)
@@ -149,7 +150,7 @@ const GridView: React.FC<GridViewProps> = ({
         // Handle subFields for comma-separated display
         if (subFields.length > 0) {
             value = subFields
-                .map((subField) => record[subField.fieldPath])
+                .map((subField) => _.get(record, subField.fieldPath))
                 .filter((v) => v !== null && v !== undefined && v !== '')
                 .join(', ');
         }
