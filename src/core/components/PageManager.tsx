@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Modal, Button, Typography, Card, InputNumber, Space, Tooltip, message } from 'antd';
+import { Modal, Button, Typography, Card, InputNumber, Space, Tooltip, message, theme } from 'antd';
 import { 
   DragOutlined, 
   DeleteOutlined, 
@@ -17,6 +17,7 @@ import {
   useSensor,
   useSensors,
   useDroppable,
+  useDraggable,
 } from '@dnd-kit/core';
 import {
   SortableContext,
@@ -53,6 +54,7 @@ interface DraggableFieldProps {
 }
 
 const DraggableField: React.FC<DraggableFieldProps> = ({ id, fieldName, onRemove }) => {
+  const { token } = theme.useToken();
   const {
     attributes,
     listeners,
@@ -67,9 +69,9 @@ const DraggableField: React.FC<DraggableFieldProps> = ({ id, fieldName, onRemove
     transition,
     opacity: isDragging ? 0.5 : 1,
     padding: '8px 12px',
-    backgroundColor: '#fafafa',
-    border: '1px solid #d9d9d9',
-    borderRadius: 4,
+    backgroundColor: token.colorBgContainer,
+    border: `1px solid ${token.colorBorder}`,
+    borderRadius: token.borderRadius,
     display: 'flex',
     alignItems: 'center',
     gap: 8,
@@ -79,7 +81,7 @@ const DraggableField: React.FC<DraggableFieldProps> = ({ id, fieldName, onRemove
 
   return (
     <div ref={setNodeRef} style={style} {...attributes}>
-      <DragOutlined {...listeners} style={{ cursor: 'grab', color: '#999' }} />
+      <DragOutlined {...listeners} style={{ cursor: 'grab', color: token.colorTextDescription }} />
       <Text ellipsis style={{ flex: 1, maxWidth: 150 }}>{fieldName}</Text>
       <Tooltip title="Remove">
         <DeleteOutlined 
@@ -87,6 +89,36 @@ const DraggableField: React.FC<DraggableFieldProps> = ({ id, fieldName, onRemove
           style={{ color: '#ff4d4f', cursor: 'pointer' }}
         />
       </Tooltip>
+    </div>
+  );
+};
+
+// Draggable Unassigned Field Component
+interface DraggableUnassignedFieldProps {
+  id: string;
+  fieldName: string;
+  onClick: () => void;
+}
+
+const DraggableUnassignedField: React.FC<DraggableUnassignedFieldProps> = ({ id, fieldName, onClick }) => {
+  const { token } = theme.useToken();
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id });
+  
+  const style: React.CSSProperties = {
+    transform: CSS.Translate.toString(transform),
+    opacity: isDragging ? 0.5 : 1,
+    padding: '4px 8px',
+    backgroundColor: token.colorBgElevated,
+    border: `1px solid ${token.colorBorder}`,
+    borderRadius: token.borderRadius,
+    cursor: 'grab',
+    fontSize: 12,
+    zIndex: isDragging ? 1000 : 1,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} {...listeners} {...attributes} onClick={onClick}>
+      {fieldName}
     </div>
   );
 };
@@ -106,6 +138,7 @@ const DroppableRow: React.FC<DroppableRowProps> = ({
   fields, 
   onRemoveField 
 }) => {
+  const { token } = theme.useToken();
   const rowId = `page-${pageIndex}-row-${rowIndex}`;
   
   // Make the row itself droppable for empty rows
@@ -124,10 +157,10 @@ const DroppableRow: React.FC<DroppableRowProps> = ({
       style={{
         minHeight: 50,
         padding: 8,
-        backgroundColor: isOver ? '#e6f7ff' : '#f5f5f5',
-        borderRadius: 4,
+        backgroundColor: isOver ? token.colorPrimaryBg : token.colorFillTertiary,
+        borderRadius: token.borderRadius,
         marginBottom: 8,
-        border: isOver ? '2px solid #1890ff' : '1px dashed #d9d9d9',
+        border: isOver ? `2px solid ${token.colorPrimary}` : `1px dashed ${token.colorBorder}`,
         transition: 'all 0.2s',
       }}
     >
@@ -164,6 +197,7 @@ const PageManager: React.FC<PageManagerProps> = ({
   onCancel, 
   visible 
 }) => {
+  const { token } = theme.useToken();
   const [pages, setPages] = useState<Page[]>([{ rows: [[]] }]);
   const [columnsPerRow, setColumnsPerRow] = useState(1);
   const [numPages, setNumPages] = useState(1);
@@ -372,15 +406,21 @@ const PageManager: React.FC<PageManagerProps> = ({
     }
     
     // Handle moving between rows/pages
-    if (activeInfo.type === 'field' && overInfo && overInfo.type === 'field') {
+    if (activeInfo.type === 'field' && overInfo) {
       const updatedPages = [...pages];
       const sourceRow = updatedPages[activeInfo.pageIndex!].rows[activeInfo.rowIndex!];
-      const [movedField] = sourceRow.splice(activeInfo.fieldIndex!, 1);
       
-      const targetRow = updatedPages[overInfo.pageIndex!].rows[overInfo.rowIndex!];
-      targetRow.splice(overInfo.fieldIndex!, 0, movedField);
-      
-      setPages(updatedPages);
+      if (overInfo.type === 'field') {
+        const [movedField] = sourceRow.splice(activeInfo.fieldIndex!, 1);
+        const targetRow = updatedPages[overInfo.pageIndex!].rows[overInfo.rowIndex!];
+        targetRow.splice(overInfo.fieldIndex!, 0, movedField);
+        setPages(updatedPages);
+      } else if (overInfo.type === 'row') {
+        const [movedField] = sourceRow.splice(activeInfo.fieldIndex!, 1);
+        const targetRow = updatedPages[overInfo.pageIndex!].rows[overInfo.rowIndex!];
+        targetRow.push(movedField);
+        setPages(updatedPages);
+      }
     }
   };
 
@@ -447,29 +487,21 @@ const PageManager: React.FC<PageManagerProps> = ({
         <Card 
           size="small" 
           title={<Text strong>Unassigned Fields ({unassignedFields.length})</Text>}
-          style={{ marginBottom: 16, backgroundColor: '#fffbe6', borderColor: '#ffe58f' }}
+          style={{ marginBottom: 16, backgroundColor: token.colorWarningBg, borderColor: token.colorWarningBorder }}
         >
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-            {unassignedFields.map((fieldName) => (
+            {unassignedFields.map((fieldName, index) => (
               <Tooltip key={fieldName} title="Drag to a row or click to add">
-                <div
-                  style={{
-                    padding: '4px 8px',
-                    backgroundColor: '#fff',
-                    border: '1px solid #d9d9d9',
-                    borderRadius: 4,
-                    cursor: 'pointer',
-                    fontSize: 12,
-                  }}
+                <DraggableUnassignedField 
+                  id={`unassigned-${index}`} 
+                  fieldName={fieldName} 
                   onClick={() => {
                     // Add to first available row
                     if (pages.length > 0 && pages[0].rows.length > 0) {
                       addFieldToRow(0, pages[0].rows.length - 1, fieldName);
                     }
                   }}
-                >
-                  {fieldName}
-                </div>
+                />
               </Tooltip>
             ))}
           </div>
@@ -540,9 +572,11 @@ const PageManager: React.FC<PageManagerProps> = ({
                     style={{ 
                       marginTop: 4, 
                       padding: '4px 8px', 
-                      borderRadius: 4,
-                      border: '1px solid #d9d9d9',
+                      borderRadius: token.borderRadius,
+                      border: `1px solid ${token.colorBorder}`,
                       fontSize: 12,
+                      backgroundColor: token.colorBgContainer,
+                      color: token.colorText
                     }}
                     value=""
                     onChange={(e) => {
@@ -576,10 +610,10 @@ const PageManager: React.FC<PageManagerProps> = ({
             <div
               style={{
                 padding: '8px 12px',
-                backgroundColor: '#fff',
-                border: '2px solid #1890ff',
-                borderRadius: 4,
-                boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                backgroundColor: token.colorBgElevated,
+                border: `2px solid ${token.colorPrimary}`,
+                borderRadius: token.borderRadius,
+                boxShadow: token.boxShadowSecondary,
               }}
             >
               <DragOutlined style={{ marginRight: 8 }} />

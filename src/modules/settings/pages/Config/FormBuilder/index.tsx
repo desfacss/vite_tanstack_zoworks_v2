@@ -11,7 +11,7 @@ import AceEditor from 'react-ace';
 import { supabase } from '@/core/lib/supabase';
 import { useAuthStore } from '@/core/lib/store';
 import DynamicForm from '@/core/components/DynamicForm';
-import PageManager from './PageManager';
+import PageManager from '@/core/components/PageManager';
 import FormGenerator from '../FormGenerator';
 
 

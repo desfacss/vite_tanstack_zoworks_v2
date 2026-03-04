@@ -5,16 +5,41 @@ import { supabase } from '@/core/lib/supabase';
 import { ThunderboltOutlined, SaveOutlined } from '@ant-design/icons';
 import { Trash2, Settings2 } from 'lucide-react';
 import AceEditor from 'react-ace';
-import { useAuthStore } from '@/core/lib/store';
+import { useAuthStore, useThemeStore } from '@/core/lib/store';
+import PageManager from '@/core/components/PageManager';
 
 // Import ace modes and themes
 import 'ace-builds/src-noconflict/mode-json';
 import 'ace-builds/src-noconflict/theme-monokai';
+import 'ace-builds/src-noconflict/theme-github';
+
+import { get, set, unset } from 'lodash';
+import { theme as antdTheme } from 'antd';
 
 const { Text } = Typography;
 
+// Helper to recursively extract all field paths from data_schema
+const getFlattenedFields = (properties: any, prefix = ''): { path: string, label: string, depth: number }[] => {
+    if (!properties) return [];
+    
+    return Object.keys(properties).flatMap(key => {
+        const fullPath = prefix ? `${prefix}.${key}` : key;
+        const property = properties[key];
+        const field = { path: fullPath, label: key, depth: prefix.split('.').filter(Boolean).length };
+        
+        if (property.type === 'object' && property.properties) {
+            return [field, ...getFlattenedFields(property.properties, fullPath)];
+        }
+        
+        return [field];
+    });
+};
+
 const TestRJSFCoreForm = () => {
     const { organization } = useAuthStore();
+    const { isDarkMode } = useThemeStore();
+    const { token } = antdTheme.useToken();
+    
     const [entities, setEntities] = useState<any[]>([]);
     const [selectedEntity, setSelectedEntity] = useState<string | null>(null);
     const [mode, setMode] = useState<'minimal' | 'recommended' | 'all'>('recommended');
@@ -30,6 +55,8 @@ const TestRJSFCoreForm = () => {
     const [saving, setSaving] = useState(false);
     const [isGlobal, setIsGlobal] = useState(true); // Default to true as requested
     const [formName, setFormName] = useState<string>('');
+    const [isPageManagerVisible, setIsPageManagerVisible] = useState(false);
+    const [uiLayout, setUiLayout] = useState<string[][][]>([]);
 
     const WIDGET_OPTIONS = [
         { label: 'Default', value: 'default' },
@@ -123,6 +150,9 @@ const TestRJSFCoreForm = () => {
                 else if (mode === 'all') suffix = 'custom';
                 setFormName(`${schemaName}_${entityName}_${suffix}`);
 
+                // Set current uiLayout
+                setUiLayout(schemas.ui_schema?.['ui:layout'] || [[]]);
+
                 message.success('Schema generated successfully');
             }
         } catch (err: any) {
@@ -196,73 +226,97 @@ const TestRJSFCoreForm = () => {
         }
     };
 
-    const handleDeleteField = (fieldName: string) => {
+    const handleSaveLayout = (newLayout: string[][][]) => {
+        try {
+            const currentUi = JSON.parse(uiSchemaStr || '{}');
+            currentUi['ui:layout'] = newLayout;
+            
+            setUiSchemaStr(JSON.stringify(currentUi, null, 2));
+            setUiLayout(newLayout);
+            setIsPageManagerVisible(false);
+            message.success('Layout updated successfully');
+        } catch (e) {
+            message.error('Error updating layout: ' + (e as Error).message);
+        }
+    };
+
+    const handleDeleteField = (fieldPath: string) => {
         try {
             const currentData = JSON.parse(dataSchemaStr);
             const currentUi = JSON.parse(uiSchemaStr);
 
-            if (currentData.properties && currentData.properties[fieldName]) {
-                delete currentData.properties[fieldName];
+            // Recursively remove from data_schema properties
+            // Note: fieldPath is something like "config.theme"
+            const pathParts = fieldPath.split('.');
+            const propPath = ['properties', ...pathParts.flatMap(p => [p, 'properties'])].slice(0, -1);
+            
+            // Delete from properties
+            unset(currentData, propPath);
 
-                // Also remove from required array if present
-                if (Array.isArray(currentData.required)) {
-                    currentData.required = currentData.required.filter((f: string) => f !== fieldName);
-                }
-
-                // Remove from UI schema
-                if (currentUi[fieldName]) {
-                    delete currentUi[fieldName];
-                }
-
-                // Update layout if it exists
-                if (currentUi['ui:layout']) {
-                    currentUi['ui:layout'] = currentUi['ui:layout'].map((page: any) =>
-                        page.map((row: any) =>
-                            row.filter((f: string) => f !== fieldName)
-                        ).filter((row: any) => row.length > 0)
-                    ).filter((page: any) => page.length > 0);
-                }
-
-                const newDataStr = JSON.stringify(currentData, null, 2);
-                const newUiStr = JSON.stringify(currentUi, null, 2);
-
-                setDataSchemaStr(newDataStr);
-                setUiSchemaStr(newUiStr);
-
-                setGeneratedSchema((prev: any) => ({
-                    ...prev,
-                    data_schema: currentData,
-                    ui_schema: currentUi
-                }));
-
-                message.info(`Field "${fieldName}" removed`);
+            // Also remove from required array at the correct level
+            const parentPath = pathParts.slice(0, -1);
+            const parentDataPath = parentPath.length > 0 
+                ? ['properties', ...parentPath.flatMap(p => [p, 'properties'])].slice(0, -1)
+                : [];
+            
+            const parentObj = parentDataPath.length > 0 ? get(currentData, parentDataPath) : currentData;
+            if (parentObj && Array.isArray(parentObj.required)) {
+                parentObj.required = parentObj.required.filter((f: string) => f !== pathParts[pathParts.length - 1]);
+                if (parentObj.required.length === 0) delete parentObj.required;
             }
+
+            // Remove from UI schema
+            unset(currentUi, fieldPath);
+
+            // Update layout if it exists (only supports top-level for now)
+            if (currentUi['ui:layout'] && !fieldPath.includes('.')) {
+                currentUi['ui:layout'] = currentUi['ui:layout'].map((page: any) =>
+                    page.map((row: any) =>
+                        row.filter((f: string) => f !== fieldPath)
+                    ).filter((row: any) => row.length > 0)
+                ).filter((page: any) => page.length > 0);
+            }
+
+            const newDataStr = JSON.stringify(currentData, null, 2);
+            const newUiStr = JSON.stringify(currentUi, null, 2);
+
+            setDataSchemaStr(newDataStr);
+            setUiSchemaStr(newUiStr);
+
+            setGeneratedSchema((prev: any) => ({
+                ...prev,
+                data_schema: currentData,
+                ui_schema: currentUi
+            }));
+
+            message.info(`Field "${fieldPath}" removed`);
         } catch (e) {
             message.error('Error modifying schema: ' + (e as Error).message);
         }
     };
 
-    const handleWidgetChange = (fieldName: string, widget: string) => {
+    const handleWidgetChange = (fieldPath: string, widget: string) => {
         try {
             const currentUi = JSON.parse(uiSchemaStr);
-            if (!currentUi[fieldName]) currentUi[fieldName] = {};
             
             if (widget === 'default') {
-                delete currentUi[fieldName]['ui:widget'];
+                unset(currentUi, [fieldPath, 'ui:widget']);
             } else {
-                currentUi[fieldName]['ui:widget'] = widget;
+                set(currentUi, [fieldPath, 'ui:widget'], widget);
+                
                 // Add default options for some widgets if they don't exist
-                if (widget === 'SelectCustomWidget' && !currentUi[fieldName]['ui:options']) {
-                    currentUi[fieldName]['ui:options'] = { 
+                const currentOptions = get(currentUi, [fieldPath, 'ui:options']);
+                if (widget === 'SelectCustomWidget' && !currentOptions) {
+                    set(currentUi, [fieldPath, 'ui:options'], { 
                         mode: 'single', 
                         colSpan: 12,
                         reference_api: '/api/v4/logical/fetch/...'
-                    };
+                    });
                 }
             }
 
             setUiSchemaStr(JSON.stringify(currentUi, null, 2));
-            message.info(`Widget for "${fieldName}" updated to ${widget}`);
+            message.info(`Widget for "${fieldPath}" updated to ${widget}`);
         } catch (e) {
             message.error('Error updating widget: ' + (e as Error).message);
         }
@@ -286,8 +340,8 @@ const TestRJSFCoreForm = () => {
         }
     }, [dataSchemaStr, uiSchemaStr, dbSchemaStr]);
 
-    const fieldList = generatedSchema?.data_schema?.properties
-        ? Object.keys(generatedSchema.data_schema.properties)
+    const flattenedFields = generatedSchema?.data_schema?.properties
+        ? getFlattenedFields(generatedSchema.data_schema.properties)
         : [];
 
     return (
@@ -341,41 +395,46 @@ const TestRJSFCoreForm = () => {
                             <Col span={6}>
                                 <Card size="small" title="Form Fields" style={{ height: '100%', overflowY: 'auto', maxHeight: '1000px' }}>
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                                        {fieldList.map(field => {
+                                        {flattenedFields.map(field => {
                                             const currentUi = JSON.parse(uiSchemaStr || '{}');
-                                            const currentWidget = currentUi[field]?.['ui:widget'] || 'default';
+                                            const currentWidget = get(currentUi, [field.path, 'ui:widget'], 'default');
                                             
                                             return (
-                                                <div key={field} style={{
+                                                <div key={field.path} style={{
                                                     display: 'flex',
                                                     flexDirection: 'column',
                                                     gap: 4,
                                                     padding: '8px',
-                                                    background: '#f5f5f5',
-                                                    borderRadius: '4px'
+                                                    background: field.depth > 0 ? token.colorFillAlter : token.colorFillSecondary,
+                                                    border: `1px solid ${token.colorBorderSecondary}`,
+                                                    borderRadius: token.borderRadiusLG,
+                                                    marginLeft: field.depth * 16,
+                                                    borderLeft: field.depth > 0 ? `2px solid ${token.colorBorder}` : 'none'
                                                 }}>
                                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                        <Text strong ellipsis style={{ maxWidth: '80%' }}>{field}</Text>
+                                                        <Text strong={field.depth === 0} type={field.depth > 0 ? "secondary" : undefined} ellipsis style={{ maxWidth: '80%' }}>
+                                                            {field.label}
+                                                        </Text>
                                                         <Button
                                                             type="text"
                                                             danger
                                                             size="small"
                                                             icon={<Trash2 size={14} />}
-                                                            onClick={() => handleDeleteField(field)}
+                                                            onClick={() => handleDeleteField(field.path)}
                                                         />
                                                     </div>
                                                     <Select
                                                         size="small"
                                                         value={currentWidget}
                                                         options={WIDGET_OPTIONS}
-                                                        onChange={(val) => handleWidgetChange(field, val)}
+                                                        onChange={(val) => handleWidgetChange(field.path, val)}
                                                         style={{ width: '100%' }}
                                                         suffixIcon={<Settings2 size={12} />}
                                                     />
                                                 </div>
                                             );
                                         })}
-                                        {fieldList.length === 0 && <Text type="secondary">No fields in schema</Text>}
+                                        {flattenedFields.length === 0 && <Text type="secondary">No fields in schema</Text>}
                                     </div>
                                 </Card>
                             </Col>
@@ -389,6 +448,14 @@ const TestRJSFCoreForm = () => {
                                                 onChange={(e) => setFormName(e.target.value)}
                                                 style={{ width: 250 }}
                                             />
+                                            <Button
+                                                type="default"
+                                                icon={<Settings2 size={16} />}
+                                                onClick={() => setIsPageManagerVisible(true)}
+                                                disabled={!generatedSchema}
+                                            >
+                                                Manage Pages
+                                            </Button>
                                             <Button
                                                 type="primary"
                                                 icon={<SaveOutlined />}
@@ -408,7 +475,7 @@ const TestRJSFCoreForm = () => {
                                                     children: (
                                                         <AceEditor
                                                             mode="json"
-                                                            theme="monokai"
+                                                            theme={isDarkMode ? "monokai" : "github"}
                                                             value={dataSchemaStr}
                                                             onChange={(val) => { setDataSchemaStr(val); }}
                                                             width="100%"
@@ -424,7 +491,7 @@ const TestRJSFCoreForm = () => {
                                                     children: (
                                                         <AceEditor
                                                             mode="json"
-                                                            theme="monokai"
+                                                            theme={isDarkMode ? "monokai" : "github"}
                                                             value={uiSchemaStr}
                                                             onChange={(val) => { setUiSchemaStr(val); }}
                                                             width="100%"
@@ -440,7 +507,7 @@ const TestRJSFCoreForm = () => {
                                                     children: (
                                                         <AceEditor
                                                             mode="json"
-                                                            theme="monokai"
+                                                            theme={isDarkMode ? "monokai" : "github"}
                                                             value={dbSchemaStr}
                                                             onChange={(val) => { setDbSchemaStr(val); }}
                                                             width="100%"
@@ -475,6 +542,14 @@ const TestRJSFCoreForm = () => {
                     )}
                 </Space>
             </Card>
+
+            <PageManager
+                visible={isPageManagerVisible}
+                fields={flattenedFields.map(f => ({ fieldName: f.path, fieldTitle: f.label }))}
+                initialLayout={uiLayout}
+                onSave={handleSaveLayout}
+                onCancel={() => setIsPageManagerVisible(false)}
+            />
         </div>
     );
 };
