@@ -23,7 +23,7 @@ const WebRegister: React.FC = () => {
   const [step, setStep] = useState<1 | 2>(1);
 
   const handleSearch = async (value: string) => {
-    if (!value || value.length < 3) {
+    if (!value || value.length < 1) {
       setSearchResults([]);
       return;
     }
@@ -118,7 +118,7 @@ const WebRegister: React.FC = () => {
                   <List.Item.Meta
                     avatar={<Building2 className="text-primary" />}
                     title={<Text strong>{item.name}</Text>}
-                    description={<Text type="secondary" className="text-xs">Matched from CRM Leads</Text>}
+                    description={<Text type="secondary" className="text-xs">Matched from CRM records</Text>}
                   />
                 </List.Item>
               )}

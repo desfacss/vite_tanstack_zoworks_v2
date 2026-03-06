@@ -67,6 +67,10 @@ const Invoices = lazy(() => import('@/modules/erp/pages/Invoices'));
 const AIWorkbench = lazy(() => import('@/modules/ai/pages/AIWorkbench'));
 const GenericDynamicPage = lazy(() => import('@/core/components/DynamicViews/GenericDynamicPage'));
 
+// Appointment Module
+const PublicAppointments = lazy(() => import('@/modules/appointments/pages/PublicAppointmentsPage'));
+const AdminAppointments = lazy(() => import('@/modules/appointments/pages/AdminAppointmentsPage'));
+
 
 
 export const AppRoutes: FC = () => {
@@ -98,6 +102,7 @@ export const AppRoutes: FC = () => {
                 {/* Public routes */}
                 <Route element={<PublicLayout />}>
                     <Route path="/" element={<Home />} />
+                    <Route path="/appointments" element={<PublicAppointments />} />
                 </Route>
 
                 {/* Auth-protected routes */}
@@ -166,6 +171,7 @@ export const AppRoutes: FC = () => {
                         <Route path="/admin/branding" element={<AdminBranding />} />
                         <Route path="/admin/form-elements" element={<AdminFormElements />} />
                         <Route path="/admin/onboarding" element={<OnboardingRequests />} />
+                        <Route path="/admin/appointments" element={<AdminAppointments />} />
 
                         {/* Profile & Settings */}
                         <Route path="/profile" element={<Profile />} />
