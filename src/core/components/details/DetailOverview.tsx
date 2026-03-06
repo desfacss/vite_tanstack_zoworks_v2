@@ -642,9 +642,9 @@ const DetailOverview: React.FC<DetailOverviewProps> = ({
       <Suspense fallback={<Spin />}>
         <DocView
           data={fetchedData}
-          templateSettings={viewConfig.details_overview.print_template.settings}
-          templateStyles={viewConfig.details_overview.print_template.styles}
-          templateConfig={viewConfig.details_overview.print_template.config}
+          templateSettings={templateData.settings || {}}
+          templateStyles={templateData.styles || {}}
+          templateConfig={templateData.template_config || { layout_blocks: [] }}
           _viewConfig={viewConfig}
         />
       </Suspense>
