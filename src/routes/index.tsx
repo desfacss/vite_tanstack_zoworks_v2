@@ -67,11 +67,14 @@ const Invoices = lazy(() => import('@/modules/erp/pages/Invoices'));
 const AIWorkbench = lazy(() => import('@/modules/ai/pages/AIWorkbench'));
 const GenericDynamicPage = lazy(() => import('@/core/components/DynamicViews/GenericDynamicPage'));
 
+// E-Sign Module
+const Envelopes = lazy(() => import('@/modules/esign/pages/Envelopes'));
+const CreateEnvelope = lazy(() => import('@/modules/esign/pages/CreateEnvelope'));
+const SignDocument = lazy(() => import('@/modules/esign/pages/SignDocument'));
+
 // Appointment Module
 const PublicAppointments = lazy(() => import('@/modules/appointments/pages/PublicAppointmentsPage'));
 const AdminAppointments = lazy(() => import('@/modules/appointments/pages/AdminAppointmentsPage'));
-
-
 
 export const AppRoutes: FC = () => {
     const { user, permissions, bypass, setNavigationItems } = useAuthStore(state => ({
@@ -103,6 +106,7 @@ export const AppRoutes: FC = () => {
                 <Route element={<PublicLayout />}>
                     <Route path="/" element={<Home />} />
                     <Route path="/appointments" element={<PublicAppointments />} />
+                    <Route path="/sign/:envelopeId" element={<SignDocument />} />
                 </Route>
 
                 {/* Auth-protected routes */}
@@ -176,6 +180,10 @@ export const AppRoutes: FC = () => {
                         {/* Profile & Settings */}
                         <Route path="/profile" element={<Profile />} />
                         <Route path="/settings" element={<Settings />} />
+
+                        {/* E-Sign */}
+                        <Route path="/esign" element={<Envelopes />} />
+                        <Route path="/esign/create" element={<CreateEnvelope />} />
 
                         {/* Sample page for new module development */}
                         <Route path="/sample" element={<SamplePage />} />

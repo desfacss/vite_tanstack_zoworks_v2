@@ -100,9 +100,10 @@ const checkConfigVersion = async () => {
 // Check config version on module load (before React renders)
 checkConfigVersion();
 
-// Register AI and Core modules (custom forms and components)
+// Register AI, Core and E-sign modules (custom forms and components)
 import('@/modules/ai/registry').then(module => module.register());
 import('@/modules/core/registry').then(module => module.register());
+import('@/modules/esign/registry').then(module => module.registerESignModule());
 
 function App() {
   useEffect(() => {

@@ -302,6 +302,7 @@ const DetailOverview: React.FC<DetailOverviewProps> = ({
       if (!templateName) return;
 
       const { data: docTemplate, error: templateError } = await supabase
+        .schema('documents')
         .from('doc_templates')
         .select(`*`)
         .eq('name', templateName)
@@ -317,6 +318,7 @@ const DetailOverview: React.FC<DetailOverviewProps> = ({
         const commonTemplateId = docTemplate.doc_common_template_id;
 
         const { data: commonTemplate, error: commonError } = await supabase
+          .schema('documents')
           .from('doc_common_templates')
           .select('settings')
           .eq('id', commonTemplateId)

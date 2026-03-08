@@ -29,6 +29,7 @@ export interface ActionDefinition {
     entityTypes: string[];         // Which entities show this action
     position: 'row' | 'global' | 'both';
     label: string | ((t: TFunction) => string);
+    icon?: React.ReactNode;         // Action icon
     component: () => Promise<any>;  // Dynamic import
     group?: string;                 // e.g., 'primary', 'danger', 'secondary'
     condition?: (context: any) => boolean;
