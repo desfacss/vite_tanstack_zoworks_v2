@@ -27,7 +27,8 @@ const InviteUserModal: React.FC = () => {
   // Fetch form schema
   const getForms = async () => {
     const { data, error } = await supabase
-      .from("forms")
+      .schema('core')
+      .from('forms')
       .select("*")
       .eq("name", "invite_user")
       .single();
@@ -198,179 +199,77 @@ const InviteUserModal: React.FC = () => {
       role_id,
       location_id,
       team_id,
-      // ... other destructured values
       ...rest
     } = values;
 
-    // --- 1. Prepare Common Payload Data ---
-    const userName = `${firstName} ${lastName}`;
     const orgId = organization?.id;
-    const currentUserId = user?.id; // The user performing the invite
-
     if (!orgId) {
       message.error("Organization context is missing. Cannot invite user.");
       setLoading(false);
       return;
     }
 
-    let globalUserId: string | null = null;
-    let organizationUserId: string | null = null;
-
     try {
-      // --- 2. Check for Global Platform User Existence (users table) ---
-      // We check the global 'users' table using the email stored in the 'details' jsonb.
+      // 1. Check if user exists globally in identity.users
       const { data: existingGlobalUser, error: checkGlobalError } = await supabase
-        .schema("identity_v2")
+        .schema("identity")
         .from("users")
-        .select("id")
-        .eq("details->>email", email)
-        .maybeSingle(); // Use maybeSingle for efficiency
+        .select("id, auth_id")
+        .eq("email", email)
+        .maybeSingle();
 
-      if (checkGlobalError && checkGlobalError.code !== "PGRST116") throw checkGlobalError;
+      if (checkGlobalError) throw checkGlobalError;
 
-      if (existingGlobalUser) {
-        globalUserId = existingGlobalUser.id;
-      }
+      let authId = existingGlobalUser?.auth_id;
 
-      // --- 3. CORE LOGIC: Handle New vs. Existing Global User ---
-      if (!globalUserId) {
-        // SCENARIO A: NEW PLATFORM USER (Must invite via Supabase Auth)
-        // The user doesn't exist in the global 'users' table.
-
-        // 3a. Invite User via Supabase function (Auth layer)
-        const ANON_KEY = env_def?.SUPABASE_ANON_KEY || "your-anon-key-here";
-        const response = await fetch(`${env_def?.SUPABASE_URL}/functions/v1/invite_users`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${ANON_KEY}`,
-          },
-          body: JSON.stringify({ email }),
+      // 2. If user doesn't exist globally, trigger Supabase Auth Invitation via Edge Function
+      if (!existingGlobalUser) {
+        const { data: inviteData, error: inviteError } = await supabase.functions.invoke("invite_users", {
+          body: { email },
         });
 
-        if (!response.ok) throw new Error("Failed to invite user via Auth service.");
-        const inviteResponse = await response.json();
-        const authId = inviteResponse?.id;
-
-        // 3b. Insert into global 'users' table
-        const userPayload = {
-          auth_id: authId,
-          name: userName,
-          details: {
-            email,
-            firstName,
-            lastName,
-            // ... include all other 'rest' fields here for global user details
-            ...rest
-          },
-          created_by: currentUserId,
-          updated_by: currentUserId,
-          // privacy, subscriptions, relationship_details, etc.
-        };
-
-        const { data: userData, error: insertUserError } = await supabase
-          .schema('identity_v2')
-          .from("users")
-          .insert([userPayload])
-          .select('id')
-          .single();
-
-        if (insertUserError || !userData) throw insertUserError || new Error("Failed to create global user record.");
-        globalUserId = userData.id;
-
-      } else {
-        // SCENARIO B: EXISTING PLATFORM USER (Only need to check org association)
-        // The user exists globally. Check if they are already in *this* organization.
-        const { data: existingOrgUser, error: checkOrgUserError } = await supabase
-          .schema("identity_v2")
-          .from("organization_users")
-          .select("id")
-          .eq("user_id", globalUserId)
-          .eq("organization_id", orgId)
-          .maybeSingle();
-
-        if (checkOrgUserError && checkOrgUserError.code !== "PGRST116") throw checkOrgUserError;
-
-        if (existingOrgUser) {
-          // User already exists in THIS organization. Prevent re-invite.
-          message.warning(`${userName} is already a member of this organization.`);
-          return;
+        if (inviteError) {
+          throw new Error(inviteError.message || "Failed to invite user via Auth service.");
         }
-        // If we reach here, the user exists globally but is new to this organization.
+
+        authId = inviteData?.id;
       }
 
-      // --- 4. Create Organization User Mapping (organization_users table) ---
-      // This is the CRITICAL multi-tenant mapping step.
-      const orgUserPayload = {
-        organization_id: orgId,
-        user_id: globalUserId, // Link to the global user
-        location_id: location_id,
-        is_active: true,
-        // The user's role/team/designation details can also be stored here or left to the joins
-        created_by: currentUserId,
-        updated_by: currentUserId,
-      };
+      // 3. Call the centralized RPC to handle all record creation/mapping
+      const { data: rpcData, error: rpcError } = await supabase.schema('identity').rpc('invite_user_to_org', {
+        p_email: email,
+        p_first_name: firstName,
+        p_last_name: lastName,
+        p_org_id: orgId,
+        p_role_id: role_id,
+        p_team_id: team_id,
+        p_location_id: location_id,
+        p_auth_id: authId,
+        p_details: { 
+          ...rest,
+          // Explicitly pass fields that the RPC might use for HR profile
+          firstName,
+          lastName,
+          email
+        }
+      });
 
-      const { data: orgUserData, error: insertOrgUserError } = await supabase
-        .schema('identity_v2')
-        .from("organization_users")
-        .insert([orgUserPayload])
-        .select('id')
-        .single();
+      if (rpcError) throw rpcError;
 
-      if (insertOrgUserError || !orgUserData) throw insertOrgUserError || new Error("Failed to create organization user mapping.");
-      organizationUserId = orgUserData.id; // This is the ID used for user_roles and user_teams
-
-      // --- 5. Assign Team Membership (user_teams table) ---
-      if (team_id) {
-        // Note: team_id must be a singular ID here as it's from the form
-        const { error: teamInsertError } = await supabase
-          .schema('identity_v2')
-          .from('user_teams')
-          .insert([{
-            organization_user_id: organizationUserId, // Use the new organization_user_id
-            team_id: team_id,
-            created_by: currentUserId,
-          }]);
-
-        if (teamInsertError) throw teamInsertError;
-      }
-
-      // --- 6. Assign Role Authorization (user_roles table) ---
-      if (role_id && team_id) {
-        // Role assignment MUST be specific to a team
-        const { error: roleInsertError } = await supabase
-          .schema('identity_v2')
-          .from('user_roles')
-          .insert([{
-            organization_user_id: organizationUserId, // Use the new organization_user_id
-            role_id: role_id,
-            team_id: team_id,
-          }]);
-
-        if (roleInsertError) throw roleInsertError;
-      }
-
-
-      // --- 7. Final Success Message ---
       message.success(
         <>
-          {userName} invited to {organization?.name} successfully.
-          The user can accept the invite sent from Inbox/Spam folder!
+          {firstName} {lastName} invited to {organization?.name} successfully.
+          The user can accept the invite sent from their inbox!
         </>
       );
 
     } catch (error: any) {
-      // --- 8. Error Handling ---
-      // In a production app, you would want transaction/rollback logic here.
-      // For simplicity with standard Supabase client, we show the error.
       console.error("Invite Error:", error);
       message.error(error.message || "An error occurred while inviting the user.");
     } finally {
       setLoading(false);
       setIsDrawerOpen(false);
       form.resetFields();
-      // Invalidate queries to refresh the user list
       queryClient.invalidateQueries({ queryKey: ["users", orgId] });
     }
   };

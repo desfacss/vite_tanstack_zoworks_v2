@@ -8,11 +8,12 @@ import { supabase } from '@/lib/supabase';
 import { loadTenantTheme, applyAccessibility } from '@/core/theme/ThemeRegistry';
 import { useTranslation } from 'react-i18next';
 import { changeLanguage } from '@/core/i18n';
+import { useNavigate } from 'react-router-dom';
 
 export const SessionManager = () => {
   console.log('[SessionManager] 🧩 Component Rendered');
+  const navigate = useNavigate();
   const [enabled, setEnabled] = useState(false);
-  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const {
     setSession,
@@ -33,7 +34,7 @@ export const SessionManager = () => {
   }));
 
   const { data, isSuccess, isError, error, isStale } = useUserSession(
-    enabled && !isLoggingOut && !isRefreshing,
+    enabled && !isLoggingOut,
     organization?.id
   );
 
@@ -51,12 +52,58 @@ export const SessionManager = () => {
 
     const initAuth = async () => {
       console.log('[SessionManager] 🚀 initAuth STARTED');
+      
+      // MANUAL HASH DETECTION (Fallback for Implicit Flow tokens in PKCE mode)
+      const hash = window.location.hash.substring(1);
+      if (hash.includes('access_token=')) {
+        console.log('[SessionManager] 🧩 Manual hash detection found access_token. Attempting setSession...');
+        const params = new URLSearchParams(hash);
+        const accessToken = params.get('access_token');
+        const refreshToken = params.get('refresh_token');
+        const type = params.get('type');
+        const errorCode = params.get('error_code');
+        
+        if (errorCode) {
+          console.error(`[SessionManager] ❌ Auth error in hash: ${errorCode} - ${params.get('error_description')}`);
+          setAuthError(`Auth error: ${params.get('error_description')}`);
+          setInitialized(true);
+          clearTimeout(safetyTimer);
+          return;
+        }
+
+        if (accessToken) {
+          const { data, error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken || '',
+          });
+          
+          if (error) {
+            console.error('[SessionManager] ❌ Manual setSession failed:', error.message);
+            setAuthError(error.message);
+            setInitialized(true);
+            clearTimeout(safetyTimer);
+            return;
+          } else {
+            console.log('[SessionManager] ✅ Manual setSession SUCCESS. Session:', data.session?.user?.id);
+            // setSession in store will be handled by the SIGNED_IN event or Effect 2
+            if (type === 'recovery') {
+              console.log('[SessionManager] 🔐 Detected recovery type in manual hash. Forcing navigate to /reset_password');
+              navigate('/reset_password', { replace: true });
+              setInitialized(true); // Recovery flow will handle further initialization
+              clearTimeout(safetyTimer);
+              return;
+            }
+          }
+        }
+      }
+
       try {
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
         if (sessionError) {
           console.error('[SessionManager] Supabase Session Error:', sessionError);
           if (isMounted) setInitialized(true);
+          clearTimeout(safetyTimer);
           return;
         }
 
@@ -98,21 +145,43 @@ export const SessionManager = () => {
 
     initAuth();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, _session) => {
+    const subscription = supabase.auth.onAuthStateChange(async (event, _session) => {
+      console.log(`%c[SessionManager] 🔄 Auth Event: ${event}`, 'color: #3b82f6; font-weight: bold;');
+
       if (event === 'SIGNED_IN') {
         setIsLoggingOut(false);
-        console.log('[SessionManager] 🔑 SIGNED_IN event detected');
+        console.log('[SessionManager] 🔑 SIGNED_IN detected');
         setEnabled(true);
+
+        // If it's a magic link or regular login on the root/login page, move to dashboard
+        // But only if we are NOT in a recovery flow (which will fire its own event)
+        const isAuthFlow = window.location.hash.includes('type=recovery') || 
+                           window.location.hash.includes('type=invite');
+        
+        if (!isAuthFlow && (window.location.pathname === '/' || window.location.pathname === '/login')) {
+          console.log('[SessionManager] 🪄 Magic link or login on root. Prompting move to dashboard in Home or here.');
+          // We let Home or AuthGuard handle the dashboard landing generally, 
+          // but we can force it here if needed.
+        }
+      }
+
+      if (event === 'PASSWORD_RECOVERY') {
+        console.log('%c[SessionManager] 🔐 PASSWORD_RECOVERY detected. Redirecting to /reset_password', 'color: #ef4444; font-weight: bold;');
+        navigate('/reset_password', { replace: true });
       }
 
       if (event === 'SIGNED_OUT') {
+        console.log('[SessionManager] 🚪 SIGNED_OUT detected');
         setEnabled(false);
         clearUserSession();
       }
     });
 
-    return () => subscription.unsubscribe();
-  }, [clearUserSession, setInitialized, setIsLoggingOut, setAuthError]);
+    return () => {
+      console.log('[SessionManager] 🧹 Unsubscribing from auth changes');
+      subscription.data.subscription.unsubscribe();
+    };
+  }, [clearUserSession, setInitialized, setIsLoggingOut, setAuthError, navigate]);
 
   // --- Effect 2: Sync Data to Store ---
   useEffect(() => {

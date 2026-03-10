@@ -12,6 +12,7 @@ import { useNestedContext } from "../../lib/NestedContext";
 import { trackAndSaveLocation } from "@/core/components/utils/locationTracker";
 import { registry } from "@/core/registry";
 import { PrimaryAction, MoreMenu } from "@/core/components/ActionBar";
+import InviteUserModal from "@/modules/admin/components/InviteUserModal";
 
 interface GlobalAction {
   form: string;
@@ -220,6 +221,9 @@ const GlobalActions: React.FC<GlobalActionsProps> = ({
 
   return (
     <div className="flex items-center gap-2">
+      {entityType === 'organization_users' && (
+        <InviteUserModal />
+      )}
       {/* Primary + Dropdown (Split Button) */}
       {mainAction && (
         <PrimaryAction

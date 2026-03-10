@@ -294,7 +294,7 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket_id, asset_id, onSuccess 
         // Fetch locations if location.is_default (Assuming organization.locations is correct)
         if (location?.is_default) {
           const { data: locationData, error: locationError } = await supabase
-            .schema('organization')
+            .schema('identity')
             .from('locations')
             .select('id, name')
             .eq('organization_id', organization?.id);

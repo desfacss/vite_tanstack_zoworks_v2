@@ -43,18 +43,28 @@ const AuthGuard: React.FC = () => {
   const isHub = isHubHost(hostname) || isDevelopment();
   const isLogin = isLoginPortal();
   const isAuthPage = ['/login', '/signup', '/reset_password', '/web_register'].includes(location.pathname);
+  const isResetPassword = location.pathname === '/reset_password';
 
   // Get redirect parameter (from login portal)
   const redirectParam = searchParams.get('redirect');
 
-  console.log(`>>> [AuthGuard] RENDERING. Initialized: ${initialized}, User: ${user ? user.id : 'null'}, Path: ${location.pathname}, isHub: ${isHub}`);
+  // CRITICAL: Check for Supabase Auth Hash (Recovery/Magic Link)
+  // If hash contains access_token and type=recovery or type=magiclink, we should wait
+  // for SessionManager to process it before redirecting to login.
+  const hasAuthHash = location.hash.includes('access_token=') && 
+    (location.hash.includes('type=recovery') || location.hash.includes('type=magiclink') || location.hash.includes('type=invite'));
+
+  console.log(`>>> [AuthGuard] RENDERING. Initialized: ${initialized}, User: ${user ? user.id : 'null'}, Path: ${location.pathname}, hasHash: ${hasAuthHash}`);
 
   // 1. If the store is not yet initialized, show a loading fallback.
-  if (!initialized) {
+  // CRITICAL: We also wait if there's an auth hash present, to prevent 
+  // premature redirect to /login which would lose the token.
+  if (!initialized || (!user && hasAuthHash)) {
+    console.log(`[AuthGuard] Waiting... Init: ${initialized}, User: ${!!user}, Hash: ${hasAuthHash}`);
     return <LoadingFallback />;
   }
 
-  // 2. LOGIN PORTAL POLICY
+  // 3. LOGIN PORTAL POLICY
   // If we are on the login portal (login.zoworks.com), let the login page handle everything
   if (isLogin) {
     // Already on login portal - no redirects needed
@@ -73,7 +83,7 @@ const AuthGuard: React.FC = () => {
     return <Outlet />;
   }
 
-  // 3. TENANT SUBDOMAIN - NOT AUTHENTICATED
+  // 4. TENANT SUBDOMAIN - NOT AUTHENTICATED
   // If on a tenant subdomain (not hub) and NOT logged in, redirect to centralized login
   if (!user && !isHub && !isAuthPage) {
     console.log('[AuthGuard] On tenant subdomain without auth, redirecting to login portal');
@@ -82,7 +92,7 @@ const AuthGuard: React.FC = () => {
     return <LoadingFallback />;
   }
 
-  // 4. TENANT SUBDOMAIN - ON AUTH PAGE WITHOUT USER
+  // 5. TENANT SUBDOMAIN - ON AUTH PAGE WITHOUT USER
   // If on tenant subdomain auth page, redirect to hub for auth (avoid non-existent login page on tenant)
   if (!user && !isHub && isAuthPage) {
     console.log('[AuthGuard] On tenant auth page, redirecting to login portal');
@@ -91,14 +101,20 @@ const AuthGuard: React.FC = () => {
     return <LoadingFallback />;
   }
 
-  // 5. HUB/DEV - NOT AUTHENTICATED - ON PROTECTED ROUTE
+  // 6. HUB/DEV - NOT AUTHENTICATED - ON PROTECTED ROUTE
   if (!user && !isAuthPage) {
     // On hub/dev mode and not on auth page - redirect to local login
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // 6. AUTHENTICATED - ON AUTH PAGE
+  // 7. AUTHENTICATED - ON AUTH PAGE
   if (user && isAuthPage) {
+    // SPECIAL CASE: Allow /reset_password even if authenticated
+    if (isResetPassword) {
+      console.log('[AuthGuard] Authenticated user on /reset_password, allowing...');
+      return <Outlet />;
+    }
+
     // Handle redirect parameter from login portal
     if (redirectParam) {
       try {
@@ -125,12 +141,15 @@ const AuthGuard: React.FC = () => {
     }
 
     // Normal redirect to dashboard
-    const targetPath = (viewPreferences?.[user.id]?.lastPath || '/dashboard').split('?')[0];
+    const userId = user?.id;
+    const lastPath = (userId ? (viewPreferences as any)[userId]?.lastPath : null) || '/dashboard';
+    const targetPath = lastPath.split('?')[0];
+    console.log(`>>> [AuthGuard] Redirecting authenticated user to: ${targetPath} (lastPath logic)`);
     return <Navigate to={targetPath} replace />;
   }
 
   // 7. VALID STATE - Render child routes
-  console.log('>>> [AuthGuard] Render: State is valid, rendering Outlet.');
+  console.log(`>>> [AuthGuard] Render: State is valid, rendering Outlet. Path: ${location.pathname}`);
   return <Outlet />;
 };
 

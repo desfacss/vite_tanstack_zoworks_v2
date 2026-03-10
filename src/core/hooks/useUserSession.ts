@@ -598,24 +598,41 @@ const fetchUserSessionData = async ({ queryKey }: QueryFunctionContext<UserSessi
   );
 
   // 3. RPC Call
-  if (!targetOrgId) {
-    console.warn('[Flow] jwt_get_user_session skipped: targetOrgId is missing');
-    throw new Error('Target Organization ID is required for session hydration');
+  let partialSession: RpcSessionData = {
+    user_id: session.user.id,
+    org_id: '',
+    permissions: {},
+    roles: [],
+    teams: [],
+  };
+
+  if (targetOrgId) {
+    console.log(`%c[Flow] Calling RPC for Org: ${targetOrgId}`, 'color: orange');
+    const { data: rpcData, error: rpcError } = await supabase
+      .schema('identity')
+      .rpc('jwt_get_user_session', { p_organization_id: targetOrgId });
+    
+    if (rpcError) {
+      console.warn('[Flow] jwt_get_user_session RPC failed:', rpcError.message);
+    } else if (rpcData) {
+      partialSession = (Array.isArray(rpcData) ? rpcData[0] : rpcData) as RpcSessionData;
+    }
+  } else {
+    console.log('%c[Flow] Skipping RPC: No Target Org ID', 'color: gray');
   }
 
-  const { data: rpcData, error: rpcError } = await supabase
-    .schema('identity')
-    .rpc('jwt_get_user_session', { p_organization_id: targetOrgId });
-  console.log('qq-jwt_get_user_session', rpcData);
-
-  if (rpcError || !rpcData) throw new Error(rpcError?.message || 'RPC No Data');
-
-  const partialSession = (Array.isArray(rpcData) ? rpcData[0] : rpcData) as RpcSessionData;
-
   // 4. Parallel Fetch of Full Records
+  // We MUST at least get the user record from identity.users
+  const userQuery = supabase.schema('identity').from('users').select('*').eq('auth_id', session.user.id).single();
+  
+  let orgQuery = null;
+  if (partialSession.org_id) {
+    orgQuery = supabase.schema('identity').from('organizations').select('*').eq('id', partialSession.org_id).single();
+  }
+
   const [userResponse, orgResponse] = await Promise.all([
-    supabase.schema('identity').from('users').select('*').eq('id', partialSession.user_id).single(),
-    supabase.schema('identity').from('organizations').select('*').eq('id', partialSession.org_id).single()
+    userQuery,
+    orgQuery || Promise.resolve({ data: null, error: null })
   ]);
 
   // 5. Location Fetch

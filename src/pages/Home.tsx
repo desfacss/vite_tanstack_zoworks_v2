@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Button, message } from "antd";
+import { Button } from "antd";
 import {
   LogIn,
   CreditCard
@@ -14,75 +14,42 @@ const Home = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useTranslation();
-  const { user, reset } = useAuthStore();
+  const { user } = useAuthStore();
 
-  // Handle invite link with access_token and refresh_token
+  // Check for existing session or user and redirect to dashboard
+  // BUT: don't redirect if we are in the middle of a recovery or magic link flow
   useEffect(() => {
-    const handleInviteLink = async () => {
-      const hashParams = new URLSearchParams(location.hash.replace('#', ''));
-      const accessToken = hashParams.get('access_token');
-      const refreshToken = hashParams.get('refresh_token');
-      const tokenType = hashParams.get('token_type');
-      const expiresIn = hashParams.get('expires_in');
+    // Note: Hash might be cleared by Supabase before this effect runs
+    const isAuthFlow = location.hash.includes('access_token=') || 
+                       location.hash.includes('type=recovery') || 
+                       location.hash.includes('type=magiclink') || 
+                       location.hash.includes('type=invite');
+    
+    if (isAuthFlow) {
+      console.log('[Home] 🚩 Auth flow detected in hash, skipping dashboard redirect to allow SessionManager to handle it');
+      return;
+    }
 
-      if (accessToken && refreshToken && tokenType && expiresIn) {
-        try {
-          console.log('Processing invite link with tokens...');
-          // Set the session in Supabase
-          const { error } = await supabase.auth.setSession({
-            access_token: accessToken,
-            refresh_token: refreshToken,
-          });
+    const checkAndRedirect = async () => {
+      // Small delay to allow SessionManager/AuthGuard to potentially change path first
+      await new Promise(r => setTimeout(r, 100));
 
-          if (error) {
-            console.error('Error setting session from invite link:', error.message);
-            message.error('Failed to authenticate with invite link.');
-            reset();
-            navigate('/login', { replace: true, state: { from: location.pathname } });
-            return;
-          }
-
-          // Check if the session is established
-          const { data: { session } } = await supabase.auth.getSession();
-          if (session) {
-            console.log('Session established from invite link, navigating to /dashboard');
-            navigate('/dashboard', { replace: true });
-          } else {
-            console.error('No session established after setting tokens');
-            message.error('Authentication failed. Please try again.');
-            reset();
-            navigate('/login', { replace: true, state: { from: location.pathname } });
-          }
-        } catch (error: any) {
-          console.error('Invite link processing error:', error.message);
-          message.error('Failed to process invite link.');
-          reset();
-          navigate('/login', { replace: true, state: { from: location.pathname } });
-        }
-      }
-    };
-
-    handleInviteLink();
-  }, [location, navigate, reset]);
-
-  // Check for existing session or user
-  useEffect(() => {
-    const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        console.log('Existing session found, navigating to /dashboard');
+      
+      // If we found a session, check if it's a recovery flow from the session itself
+      if (session?.user?.app_metadata?.recovery || session?.user?.user_metadata?.recovery) {
+          console.log('[Home] 🚩 Session has recovery metadata, skipping dashboard redirect');
+          return;
+      }
+
+      if (session || user) {
+        console.log('[Home] ✅ Session or user found, navigating to /dashboard');
         navigate('/dashboard', { replace: true });
       }
     };
-    checkSession();
-  }, [navigate]);
-
-  useEffect(() => {
-    if (user) {
-      console.log('User found in store, navigating to /dashboard');
-      navigate('/dashboard', { replace: true });
-    }
-  }, [user, navigate]);
+    
+    checkAndRedirect();
+  }, [user, navigate, location.hash]);
 
   return (
     <div className="min-h-[calc(100vh-64px)] flex items-center justify-center p-4">

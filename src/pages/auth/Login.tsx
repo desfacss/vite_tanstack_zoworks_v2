@@ -56,11 +56,14 @@ const Login = () => {
   // 1. REACTIVE REDIRECT: Watch the Store
   // If SessionManager successfully hydrates the user, handle redirect
   useEffect(() => {
+    console.log(`>>> [LoginPage] Reactive Redirect check: user=${!!user}, org=${!!organization}, showOrgSelect=${showOrgSelect}, initialized=${initialized}`);
     if (user && organization && !showOrgSelect) {
-      console.log('>>> [LoginPage] User and org detected. Handling redirect...');
+      console.log('>>> [LoginPage] ✅ User and org detected. Handling redirect...');
       handlePostLoginRedirect(organization);
+    } else if (user && !organization && !showOrgSelect && initialized) {
+       console.log('>>> [LoginPage] ⚠️ User found but NO organization. Waiting or showing org select if multi...');
     }
-  }, [user, organization, showOrgSelect]);
+  }, [user, organization, showOrgSelect, initialized]);
 
   // 2. INITIAL CHECK: Look for existing session
   useEffect(() => {
@@ -271,7 +274,18 @@ const Login = () => {
         }
       }
     } catch (error: any) {
-      console.error('>>> [LoginPage] Error:', error.message);
+      console.error('>>> [LoginPage] ❌ Login Error:', error.message);
+      
+      // CRITICAL: If login fails, explicitly sign out from Supabase 
+      // to ensure no "ghost" session is left in memory/storage that 
+      // might trigger a redirect in AuthGuard or Login.tsx
+      try {
+        await supabase.auth.signOut();
+        console.log('>>> [LoginPage] 🧹 Signed out after login failure to clear stale state.');
+      } catch (signOutErr) {
+        console.warn('>>> [LoginPage] Sign out failed during error handling:', signOutErr);
+      }
+
       message.error(error.message || t('core.auth.message.login_failed'));
       reset();
       setLoading(false);
