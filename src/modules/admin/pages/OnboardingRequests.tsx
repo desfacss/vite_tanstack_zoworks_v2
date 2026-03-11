@@ -52,8 +52,15 @@ const OnboardingRequests: React.FC = () => {
 
       // The L4 fetcher returns data in a 'data' property
       const records = data?.data || [];
+      console.log('Onboarding Records:', records); // DEBUG: Inspection of flat payload
       
       const formattedRequests: OnboardingRequest[] = records.map((org: any) => {
+        // Try to identify contact data from potential flattened keys
+        // Based on V4 pattern, joins on 'claimed_by_contact_id' might produce:
+        // - org.contacts (if array)
+        // - org.claimed_by_contact_id__email (if flattened with __)
+        // - org.email (if direct join without prefix)
+        
         const contact = org.contacts?.[0] || {};
         
         // Organization Name & Code
@@ -70,11 +77,11 @@ const OnboardingRequests: React.FC = () => {
           id: org.id,
           name: orgName,
           short_code: shortCode,
-          contact_id: contact.id,
-          contact_name: contactName,
-          contact_email: contact.email,
-          contact_phone: contact.phone,
-          requested_at: org.created_at || contact.created_at
+          contact_id: contact.id || org.claimed_by_contact_id,
+          contact_name: contactName || org.contacts__name || org.contacts_name || org.contact_name,
+          contact_email: contact.email || org.contacts__email || org.contacts_email || org.email || org.contact_email,
+          contact_phone: contact.phone || org.contacts__phone || org.contacts_phone || org.phone || org.contact_phone,
+          requested_at: org.created_at || contact.created_at || org.claimed_at
         };
       });
 
@@ -94,18 +101,45 @@ const OnboardingRequests: React.FC = () => {
   const handleApprove = async (request: OnboardingRequest) => {
     setProcessingId(request.id);
     try {
-      // Phase 3: SaaS Activation via RPC
-      const { error } = await supabase.schema('identity').rpc('promote_to_tenant', {
-        p_org_id: request.id
-      });
+      // 1. Call Promote RPC - source of truth for user existence and contact email
+      const { data: promoteRes, error: promoteError } = await supabase
+        .schema('identity')
+        .rpc('onboard_promote_to_tenant', {
+          p_org_id: request.id
+        });
 
-      if (error) throw error;
+      if (promoteError) throw promoteError;
 
-      message.success(`Activated ${request.name} successfully! Organization is now operational.`);
+      // 2. If the user needs to be invited (doesn't exist in identity.users)
+      if (promoteRes?.status === 'NEED_INVITE') {
+        const inviteEmail = promoteRes.email;
+        if (!inviteEmail) throw new Error('Invite failed: No email found for contact.');
+
+        const { data: inviteData, error: inviteError } = await supabase.functions.invoke('invite_users', {
+          body: { email: inviteEmail }
+        });
+
+        if (inviteError) throw new Error(inviteError.message || 'Failed to invite user');
+        const authId = inviteData?.id;
+
+        // 3. Second call with authId to complete activation
+        const { error: finalError } = await supabase
+          .schema('identity')
+          .rpc('onboard_promote_to_tenant', {
+            p_org_id: request.id,
+            p_auth_id: authId
+          });
+
+        if (finalError) throw finalError;
+      }
+
+      message.success(`Organization ${request.name} approved and activated!`);
       fetchRequests();
     } catch (error: any) {
       console.error('Approval Error:', error);
-      message.error('Approval failed: ' + error.message);
+      // Fallback display for JSON errors from PostgREST
+      const errorMsg = typeof error === 'object' ? (error.message || JSON.stringify(error)) : error;
+      message.error('Approval failed: ' + errorMsg);
     } finally {
       setProcessingId(null);
     }

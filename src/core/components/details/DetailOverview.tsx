@@ -229,7 +229,14 @@ const DetailOverview: React.FC<DetailOverviewProps> = ({
   };
 
   const fetchDetailData = useCallback(async () => {
+    console.log('[DetailOverview] fetchDetailData check:', {
+      recordId,
+      entityType: viewConfig?.entity_type,
+      orgId: organization?.id
+    });
+
     if (!recordId || !viewConfig?.entity_type || !organization?.id) {
+      console.warn('[DetailOverview] Missing required data for fetchDetailData');
       setLoading(false);
       return;
     }
@@ -244,6 +251,8 @@ const DetailOverview: React.FC<DetailOverviewProps> = ({
         organization_id: organization.id,
       };
 
+      console.log('[DetailOverview] Calling api_fetch_entity_detail with payload:', payload);
+
       const { data: detailResult, error } = await supabase
         .schema('core')
         .rpc('api_fetch_entity_detail', {
@@ -251,17 +260,19 @@ const DetailOverview: React.FC<DetailOverviewProps> = ({
         });
 
       if (error) {
-        console.error('Error fetching detail data via RPC:', error);
+        console.error('[DetailOverview] Error fetching detail data via RPC:', error);
         message.error('Failed to load detail data.');
         setFetchedData(null);
       } else if (detailResult && detailResult.data) {
+        console.log('[DetailOverview] Received detail data:', detailResult.data);
         setFetchedData(detailResult.data);
       } else {
+        console.warn('[DetailOverview] No detail data found in result:', detailResult);
         setFetchedData(null);
         message.warning('No detail data found.');
       }
     } catch (err) {
-      console.error('RPC call exception:', err);
+      console.error('[DetailOverview] RPC call exception:', err);
       message.error('An unexpected error occurred during data fetching.');
       setFetchedData(null);
     } finally {
@@ -691,16 +702,26 @@ const DetailOverview: React.FC<DetailOverviewProps> = ({
         </Suspense>
       }
     >
-      {fetchedData && (
+      {currentData && (
         <Suspense fallback={<Spin />}>
-          <ApprovalActionButtons
-            entityId={fetchedData.id}
-            entityType={viewConfig?.entity_type}
-            entitySchema={viewConfig?.entity_schema}
-            currentStatus={fetchedData.stage_id}
-            submitterUserId={fetchedData.user_id}
-            createdAt={fetchedData.created_at}
-          />
+          {(() => {
+            console.log('[DetailOverview] Rendering ApprovalActionButtons with:', {
+              id: currentData.id,
+              stage_id: currentData.stage_id,
+              user_id: currentData.user_id,
+              created_at: currentData.created_at
+            });
+            return (
+              <ApprovalActionButtons
+                entityId={currentData.id}
+                entityType={viewConfig?.entity_type}
+                entitySchema={viewConfig?.entity_schema}
+                currentStatus={currentData.stage_id}
+                submitterUserId={currentData.user_id}
+                createdAt={currentData.created_at}
+              />
+            );
+          })()}
         </Suspense>
       )}
       {viewConfig?.detailview?.component && (

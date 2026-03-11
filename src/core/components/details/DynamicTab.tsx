@@ -120,7 +120,7 @@ const DynamicTab: React.FC<DynamicTabProps> = (props) => {
   // It also injects a static `testing={false}` prop, likely to control a specific mode in DynamicViews.
   return (
     <div>
-      <DynamicViews {...props} testing={false} />
+      <DynamicViews {...props} testing={false} detailView={true} />
     </div>
   );
 };

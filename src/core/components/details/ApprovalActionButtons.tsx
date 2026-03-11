@@ -40,6 +40,15 @@ const ApprovalActionButtons: React.FC<ApprovalActionButtonsProps> = ({
   // 1. Check if the current user is an eligible approver for this record
   const checkApproverEligibility = async () => {
     // Basic checks to prevent unnecessary API calls
+    console.log('[ApprovalActionButtons] Eligibility Check:', {
+      entityId,
+      currentStatus,
+      submitterUserId,
+      createdAt,
+      orgId: organization?.id,
+      userId: user?.id
+    });
+
     if (!submitterUserId || !createdAt || !organization?.id || !user?.id) {
       setIsApprover(false);
       return;
@@ -55,21 +64,40 @@ const ApprovalActionButtons: React.FC<ApprovalActionButtonsProps> = ({
     setIsCheckingEligibility(true);
 
     try {
+      // Step A: We need the org_user_id of the submitter, not just their user_id
+      // to walk the management chain correctly in the RPC.
+      const { data: orgUserData, error: orgUserError } = await supabase
+        .schema('identity')
+        .from('organization_users')
+        .select('id')
+        .eq('user_id', submitterUserId)
+        .eq('organization_id', organization.id)
+        .single();
+
+      if (orgUserError || !orgUserData) {
+        console.warn('[ApprovalActionButtons] Could not find organization_user for submitter:', submitterUserId);
+        setIsApprover(false);
+        return;
+      }
+
+      const submitterOrgUserId = orgUserData.id;
+
       // Calling the stored procedure/RPC to check eligibility
+      // FIX: p_submitter_user_id -> p_submitter_org_user_id
       const { data: approvers, error } = await supabase.schema('identity').rpc('get_all_approvers', {
-        p_submitter_user_id: submitterUserId,
+        p_submitter_org_user_id: submitterOrgUserId,
         p_hr_role_id: HR_ROLE_ID,
         p_organization_id: organization.id,
         p_created_at: createdAt,
         p_current_time: new Date().toISOString(),
       });
-      console.log("bz", {
-        p_submitter_user_id: submitterUserId,
-        p_hr_role_id: HR_ROLE_ID,
-        p_organization_id: organization.id,
-        p_created_at: createdAt,
-        p_current_time: new Date().toISOString(),
-      }, approvers, user?.id);
+
+      console.log("[ApprovalActionButtons] RPC Results:", {
+        submitterOrgUserId,
+        approvers,
+        currentUserId: user?.id
+      });
+
       if (error) {
         console.error('Error fetching approvers:', error);
         setIsApprover(false);
@@ -77,7 +105,8 @@ const ApprovalActionButtons: React.FC<ApprovalActionButtonsProps> = ({
       }
 
       // Check if the current user's ID is in the list of eligible approvers
-      const isEligible = Array.isArray(approvers) && approvers.some(approver => approver.user_id === user.id);
+      // FIX: approver.user_id -> approver.approver_user_id as per SQL definition
+      const isEligible = Array.isArray(approvers) && approvers.some(approver => approver.approver_user_id === user.id);
 
       setIsApprover(isEligible);
 
@@ -155,6 +184,7 @@ const ApprovalActionButtons: React.FC<ApprovalActionButtonsProps> = ({
     return <Spin tip={isCheckingEligibility ? "Checking eligibility..." : "Submitting action..."} style={{ marginTop: '20px' }} />;
   }
 
+  console.log('[ApprovalActionButtons] Final IsApprover:', isApprover);
   if (!isApprover) return null;
 
   return (

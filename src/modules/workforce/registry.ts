@@ -110,13 +110,13 @@ export async function register(
     // Note: If no specialized Leave component exists, we'll let it fallback to DynamicForm
     // or we can register a placeholder if we find one later.
     // For now, let's at least register a tab if needed for users.
-    registry.registerTab({
-      id: 'leaves',
-      entityTypes: leaveEntityTypes,
-      label: 'workforce:nav.leaves',
-      component: () => import('./components/Leaves'),
-      order: 15,
-    });
+    // registry.registerTab({
+    //   id: 'leaves',
+    //   entityTypes: leaveEntityTypes,
+    //   label: 'workforce:nav.leaves',
+    //   component: () => import('./components/Leaves'),
+    //   order: 15,
+    // });
   }
 
   // 6. Register Agent Activity Report
@@ -135,10 +135,10 @@ export async function register(
     component: () => import('./components/Expensesheet'),
   });
 
-  registry.registerDetailComponent({
-    id: 'leave_application',
-    component: () => import('./components/Leaves'),
-  });
+  // registry.registerDetailComponent({
+  //   id: 'leave_application',
+  //   component: () => import('./components/Leaves'),
+  // });
 
   registry.registerDetailComponent({
     id: 'timesheet',

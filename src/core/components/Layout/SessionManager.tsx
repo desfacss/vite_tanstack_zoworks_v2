@@ -183,7 +183,7 @@ export const SessionManager = () => {
     };
   }, [clearUserSession, setInitialized, setIsLoggingOut, setAuthError, navigate]);
 
-  // --- Effect 2: Sync Data to Store ---
+  // --- Effect 2: Sync Data to Store & Enforce Password Confirmation ---
   useEffect(() => {
     if (isLoggingOut) return;
 
@@ -192,6 +192,16 @@ export const SessionManager = () => {
         return;
       }
       setSession(data);
+
+      // --- PASSWORD CONFIRMATION ENFORCEMENT ---
+      // If user hasn't confirmed their password, force them to the reset_password page
+      const isPasswordConfirmed = data.user?.password_confirmed;
+      const currentPath = window.location.pathname;
+
+      if (isPasswordConfirmed === false && currentPath !== '/reset_password') {
+        console.warn('[SessionManager] 🔐 Password setup required. Redirecting to /reset_password');
+        navigate('/reset_password', { replace: true });
+      }
     }
 
     if (isError && error) {
@@ -199,7 +209,7 @@ export const SessionManager = () => {
       setAuthError(error.message);
       setInitialized(true);
     }
-  }, [isSuccess, isError, data, setSession, clearUserSession, error, organization?.id, isLoggingOut, setAuthError, isStale, setInitialized]);
+  }, [isSuccess, isError, data, setSession, clearUserSession, error, organization?.id, isLoggingOut, setAuthError, isStale, setInitialized, navigate]);
 
   // --- Effect 3: Watch and Apply Theme & Accessibility Configuration ---
   useEffect(() => {

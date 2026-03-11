@@ -4,11 +4,13 @@ import { ArrowLeft, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabase';
 
 const ResetPassword = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();
+    const queryClient = useQueryClient();
     const [form] = Form.useForm();
     const [loading, setLoading] = useState(false);
 
@@ -31,8 +33,27 @@ const ResetPassword = () => {
             });
 
             if (error) throw error;
+
+            // --- CONFIRM PASSWORD STATUS ---
+            // Tell the backend that the user has successfully set their password.
+            const { error: rpcError } = await supabase
+                .schema('identity')
+                .rpc('confirm_user_password');
+
+            if (rpcError) {
+                console.warn('Failed to confirm password status:', rpcError.message);
+                // We don't throw here to avoid blocking the user if the RPC fails 
+                // but the password was actually updated in auth.
+            }
+
+            // --- REFRESH SESSION DATA ---
+            // Invalidate the cache to ensure SessionManager sees the new status
+            await queryClient.invalidateQueries({ queryKey: ['user-session'] });
+
             message.success(t('core.auth.message.reset_success'));
-            navigate('/dashboard');
+            
+            // Navigate to dashboard - SessionManager should now allow it
+            navigate('/dashboard', { replace: true });
         } catch (error: any) {
             console.error('Password update error:', error.message);
             message.error(t('core.auth.message.reset_failed'));

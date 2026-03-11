@@ -30,7 +30,7 @@ const WebRegister: React.FC = () => {
 
     setSearching(true);
     try {
-      const { data, error } = await supabase.rpc('search_crm_accounts', {
+      const { data, error } = await supabase.rpc('onboard_search_crm_accounts', {
         p_query: value
       });
 
@@ -54,7 +54,7 @@ const WebRegister: React.FC = () => {
 
     setLoading(true);
     try {
-      const { error } = await supabase.rpc('request_zoworks_account', {
+      const { error } = await supabase.rpc('onboard_request_zoworks_account', {
         p_account_id: selectedAccount.id,
         p_admin_first_name: values.firstName,
         p_admin_last_name: values.lastName,

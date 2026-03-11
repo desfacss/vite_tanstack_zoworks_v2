@@ -236,7 +236,7 @@ const InviteUserModal: React.FC = () => {
       }
 
       // 3. Call the centralized RPC to handle all record creation/mapping
-      const { data: rpcData, error: rpcError } = await supabase.schema('identity').rpc('invite_user_to_org', {
+      const { data: rpcData, error: rpcError } = await supabase.schema('identity').rpc('onboard_invite_user_to_org', {
         p_email: email,
         p_first_name: firstName,
         p_last_name: lastName,

@@ -785,6 +785,8 @@ interface DynamicViewsProps {
    * (e.g., showing orders for a specific customer).
    */
   parentRecord?: Record<string, any>;
+  /** Alias for detailView used in some parts of the system. */
+  details_overview?: boolean;
 }
 
 /**
@@ -800,7 +802,8 @@ const DynamicViews: React.FC<DynamicViewsProps> = ({
   defaultFilters: propDefaultFilters = {},
   searchConfig,
   schema,
-  detailView = false,
+  details_overview,
+  detailView = details_overview || false,
   parentRecord,
 }) => {
   // --- Aliases and Hooks Setup ---

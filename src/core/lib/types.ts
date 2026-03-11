@@ -59,6 +59,7 @@ export interface User {
   email?: string | null;
   mobile?: string | null;
   is_active: boolean;
+  password_confirmed?: boolean | null;
   roles?: {
     id: string;
     name: string;
