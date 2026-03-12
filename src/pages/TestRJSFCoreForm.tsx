@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import RJSFCoreForm from '@/core/components/RJSFCoreForm';
 import { Card, Select, Radio, Button, Space, message, Typography, Tabs, Divider, Row, Col, Switch, Input } from 'antd';
 import { supabase } from '@/core/lib/supabase';
-import { ThunderboltOutlined, SaveOutlined } from '@ant-design/icons';
+import { ThunderboltOutlined, SaveOutlined, PlusOutlined } from '@ant-design/icons';
 import { Trash2, Settings2 } from 'lucide-react';
 import AceEditor from 'react-ace';
 import { useAuthStore, useThemeStore } from '@/core/lib/store';
@@ -17,6 +17,23 @@ import { get, set, unset } from 'lodash';
 import { theme as antdTheme } from 'antd';
 
 const { Text } = Typography;
+
+// Helper to recursively fix invalid widgets (e.g., 'input' -> 'text')
+const cleanupUiSchema = (uiSchema: any): any => {
+    if (!uiSchema || typeof uiSchema !== 'object') return uiSchema;
+    
+    const clean = Array.isArray(uiSchema) ? [...uiSchema] : { ...uiSchema };
+    
+    Object.keys(clean).forEach(key => {
+        if (key === 'ui:widget' && clean[key] === 'input') {
+            clean[key] = 'text';
+        } else if (typeof clean[key] === 'object') {
+            clean[key] = cleanupUiSchema(clean[key]);
+        }
+    });
+    
+    return clean;
+};
 
 // Helper to recursively extract all field paths from data_schema
 const getFlattenedFields = (properties: any, prefix = ''): { path: string, label: string, depth: number }[] => {
@@ -57,10 +74,16 @@ const TestRJSFCoreForm = () => {
     const [formName, setFormName] = useState<string>('');
     const [isPageManagerVisible, setIsPageManagerVisible] = useState(false);
     const [uiLayout, setUiLayout] = useState<string[][][]>([]);
+    const [masterFields, setMasterFields] = useState<{ key: string, display_name: string, type?: string }[]>([]);
+
+    // States for "Add Field" UI
+    const [newFieldName, setNewFieldName] = useState<string>('');
+    const [newFieldType, setNewFieldType] = useState<string>('input');
+    const [isAddingField, setIsAddingField] = useState(false);
 
     const WIDGET_OPTIONS = [
         { label: 'Default', value: 'default' },
-        { label: 'Input', value: 'input' },
+        { label: 'Input', value: 'text' },
         { label: 'Textarea', value: 'textarea' },
         { label: 'Password', value: 'password' },
         { label: 'Select Custom', value: 'SelectCustomWidget' },
@@ -114,6 +137,42 @@ const TestRJSFCoreForm = () => {
         fetchEntities();
     }, []);
 
+    // Fetch entity metadata when selectedEntity changes
+    useEffect(() => {
+        const fetchMetadata = async () => {
+            if (!selectedEntity) {
+                setMasterFields([]);
+                return;
+            }
+
+            try {
+                const [schema, type] = selectedEntity.split('.');
+                const { data, error } = await supabase
+                    .schema('core')
+                    .from('entities')
+                    .select('v_metadata')
+                    .eq('entity_schema', schema)
+                    .eq('entity_type', type)
+                    .maybeSingle();
+
+                if (error) throw error;
+                if (data) {
+                    const fields = data.v_metadata || [];
+                    const formatted = fields.map((f: any) => ({
+                        key: f.key,
+                        display_name: f.display_name || f.key,
+                        type: f.type || 'string'
+                    }));
+                    setMasterFields(formatted);
+                }
+            } catch (err: any) {
+                console.error('Failed to fetch field metadata:', err);
+            }
+        };
+
+        fetchMetadata();
+    }, [selectedEntity]);
+
     const handleGenerate = async () => {
         if (!selectedEntity) return;
         setGenerating(true);
@@ -139,8 +198,12 @@ const TestRJSFCoreForm = () => {
                     db_schema: (data as any).db_schema || (data as any).dbSchema
                 };
                 setGeneratedSchema(schemas);
+                
+                // Cleanup ui_schema of any invalid 'input' widgets recursively
+                const cleanUiSchema = cleanupUiSchema(schemas.ui_schema);
+
                 setDataSchemaStr(JSON.stringify(schemas.data_schema, null, 2));
-                setUiSchemaStr(JSON.stringify(schemas.ui_schema, null, 2));
+                setUiSchemaStr(JSON.stringify(cleanUiSchema, null, 2));
                 setDbSchemaStr(JSON.stringify(schemas.db_schema, null, 2));
 
                 // Set default form name
@@ -295,6 +358,80 @@ const TestRJSFCoreForm = () => {
         }
     };
 
+    const handleAddField = () => {
+        if (!newFieldName) {
+            message.warning('Please select or enter a field name');
+            return;
+        }
+
+        try {
+            const currentData = JSON.parse(dataSchemaStr || '{"type":"object","properties":{},"required":[]}');
+            const currentUi = JSON.parse(uiSchemaStr || '{}');
+
+            // Skip if field already exists
+            if (get(currentData, ['properties', newFieldName])) {
+                message.warning(`Field "${newFieldName}" already exists`);
+                return;
+            }
+
+            // Get field metadata if available to determine default widget
+            const fieldMeta = masterFields.find(f => f.key === newFieldName);
+            const type = fieldMeta?.type || 'string';
+            
+            // Map common metadata types to RJSF types/widgets
+            let rjsfType = 'string';
+            let defaultWidget = 'text';
+
+            if (type === 'boolean') {
+                rjsfType = 'boolean';
+                defaultWidget = 'checkbox';
+            } else if (type === 'integer' || type === 'number') {
+                rjsfType = 'number';
+                defaultWidget = 'text';
+            } else if (type.includes('timestamp') || type.includes('date')) {
+                defaultWidget = 'date';
+            }
+
+            // Add to data schema
+            const newProperty = {
+                type: rjsfType,
+                title: fieldMeta?.display_name || newFieldName
+            };
+            set(currentData, ['properties', newFieldName], newProperty);
+
+            // Add to UI schema
+            set(currentUi, [newFieldName, 'ui:widget'], newFieldType !== 'default' ? newFieldType : defaultWidget);
+
+            // Final recursive cleanup just in case
+            const cleanUi = cleanupUiSchema(currentUi);
+
+            // Update strings
+            const newDataStr = JSON.stringify(currentData, null, 2);
+            const newUiStr = JSON.stringify(cleanUi, null, 2);
+
+            setDataSchemaStr(newDataStr);
+            setUiSchemaStr(newUiStr);
+
+            // Update layout if exists
+            if (currentUi['ui:layout']) {
+                const updatedLayout = [...currentUi['ui:layout']];
+                if (updatedLayout.length > 0 && updatedLayout[0].length > 0) {
+                    updatedLayout[0].push([newFieldName]);
+                    setUiLayout(updatedLayout);
+                    // Update uiSchemaStr with layout
+                    currentUi['ui:layout'] = updatedLayout;
+                    setUiSchemaStr(JSON.stringify(currentUi, null, 2));
+                }
+            }
+
+            message.success(`Field "${newFieldName}" added`);
+            setNewFieldName('');
+            setIsAddingField(false);
+        } catch (e) {
+            message.error('Error adding field: ' + (e as Error).message);
+        }
+    };
+
     const handleWidgetChange = (fieldPath: string, widget: string) => {
         try {
             const currentUi = JSON.parse(uiSchemaStr);
@@ -329,10 +466,13 @@ const TestRJSFCoreForm = () => {
             const ui_schema = JSON.parse(uiSchemaStr);
             const db_schema = JSON.parse(dbSchemaStr);
 
+            // Safety cleanup for invalid widgets
+            const cleanUiSchema = cleanupUiSchema(ui_schema);
+
             setGeneratedSchema((prev: any) => ({
                 ...prev,
                 data_schema,
-                ui_schema,
+                ui_schema: cleanUiSchema,
                 db_schema
             }));
         } catch (e) {
@@ -435,6 +575,82 @@ const TestRJSFCoreForm = () => {
                                             );
                                         })}
                                         {flattenedFields.length === 0 && <Text type="secondary">No fields in schema</Text>}
+                                        
+                                        <Divider style={{ margin: '8px 0' }} />
+                                        
+                                        {!isAddingField ? (
+                                            <Button 
+                                                type="dashed" 
+                                                block 
+                                                icon={<PlusOutlined />} 
+                                                onClick={() => setIsAddingField(true)}
+                                            >
+                                                Add Field
+                                            </Button>
+                                        ) : (
+                                            <div style={{ 
+                                                padding: '12px', 
+                                                background: token.colorFillAlter, 
+                                                borderRadius: token.borderRadiusLG,
+                                                border: `1px dashed ${token.colorBorder}`,
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                gap: 8
+                                            }}>
+                                                <Text strong>New Field</Text>
+                                                <Select
+                                                    showSearch
+                                                    placeholder="Select or type field name"
+                                                    value={newFieldName}
+                                                    onChange={setNewFieldName}
+                                                    style={{ width: '100%' }}
+                                                    options={masterFields.map(f => ({ label: f.display_name, value: f.key }))}
+                                                    onSearch={(val) => {
+                                                        // Allow custom field names if not in master list
+                                                        if (!masterFields.find(f => f.key === val)) {
+                                                            setNewFieldName(val);
+                                                        }
+                                                    }}
+                                                    dropdownRender={(menu) => (
+                                                        <>
+                                                            {menu}
+                                                            <Divider style={{ margin: '8px 0' }} />
+                                                            <div style={{ padding: '0 8px 4px' }}>
+                                                                <Input 
+                                                                    placeholder="Manual entry..." 
+                                                                    value={newFieldName}
+                                                                    onChange={(e) => setNewFieldName(e.target.value)}
+                                                                    onKeyDown={(e) => e.stopPropagation()}
+                                                                />
+                                                            </div>
+                                                        </>
+                                                    )}
+                                                />
+                                                <Select
+                                                    value={newFieldType}
+                                                    onChange={setNewFieldType}
+                                                    options={WIDGET_OPTIONS}
+                                                    style={{ width: '100%' }}
+                                                />
+                                                <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+                                                    <Button 
+                                                        type="primary" 
+                                                        size="small" 
+                                                        onClick={handleAddField}
+                                                        style={{ flex: 1 }}
+                                                    >
+                                                        Add
+                                                    </Button>
+                                                    <Button 
+                                                        size="small" 
+                                                        onClick={() => setIsAddingField(false)}
+                                                        style={{ flex: 1 }}
+                                                    >
+                                                        Cancel
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                 </Card>
                             </Col>

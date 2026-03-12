@@ -68,33 +68,89 @@ const WebRegister: React.FC = () => {
     setStep(2);
   };
 
-  const onFinish = async (values: any) => {
+  // const onFinish = async (values: any) => {
+  //   if (!selectedAccount) return;
+
+  //   setLoading(true);
+  //   try {
+  //     const modulesParam = searchParams.get('modules');
+  //     const requestedModulesList = modulesParam ? modulesParam.split(',') : null;
+
+  //     const payload: any = {
+  //       p_admin_first_name: values.firstName,
+  //       p_admin_last_name: values.lastName,
+  //       p_admin_email: values.email,
+  //       p_admin_mobile: values.mobile,
+  //       p_requested_modules: requestedModulesList,
+  //       p_details: {}
+  //     };
+
+  //     if (selectedAccount.id === 'NEW') {
+  //       payload.p_org_name = selectedAccount.name;
+  //       if (values.domain) {
+  //         payload.p_details.domain = values.domain;
+  //       }
+  //     } else {
+  //       // payload.p_unified_org_id = selectedAccount.id;
+  //       payload.p_org_name = selectedAccount.name;
+  //     }
+
+  //     const { error } = await supabase.rpc('onboard_request_zoworks_account', payload);
+
+  //     if (error) throw error;
+
+  //     message.success(t('core.auth.message.registration_request_success') || 'Registration request submitted! Pending admin approval.');
+  //     form.resetFields();
+  //     setSelectedAccount(null);
+  //     setStep(1);
+  //   } catch (error: any) {
+  //     console.error('Registration Error:', error);
+  //     notification.error({
+  //       message: 'Registration Error',
+  //       description: error.message || 'An error occurred during registration.'
+  //     });
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+const onFinish = async (values: any) => {
     if (!selectedAccount) return;
 
     setLoading(true);
     try {
       const modulesParam = searchParams.get('modules');
-      const requestedModulesList = modulesParam ? modulesParam.split(',') : null;
+      const requestedModulesList = modulesParam ? modulesParam.split(',') : [];
 
-      const payload: any = {
+      let accountId = selectedAccount.id;
+
+      // 1. Vector C: If it's a brand new organization, create the lead account first
+      if (accountId === 'NEW') {
+        const { data: leadData, error: leadError } = await supabase.rpc('onboard_create_lead_account', {
+          p_org_name: selectedAccount.name,
+          p_domain: values.domain || null,
+          p_industry: null,
+          p_details: {}
+        });
+
+        if (leadError) throw leadError;
+        if (!leadData?.account_id) throw new Error("Failed to generate lead account ID");
+        
+        accountId = leadData.account_id;
+      }
+
+      // 2. Build the exact payload for the realigned RPC
+      const payload = {
+        p_account_id: accountId,
         p_admin_first_name: values.firstName,
         p_admin_last_name: values.lastName,
         p_admin_email: values.email,
-        p_admin_mobile: values.mobile,
+        p_admin_mobile: values.mobile || null,
         p_requested_modules: requestedModulesList,
         p_details: {}
       };
 
-      if (selectedAccount.id === 'NEW') {
-        payload.p_org_name = selectedAccount.name;
-        if (values.domain) {
-          payload.p_details.domain = values.domain;
-        }
-      } else {
-        payload.p_unified_org_id = selectedAccount.id;
-        payload.p_org_name = selectedAccount.name;
-      }
-
+      // 3. Submit the main onboarding request
       const { error } = await supabase.rpc('onboard_request_zoworks_account', payload);
 
       if (error) throw error;
