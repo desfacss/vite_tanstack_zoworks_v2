@@ -1755,3 +1755,349 @@ BEGIN
   -- The impersonation is automatically cleared at the end of the transaction.
   RETURN v_result;
 END;$function$
+-- identity.onboard_rpcs.sql
+-- Updates identity provisioning logic for V5 Onboarding Strategy
+-- Target: Live DB
+
+-- 1. Update identity.onboard_invite_user_to_org
+CREATE OR REPLACE FUNCTION identity.onboard_invite_user_to_org(
+    p_email text, 
+    p_first_name text, 
+    p_last_name text, 
+    p_org_id uuid, 
+    p_role_id uuid, 
+    p_team_id uuid, 
+    p_location_id uuid, 
+    p_auth_id uuid DEFAULT NULL::uuid, 
+    p_details jsonb DEFAULT '{}'::jsonb
+)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+AS $function$
+DECLARE
+    v_user_id UUID;
+    v_org_user_id UUID;
+    v_full_name TEXT := TRIM(COALESCE(p_first_name, '') || ' ' || COALESCE(p_last_name, ''));
+    v_current_user_id UUID := auth.uid();
+BEGIN
+    SET LOCAL search_path = identity, hr, core, public;
+
+    -- 1. Get Global Identity User
+    SELECT id INTO v_user_id FROM identity.users WHERE email = p_email;
+    
+    IF v_user_id IS NULL THEN
+        -- Brand new user across the entire platform
+        IF p_auth_id IS NULL THEN
+            RAISE EXCEPTION 'auth_id is required for new users';
+        END IF;
+
+        INSERT INTO identity.users (
+            auth_id, name, email, details, created_by, updated_by, pref_organization_id, password_confirmed
+        )
+        VALUES (
+            p_auth_id, v_full_name, p_email, 
+            p_details || jsonb_build_object('first_name', p_first_name, 'last_name', p_last_name, 'email', p_email),
+            v_current_user_id, v_current_user_id, p_org_id, false
+        )
+        RETURNING id INTO v_user_id;
+
+    ELSE
+        -- CRITICAL CROSS-TENANT FIX:
+        -- The user already exists in `identity.users` (likely from another tenant).
+        -- 1. Set their default login to this new tenant.
+        -- 2. If they somehow didn't have an auth_id mapped yet, map it now.
+        UPDATE identity.users 
+        SET 
+            pref_organization_id = p_org_id,
+            auth_id = COALESCE(auth_id, p_auth_id),
+            updated_at = now()
+        WHERE id = v_user_id;
+    END IF;
+
+    -- 2. Map User to Organization (Tenant Mapping)
+    INSERT INTO identity.organization_users (
+        organization_id, user_id, location_id, is_active, persona_type,
+        details, created_by, updated_by
+    ) VALUES (
+        p_org_id, v_user_id, p_location_id, true, 'worker',
+        jsonb_build_object('person', jsonb_build_object('name', jsonb_build_object('family', p_last_name, 'given', p_first_name))),
+        v_current_user_id, v_current_user_id
+    )
+    ON CONFLICT (organization_id, user_id) 
+    DO UPDATE SET 
+        location_id = EXCLUDED.location_id,
+        is_active = true,
+        updated_at = now()
+    RETURNING id INTO v_org_user_id;
+
+    -- 3. Enrich HR Profile
+    BEGIN
+        UPDATE hr.profiles SET
+            job_title = p_details->>'designation',
+            department = p_details->>'department',
+            employment_type = COALESCE(p_details->>'employment_type', 'full-time'),
+            employment_status = 'active', 
+            updated_at = now(),
+            updated_by = v_current_user_id
+        WHERE id = v_org_user_id;
+    EXCEPTION WHEN OTHERS THEN
+        RAISE WARNING 'HR Profile Enrichment skipped for org_user %: %', v_org_user_id, SQLERRM;
+    END;
+
+    -- 4. Assign Team
+    IF p_team_id IS NOT NULL THEN
+        INSERT INTO identity.user_teams (organization_user_id, team_id, organization_id, created_by)
+        VALUES (v_org_user_id, p_team_id, p_org_id, v_current_user_id)
+        ON CONFLICT (organization_user_id, team_id) DO NOTHING;
+    END IF;
+
+    -- 5. Assign Role
+    IF p_role_id IS NOT NULL AND p_team_id IS NOT NULL THEN
+        INSERT INTO identity.user_roles (organization_user_id, role_id, team_id, organization_id, created_by)
+        VALUES (v_org_user_id, p_role_id, p_team_id, p_org_id, v_current_user_id)
+        ON CONFLICT (organization_user_id, role_id, team_id) DO NOTHING;
+    END IF;
+
+    RETURN jsonb_build_object(
+        'status', 'success',
+        'user_id', v_user_id,
+        'org_user_id', v_org_user_id
+    );
+END;
+$function$;
+
+-- 2. Update identity.onboard_promote_to_tenant
+CREATE OR REPLACE FUNCTION identity.onboard_promote_to_tenant(p_org_id uuid, p_auth_id uuid DEFAULT NULL::uuid)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+AS $function$
+DECLARE
+    v_contact_id UUID;
+    v_contact_name TEXT;
+    v_contact_email TEXT;
+    v_contact_mobile TEXT;
+    v_first_name TEXT;
+    v_last_name TEXT;
+    v_role_id UUID;
+    v_team_id UUID;
+    v_location_id UUID;
+    v_user_id UUID;
+    v_res JSONB;
+    v_requested_modules JSONB;
+BEGIN
+    SET LOCAL search_path = identity, crm, hr, public;
+
+    -- 1. Fetch Claiming Contact Details and Requested Modules
+    SELECT 
+        o.claimed_by_contact_id, c.name, c.email, c.phone, o.settings->'requested_modules'
+    INTO 
+        v_contact_id, v_contact_name, v_contact_email, v_contact_mobile, v_requested_modules
+    FROM identity.organizations o
+    JOIN unified.contacts c ON o.claimed_by_contact_id = c.id
+    WHERE o.id = p_org_id;
+
+    IF v_contact_id IS NULL THEN
+        RAISE EXCEPTION 'Organization % not found or has no claiming contact.', p_org_id;
+    END IF;
+
+    -- Split name for potential invite
+    v_first_name := split_part(coalesce(v_contact_name, ' '), ' ', 1);
+    v_last_name := NULLIF(substring(coalesce(v_contact_name, ' ') from ' (.*)$'), '');
+
+    -- 2. Check if Identity user exists
+    SELECT id INTO v_user_id FROM identity.users WHERE email = v_contact_email;
+
+    -- 3. If user doesn't exist and no auth_id provided, signal frontend to invite
+    IF v_user_id IS NULL AND p_auth_id IS NULL THEN
+        RETURN jsonb_build_object(
+            'status', 'NEED_INVITE',
+            'email', v_contact_email,
+            'first_name', v_first_name,
+            'last_name', v_last_name
+        );
+    END IF;
+
+    -- 4. Activate Organization
+    UPDATE identity.organizations 
+    SET is_active = true, 
+        updated_at = now()
+    WHERE id = p_org_id;
+
+    -- 5. Dynamic Module Provisioning based on Requested Modules
+    -- Always create an identity.modules row for the Tenant
+    INSERT INTO identity.modules (
+        organization_id, 
+        is_active, 
+        created_by,
+        sub_modules
+    )
+    VALUES (
+        p_org_id, 
+        true, 
+        auth.uid(),
+        jsonb_build_object(
+            'config', true,
+            'settings', true,
+            'users', true,
+            'crm', COALESCE(v_requested_modules ? 'crm', false),
+            'engage', COALESCE(v_requested_modules ? 'engage', false),
+            'documents', COALESCE(v_requested_modules ? 'documents', false)
+        )
+    )
+    ON CONFLICT (organization_id) DO UPDATE SET
+        sub_modules = identity.modules.sub_modules || EXCLUDED.sub_modules,
+        updated_at = now();
+
+
+    -- 6. Initial Setup (Role, Location, Team)
+    INSERT INTO identity.roles (organization_id, name, permissions, is_active)
+    VALUES (p_org_id, 'SuperAdmin', '{"*": true}'::jsonb, true)
+    ON CONFLICT (organization_id, name) DO UPDATE SET updated_at = now()
+    RETURNING id INTO v_role_id;
+
+    INSERT INTO identity.locations (organization_id, name, time_zone, is_active)
+    VALUES (p_org_id, 'Headquarters', 'UTC', true)
+    ON CONFLICT (organization_id, name) DO UPDATE SET updated_at = now()
+    RETURNING id INTO v_location_id;
+
+    INSERT INTO identity.teams (organization_id, location_id, name)
+    VALUES (p_org_id, v_location_id, 'Leadership Team')
+    ON CONFLICT (location_id, name) DO UPDATE SET updated_at = now()
+    RETURNING id INTO v_team_id;
+
+    -- 7. Invite/Provision User
+    -- This handles identity.users, cross-tenant pref mapping, roles, and teams.
+    SELECT identity.onboard_invite_user_to_org(
+        p_email := v_contact_email,
+        p_first_name := v_first_name,
+        p_last_name := COALESCE(v_last_name, ''),
+        p_org_id := p_org_id,
+        p_role_id := v_role_id,
+        p_team_id := v_team_id,
+        p_location_id := v_location_id,
+        p_auth_id := p_auth_id,
+        p_details := jsonb_build_object('mobile', v_contact_mobile, 'persona', 'admin')
+    ) INTO v_res;
+
+    -- 8. Mark Contact as Promoted/Converted
+    UPDATE unified.contacts SET intent_category = 'CONVERTED' WHERE id = v_contact_id;
+
+    RETURN jsonb_build_object(
+        'status', 'success',
+        'organization_id', p_org_id,
+        'user_id', COALESCE(v_user_id, (v_res->>'user_id')::uuid),
+        'details', v_res
+    );
+END;
+$function$;
+-- public.onboard_request_zoworks_account.sql
+-- Rewritten for V5 Architecture with unified.organizations and requested_modules
+-- Run against: Zoworks Live DB
+
+DROP FUNCTION IF EXISTS public.onboard_request_zoworks_account;
+
+CREATE OR REPLACE FUNCTION public.onboard_request_zoworks_account(
+    p_org_name text DEFAULT NULL::text, 
+    p_unified_org_id uuid DEFAULT NULL::uuid, 
+    p_admin_first_name text DEFAULT NULL::text, 
+    p_admin_last_name text DEFAULT NULL::text, 
+    p_admin_email text DEFAULT NULL::text, 
+    p_admin_mobile text DEFAULT NULL::text, 
+    p_requested_modules jsonb DEFAULT NULL::jsonb,
+    p_details jsonb DEFAULT '{}'::jsonb
+)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+AS $function$
+DECLARE
+    v_unified_org_id UUID := p_unified_org_id;
+    v_contact_id UUID;
+    v_identity_org_id UUID;
+    v_org_name TEXT := p_org_name;
+    v_settings JSONB := '{}'::jsonb;
+BEGIN
+    SET LOCAL search_path = unified, crm, identity, public;
+
+    -- 1. Validate/Resolve Master Tenant Account (unified.organizations)
+    IF v_unified_org_id IS NOT NULL THEN
+        SELECT name INTO v_org_name FROM unified.organizations WHERE id = v_unified_org_id;
+        IF v_org_name IS NULL THEN
+            RAISE EXCEPTION 'Unified Organization % not found', v_unified_org_id;
+        END IF;
+    ELSE
+        -- Vector C: Try to find by name if unified_org_id not provided
+        IF p_org_name IS NOT NULL THEN
+            SELECT id, name INTO v_unified_org_id, v_org_name FROM unified.organizations WHERE name = p_org_name LIMIT 1;
+            
+            IF v_unified_org_id IS NULL THEN
+                -- Create new Unified Organization immediately to anchor the system
+                INSERT INTO unified.organizations (name, details)
+                VALUES (p_org_name, p_details)
+                RETURNING id INTO v_unified_org_id;
+                v_org_name := p_org_name;
+            END IF;
+        ELSE
+             RAISE EXCEPTION 'Either p_unified_org_id or p_org_name must be provided.';
+        END IF;
+    END IF;
+
+    -- 2. Validate/Resolve CRM Contact (Lead for Zoworks Tenant)
+    IF p_admin_email IS NOT NULL THEN
+        -- Upsert contact by email as a Lead under this Organization
+        -- We link it to unified.organizations
+        INSERT INTO unified.contacts (
+            organization_id, 
+            name, 
+            first_name,
+            last_name,
+            email, 
+            phone,
+            intent_category,
+            details
+        )
+        VALUES (
+            v_unified_org_id, 
+            TRIM(COALESCE(p_admin_first_name, '') || ' ' || COALESCE(p_admin_last_name, '')), 
+            p_admin_first_name,
+            p_admin_last_name,
+            p_admin_email, 
+            p_admin_mobile,
+            'CRM_LEAD',
+            p_details
+        )
+        ON CONFLICT (email) DO UPDATE SET
+            organization_id = EXCLUDED.organization_id,
+            name = COALESCE(NULLIF(EXCLUDED.name, ' '), unified.contacts.name),
+            first_name = COALESCE(EXCLUDED.first_name, unified.contacts.first_name),
+            last_name = COALESCE(EXCLUDED.last_name, unified.contacts.last_name),
+            phone = COALESCE(EXCLUDED.phone, unified.contacts.phone),
+            intent_category = 'CRM_LEAD',
+            details = unified.contacts.details || EXCLUDED.details
+        RETURNING id INTO v_contact_id;
+    ELSE
+        RAISE EXCEPTION 'Admin contact details (email) are required for new requests.';
+    END IF;
+
+    -- 3. Prepare Settings payload with the Requested Modules
+    IF p_requested_modules IS NOT NULL THEN
+        v_settings := jsonb_build_object('requested_modules', p_requested_modules);
+    END IF;
+
+    v_settings := v_settings || p_details;
+
+    -- 4. Create Inactive Organization in Identity Scheme (The Actual Tenant)
+    INSERT INTO identity.organizations (name, is_active, claimed_by_contact_id, settings, unified_organization_id)
+    VALUES (v_org_name, false, v_contact_id, v_settings, v_unified_org_id)
+    RETURNING id INTO v_identity_org_id;
+
+    RETURN jsonb_build_object(
+        'status', 'requested',
+        'organization_id', v_identity_org_id,       -- Identity Schema Org ID (Tenant ID)
+        'unified_organization_id', v_unified_org_id, -- Master Registry ID
+        'contact_id', v_contact_id
+    );
+END;
+$function$;
