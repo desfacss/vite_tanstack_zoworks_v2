@@ -4,7 +4,7 @@ const Contacts: React.FC = () => {
   
   return (
     <DynamicViews entityType="contacts"
-        entitySchema={'external'}/>
+        entitySchema={'crm'}/>
   );
 };
 

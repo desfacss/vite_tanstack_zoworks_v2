@@ -88,6 +88,9 @@ interface DynamicTabProps {
   entitySchema?: string;
 
   /** A flag to indicate if the view is part of a larger detail page. Optional. */
+  detailView?: boolean;
+
+  /** A flag to indicate if the view is part of a larger detail page (alias). Optional. */
   details_overview?: boolean;
 
   /** Default filters to apply to the view's data query. Optional. */
@@ -120,7 +123,7 @@ const DynamicTab: React.FC<DynamicTabProps> = (props) => {
   // It also injects a static `testing={false}` prop, likely to control a specific mode in DynamicViews.
   return (
     <div>
-      <DynamicViews {...props} testing={false} detailView={true} />
+      <DynamicViews {...props} testing={false} detailView={props.detailView || props.details_overview || false} />
     </div>
   );
 };

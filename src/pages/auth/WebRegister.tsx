@@ -155,7 +155,7 @@ const onFinish = async (values: any) => {
 
       if (error) throw error;
 
-      message.success(t('core.auth.message.registration_request_success') || 'Registration request submitted! Pending admin approval.');
+      message.success("Thanks we will get back - after web registration" ||t('core.auth.message.registration_request_success') || 'Registration request submitted! Pending admin approval.');
       form.resetFields();
       setSelectedAccount(null);
       setStep(1);

@@ -32,10 +32,19 @@ interface ConfigEditorProps {
   detailView?: DetailView;
   entityType: string;
   entitySchema?: string;
+  entityId?: string;
+  viewConfigId?: string | null;
   onSave?: (data: DetailView) => void;
 }
 
-const ConfigEditor: React.FC<ConfigEditorProps> = ({ detailView, entityType, entitySchema = 'public', onSave }) => {
+const ConfigEditor: React.FC<ConfigEditorProps> = ({ 
+  detailView, 
+  entityType, 
+  entitySchema = 'public', 
+  entityId: propEntityId,
+  viewConfigId: propViewConfigId,
+  onSave 
+}) => {
   const [form] = Form.useForm();
   const [entityId, setEntityId] = useState<string | null>(null);
   const [viewConfigId, setViewConfigId] = useState<string | null>(null);
@@ -43,45 +52,62 @@ const ConfigEditor: React.FC<ConfigEditorProps> = ({ detailView, entityType, ent
   const tabViewOptions = ['tableview', 'gridview', 'kanbanview', 'calendarview', 'timelineview', 'ganttview', 'dashboardview', 'mapview'].sort();
 
   useEffect(() => {
+    // Sync with props if provided
+    if (propEntityId) setEntityId(propEntityId);
+    if (propViewConfigId !== undefined) setViewConfigId(propViewConfigId);
+
     async function fetchViewConfig() {
+      // If props already provided most info, we might skip full fetch or just update normalized data
+      // However, to be safe and reactive to changes in parent, we fetch if not provided or when entity changes
       if (!entityType || !entitySchema) {
         form.resetFields();
         return;
       }
 
       try {
-        const { data: entityData, error: entityError } = await supabase
-          .schema('core')
-          .from('entities')
-          .select('id')
-          .eq('entity_type', entityType)
-          .eq('entity_schema', entitySchema)
-          .single();
+        let currentEntityId = propEntityId;
+        if (!currentEntityId) {
+          const { data: entityData, error: entityError } = await supabase
+            .schema('core')
+            .from('entities')
+            .select('id')
+            .eq('entity_type', entityType)
+            .eq('entity_schema', entitySchema)
+            .single();
 
-        if (entityError && entityError.code !== 'PGRST116') {
-          throw entityError;
+          if (entityError && entityError.code !== 'PGRST116') {
+            throw entityError;
+          }
+
+          if (!entityData) {
+            form.resetFields();
+            return;
+          }
+          currentEntityId = entityData.id;
+          setEntityId(entityData.id);
         }
 
-        if (!entityData) {
-          form.resetFields();
-          return;
+        let currentViewConfigId = propViewConfigId;
+        let detailsOverview = null;
+
+        if (currentViewConfigId === undefined || currentViewConfigId === null) {
+          const { data: viewConfigData, error: viewConfigError } = await supabase
+            .schema('core')
+            .from('view_configs')
+            .select('id, details_overview')
+            .eq('entity_id', currentEntityId)
+            .single();
+
+          if (viewConfigError && viewConfigError.code !== 'PGRST116') {
+            throw viewConfigError;
+          }
+          currentViewConfigId = viewConfigData?.id || null;
+          detailsOverview = viewConfigData?.details_overview;
         }
-        
-        setEntityId(entityData.id);
 
-        const { data: viewConfigData, error: viewConfigError } = await supabase
-          .schema('core')
-          .from('view_configs')
-          .select('id, details_overview')
-          .eq('entity_id', entityData.id)
-          .single();
+        setViewConfigId(currentViewConfigId ?? null);
 
-        if (viewConfigError && viewConfigError.code !== 'PGRST116') {
-          throw viewConfigError;
-        }
-
-        const currentDetailView = viewConfigData?.details_overview || detailView;
-        setViewConfigId(viewConfigData?.id || null);
+        const currentDetailView = detailsOverview || detailView;
 
         const normalizedDetailView = {
           staticTabs: (currentDetailView?.staticTabs || []).map((tab: StaticTab) => ({
@@ -107,16 +133,18 @@ const ConfigEditor: React.FC<ConfigEditorProps> = ({ detailView, entityType, ent
         console.error('Error fetching view configuration:', error.message);
         message.error('Failed to load configuration: ' + error.message);
         form.resetFields();
-        setEntityId(null);
-        setViewConfigId(null);
+        if (!propEntityId) setEntityId(null);
+        if (propViewConfigId === undefined) setViewConfigId(null);
       }
     }
 
     fetchViewConfig();
-  }, [detailView, entityType, entitySchema, form]);
+  }, [detailView, entityType, entitySchema, form, propEntityId, propViewConfigId]);
 
   const onFinish = async (values: DetailView) => {
     if (!viewConfigId || !entityId) {
+      console.log("viewConfigId", viewConfigId);
+      console.log("entityId", entityId);
       message.error('Entity and View Config ID are missing. Cannot save.');
       return;
     }

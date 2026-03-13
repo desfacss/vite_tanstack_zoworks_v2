@@ -777,6 +777,8 @@ interface DynamicViewsProps {
   };
   /** The schema configuration for forms. */
   schema?: any;
+  /** A flag for enabling testing configurations. */
+  testing?: boolean;
   /** A flag indicating if this view is nested inside another component (e.g., a drawer). */
   detailView?: boolean;
   /**
@@ -1359,18 +1361,46 @@ const DynamicViews: React.FC<DynamicViewsProps> = ({
     </ImportExportComponent>
   );
 
-  if (detailView) {
-    return (
-      <DetailOverview
-        data={entities[0]}
-        viewConfig={viewConfig}
-        config={config}
-      />
-    );
-  }
-
   // Mobile/Desktop Conditional Rendering
   const isMobile = !isDesktop;
+
+  if (detailView) {
+    if (entities.length === 0 && !isDataLoading) {
+      return (
+        <Card variant="outlined" className="p-0" styles={{ body: { padding: isMobile ? 10 : '' } }}>
+          <ZeroStateContent
+            entityName={config?.details?.name}
+            globalFiltersElement={null}
+            globalActionsElement={globalActionsElement}
+            searchConfig={searchConfig}
+            hasActiveFilters={Object.keys(filterValues).some(
+              (key) =>
+                filterValues[key] !== undefined &&
+                filterValues[key] !== null &&
+                (Array.isArray(filterValues[key])
+                  ? filterValues[key].length > 0
+                  : true)
+            )}
+            clearFilters={handleClearFilters}
+          />
+        </Card>
+      );
+    }
+
+    if (entities.length > 0) {
+      return (
+        <DetailOverview
+          data={entities[0]}
+          viewConfig={viewConfig}
+          config={config}
+        />
+      );
+    }
+    
+    if (isDataLoading) {
+      return <div className="flex justify-center items-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--color-primary)]"></div></div>;
+    }
+  }
 
   const renderTabs = () => {
     if (tabOptions.length <= 1) {

@@ -87,13 +87,15 @@ const TableView: React.FC<TableViewProps> = ({
     const tableColumns = combinedFields
       .filter(field => visibleColumns.includes(field.fieldPath))
       .filter(field => !hiddenFields.includes(field.fieldPath))
-      .map((field: any) => ({
+      .map((field: any, index: number) => ({
         title: field.fieldName,
         dataIndex: field.fieldPath.includes('.') ? field.fieldPath.split('.') : field.fieldPath,
         key: field.fieldPath,
+        fixed: index === 0 ? 'left' : undefined,
+        width: index === 0 ? 150 : undefined,
         sorter: viewConfig?.tableview?.showFeatures ? viewConfig.tableview.showFeatures.includes('sorting') : true,
         sortOrder: filterValues?.sorter?.field === field.fieldPath ? (filterValues?.sorter?.order || null) : null,
-        render: (text: any, record: any) => {
+        render: (__: any, record: any) => {
           const value = _.get(record, field.fieldPath);
           const autoRenderer = getAutoRenderer(field.fieldPath, field.dataType);
           if (autoRenderer) {
@@ -149,7 +151,9 @@ const TableView: React.FC<TableViewProps> = ({
       tableColumns.push({
         title: 'Actions',
         key: 'actions',
-        render: (text: any, record: any) => (
+        fixed: 'right',
+        width: 100,
+        render: (__: any, record: any) => (
           <RowActions
             entityType={entityType}
             record={record}

@@ -32,7 +32,7 @@ const OnboardingRequests: React.FC = () => {
           entity_schema: 'identity',
           // No organization_id needed here since this is a global admin view of organizations
           filters: [
-            // { key: 'is_active', operator: '=', value: false }
+            { key: 'is_active', operator: '=', value: false }
           ],
           // Join with the contact who claimed/requested this organization
           include: [

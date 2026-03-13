@@ -123,6 +123,7 @@ const YViewConfigManager: React.FC = () => {
           ...entity,
           ...viewConfig,
           id: entity.id, // Ensure we use entities.id
+          view_config_id: viewConfig.id, // Capture view_config id
           _needsSetup: !viewConfig.entity_id // Flag for auto-setup logic
         };
       });
@@ -389,6 +390,8 @@ const YViewConfigManager: React.FC = () => {
       <ConfigEditor
         detailView={selectedConfig?.details_overview}
         entityType={selectedConfig?.entity_type || ''}
+        entityId={selectedConfig?.id}
+        viewConfigId={selectedConfig?.view_config_id}
         onSave={(updatedData) => handleSave(viewName, updatedData)}
         entitySchema={selectedSchema || undefined} // Pass entity_schema
       />
@@ -655,9 +658,8 @@ const YViewConfigManager: React.FC = () => {
               label: 'Metadata',
               children: (
                 <Metadata
-                  entityType={selectedConfig?.entity_type}
-                  entitySchema={selectedSchema || undefined}
-                  entityMetadata={selectedConfig?.v_metadata || []}
+                  entityType={selectedConfig?.entity_type || ''}
+                  entitySchema={selectedSchema || ''}
                   fetchConfigs={fetchConfigs}
                   // NEW: Logical variant awareness
                   isLogicalVariant={selectedConfig?.is_logical_variant || false}
