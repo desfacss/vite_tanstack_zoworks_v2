@@ -74,12 +74,41 @@ const TestRJSFCoreForm = () => {
     const [formName, setFormName] = useState<string>('');
     const [isPageManagerVisible, setIsPageManagerVisible] = useState(false);
     const [uiLayout, setUiLayout] = useState<string[][][]>([]);
-    const [masterFields, setMasterFields] = useState<{ key: string, display_name: string, type?: string }[]>([]);
+    const [masterFields, setMasterFields] = useState<{ 
+        key: string, 
+        display_name: string, 
+        type?: string,
+        foreign_key?: {
+            source_table: string,
+            display_column: string
+        }
+    }[]>([]);
 
     // States for "Add Field" UI
     const [newFieldName, setNewFieldName] = useState<string>('');
-    const [newFieldType, setNewFieldType] = useState<string>('input');
+    const [newFieldType, setNewFieldType] = useState<string>('text');
     const [isAddingField, setIsAddingField] = useState(false);
+    
+    // Lookup states
+    const [lookupTable, setLookupTable] = useState<string>('');
+    const [lookupColumn, setLookupColumn] = useState<string>('');
+    const [lookupSchema, setLookupSchema] = useState<string>('');
+
+    // Extra field attribute states
+    const [newFieldRequired, setNewFieldRequired] = useState(false);
+    const [newFieldReadonly, setNewFieldReadonly] = useState(false);
+    const [newFieldPlaceholder, setNewFieldPlaceholder] = useState('');
+    const [newFieldDefaultValue, setNewFieldDefaultValue] = useState('');
+    const [newFieldTitle, setNewFieldTitle] = useState('');
+    const [newFieldHidden, setNewFieldHidden] = useState(false);
+    const [newFieldManualOptions, setNewFieldManualOptions] = useState('');
+    const [lookupNoId, setLookupNoId] = useState(false);
+    
+    // Cascading & specialized states
+    const [newFieldAcceptedFileTypes, setNewFieldAcceptedFileTypes] = useState('.pdf,.doc,.docx,.jpg,.png');
+    const [newFieldDependsOn, setNewFieldDependsOn] = useState('');
+    const [newFieldDependsOnField, setNewFieldDependsOnField] = useState('');
+    const [newFieldDependsOnColumn, setNewFieldDependsOnColumn] = useState('');
 
     const WIDGET_OPTIONS = [
         { label: 'Default', value: 'default' },
@@ -87,16 +116,26 @@ const TestRJSFCoreForm = () => {
         { label: 'Textarea', value: 'textarea' },
         { label: 'Password', value: 'password' },
         { label: 'Select Custom', value: 'SelectCustomWidget' },
+        { label: 'Select Single', value: 'SelectSingle' },
+        { label: 'Select Multiple', value: 'SelectMultiple' },
+        { label: 'Select Multi-Tags', value: 'SelectMultiTags' },
+        { label: 'Selectable Tags', value: 'SelectableTags' },
         { label: 'Date', value: 'date' },
         { label: 'Date-Time', value: 'date-time' },
         { label: 'Date Range', value: 'DateRangePickerWidget' },
         { label: 'Date-Time Range', value: 'DateTimeRangePickerWidget' },
+        { label: 'Number', value: 'updown' },
+        { label: 'Range', value: 'range' },
+        { label: 'Phone', value: 'phone' },
+        { label: 'Email', value: 'email' },
+        { label: 'URL', value: 'url' },
+        { label: 'Tags', value: 'TagsWidget' },
         { label: 'Switch', value: 'checkbox' },
         { label: 'Radio', value: 'radio' },
         { label: 'File', value: 'file' },
         { label: 'Web Widget', value: 'WebWidget' },
         { label: 'Editable Table', value: 'EditableTableWidget' },
-        { label: 'Hidden', value: 'hidden' }
+        { label: 'Hidden', value: 'hidden' },
     ];
 
     useEffect(() => {
@@ -161,7 +200,8 @@ const TestRJSFCoreForm = () => {
                     const formatted = fields.map((f: any) => ({
                         key: f.key,
                         display_name: f.display_name || f.key,
-                        type: f.type || 'string'
+                        type: f.type || 'string',
+                        foreign_key: f.foreign_key
                     }));
                     setMasterFields(formatted);
                 }
@@ -172,6 +212,26 @@ const TestRJSFCoreForm = () => {
 
         fetchMetadata();
     }, [selectedEntity]);
+
+    // Pre-fill lookup settings when field name or widget changes
+    useEffect(() => {
+        if (isAddingField && newFieldName) {
+            const fieldMeta = masterFields.find(f => f.key === newFieldName);
+            if (fieldMeta?.foreign_key) {
+                setLookupTable(fieldMeta.foreign_key.source_table || '');
+                setLookupColumn(fieldMeta.foreign_key.display_column || '');
+                // Try to detect schema if dot separated
+                // Switch to select widget if it's a FK
+                if (newFieldType === 'text') {
+                    // We don't auto-switch anymore per user request, but we keep text
+                }
+            }
+            // Auto-set title if empty
+            if (!newFieldTitle) {
+                setNewFieldTitle(fieldMeta?.display_name || newFieldName);
+            }
+        }
+    }, [newFieldName, isAddingField, masterFields]);
 
     const handleGenerate = async () => {
         if (!selectedEntity) return;
@@ -392,15 +452,102 @@ const TestRJSFCoreForm = () => {
                 defaultWidget = 'date';
             }
 
-            // Add to data schema
-            const newProperty = {
+            // Sync with selected widget type
+            const activeWidget = newFieldType !== 'default' ? newFieldType : defaultWidget;
+            if (activeWidget === 'checkbox') {
+                rjsfType = 'boolean';
+            } else if (activeWidget === 'DateRangePickerWidget' || activeWidget === 'DateTimeRangePickerWidget' || activeWidget === 'EditableTableWidget' || activeWidget === 'TagsWidget') {
+                rjsfType = 'array';
+            } else if (activeWidget === 'updown' || activeWidget === 'range') {
+                rjsfType = 'number';
+            }
+
+            // Path in data schema properties
+            const newProperty: any = {
                 type: rjsfType,
-                title: fieldMeta?.display_name || newFieldName
+                title: newFieldTitle || fieldMeta?.display_name || newFieldName
             };
+            
+            if (newFieldDefaultValue) {
+                newProperty.default = rjsfType === 'number' ? Number(newFieldDefaultValue) : newFieldDefaultValue;
+            }
+
+            if (newFieldManualOptions) {
+                newProperty.enum = newFieldManualOptions.split(',').map(s => s.trim()).filter(Boolean);
+            }
+
+            if (activeWidget === 'email') {
+                newProperty.format = 'email';
+            } else if (activeWidget === 'url') {
+                newProperty.format = 'uri';
+            } else if (activeWidget === 'phone') {
+                // Phone is usually a string with inputType tel
+            }
+
+            if (rjsfType === 'array') {
+                newProperty.items = { type: 'string' };
+            }
+
             set(currentData, ['properties', newFieldName], newProperty);
 
+            if (newFieldRequired) {
+                const required = currentData.required || [];
+                if (!required.includes(newFieldName)) {
+                    required.push(newFieldName);
+                    currentData.required = required;
+                }
+            }
+
+            // Sync with UI schema
+            set(currentUi, [newFieldName, 'ui:placeholder'], newFieldPlaceholder);
+            if (newFieldReadonly) {
+                set(currentUi, [newFieldName, 'ui:readonly'], true);
+            }
+            if (newFieldHidden) {
+                set(currentUi, [newFieldName, 'ui:widget'], 'Hidden');
+            }
+            if (activeWidget === 'file' && newFieldAcceptedFileTypes) {
+                set(currentUi, [newFieldName, 'ui:options', 'accept'], newFieldAcceptedFileTypes);
+            }
+
+            // Sync with DATA schema enum for cascading selects
+            if (activeWidget === 'SelectCustomWidget' || activeWidget === 'SelectSingle' || activeWidget === 'SelectMultiple' || activeWidget === 'SelectMultiTags') {
+                // Add lookup config to DATA schema enum as expected by DynamicForm
+                const enumConfig: any = {
+                    table: lookupSchema ? `${lookupSchema}.${lookupTable}` : lookupTable,
+                    column: lookupColumn,
+                    no_id: lookupNoId
+                };
+
+                if (newFieldDependsOn) {
+                    enumConfig.dependsOn = newFieldDependsOn;
+                    enumConfig.dependsOnField = newFieldDependsOnField || newFieldDependsOn;
+                    enumConfig.dependsOnColumn = newFieldDependsOnColumn;
+                }
+
+                newProperty.enum = enumConfig;
+            }
+
             // Add to UI schema
-            set(currentUi, [newFieldName, 'ui:widget'], newFieldType !== 'default' ? newFieldType : defaultWidget);
+            if (activeWidget === 'SelectCustomWidget' || activeWidget === 'SelectSingle' || activeWidget === 'SelectMultiple' || activeWidget === 'SelectMultiTags') {
+
+                const actualWidget = 'SelectCustomWidget';
+                set(currentUi, [newFieldName, 'ui:widget'], actualWidget);
+                
+                let mode = 'single';
+                if (activeWidget === 'SelectMultiple') mode = 'multiple';
+                if (activeWidget === 'SelectMultiTags') mode = 'tags';
+
+                set(currentUi, [newFieldName, 'ui:options'], { 
+                    mode, 
+                    colSpan: 12,
+                    reference_api: '/api/v4/logical/fetch/...'
+                });
+            } else if (activeWidget === 'phone') {
+                set(currentUi, [newFieldName, 'ui:options'], { inputType: 'tel' });
+            } else {
+                set(currentUi, [newFieldName, 'ui:widget'], activeWidget === 'email' || activeWidget === 'url' ? undefined : activeWidget);
+            }
 
             // Final recursive cleanup just in case
             const cleanUi = cleanupUiSchema(currentUi);
@@ -426,6 +573,20 @@ const TestRJSFCoreForm = () => {
 
             message.success(`Field "${newFieldName}" added`);
             setNewFieldName('');
+            setNewFieldTitle('');
+            setNewFieldPlaceholder('');
+            setNewFieldDefaultValue('');
+            setNewFieldRequired(false);
+            setNewFieldReadonly(false);
+            setNewFieldHidden(false);
+            setNewFieldManualOptions('');
+            setNewFieldDependsOn('');
+            setNewFieldDependsOnField('');
+            setNewFieldDependsOnColumn('');
+            setLookupTable('');
+            setLookupColumn('');
+            setLookupSchema('');
+            setLookupNoId(false);
             setIsAddingField(false);
         } catch (e) {
             message.error('Error adding field: ' + (e as Error).message);
@@ -435,25 +596,65 @@ const TestRJSFCoreForm = () => {
     const handleWidgetChange = (fieldPath: string, widget: string) => {
         try {
             const currentUi = JSON.parse(uiSchemaStr);
+            const currentData = JSON.parse(dataSchemaStr);
+            
+            // Path in data schema properties
+            const pathParts = fieldPath.split('.');
+            const propPath = ['properties', ...pathParts.flatMap(p => [p, 'properties'])].slice(0, -1);
             
             if (widget === 'default') {
                 unset(currentUi, [fieldPath, 'ui:widget']);
             } else {
                 set(currentUi, [fieldPath, 'ui:widget'], widget);
                 
+                // Sync data type if necessary
+                const fieldProp = get(currentData, propPath);
+                if (fieldProp) {
+                    if (widget === 'checkbox') {
+                        fieldProp.type = 'boolean';
+                    } else if (widget === 'DateRangePickerWidget' || widget === 'DateTimeRangePickerWidget' || widget === 'EditableTableWidget' || widget === 'TagsWidget') {
+                        fieldProp.type = 'array';
+                        if (!fieldProp.items) {
+                            fieldProp.items = { type: 'string' };
+                        }
+                    } else if (widget === 'updown' || widget === 'range') {
+                        fieldProp.type = 'number';
+                        delete fieldProp.format;
+                    } else if (widget === 'text' || widget === 'textarea' || widget === 'password' || widget === 'date' || widget === 'date-time' || widget === 'SelectSingle' || widget === 'SelectCustomWidget' || widget === 'SelectableTags' || widget === 'SelectMultiple' || widget === 'SelectMultiTags' || widget === 'email' || widget === 'url' || widget === 'phone' || widget === 'hidden') {
+                        fieldProp.type = 'string';
+                        if (widget === 'email') fieldProp.format = 'email';
+                        else if (widget === 'url') fieldProp.format = 'uri';
+                        else delete fieldProp.format;
+                    }
+                }
+
                 // Add default options for some widgets if they don't exist
-                const currentOptions = get(currentUi, [fieldPath, 'ui:options']);
-                if (widget === 'SelectCustomWidget' && !currentOptions) {
+                if (widget === 'SelectCustomWidget' || widget === 'SelectSingle' || widget === 'SelectMultiple' || widget === 'SelectMultiTags') {
+                    const actualWidget = (widget === 'SelectCustomWidget' || widget === 'SelectSingle' || widget === 'SelectMultiple' || widget === 'SelectMultiTags') 
+                        ? 'SelectCustomWidget' 
+                        : widget;
+                    
+                    set(currentUi, [fieldPath, 'ui:widget'], actualWidget);
+                    
+                    let mode = 'single';
+                    if (widget === 'SelectMultiple') mode = 'multiple';
+                    if (widget === 'SelectMultiTags') mode = 'tags';
+
+                    const existingOptions = get(currentUi, [fieldPath, 'ui:options']) || {};
                     set(currentUi, [fieldPath, 'ui:options'], { 
-                        mode: 'single', 
-                        colSpan: 12,
-                        reference_api: '/api/v4/logical/fetch/...'
+                        ...existingOptions,
+                        mode, 
+                        colSpan: existingOptions.colSpan || 12,
+                        reference_api: existingOptions.reference_api || '/api/v4/logical/fetch/...'
                     });
+                } else if (widget === 'SelectableTags') {
+                    set(currentUi, [fieldPath, 'ui:widget'], 'SelectableTags');
                 }
             }
 
             setUiSchemaStr(JSON.stringify(currentUi, null, 2));
-            message.info(`Widget for "${fieldPath}" updated to ${widget}`);
+            setDataSchemaStr(JSON.stringify(currentData, null, 2));
+            message.info(`Widget and data type for "${fieldPath}" updated`);
         } catch (e) {
             message.error('Error updating widget: ' + (e as Error).message);
         }
@@ -500,6 +701,7 @@ const TestRJSFCoreForm = () => {
                                     value={selectedEntity}
                                     onChange={setSelectedEntity}
                                     showSearch
+                                    optionFilterProp="label"
                                 />
                             </div>
                             <div>
@@ -537,8 +739,15 @@ const TestRJSFCoreForm = () => {
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                                         {flattenedFields.map(field => {
                                             const currentUi = JSON.parse(uiSchemaStr || '{}');
-                                            const currentWidget = get(currentUi, [field.path, 'ui:widget'], 'default');
+                                            let currentWidget = get(currentUi, [field.path, 'ui:widget'], 'default');
                                             
+                                            // Map back from SelectCustomWidget variants
+                                            if (currentWidget === 'SelectCustomWidget') {
+                                                const mode = get(currentUi, [field.path, 'ui:options', 'mode'], 'single');
+                                                if (mode === 'multiple') currentWidget = 'SelectMultiple';
+                                                else if (mode === 'tags') currentWidget = 'SelectMultiTags';
+                                                else currentWidget = 'SelectSingle';
+                                            }
                                             return (
                                                 <div key={field.path} style={{
                                                     display: 'flex',
@@ -570,6 +779,8 @@ const TestRJSFCoreForm = () => {
                                                         onChange={(val) => handleWidgetChange(field.path, val)}
                                                         style={{ width: '100%' }}
                                                         suffixIcon={<Settings2 size={12} />}
+                                                        showSearch
+                                                        optionFilterProp="label"
                                                     />
                                                 </div>
                                             );
@@ -625,13 +836,115 @@ const TestRJSFCoreForm = () => {
                                                             </div>
                                                         </>
                                                     )}
+                                                    optionFilterProp="label"
                                                 />
                                                 <Select
                                                     value={newFieldType}
                                                     onChange={setNewFieldType}
                                                     options={WIDGET_OPTIONS}
                                                     style={{ width: '100%' }}
+                                                    showSearch
+                                                    optionFilterProp="label"
                                                 />
+                                                
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 8 }}>
+                                                    <Input 
+                                                        size="small" 
+                                                        placeholder="Field Title" 
+                                                        value={newFieldTitle} 
+                                                        onChange={(e) => setNewFieldTitle(e.target.value)} 
+                                                    />
+                                                    <Input 
+                                                        size="small" 
+                                                        placeholder="Placeholder" 
+                                                        value={newFieldPlaceholder} 
+                                                        onChange={(e) => setNewFieldPlaceholder(e.target.value)} 
+                                                    />
+                                                    <Input 
+                                                        size="small" 
+                                                        placeholder="Default Value" 
+                                                        value={newFieldDefaultValue} 
+                                                        onChange={(e) => setNewFieldDefaultValue(e.target.value)} 
+                                                    />
+                                                    <div style={{ display: 'flex', gap: 16, marginTop: 4 }}>
+                                                        <label style={{ fontSize: '12px', display: 'flex', alignItems: 'center', gap: 4 }}>
+                                                            <Switch size="small" checked={newFieldRequired} onChange={setNewFieldRequired} /> Required
+                                                        </label>
+                                                        <label style={{ fontSize: '12px', display: 'flex', alignItems: 'center', gap: 4 }}>
+                                                            <Switch size="small" checked={newFieldReadonly} onChange={setNewFieldReadonly} /> Readonly
+                                                        </label>
+                                                        <label style={{ fontSize: '12px', display: 'flex', alignItems: 'center', gap: 4 }}>
+                                                            <Switch size="small" checked={newFieldHidden} onChange={setNewFieldHidden} /> Hidden
+                                                        </label>
+                                                    </div>
+                                                    
+                                                    {!lookupTable && (
+                                                        <Input.TextArea 
+                                                            size="small" 
+                                                            placeholder="Manual Options (comma separated)" 
+                                                            value={newFieldManualOptions} 
+                                                            onChange={(e) => setNewFieldManualOptions(e.target.value)}
+                                                            rows={2}
+                                                            style={{ marginTop: 4 }}
+                                                        />
+                                                    )}
+                                                </div>
+
+                                                {(newFieldType === 'SelectCustomWidget' || newFieldType === 'SelectSingle' || newFieldType === 'SelectMultiple' || newFieldType === 'SelectMultiTags') && (
+                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 4 }}>
+                                                        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                                                            <Switch size="small" checked={lookupNoId} onChange={setLookupNoId} />
+                                                            <span style={{ fontSize: '12px' }}>Use value as ID (no_id)</span>
+                                                        </div>
+                                                        <Input 
+                                                            size="small" 
+                                                            placeholder="Lookup Schema (e.g. core)" 
+                                                            value={lookupSchema} 
+                                                            onChange={(e) => setLookupSchema(e.target.value)} 
+                                                        />
+                                                        <Input 
+                                                            size="small" 
+                                                            placeholder="Lookup Table" 
+                                                            value={lookupTable} 
+                                                            onChange={(e) => setLookupTable(e.target.value)} 
+                                                        />
+                                                        <Input 
+                                                            size="small" 
+                                                            placeholder="Lookup Column" 
+                                                            value={lookupColumn} 
+                                                            onChange={(e) => setLookupColumn(e.target.value)} 
+                                                        />
+                                                        
+                                                        <div className="p-1 bg-gray-50 rounded" style={{ padding: '4px', background: '#f5f5f5', borderRadius: '4px' }}>
+                                                            <div style={{ fontSize: '10px', color: '#888', marginBottom: '2px' }}>CASCADING (OPTIONAL)</div>
+                                                            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                                                                <Input 
+                                                                    size="small" 
+                                                                    placeholder="Depends On (Field Name)" 
+                                                                    value={newFieldDependsOn} 
+                                                                    onChange={(e) => setNewFieldDependsOn(e.target.value)} 
+                                                                />
+                                                                <Input 
+                                                                    size="small" 
+                                                                    placeholder="Filter Column" 
+                                                                    value={newFieldDependsOnColumn} 
+                                                                    onChange={(e) => setNewFieldDependsOnColumn(e.target.value)} 
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {newFieldType === 'file' && (
+                                                    <Input 
+                                                        size="small" 
+                                                        placeholder="Accepted File Types (e.g. .pdf,.jpg)" 
+                                                        value={newFieldAcceptedFileTypes} 
+                                                        onChange={(e) => setNewFieldAcceptedFileTypes(e.target.value)}
+                                                        style={{ marginTop: 4 }}
+                                                    />
+                                                )}
+
                                                 <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
                                                     <Button 
                                                         type="primary" 
