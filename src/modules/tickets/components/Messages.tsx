@@ -130,8 +130,8 @@
 //         // Fetch messages if conversation exists
 //         if (parsedTicketData.conversation_id) {
 //           const { data: messagesData, error: messagesError } = await supabase
-//             .schema('external')
-//             .from('messages')
+//             .schema('esm')
+//             .from('v_messages')
 //             .select('id, conversation_id, content, timestamp, direction')
 //             .eq('conversation_id', parsedTicketData.conversation_id)
 //             .order('timestamp', { ascending: false });
@@ -228,8 +228,8 @@
 
 //       // ----------------- OPTION 1: Send Email from UI & Save with RPC (Active) -----------------
 //       const { data: conversationData, error: conversationError } = await supabase
-//         .schema('external')
-//         .from('conversations')
+//         .schema('esm')
+//         .from('v_conversations')
 //         .select('channel_conversation_id')
 //         .eq('id', ticketDetails.conversation_id)
 //         .single();
@@ -546,7 +546,7 @@ const Ticket: React.FC<TicketProps> = ({ data, entityId }) => {
 
         // Fetch messages
         if (parsedTicketData.conversation_id) {
-          const { data: messagesData, error: messagesError } = await supabase.schema('external').from('messages').select('id, conversation_id, content, timestamp, direction').eq('conversation_id', parsedTicketData.conversation_id).order('timestamp', { ascending: false });
+      const { data: messagesData, error: messagesError } = await supabase.schema('esm').from('v_messages').select('id, conversation_id, content, timestamp, direction').eq('conversation_id', parsedTicketData.conversation_id).order('timestamp', { ascending: false });
           if (messagesError) throw new Error(`Messages fetch failed: ${messagesError.message}`);
 
           const parsedMessages = messagesData.map(msg => {
@@ -578,7 +578,7 @@ const Ticket: React.FC<TicketProps> = ({ data, entityId }) => {
     setSending(true);
     try {
       // Fetch the latest message to get recipient details
-      const { data: latestMessage, error: messageError } = await supabase.schema('external').from('messages').select('content').eq('conversation_id', ticketDetails.conversation_id).order('timestamp', { ascending: false }).limit(1).single();
+      const { data: latestMessage, error: messageError } = await supabase.schema('esm').from('v_messages').select('content').eq('conversation_id', ticketDetails.conversation_id).order('timestamp', { ascending: false }).limit(1).single();
       if (messageError) throw new Error(`Failed to fetch latest message: ${messageError.message}`);
 
       const messageContent = latestMessage?.content ? (typeof latestMessage.content === 'string' ? JSON.parse(latestMessage.content) : latestMessage.content) : null;
@@ -599,7 +599,7 @@ const Ticket: React.FC<TicketProps> = ({ data, entityId }) => {
 
       if (uniqueEmails.length === 0) throw new Error("No external recipients to send a reply to.");
 
-      const { data: conversationData } = await supabase.schema('external').from('conversations').select('channel_conversation_id').eq('id', ticketDetails.conversation_id).single();
+      const { data: conversationData } = await supabase.schema('esm').from('v_conversations').select('channel_conversation_id').eq('id', ticketDetails.conversation_id).single();
 
       const emailMessageId = `<${uuidv4()}@zoworks.com>`;
       const inReplyTo = conversationData?.channel_conversation_id || null;
@@ -609,8 +609,8 @@ const Ticket: React.FC<TicketProps> = ({ data, entityId }) => {
       // 1. Send the email
       await sendEmail([{ ...emailData, text: emailData.body_text, messageId: emailMessageId, inReplyTo: inReplyTo }]);
 
-      // 2. Save the reply to the database
-      const { error: rpcError } = await supabase.rpc('tkt_add_reply_to_conversation', {
+      // 2. Save the reply to the database in ESM
+      const { error: rpcError } = await supabase.schema('esm').rpc('fn_tkt_add_reply', {
         p_conversation_id: ticketDetails.conversation_id,
         p_organization_id: ticketDetails.organization_id,
         p_content: emailData,

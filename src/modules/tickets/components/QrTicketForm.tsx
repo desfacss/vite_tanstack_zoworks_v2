@@ -43,7 +43,7 @@ const QrTicketForm: React.FC<QrTicketFormProps> = ({ asset_id, onSuccess }) => {
         : [];
       console.log(uploadedImages, "uploadedImages");
       // Call the new RPC function for public ticket creation
-      const { error } = await supabase.rpc('tkt_wrapper_create_qr_ticket_v5', {
+      const { error } = await supabase.schema('esm').rpc('fn_tkt_create_qr_v1', {
         p_asset_id: asset_id,
         p_subject: values.subject,
         p_description: values.description || null,

@@ -57,7 +57,7 @@ const SupportTicketForm: React.FC = () => {
           { data: categoryData },
           { data: userData },
         ] = await Promise.all([
-          supabase.schema('external').from('accounts').select('id, name'),
+          supabase.schema('crm').from('v_accounts').select('id, name'),
           supabase.schema('catalog').from('asset_categories').select('id, name'),
           supabase.schema('identity').from('users').select('id, name'),
         ]);
@@ -91,9 +91,9 @@ const SupportTicketForm: React.FC = () => {
             // supabase.schema('external').from('contacts').select('id, name').eq('account_id', clientId),
             // supabase.schema('external').from('contracts').select('*').eq('client_id', clientId),
             // supabase.schema('external').from('service_assets').select('id, display_id').eq('client_id', clientId),
-            supabase.schema('external').from('contacts').select('id, name'),
-            supabase.schema('external').from('contracts').select('*'),
-            supabase.schema('external').from('service_assets').select('id, display_id'),
+            supabase.schema('crm').from('v_contacts').select('id, name'),
+            supabase.schema('crm').from('v_contracts').select('*'),
+            supabase.schema('catalog').from('sh_assets').select('id, display_id'),
           ]);
 
           setContacts(contactData || []);
@@ -170,7 +170,7 @@ const SupportTicketForm: React.FC = () => {
       }
 
       const { data, error } = await supabase
-        .schema('external').from('contacts')
+        .schema('crm').from('v_contacts')
         .insert({
           name: values.name,
           account_id: clientId,

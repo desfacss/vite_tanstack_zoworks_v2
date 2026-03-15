@@ -80,7 +80,7 @@ const ClientDetails: React.FC<ClientDetailsProps> = ({ editItem }) => {
 
                 // Fetch client details
                 const { data: clientData, error: clientError } = await supabase
-                    .schema('external').from('accounts')
+                    .schema('crm').from('v_accounts')
                     .select('*')
                     .eq('id', editItem?.account_id)
                     .single();
@@ -94,7 +94,7 @@ const ClientDetails: React.FC<ClientDetailsProps> = ({ editItem }) => {
 
                 // Fetch primary contact
                 const { data: contactData, error: contactError } = await supabase
-                    .schema('external').from('contacts')
+                    .schema('crm').from('v_contacts')
                     .select('*')
                     .eq('account_id', clientData.id)
                     .eq('is_primary', true)

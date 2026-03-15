@@ -88,8 +88,8 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket_id, asset_id, onSuccess 
       try {
         // Fetch clients (Assuming external.accounts is correct)
         const { data: clientData, error: clientError } = await supabase
-          .schema('external')
-          .from('accounts')
+          .schema('crm')
+          .from('v_accounts')
           .select('id, name')
           .eq('organization_id', organization?.id);
         if (clientError) throw new Error(`Failed to fetch clients: ${clientError.message}`);
@@ -278,8 +278,8 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket_id, asset_id, onSuccess 
         if (showAssetDropdown) {
           const clientId = form.getFieldValue('account_id');
           let query = supabase
-            .schema('external')
-            .from('service_assets')
+            .schema('catalog')
+            .from('sh_assets')
             .select('id, display_id')
             .eq('organization_id', organization?.id)
             .eq('is_active', true);
@@ -306,8 +306,8 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket_id, asset_id, onSuccess 
         if (isEditMode) {
           // *** CHANGE: Reference blueprint.tickets ***
           const { data: ticketData, error: ticketError } = await supabase
-            .schema('blueprint')
-            .from('tickets')
+            .schema('esm')
+            .from('v_tickets')
             .select('*, details, receivers')
             .eq('id', ticket_id)
             .single();
@@ -333,8 +333,8 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket_id, asset_id, onSuccess 
             // Fetch contacts for the ticket's account_id (Assuming external.contacts is correct)
             if (ticketData.account_id) {
               const { data: contactData, error: contactError } = await supabase
-                .schema('external')
-                .from('contacts')
+                .schema('crm')
+                .from('v_contacts')
                 .select('id, name')
                 .eq('account_id', ticketData.account_id);
               if (contactError) throw new Error(`Failed to fetch contacts: ${contactError.message}`);
@@ -351,8 +351,8 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket_id, asset_id, onSuccess 
         // Prefill fields for asset_id (e.g., from QR code scan) (Assuming external.service_assets is correct)
         if (isAssetProvided && !isEditMode) {
           const { data: assetData, error: assetError } = await supabase
-            .schema('external')
-            .from('service_assets')
+            .schema('catalog')
+            .from('sh_assets')
             .select('account_id, category_id, contract_id, location_id')
             .eq('id', asset_id)
             .single();
@@ -402,8 +402,8 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket_id, asset_id, onSuccess 
     try {
       // Fetch contacts (Assuming external.contacts is correct)
       const { data: contactData, error: contactError } = await supabase
-        .schema('external')
-        .from('contacts')
+        .schema('crm')
+        .from('v_contacts')
         .select('id, name')
         .eq('account_id', clientId);
       if (contactError) throw new Error(`Failed to fetch contacts: ${contactError.message}`);
@@ -413,8 +413,8 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket_id, asset_id, onSuccess 
       if (showAssetDropdown) {
         // Fetch assets (Assuming external.service_assets is correct)
         const { data: assetData, error: assetError } = await supabase
-          .schema('external')
-          .from('service_assets')
+          .schema('catalog')
+          .from('sh_assets')
           .select('id, display_id')
           .eq('organization_id', organization?.id)
           .eq('account_id', clientId)
@@ -444,8 +444,8 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket_id, asset_id, onSuccess 
     try {
       // Fetch asset details (Assuming external.service_assets is correct)
       const { data: assetData, error: assetError } = await supabase
-        .schema('external')
-        .from('service_assets')
+        .schema('catalog')
+        .from('sh_assets')
         .select('account_id, category_id, contract_id, location_id')
         .eq('id', selectedAssetId)
         .single();
@@ -460,8 +460,8 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket_id, asset_id, onSuccess 
         });
         // Fetch contacts (Assuming external.contacts is correct)
         const { data: contactData, error: contactError } = await supabase
-          .schema('external')
-          .from('contacts')
+          .schema('crm')
+          .from('v_contacts')
           .select('id, name')
           .eq('account_id', assetData.account_id);
         if (contactError) throw new Error(`Failed to fetch contacts: ${contactError.message}`);
@@ -489,8 +489,8 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket_id, asset_id, onSuccess 
 
       // Insert into external.contacts (Assuming external.contacts is correct)
       const { data: newContact, error: contactError } = await supabase
-        .schema('external')
-        .from('contacts')
+        .schema('crm')
+        .from('v_contacts')
         .insert({
           name: values.name,
           email: values.email || null,
@@ -529,25 +529,25 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket_id, asset_id, onSuccess 
       let newTicketId: string | null = null;
 
       if (!isEditMode) {
-        // *** CHANGE: Using RPC to create. Assuming this RPC correctly inserts into blueprint.tickets ***
-        const { data, error } = await supabase.schema('organization').rpc('tkt_wrapper_create_manual_ticket_v8', {
+        // *** CHANGE: Using ESM RPC to create. ***
+        const { data, error } = await supabase.schema('esm').rpc('fn_tkt_create_manual_v1', {
           p_organization_id: organization.id,
           p_location_id: location?.is_default ? values.location_id : location.id,
           p_account_id: values.account_id,
           p_contact_id: values.contact_id || null,
-          p_receiver_emails: values.receiver_emails || [],
           p_created_by: user.id,
           p_assignee_id: values.assignee_id || null,
           p_field_agent_id: values.field_agent_id || null,
           p_subject: values.subject,
           p_description: values.description || null,
-          p_status: values.stage_id || 'Open',
+          p_status: values.stage_id || 'open',
           p_stage_id: values.stage_id,
           p_category_id: values.category_id || null,
           p_asset_id: values.asset_id || asset_id || null,
           p_contract_id: values.contract_id || null,
           p_priority_id: values.priority_id || null,
           p_schedule_at: values.schedule?.toISOString() || null,
+          p_receiver_emails: values.receiver_emails || []
         });
 
         if (error) {
@@ -583,14 +583,14 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket_id, asset_id, onSuccess 
 
         // *** CHANGE: Reference blueprint.tickets ***
         const { error: updateError } = await supabase
-          .schema('blueprint')
-          .from('tickets')
+          .schema('esm')
+          .from('v_tickets')
           .update(ticketData)
           .eq('id', ticket_id);
         if (updateError) throw new Error(`Failed to update ticket: ${updateError.message}`);
 
-        // [NEW] After a successful update, call the sync function.
-        const { error: syncError } = await supabase.rpc('tkt_utils_sync_conversation_receivers', {
+        // [NEW] After a successful update, call the sync function in ESM.
+        const { error: syncError } = await supabase.schema('esm').rpc('fn_tkt_sync_receivers', {
           p_ticket_id: ticket_id,
         });
 

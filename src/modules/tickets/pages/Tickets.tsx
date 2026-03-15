@@ -25,7 +25,7 @@ const Tickets: React.FC = () => {
     return (
         <DynamicViews
             entityType="tickets"
-            entitySchema="blueprint"
+            entitySchema="esm"
             tabOptions={tabOptions}
         />
     );
