@@ -53,6 +53,12 @@ const RowActions: React.FC<RowActionsProps> = ({
   const [activeRegistryActionId, setActiveRegistryActionId] = useState<string | null>(null);
   const [LoadedActionComponent, setLoadedActionComponent] = useState<React.ComponentType<any> | null>(null);
   const [enhancedRecord, setEnhancedRecord] = useState(record);
+  
+  // Update enhancedRecord whenever the base record from props changes (e.g. after a list refresh)
+  React.useEffect(() => {
+    setEnhancedRecord(record);
+  }, [record]);
+
 
   const { data: formConfig } = useFormConfig(formName || '');
 
@@ -284,7 +290,11 @@ const RowActions: React.FC<RowActionsProps> = ({
     if (viewConfig?.general?.select || isTimesheet || isExpense || targetEntity) {
       latestRecord = await fetchFullRecord(targetId, targetEntity);
       setEnhancedRecord(latestRecord);
+    } else {
+      // Ensure enhancedRecord is updated with the current record even if no full fetch is performed
+      setEnhancedRecord(record);
     }
+
 
     // 1. Check if this is a registry action ID (check entity first, then global)
     // ... (keep existing registry logic) ...
