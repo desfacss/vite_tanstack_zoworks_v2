@@ -107,18 +107,16 @@ export const AppRoutes: FC = () => {
                     <Route path="/" element={<Home />} />
                     <Route path="/appointments" element={<PublicAppointments />} />
                     <Route path="/sign/:envelopeId" element={<SignDocument />} />
+                    {/* Auth pages moved here - outside AuthGuard */}
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/signup" element={<Signup />} />
+                    <Route path="/reset_password" element={<ResetPassword />} />
+                    <Route path="/web_register" element={<WebRegister />} />
+                    <Route path="/sign_up" element={<WebRegister />} /> {/* Vector A alias */}
                 </Route>
 
                 {/* Auth-protected routes */}
                 <Route element={<AuthGuard />}>
-                    {/* Auth pages (login, signup, etc.) */}
-                    <Route element={<PublicLayout />}>
-                        <Route path="/login" element={<Login />} />
-                        <Route path="/signup" element={<Signup />} />
-                        <Route path="/reset_password" element={<ResetPassword />} />
-                        <Route path="/web_register" element={<WebRegister />} />
-                    </Route>
-
                     {/* Protected pages with AuthedLayout */}
                     <Route element={<AuthedLayoutProvider><AuthedLayout /></AuthedLayoutProvider>}>
                         <Route index element={<Navigate to="/welcome" replace />} />

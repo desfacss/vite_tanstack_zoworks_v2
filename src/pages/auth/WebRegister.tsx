@@ -4,6 +4,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
 import { Building2, User, Mail, Phone, Search, ArrowRight, CheckCircle2, PlusCircle, Globe } from 'lucide-react';
+import ModuleSelector from './components/ModuleSelector';
 
 const { Title, Text } = Typography;
 
@@ -22,15 +23,30 @@ const WebRegister: React.FC = () => {
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [selectedAccount, setSelectedAccount] = useState<SearchResult | null>(null);
   const [step, setStep] = useState<1 | 2>(1);
+  const [selectedModules, setSelectedModules] = useState<string[]>([]);
 
-  // Auto-fill from URL parameters (e.g. from an invite email sent to a unified.contact)
+  // Auto-fill from URL parameters (e.g. from a Fast Track marketing link)
   useEffect(() => {
     const orgId = searchParams.get('org_id');
-    const orgName = searchParams.get('org_name') || 'Your Organization';
-    if (orgId) {
-      setSelectedAccount({ id: orgId, name: orgName, similarity_score: 1 });
-      setStep(2);
+
+    // Pre-select modules from ?modules=crm,engage URL param
+    const modulesParam = searchParams.get('modules');
+    if (modulesParam) {
+      setSelectedModules(modulesParam.split(',').map(m => m.trim()).filter(Boolean));
     }
+
+    if (!orgId) return;
+
+    // Fetch org name safely from DB via public RPC (no hardcoded org_name in URL)
+    supabase.rpc('onboard_get_org_summary', { p_account_id: orgId })
+      .then(({ data, error }) => {
+        if (error || !data) {
+          message.error('Invalid or expired registration link.');
+          return;
+        }
+        setSelectedAccount({ id: data.id, name: data.name, similarity_score: 1 });
+        setStep(2);
+      });
   }, [searchParams]);
 
   const handleSearch = async (value: string) => {
@@ -117,10 +133,16 @@ const WebRegister: React.FC = () => {
 const onFinish = async (values: any) => {
     if (!selectedAccount) return;
 
+    // Module validation — at least one must be selected
+    if (selectedModules.length === 0) {
+      message.warning('Please select at least one module before submitting.');
+      return;
+    }
+
     setLoading(true);
     try {
-      const modulesParam = searchParams.get('modules');
-      const requestedModulesList = modulesParam ? modulesParam.split(',') : [];
+      // Use offering IDs from ModuleSelector state (already set from URL or user picks)
+      const requestedModulesList = selectedModules;
 
       let accountId = selectedAccount.id;
 
@@ -155,7 +177,7 @@ const onFinish = async (values: any) => {
 
       if (error) throw error;
 
-      message.success("Thanks we will get back - after web registration" ||t('core.auth.message.registration_request_success') || 'Registration request submitted! Pending admin approval.');
+      message.success(t('core.auth.message.registration_request_success') || 'Registration submitted! We will reviewand get back to you shortly.');
       form.resetFields();
       setSelectedAccount(null);
       setStep(1);
@@ -236,6 +258,14 @@ const onFinish = async (values: any) => {
                 </div>
                 <CheckCircle2 size={20} className="text-green-500" />
               </div>
+            </div>
+
+            {/* ── Module Selector ─────────────────────────────────────── */}
+            <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm mb-4">
+              <ModuleSelector
+                preSelected={selectedModules}
+                onChange={setSelectedModules}
+              />
             </div>
 
             <Form

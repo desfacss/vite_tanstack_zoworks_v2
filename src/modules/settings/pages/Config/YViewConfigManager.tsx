@@ -269,9 +269,14 @@ const YViewConfigManager: React.FC = () => {
   const handleSave = async (viewName: string, formData: any) => {
     if (!selectedConfig) return;
     const entityId = selectedConfig.id;
+    const entityType = selectedConfig.entity_type;
+    const entitySchema = selectedConfig.entity_schema;
 
     try {
         let updatePromise;
+        let blueprintUpdateCol = '';
+        let blueprintUpdateData = formData;
+
         switch (viewName) {
             case 'viewConfig':
             case 'global_access':
@@ -284,17 +289,44 @@ const YViewConfigManager: React.FC = () => {
                 updatePromise = supabase.schema('core').from('view_configs')
                     .update({ general: updatedGeneral })
                     .eq('entity_id', entityId);
+                
+                blueprintUpdateCol = 'ui_general';
+                blueprintUpdateData = updatedGeneral;
+                break;
+            case 'stages':
+                // Stages updates 'view_configs' (column 'stages') but NOT 'entity_blueprints'
+                updatePromise = supabase.schema('core').from('view_configs')
+                    .update({ stages: formData })
+                    .eq('entity_id', entityId);
                 break;
             default:
                 // All other views (tableview, gridview, etc.) update the respective JSONB column
                 updatePromise = supabase.schema('core').from('view_configs')
                     .update({ [viewName]: formData })
                     .eq('entity_id', entityId);
+                
+                blueprintUpdateCol = `ui_${viewName}`;
                 break;
         }
 
-        const { error } = await updatePromise;
-        if (error) throw error;
+        const { error: viewError } = await updatePromise;
+        if (viewError) throw viewError;
+
+        // Perform synchronization write to core.entity_blueprints (except for 'stages')
+        if (blueprintUpdateCol && entityType && entitySchema) {
+            const { error: blueprintError } = await supabase
+                .schema('core')
+                .from('entity_blueprints')
+                .update({ [blueprintUpdateCol]: blueprintUpdateData })
+                .eq('base_source', entityType);
+            
+            if (blueprintError) {
+                console.error('Error syncing to entity_blueprints:', blueprintError);
+                // We don't throw here to ensure the primary save is considered successful, 
+                // but we log it for debugging.
+                message.warning('Configuration saved to view_configs, but failed to sync to blueprints');
+            }
+        }
 
         message.success('Configuration updated successfully');
         fetchConfigs();

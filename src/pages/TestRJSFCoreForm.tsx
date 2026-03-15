@@ -110,6 +110,10 @@ const TestRJSFCoreForm = () => {
     const [newFieldDependsOnField, setNewFieldDependsOnField] = useState('');
     const [newFieldDependsOnColumn, setNewFieldDependsOnColumn] = useState('');
 
+    const [savedForms, setSavedForms] = useState<any[]>([]);
+    const [selectedFormId, setSelectedFormId] = useState<string | null>(null);
+    const [loadingSavedForms, setLoadingSavedForms] = useState(false);
+
     const WIDGET_OPTIONS = [
         { label: 'Default', value: 'default' },
         { label: 'Input', value: 'text' },
@@ -212,6 +216,83 @@ const TestRJSFCoreForm = () => {
 
         fetchMetadata();
     }, [selectedEntity]);
+
+    // Fetch saved forms when selectedEntity changes
+    useEffect(() => {
+        const fetchSavedForms = async () => {
+            if (!selectedEntity) {
+                setSavedForms([]);
+                setSelectedFormId(null);
+                return;
+            }
+
+            setSelectedFormId(null);
+            setLoadingSavedForms(true);
+            try {
+                // Determine search pattern: if crm.accounts then search for crm_accounts
+                const searchPattern = selectedEntity.replace('.', '_');
+                
+                const { data, error } = await supabase
+                    .schema('core')
+                    .from('forms')
+                    .select('id, name, organization_id')
+                    .ilike('name', `%${searchPattern}%`)
+                    .order('name', { ascending: true });
+
+                if (error) throw error;
+                setSavedForms(data || []);
+            } catch (err: any) {
+                console.error('Failed to fetch saved forms:', err);
+            } finally {
+                setLoadingSavedForms(false);
+            }
+        };
+
+        fetchSavedForms();
+    }, [selectedEntity]);
+
+    const handleLoadForm = async (formId: string) => {
+        if (!formId) return;
+        
+        setLoading(true);
+        try {
+            const { data, error } = await supabase
+                .schema('core')
+                .from('forms')
+                .select('*')
+                .eq('id', formId)
+                .single();
+
+            if (error) throw error;
+
+            if (data) {
+                // Update editable schemas
+                setDataSchemaStr(JSON.stringify(data.data_schema || {}, null, 2));
+                setUiSchemaStr(JSON.stringify(data.ui_schema || {}, null, 2));
+                setDbSchemaStr(JSON.stringify(data.data_config || {}, null, 2));
+                
+                setFormName(data.name || '');
+                setIsGlobal(!data.organization_id);
+                
+                // Set generated schema for preview
+                setGeneratedSchema({
+                    data_schema: data.data_schema,
+                    ui_schema: data.ui_schema,
+                    db_schema: data.data_config
+                });
+
+                // Update layout state
+                setUiLayout(data.ui_schema?.['ui:layout'] || [[]]);
+
+                setSelectedFormId(formId);
+                message.success(`Form "${data.name}" loaded successfully`);
+            }
+        } catch (err: any) {
+            message.error('Failed to load form: ' + err.message);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     // Pre-fill lookup settings when field name or widget changes
     useEffect(() => {
@@ -729,6 +810,26 @@ const TestRJSFCoreForm = () => {
                             >
                                 Generate Form
                             </Button>
+
+                            {selectedEntity && (
+                                <div style={{ borderLeft: `1px solid ${token.colorBorder}`, paddingLeft: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+                                    <Text strong>Saved Forms: </Text>
+                                    <Select
+                                        style={{ width: 250 }}
+                                        placeholder="Select a saved form"
+                                        options={savedForms.map(f => ({
+                                            label: f.name,
+                                            value: f.id,
+                                        }))}
+                                        loading={loadingSavedForms}
+                                        value={selectedFormId}
+                                        onChange={handleLoadForm}
+                                        allowClear
+                                        showSearch
+                                        optionFilterProp="label"
+                                    />
+                                </div>
+                            )}
                         </Space>
                     </Card>
 

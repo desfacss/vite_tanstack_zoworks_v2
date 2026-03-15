@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/core/lib/store';
 import { getCacheConfig } from '@/core/lib/cacheConfig';
+import { snakeToTitleCase } from '@/core/components/common/utils/casing';
 
 interface Config {
   available_views?: string[] | null;
@@ -96,8 +97,10 @@ export const useViewConfigEnhanced = (entityType: string, entitySchema: string) 
       const mergedConfig: Config = {
         ...viewConfigData.general,
         details: {
+          name: snakeToTitleCase(finalEntityType), // Default fallback
           ...(entityData.semantics?.details || {}),
-          ...(viewConfigData.details || {}),
+          ...(viewConfigData.general?.details || {}),
+          ...(viewConfigData.details || {}), // Fallback to deprecated top-level column if exists
         },
       };
 

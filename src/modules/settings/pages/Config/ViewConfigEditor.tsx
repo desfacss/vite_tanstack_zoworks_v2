@@ -220,6 +220,20 @@ const ViewConfigEditor = ({ entityType, metadata, entitySchema }: any) => {
 
       if (error) throw error;
       
+      // Perform synchronization write to core.entity_blueprints
+      if (entityType) {
+        const { error: blueprintError } = await supabase
+          .schema('core')
+          .from('entity_blueprints')
+          .update({ ui_general: upsertPayload.general })
+          .eq('base_source', entityType);
+        
+        if (blueprintError) {
+          console.error('Error syncing ViewConfig to entity_blueprints:', blueprintError);
+          message.warning('View Config saved, but failed to sync to blueprints');
+        }
+      }
+
       message.success('Configuration saved successfully!');
       if (savedRecord && savedRecord.length > 0) {
         setViewConfigId(savedRecord[0].id);

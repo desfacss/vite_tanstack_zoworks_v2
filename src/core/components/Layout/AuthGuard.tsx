@@ -42,7 +42,7 @@ const AuthGuard: React.FC = () => {
   const hostname = window.location.hostname;
   const isHub = isHubHost(hostname) || isDevelopment();
   const isLogin = isLoginPortal();
-  const isAuthPage = ['/login', '/signup', '/reset_password', '/web_register'].includes(location.pathname);
+  const isAuthPage = ['/login', '/signup', '/reset_password', '/web_register', '/sign_up'].includes(location.pathname);
   const isResetPassword = location.pathname === '/reset_password';
 
   // Get redirect parameter (from login portal)
