@@ -1,7 +1,7 @@
 import Form from "@rjsf/antd";
 import validator from "@rjsf/validator-ajv8";
 import { Button, Space, Spin, Typography } from "antd";
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { PostgrestFilterBuilder } from '@supabase/supabase-js';
 import Widgets from "./Widgets";
 import ObjectFieldTemplate from "./ObjectFieldTemplate";
@@ -28,12 +28,11 @@ interface DynamicFormProps {
 }
 
 interface CustomSubmitButton {
-  name: string;
-  label: string;
-  variant?: 'primary' | 'default' | 'dashed' | 'link' | 'text'; // Maps to Antd Button type
+  label: string; // Used for both display and identification
+  variant?: 'primary' | 'default' | 'dashed' | 'link' | 'text';
   icon?: string;
   className?: string;
-  defaultValues?: { [key: string]: any }; // The key feature: default data to merge on submit
+  defaultValues?: { [key: string]: any };
 }
 
 interface EnumType {
@@ -173,8 +172,8 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ schemas, formData, updateId, 
   const [submitClicked, setSubmitClicked] = useState<boolean>(false);
   const [enumCache, setEnumCache] = useState<{ [key: string]: any[] }>({});
 
-  // 🎯 FIX: Use a state to hold the *active* button's default values
-  const [activeButtonDefaults, setActiveButtonDefaults] = useState<{ [key: string]: any } | null>(null);
+  // 🎯 FIX: Use a ref to hold the *active* button's default values for reliable sync access in onSubmit
+  const activeButtonDefaultsRef = useRef<{ [key: string]: any } | null>(null);
 
   const { organization: userOrganization, location } = useAuthStore();
 
@@ -527,7 +526,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ schemas, formData, updateId, 
     const finalFormData = {
       ...localFormData,
       ...formData,
-      ...(activeButtonDefaults || {}), // <--- THE FIX: Merge the payload here
+      ...(activeButtonDefaultsRef.current || {}), // <--- THE FIX: Merge the payload here using Ref
     };
 
     if (!isMultiPage || currentPage === totalPages - 1) {
@@ -538,7 +537,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ schemas, formData, updateId, 
       setLocalFormData({});
       setCurrentPage(0);
       setSubmitClicked(false);
-      setActiveButtonDefaults(null); // <--- IMPORTANT: Clear the defaults
+      activeButtonDefaultsRef.current = null; // <--- IMPORTANT: Clear the defaults
     }
   };
 
@@ -546,8 +545,8 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ schemas, formData, updateId, 
   const handleCustomSubmit = (defaults: { [key: string]: any }) => (e: React.MouseEvent) => {
     e.preventDefault();
 
-    // Set the default values for the upcoming submission
-    setActiveButtonDefaults(defaults);
+    // Set the default values for the upcoming submission (synchronously via Ref)
+    activeButtonDefaultsRef.current = defaults;
 
     // After setting the state, use a slight timeout or similar mechanism 
     // to ensure state is updated before form submission is guaranteed to read it.
@@ -576,9 +575,10 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ schemas, formData, updateId, 
 
   const pageFields: string[][] | undefined = schema?.ui_schema?.pageFields;
   const isMultiPage: boolean = pageFields && pageFields?.length > 1;
-  const totalPages: number = pageFields ? pageFields?.length : 1;
+  const totalPages: number = pageFields ? pageFields.length : 1;
 
   const customSubmitButtons: CustomSubmitButton[] = schema?.ui_schema?.['ui:submitButtons'] || [];
+  const submitButtonOptions = schema?.ui_schema?.['ui:submitButtonOptions'] || {};
 
 
   const getPageSchema = (): any => {
@@ -689,15 +689,14 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ schemas, formData, updateId, 
             Page {currentPage + 1} of {totalPages}
           </Typography.Text>
 
-          {currentPage < totalPages - 1 ? (
+            {currentPage < totalPages - 1 ? (
             <Button type="default" onClick={handleNext}>Next</Button>
           ) : (
-            // Last page: Render custom buttons or default submit
             <Space size="small">
-              {customSubmitButtons.length > 0 ? (
+              {customSubmitButtons.length > 0 &&
                 customSubmitButtons.map((button) => (
                   <Button
-                    key={button.name}
+                    key={button.label}
                     type={button.variant || "default"}
                     onClick={handleCustomSubmit(button.defaultValues || {})}
                     className={button.className}
@@ -705,9 +704,11 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ schemas, formData, updateId, 
                     {button.label}
                   </Button>
                 ))
-              ) : (
-                // Default submit for last page if no custom buttons
-                <Button type="primary" htmlType="submit" onClick={handleCustomSubmit({})}>Submit</Button>
+              }
+              {!submitButtonOptions.norender && (
+                <Button type="primary" htmlType="submit" onClick={handleCustomSubmit({})}>
+                  {submitButtonOptions.submitText || (updateId ? "Update" : "Save")}
+                </Button>
               )}
             </Space>
           )}
@@ -716,43 +717,33 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ schemas, formData, updateId, 
     }
 
     // --- Single-Page Logic ---
-    if (customSubmitButtons.length > 0) {
-      return (
-        <div // Changed from <Space> to a <div> for better flex control
-          style={{
-            display: "flex",
-            justifyContent: "space-between", // Distribute buttons across the line
-            gap: 8, // Maintain the gap
-            marginTop: 16,
-            width: "100%",
-          }}
-        >
-          {customSubmitButtons.map((button) => (
+    // --- Single-Page Logic ---
+    return (
+      <div style={{ display: 'flex', gap: 8, marginTop: 16, width: '100%' }}>
+        {customSubmitButtons.length > 0 &&
+          customSubmitButtons.map((button) => (
             <Button
-              key={button.name}
+              key={button.label}
               type={button.variant || "default"}
               onClick={handleCustomSubmit(button.defaultValues || {})}
               className={button.className}
-              style={{ flex: 1 }} // <--- MODIFICATION: Makes button take up equal width
+              style={{ flex: 1 }}
             >
               {button.label}
             </Button>
           ))}
-        </div> // Changed from </Space> to </div>
-      );
-    }
-
-    // Fallback default submit for single page, no custom buttons
-    return (
-      <Button
-        type="primary"
-        htmlType="submit"
-        style={{ marginTop: 16, width: "100%" }}
-        onClick={handleCustomSubmit({})} // Triggers submit with empty defaults
-      >
-        Submit
-      </Button>
-    )
+        {!submitButtonOptions.norender && (
+          <Button
+            type="primary"
+            htmlType="submit"
+            style={customSubmitButtons.length > 0 ? { flex: 1 } : { width: '100%' }}
+            onClick={handleCustomSubmit({})}
+          >
+            {submitButtonOptions.submitText || (updateId ? "Update" : "Save")}
+          </Button>
+        )}
+      </div>
+    );
   };
 
   const _RJSFSchema = schema && (isMultiPage ? getPageSchema() : schema?.data_schema);

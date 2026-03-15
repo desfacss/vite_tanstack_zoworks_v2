@@ -1,62 +1,55 @@
 
 // components/common/ApprovalActionButtons.tsx
+// Blueprint-driven approval routing via identity.get_all_approvers_from_blueprint
 
 import React, { useState, useEffect } from 'react';
 import { Button, Space, message, Modal, Spin } from 'antd';
 import { CheckCircle, XCircle } from "lucide-react";
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase'; // Assuming this path is correct
-import { useAuthStore } from '@/core/lib/store'; // Assuming this path is correct
-
-// --- Configuration ---
-// NOTE: Use the actual HR Role ID from your system.
-const HR_ROLE_ID = '80d2b431-7b95-453a-9a24-b697eefeca42';
-// Define the stage ID(s) that permit an approval/rejection action
-const ELIGIBLE_STATUSES = ['Submitted', 'Pending', 'Under Review', null, undefined];
-const COMPLETED_STATUSES = ['Approved', 'Rwejected'];
-// ---------------------
+import { supabase } from '@/lib/supabase';
+import { useAuthStore } from '@/core/lib/store';
 
 interface ApprovalActionButtonsProps {
   entityId: string;
-  entityType: string; // The table name (e.g., 'public.timesheet')
-  entitySchema: string; // The schema name (e.g., 'public')
-  currentStatus: string | null | undefined;
+  entityType: string;      // e.g. 'workforce.leave_applications'
+  entitySchema: string;
+  currentStageId: string | null | undefined;
   submitterUserId: string | null;
   createdAt: string | null;
+  automationBpInstanceId?: string | null; // from leave_applications.automation_bp_instance_id
 }
 
 const ApprovalActionButtons: React.FC<ApprovalActionButtonsProps> = ({
   entityId,
   entityType,
   entitySchema,
-  currentStatus,
+  currentStageId,
   submitterUserId,
   createdAt,
+  automationBpInstanceId,
 }) => {
   const [isApprover, setIsApprover] = useState(false);
   const [isCheckingEligibility, setIsCheckingEligibility] = useState(false);
   const { organization, user } = useAuthStore();
   const queryClient = useQueryClient();
-  // 1. Check if the current user is an eligible approver for this record
-  const checkApproverEligibility = async () => {
-    // Basic checks to prevent unnecessary API calls
-    console.log('[ApprovalActionButtons] Eligibility Check:', {
-      entityId,
-      currentStatus,
-      submitterUserId,
-      createdAt,
-      orgId: organization?.id,
-      userId: user?.id
-    });
 
-    if (!submitterUserId || !createdAt || !organization?.id || !user?.id) {
+  const checkApproverEligibility = async () => {
+    // PRE-EMPTIVE GUARD: If record is already in a terminal stage, don't show buttons
+    const terminalStages = ['Approved', 'Rejected', 'Cancelled'];
+    if (currentStageId && terminalStages.includes(currentStageId)) {
+      console.log('[ApprovalActionButtons] Record is in a terminal stage, hiding buttons.');
       setIsApprover(false);
       return;
     }
 
-    // Check if the current status allows for approval/rejection
-    const statusIsEligible = ELIGIBLE_STATUSES.some(s => s === currentStatus);
-    if (!statusIsEligible) {
+    console.log('[ApprovalActionButtons] Checking eligibility:', {
+      entityId, currentStageId, submitterUserId, createdAt,
+      automationBpInstanceId, orgId: organization?.id, userId: user?.id
+    });
+
+    // Basic guards
+    if (!submitterUserId || !createdAt || !organization?.id || !user?.id || !currentStageId) {
+      console.warn('[ApprovalActionButtons] Missing required fields or currentStageId, skipping check.');
       setIsApprover(false);
       return;
     }
@@ -64,8 +57,43 @@ const ApprovalActionButtons: React.FC<ApprovalActionButtonsProps> = ({
     setIsCheckingEligibility(true);
 
     try {
-      // Step A: We need the org_user_id of the submitter, not just their user_id
-      // to walk the management chain correctly in the RPC.
+      // ── Step 1: Resolve blueprint definition ───────────────────────────────
+      let blueprintDefinition: any = null;
+
+      if (automationBpInstanceId) {
+        // Follow: bp_instance → blueprint_id → bp_process_blueprints.definition
+        const { data: bpInstance, error: bpInstanceError } = await supabase
+          .schema('automation')
+          .from('bp_instances')
+          .select('blueprint_id')
+          .eq('id', automationBpInstanceId)
+          .single();
+
+        if (bpInstanceError || !bpInstance) {
+          console.warn('[ApprovalActionButtons] Could not fetch bp_instance:', bpInstanceError);
+        } else {
+          const { data: blueprint, error: blueprintError } = await supabase
+            .schema('automation')
+            .from('bp_process_blueprints')
+            .select('definition')
+            .eq('id', bpInstance.blueprint_id)
+            .single();
+
+          if (blueprintError || !blueprint) {
+            console.warn('[ApprovalActionButtons] Could not fetch blueprint:', blueprintError);
+          } else {
+            blueprintDefinition = blueprint.definition;
+          }
+        }
+      }
+
+      if (!blueprintDefinition) {
+        console.warn('[ApprovalActionButtons] No blueprint definition available, cannot determine approvers.');
+        setIsApprover(false);
+        return;
+      }
+
+      // ── Step 2: Resolve submitter's org_user_id ────────────────────────────
       const { data: orgUserData, error: orgUserError } = await supabase
         .schema('identity')
         .from('organization_users')
@@ -75,43 +103,46 @@ const ApprovalActionButtons: React.FC<ApprovalActionButtonsProps> = ({
         .single();
 
       if (orgUserError || !orgUserData) {
-        console.warn('[ApprovalActionButtons] Could not find organization_user for submitter:', submitterUserId);
+        console.warn('[ApprovalActionButtons] Could not find org_user for submitter:', submitterUserId);
         setIsApprover(false);
         return;
       }
 
       const submitterOrgUserId = orgUserData.id;
 
-      // Calling the stored procedure/RPC to check eligibility
-      // FIX: p_submitter_user_id -> p_submitter_org_user_id
-      const { data: approvers, error } = await supabase.schema('identity').rpc('get_all_approvers', {
-        p_submitter_org_user_id: submitterOrgUserId,
-        p_hr_role_id: HR_ROLE_ID,
-        p_organization_id: organization.id,
-        p_created_at: createdAt,
-        p_current_time: new Date().toISOString(),
-      });
+      // ── Step 3: Call get_all_approvers_from_blueprint ──────────────────────
+      const { data: approvers, error: rpcError } = await supabase
+        .schema('identity')
+        .rpc('get_all_approvers_from_blueprint', {
+          p_submitter_org_user_id: submitterOrgUserId,
+          p_organization_id: organization.id,
+          p_blueprint_definition: blueprintDefinition,
+          p_current_stage_id: currentStageId,
+          p_created_at: createdAt,
+          p_current_time: new Date().toISOString(),
+        });
 
-      console.log("[ApprovalActionButtons] RPC Results:", {
+      console.log('[ApprovalActionButtons] Blueprint RPC result:', {
         submitterOrgUserId,
+        currentStageId,
         approvers,
-        currentUserId: user?.id
+        myUserId: user?.id
       });
 
-      if (error) {
-        console.error('Error fetching approvers:', error);
+      if (rpcError) {
+        console.error('[ApprovalActionButtons] RPC error:', rpcError);
         setIsApprover(false);
         return;
       }
 
-      // Check if the current user's ID is in the list of eligible approvers
-      // FIX: approver.user_id -> approver.approver_user_id as per SQL definition
-      const isEligible = Array.isArray(approvers) && approvers.some(approver => approver.approver_user_id === user.id);
+      // ── Step 4: Check if current user is in the approvers list ────────────
+      const isEligible = Array.isArray(approvers) &&
+        approvers.some((a: any) => a.approver_user_id === user.id);
 
       setIsApprover(isEligible);
 
-    } catch (error) {
-      console.error('Approval check failed:', error);
+    } catch (err) {
+      console.error('[ApprovalActionButtons] Unexpected error:', err);
       setIsApprover(false);
       message.error('Failed to check approval eligibility.');
     } finally {
@@ -121,76 +152,55 @@ const ApprovalActionButtons: React.FC<ApprovalActionButtonsProps> = ({
 
   useEffect(() => {
     checkApproverEligibility();
-  }, [submitterUserId, createdAt, currentStatus, organization?.id, user?.id]);
+  }, [submitterUserId, createdAt, currentStageId, organization?.id, user?.id, automationBpInstanceId]);
 
-  // 2. Mutation for updating the record status
-  const updateStatusMutation = useMutation({
-    mutationFn: async (newStatus: 'Approved' | 'Rejected') => {
+  // ── Approve / Reject mutation ──────────────────────────────────────────────
+  const updateStageMutation = useMutation({
+    mutationFn: async (newStageId: 'Approved' | 'Rejected') => {
       if (!entityId || !entityType) throw new Error('Entity information missing.');
-
       const payload = {
-        id: entityId, // Include id in data object for update
-        // The column in your table that holds the status/stage information
-        status: newStatus,
-        stage_id: newStatus,
-        // Add audit fields if necessary
-        // approved_by: newStatus === 'Approved' ? user?.id : null,
-        // rejected_by: newStatus === 'Rejected' ? user?.id : null,
-        // approved_at: newStatus === 'Approved' ? new Date().toISOString() : null,
-        // rejected_at: newStatus === 'Rejected' ? new Date().toISOString() : null,
+        id: entityId,
+        status: newStageId,
+        stage_id: newStageId,
       };
-
       const { error } = await supabase.schema('core').rpc('api_new_core_upsert_data', {
         table_name: entityType,
         data: payload
       });
-
       if (error) throw error;
     },
-    onSuccess: (_, newStatus) => {
+    onSuccess: (_, newStageId) => {
       queryClient.invalidateQueries({ queryKey: [entityType?.split('.')[1], organization?.id] });
-      message.success(`Successfully ${newStatus} !`);
-      // Re-run eligibility check to hide buttons after update
+      message.success(`Successfully ${newStageId}!`);
       setIsApprover(false);
-      // checkApproverEligibility(); 
     },
-    onError: (error: any, newStatus) => {
-      message.error(error.message || `Failed to ${newStatus.toLowerCase()} ${entityType}.`);
+    onError: (error: any, newStageId) => {
+      message.error(error.message || `Failed to ${newStageId.toLowerCase()} ${entityType}.`);
     },
   });
 
-
-  // 3. Handlers with Confirmation Popups
   const handleAction = (action: 'Approved' | 'Rejected') => {
-    const title = `${action} Confirmation`;
-    const content = `Are you sure you want to ${action.toLowerCase()} this ${entityType}?`;
-
     Modal.confirm({
-      title: title,
-      content: content,
+      title: `${action} Confirmation`,
+      content: `Are you sure you want to ${action.toLowerCase()} this request?`,
       okText: action,
       okType: action === 'Rejected' ? 'danger' : 'primary',
       cancelText: 'Cancel',
-      onOk() {
-        updateStatusMutation.mutate(action);
-      },
-      // Do nothing on Cancel
+      onOk() { updateStageMutation.mutate(action); },
     });
   };
 
-
-  // 4. Render Logic
-  if (isCheckingEligibility || updateStatusMutation.isPending) {
-    return <Spin tip={isCheckingEligibility ? "Checking eligibility..." : "Submitting action..."} style={{ marginTop: '20px' }} />;
+  // ── Render ─────────────────────────────────────────────────────────────────
+  if (isCheckingEligibility || updateStageMutation.isPending) {
+    return <Spin tip={isCheckingEligibility ? 'Checking approval eligibility...' : 'Submitting...'} style={{ marginTop: 20 }} />;
   }
 
-  console.log('[ApprovalActionButtons] Final IsApprover:', isApprover);
   if (!isApprover) return null;
 
   return (
     <Space
       style={{
-        marginTop: '20px',
+        marginTop: 20,
         padding: '15px 0',
         borderTop: '1px solid #f0f0f0',
         width: '100%',
@@ -199,17 +209,17 @@ const ApprovalActionButtons: React.FC<ApprovalActionButtonsProps> = ({
     >
       <Button
         type="primary"
-        className="bg-green-600 hover:bg-green-700 border-green-600"
         icon={<CheckCircle size={16} />}
-        loading={updateStatusMutation.isPending}
+        loading={updateStageMutation.isPending}
         onClick={() => handleAction('Approved')}
+        style={{ backgroundColor: '#16a34a', borderColor: '#16a34a' }}
       >
         Approve
       </Button>
       <Button
         danger
         icon={<XCircle size={16} />}
-        loading={updateStatusMutation.isPending}
+        loading={updateStageMutation.isPending}
         onClick={() => handleAction('Rejected')}
       >
         Reject

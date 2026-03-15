@@ -709,16 +709,18 @@ const DetailOverview: React.FC<DetailOverviewProps> = ({
               id: currentData.id,
               stage_id: currentData.stage_id,
               user_id: currentData.user_id,
-              created_at: currentData.created_at
+              created_at: currentData.created_at,
+              automation_bp_instance_id: currentData.automation_bp_instance_id,
             });
             return (
               <ApprovalActionButtons
                 entityId={currentData.id}
                 entityType={viewConfig?.entity_type}
                 entitySchema={viewConfig?.entity_schema}
-                currentStatus={currentData.stage_id}
+                currentStageId={currentData.stage_id}
                 submitterUserId={currentData.user_id}
                 createdAt={currentData.created_at}
+                automationBpInstanceId={currentData.automation_bp_instance_id}
               />
             );
           })()}

@@ -110,6 +110,12 @@ const TestRJSFCoreForm = () => {
     const [newFieldDependsOnField, setNewFieldDependsOnField] = useState('');
     const [newFieldDependsOnColumn, setNewFieldDependsOnColumn] = useState('');
 
+    // Custom Button states
+    const [isAddingButton, setIsAddingButton] = useState(false);
+    const [newButtonLabel, setNewButtonLabel] = useState('');
+    const [newButtonVariant, setNewButtonVariant] = useState('default');
+    const [newButtonDefaultValues, setNewButtonDefaultValues] = useState('{}');
+
     const [savedForms, setSavedForms] = useState<any[]>([]);
     const [selectedFormId, setSelectedFormId] = useState<string | null>(null);
     const [loadingSavedForms, setLoadingSavedForms] = useState(false);
@@ -674,6 +680,57 @@ const TestRJSFCoreForm = () => {
         }
     };
 
+    const handleAddCustomButton = () => {
+        if (!newButtonLabel) {
+            message.warning('Please enter a button label');
+            return;
+        }
+
+        try {
+            const currentUi = JSON.parse(uiSchemaStr || '{}');
+            const buttons = currentUi['ui:submitButtons'] || [];
+            
+            let defaults = {};
+            try {
+                defaults = JSON.parse(newButtonDefaultValues);
+            } catch (pErr) {
+                message.error('Invalid JSON in default values');
+                return;
+            }
+
+            buttons.push({
+                label: newButtonLabel,
+                variant: newButtonVariant,
+                defaultValues: defaults
+            });
+
+            currentUi['ui:submitButtons'] = buttons;
+            setUiSchemaStr(JSON.stringify(currentUi, null, 2));
+            
+            setNewButtonLabel('');
+            setNewButtonVariant('default');
+            setNewButtonDefaultValues('{}');
+            setIsAddingButton(false);
+            message.success(`Button "${newButtonLabel}" added`);
+        } catch (e) {
+            message.error('Error adding button: ' + (e as Error).message);
+        }
+    };
+
+    const handleDeleteButton = (label: string) => {
+        try {
+            const currentUi = JSON.parse(uiSchemaStr);
+            if (currentUi['ui:submitButtons']) {
+                currentUi['ui:submitButtons'] = currentUi['ui:submitButtons'].filter((b: any) => b.label !== label);
+                if (currentUi['ui:submitButtons'].length === 0) delete currentUi['ui:submitButtons'];
+                setUiSchemaStr(JSON.stringify(currentUi, null, 2));
+                message.info(`Button "${label}" removed`);
+            }
+        } catch (e) {
+            message.error('Error removing button: ' + (e as Error).message);
+        }
+    };
+
     const handleWidgetChange = (fieldPath: string, widget: string) => {
         try {
             const currentUi = JSON.parse(uiSchemaStr);
@@ -1062,6 +1119,97 @@ const TestRJSFCoreForm = () => {
                                                     >
                                                         Cancel
                                                     </Button>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </Card>
+
+                                <Card size="small" title="Custom Submit Buttons" style={{ marginTop: 16 }}>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                                        {(() => {
+                                            try {
+                                                const ui = JSON.parse(uiSchemaStr || '{}');
+                                                const buttons = ui['ui:submitButtons'] || [];
+                                                return buttons.map((btn: any) => (
+                                                    <div key={btn.label} style={{
+                                                        display: 'flex',
+                                                        justifyContent: 'space-between',
+                                                        alignItems: 'center',
+                                                        padding: '8px',
+                                                        background: token.colorFillSecondary,
+                                                        border: `1px solid ${token.colorBorderSecondary}`,
+                                                        borderRadius: token.borderRadiusLG
+                                                    }}>
+                                                        <Space>
+                                                            <Text strong>{btn.label}</Text>
+                                                            <Text type="secondary" style={{ fontSize: '10px' }}>({btn.variant})</Text>
+                                                        </Space>
+                                                        <Button
+                                                            type="text"
+                                                            danger
+                                                            size="small"
+                                                            icon={<Trash2 size={14} />}
+                                                            onClick={() => handleDeleteButton(btn.label)}
+                                                        />
+                                                    </div>
+                                                ));
+                                            } catch (e) {
+                                                return <Text type="danger">UI Schema Error</Text>;
+                                            }
+                                        })()}
+
+                                        {!isAddingButton ? (
+                                            <Button
+                                                type="dashed"
+                                                block
+                                                icon={<PlusOutlined />}
+                                                onClick={() => setIsAddingButton(true)}
+                                            >
+                                                Add Custom Button
+                                            </Button>
+                                        ) : (
+                                            <div style={{
+                                                padding: '12px',
+                                                background: token.colorFillAlter,
+                                                borderRadius: token.borderRadiusLG,
+                                                border: `1px dashed ${token.colorBorder}`,
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                gap: 8
+                                            }}>
+                                                <Input
+                                                    size="small"
+                                                    placeholder="Button Label"
+                                                    value={newButtonLabel}
+                                                    onChange={(e) => setNewButtonLabel(e.target.value)}
+                                                />
+                                                <Select
+                                                    size="small"
+                                                    value={newButtonVariant}
+                                                    onChange={setNewButtonVariant}
+                                                    options={[
+                                                        { label: 'Primary', value: 'primary' },
+                                                        { label: 'Default', value: 'default' },
+                                                        { label: 'Dashed', value: 'dashed' },
+                                                        { label: 'Danger', value: 'danger' }
+                                                    ]}
+                                                    style={{ width: '100%' }}
+                                                />
+                                                <Text type="secondary" style={{ fontSize: '10px' }}>Default Values (JSON):</Text>
+                                                <AceEditor
+                                                    mode="json"
+                                                    theme={isDarkMode ? "monokai" : "github"}
+                                                    value={newButtonDefaultValues}
+                                                    onChange={setNewButtonDefaultValues}
+                                                    width="100%"
+                                                    height="100px"
+                                                    fontSize={12}
+                                                    setOptions={{ useWorker: false, showPrintMargin: false, showGutter: false }}
+                                                />
+                                                <div style={{ display: 'flex', gap: 8 }}>
+                                                    <Button type="primary" size="small" onClick={handleAddCustomButton} style={{ flex: 1 }}>Add</Button>
+                                                    <Button size="small" onClick={() => setIsAddingButton(false)} style={{ flex: 1 }}>Cancel</Button>
                                                 </div>
                                             </div>
                                         )}

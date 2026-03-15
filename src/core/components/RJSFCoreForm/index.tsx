@@ -1,7 +1,7 @@
 import Form from "@rjsf/antd";
 import validator from "@rjsf/validator-ajv8";
 import { Button, message, Space, Spin, Typography } from "antd";
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "../../lib/supabase";
 import { useAuthStore } from "../../lib/store";
@@ -11,6 +11,14 @@ import CustomFieldTemplate from "../DynamicForm/FieldTemplate";
 import { debounce } from "lodash";
 
 // --- Interfaces ---
+
+interface CustomSubmitButton {
+  label: string; // Used for both display and identification
+  variant?: 'primary' | 'default' | 'dashed' | 'link' | 'text';
+  icon?: string;
+  className?: string;
+  defaultValues?: { [key: string]: any };
+}
 
 interface RJSFCoreFormProps {
   schema: {
@@ -148,6 +156,7 @@ const RJSFCoreForm: React.FC<RJSFCoreFormProps> = ({
 
   const { organization, user, location } = useAuthStore();
   const queryClient = useQueryClient();
+  const activeButtonDefaultsRef = useRef<{ [key: string]: any } | null>(null);
 
   // --- Fetch Logic ---
 
@@ -362,7 +371,30 @@ const RJSFCoreForm: React.FC<RJSFCoreFormProps> = ({
   const onSubmit = (data: any) => {
     setSubmitClicked(true);
     if (!isMultiPage || currentPage === totalPages - 1) {
-      upsertMutation.mutate(data.formData);
+      const finalFormData = {
+        ...data.formData,
+        ...(activeButtonDefaultsRef.current || {}),
+      };
+      upsertMutation.mutate(finalFormData);
+      activeButtonDefaultsRef.current = null; // Clear after use
+    }
+  };
+
+  const handleCustomSubmit = (defaults: any) => (e: React.MouseEvent) => {
+    e.preventDefault();
+    activeButtonDefaultsRef.current = defaults;
+
+    // Trigger form submission programmatically
+    const formElement = document.getElementById('rjsf-core-form');
+    if (formElement) {
+      const submitButton = formElement.querySelector('button[type="submit"]') as HTMLButtonElement;
+      if (submitButton) {
+        submitButton.click();
+      } else {
+        // Fallback: trigger submit event on form
+        const event = new Event('submit', { cancelable: true, bubbles: true });
+        formElement.dispatchEvent(event);
+      }
     }
   };
 
@@ -414,6 +446,8 @@ const RJSFCoreForm: React.FC<RJSFCoreFormProps> = ({
   const pageFields = schema?.ui_schema?.pageFields;
   const isMultiPage = pageFields && pageFields.length > 1;
   const totalPages = pageFields ? pageFields.length : 1;
+  const customSubmitButtons: CustomSubmitButton[] = schema?.ui_schema?.['ui:submitButtons'] || [];
+  const submitButtonOptions = schema?.ui_schema?.['ui:submitButtonOptions'] || {};
 
   const getPageSchema = () => {
     if (!isMultiPage || !schema) return schema?.data_schema;
@@ -467,13 +501,58 @@ const RJSFCoreForm: React.FC<RJSFCoreFormProps> = ({
             {currentPage < totalPages - 1 ? (
               <Button type="primary" onClick={handleNext}>Next</Button>
             ) : (
-              <Button type="primary" htmlType="submit" loading={upsertMutation.isPending}>Submit</Button>
+              <div style={{ display: 'flex', gap: 8, width: '100%' }}>
+                {customSubmitButtons.length > 0 &&
+                  customSubmitButtons.map((button) => (
+                    <Button
+                      key={button.label}
+                      type={(button.variant as any) || "default"}
+                      onClick={handleCustomSubmit(button.defaultValues || {})}
+                      className={button.className}
+                      style={{ flex: 1 }}
+                    >
+                      {button.label}
+                    </Button>
+                  ))}
+                {!submitButtonOptions.norender && (
+                  <Button
+                    type="primary"
+                    htmlType="submit"
+                    loading={upsertMutation.isPending}
+                    style={{ flex: 1 }}
+                  >
+                    {submitButtonOptions.submitText || (updateId ? "Update" : "Save")}
+                  </Button>
+                )}
+              </div>
             )}
           </Space>
         ) : (
-          <Button type="primary" htmlType="submit" block loading={upsertMutation.isPending}>
-            {updateId ? 'Update' : 'Save'}
-          </Button>
+          <div style={{ display: 'flex', gap: 8, width: '100%' }}>
+            {customSubmitButtons.length > 0 &&
+              customSubmitButtons.map((button) => (
+                <Button
+                  key={button.label}
+                  type={(button.variant as any) || "default"}
+                  onClick={handleCustomSubmit(button.defaultValues || {})}
+                  className={button.className}
+                  style={{ flex: 1 }}
+                >
+                  {button.label}
+                </Button>
+              ))}
+            {!submitButtonOptions.norender && (
+              <Button
+                type="primary"
+                htmlType="submit"
+                block={customSubmitButtons.length === 0}
+                loading={upsertMutation.isPending}
+                style={customSubmitButtons.length > 0 ? { flex: 1 } : {}}
+              >
+                {submitButtonOptions.submitText || (updateId ? "Update" : "Save")}
+              </Button>
+            )}
+          </div>
         )}
       </div>
     </Form>
