@@ -493,6 +493,7 @@ interface TicketDetails {
   display_id: string;
   conversation_id: string | null;
   organization_id?: string;
+  receivers?: { emails: string[] } | null;
 }
 
 // ===================================================================================
@@ -507,9 +508,11 @@ const Ticket: React.FC<TicketProps> = ({ data, entityId }) => {
   const [ticketDetails, setTicketDetails] = useState<TicketDetails | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [conversationId, setConversationId] = useState<string | null>(null);
   const [replyContent, setReplyContent] = useState<string>('');
   const [sending, setSending] = useState<boolean>(false);
   const supportEmail = (appSettings as any)?.emailOverrides?.email || (appSettings as any)?.email?.[0];
+
   useEffect(() => {
     if (!ticketId) {
       setError('No ticket ID provided.');
@@ -524,29 +527,40 @@ const Ticket: React.FC<TicketProps> = ({ data, entityId }) => {
 
         // Fetch ticket details
         const config = {
-          main_table: { schema: 'blueprint', name: 'tickets' },
-          join_table: { schema: 'external', name: 'contacts', on_fk_column: 'contact_id' },
-          filters: { where_clause: `m.id = '${ticketId}'` },
+          entity_name: 'tickets',
+          entity_schema: 'esm',
+          filters: [{ key: 'id', operator: '=', value: ticketId }],
+          include_jsonb: true,
+          mode: 'fast'
         };
-        const { data: ticketData, error: ticketError } = await supabase.rpc('core_get_entity_data_with_joins_v2', { config });//TODO:RAVI
-        // const { data: ticketData, error: ticketError } = await supabase.schema('core').rpc('api_fetch_entity_records', { config });//TODO:RAVI
+        const { data, error: ticketError } = await supabase.schema('core').rpc('api_new_fetch_entity_records', { config });
         if (ticketError) throw new Error(`Ticket fetch failed: ${ticketError.message}`);
-        const parsedTicketData = ticketData?.[0];
+        const parsedTicketData = data?.data?.[0];
         if (!parsedTicketData) throw new Error('Ticket not found.');
         setTicketDetails(parsedTicketData);
 
-        // Fetch dynamic support email - currently disabled, using default from appSettings
-        // if (parsedTicketData.organization_id && parsedTicketData.location_id) {
-        //   const { data: orgData } = await supabase.schema('identity').from('organizations').select('app_settings').eq('id', parsedTicketData.organization_id).single();
-        //   const { data: locData } = await supabase.schema('identity').from('locations').select('app_settings').eq('id', parsedTicketData.location_id).single();
-        //   const locEmail = locData?.app_settings?.emailOverrides?.fromAddress;
-        //   const orgEmail = orgData?.app_settings?.channels?.email?.defaults?.fromAddress;
-        //   // setSupportEmail(locEmail || orgEmail || 'support@vkbs.zoworks.com');
-        // }
+        // Fetch conversation for this ticket
+        const { data: conversationData, error: convError } = await supabase
+          .schema('esm')
+          .from('v_conversations')
+          .select('id')
+          .eq('ticket_id', ticketId)
+          .maybeSingle();
 
-        // Fetch messages
-        if (parsedTicketData.conversation_id) {
-      const { data: messagesData, error: messagesError } = await supabase.schema('esm').from('v_messages').select('id, conversation_id, content, timestamp, direction').eq('conversation_id', parsedTicketData.conversation_id).order('timestamp', { ascending: false });
+        if (convError) console.error('Error fetching conversation:', convError);
+        
+        const currentConvId = conversationData?.id;
+        setConversationId(currentConvId);
+
+        // Fetch messages if conversation exists
+        if (currentConvId) {
+          const { data: messagesData, error: messagesError } = await supabase
+            .schema('esm')
+            .from('v_messages')
+            .select('id, conversation_id, content, timestamp, direction')
+            .eq('conversation_id', currentConvId)
+            .order('timestamp', { ascending: false });
+          
           if (messagesError) throw new Error(`Messages fetch failed: ${messagesError.message}`);
 
           const parsedMessages = messagesData.map(msg => {
@@ -571,35 +585,46 @@ const Ticket: React.FC<TicketProps> = ({ data, entityId }) => {
   }, [ticketId]);
 
   const handleSendReply = async () => {
-    if (!replyContent.trim() || !ticketDetails?.conversation_id || !user?.id) {
+    if (!replyContent.trim() || !conversationId || !user?.id || !ticketDetails) {
       notification.error({ message: 'Error', description: 'Missing required information to send reply.' });
       return;
     }
     setSending(true);
     try {
       // Fetch the latest message to get recipient details
-      const { data: latestMessage, error: messageError } = await supabase.schema('esm').from('v_messages').select('content').eq('conversation_id', ticketDetails.conversation_id).order('timestamp', { ascending: false }).limit(1).single();
-      if (messageError) throw new Error(`Failed to fetch latest message: ${messageError.message}`);
+      const { data: latestMessage, error: messageError } = await supabase
+        .schema('esm')
+        .from('v_messages')
+        .select('content')
+        .eq('conversation_id', conversationId)
+        .order('timestamp', { ascending: false })
+        .limit(1)
+        .maybeSingle();
 
-      const messageContent = latestMessage?.content ? (typeof latestMessage.content === 'string' ? JSON.parse(latestMessage.content) : latestMessage.content) : null;
-      if (!messageContent) throw new Error('No content found in the latest message.');
+      if (messageError) console.error('Error fetching latest message:', messageError);
 
-      // Construct reply recipients, excluding the agent's email AND the support email
-      const agentEmail = user.email || '';
-      const fromEmails = Array.isArray(messageContent.from) ? messageContent.from : [messageContent.from];
-      const toEmails = Array.isArray(messageContent.to) ? messageContent.to : [messageContent.to];
-      const ccEmails = Array.isArray(messageContent.cc) ? messageContent.cc : [];
+      let uniqueEmails: string[] = [];
+      if (latestMessage) {
+        const messageContent = latestMessage?.content ? (typeof latestMessage.content === 'string' ? JSON.parse(latestMessage.content) : latestMessage.content) : null;
+        if (messageContent) {
+          const agentEmail = user.email || '';
+          const fromEmails = Array.isArray(messageContent.from) ? messageContent.from : (messageContent.from ? [messageContent.from] : []);
+          const toEmails = Array.isArray(messageContent.to) ? messageContent.to : (messageContent.to ? [messageContent.to] : []);
+          const ccEmails = Array.isArray(messageContent.cc) ? messageContent.cc : (messageContent.cc ? [messageContent.cc] : []);
 
-      const allEmails = [...fromEmails, ...toEmails, ...ccEmails];
+          const allEmails = [...fromEmails, ...toEmails, ...ccEmails];
+          uniqueEmails = Array.from(new Set(allEmails))
+            .filter(Boolean)
+            .filter(email => email.toLowerCase() !== agentEmail.toLowerCase())
+            .filter(email => email.toLowerCase() !== supportEmail?.toLowerCase());
+        }
+      }
 
-      const uniqueEmails = Array.from(new Set(allEmails))
-        .filter(Boolean) // Remove any null/undefined entries
-        .filter(email => email.toLowerCase() !== agentEmail.toLowerCase()) // [FIXED] Filter out the agent sending the reply
-        .filter(email => email.toLowerCase() !== supportEmail.toLowerCase()); // [FIXED] Filter out the common support email to prevent loops
+      if (uniqueEmails.length === 0 && ticketDetails.receivers?.emails) {
+        uniqueEmails = ticketDetails.receivers.emails.filter((e: string) => e.toLowerCase() !== supportEmail?.toLowerCase());
+      }
 
-      if (uniqueEmails.length === 0) throw new Error("No external recipients to send a reply to.");
-
-      const { data: conversationData } = await supabase.schema('esm').from('v_conversations').select('channel_conversation_id').eq('id', ticketDetails.conversation_id).single();
+      const { data: conversationData } = await supabase.schema('esm').from('v_conversations').select('channel_conversation_id').eq('id', conversationId).single();
 
       const emailMessageId = `<${uuidv4()}@zoworks.com>`;
       const inReplyTo = conversationData?.channel_conversation_id || null;
@@ -611,7 +636,7 @@ const Ticket: React.FC<TicketProps> = ({ data, entityId }) => {
 
       // 2. Save the reply to the database in ESM
       const { error: rpcError } = await supabase.schema('esm').rpc('fn_tkt_add_reply', {
-        p_conversation_id: ticketDetails.conversation_id,
+        p_conversation_id: conversationId,
         p_organization_id: ticketDetails.organization_id,
         p_content: emailData,
         p_direction: 'outbound',
@@ -622,10 +647,9 @@ const Ticket: React.FC<TicketProps> = ({ data, entityId }) => {
       if (rpcError) throw new Error(`Failed to save reply: ${rpcError.message}`);
 
       // 3. Update UI instantly
-      setMessages([{ id: uuidv4(), conversation_id: ticketDetails.conversation_id, content: replyContent, timestamp: new Date().toISOString(), direction: 'outbound', from_email: supportEmail, to_email: uniqueEmails, cc_emails: [] }, ...messages]);
+      setMessages([{ id: uuidv4(), conversation_id: conversationId!, content: replyContent, timestamp: new Date().toISOString(), direction: 'outbound', from_email: supportEmail, to_email: uniqueEmails, cc_emails: [] }, ...messages]);
       setReplyContent('');
       notification.success({ message: 'Reply Sent' });
-
     } catch (err: any) {
       notification.error({ message: 'Error', description: err.message });
     } finally {
