@@ -122,6 +122,9 @@ export interface EntityBlueprint {
   custom_view_sql?: string | null;
   partition_filter?: string | null;
   ui_config?: Record<string, any> | null;
+  ui_general?: Record<string, any> | null;
+  ui_details_overview?: Record<string, any> | null;
+  ui_dashboard?: Record<string, any> | null;
   dependencies?: string[] | null;
   status?: string | null;
   sub_panels?: any[] | null;
@@ -129,6 +132,8 @@ export interface EntityBlueprint {
   semantics?: Record<string, any> | null;
   rules?: Record<string, any> | null;
   ai_metadata?: Record<string, any> | null;
+  jsonb_schema?: Record<string, any> | null;
+  display_format?: Record<string, any> | null;
   classification?: string | null;
   version?: number | null;
   blueprint_hash?: string | null;

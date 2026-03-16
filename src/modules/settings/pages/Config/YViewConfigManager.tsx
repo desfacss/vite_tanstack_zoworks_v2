@@ -56,21 +56,13 @@ interface YViewConfig {
   [key: string]: any;
 }
 
-interface WorkflowConfiguration {
-  id: string;
-  name: string;
-  [key: string]: any;
-}
 
 const YViewConfigManager: React.FC = () => {
   const [configs, setConfigs] = useState<YViewConfig[]>([]);
   const [selectedConfig, setSelectedConfig] = useState<YViewConfig | null>(null);
-  const [workflowConfigurations, setWorkflowConfigurations] = useState<WorkflowConfiguration[]>([]);
-  const [selectedWorkflowConfiguration, setSelectedWorkflowConfiguration] = useState<WorkflowConfiguration | null>(null);
   const [activeTab, setActiveTab] = useState<string>('viewConfig');
   // const [dropdownOptions, setDropdownOptions] = useState<string[]>([]);
   const [selectedRow, setSelectedRow] = useState<string | null>(null);
-  const [selectedSchema, setSelectedSchema] = useState<string | null>(null); // New state for entity_schema
   const [schemaOptions, setSchemaOptions] = useState<string[]>([]); // New state for unique schemas
   // Entity Registration Wizard state (replaces old simple modal)
   const [wizardVisible, setWizardVisible] = useState<boolean>(false);
@@ -145,22 +137,9 @@ const YViewConfigManager: React.FC = () => {
     }
   };
 
-  const fetchWorkflows = async () => {
-    try {
-      const { data, error } = await supabase
-        .schema('crm')
-        .from('workflows')
-        .select('*');
-      if (error) throw error;
-      setWorkflowConfigurations(data || []);
-    } catch (error) {
-      console.error('Error fetching workflows:', error);
-    }
-  };
 
   useEffect(() => {
     fetchConfigs();
-    fetchWorkflows();
   }, []);
 
   const handleGenerateViews = async () => {
@@ -293,6 +272,15 @@ const YViewConfigManager: React.FC = () => {
                 blueprintUpdateCol = 'ui_general';
                 blueprintUpdateData = updatedGeneral;
                 break;
+            case 'details_overview':
+            case 'detailview':
+                // Map both to ui_details_overview in blueprints
+                updatePromise = supabase.schema('core').from('view_configs')
+                    .update({ [viewName]: formData })
+                    .eq('entity_id', entityId);
+                
+                blueprintUpdateCol = 'ui_details_overview';
+                break;
             case 'stages':
                 // Stages updates 'view_configs' (column 'stages') but NOT 'entity_blueprints'
                 updatePromise = supabase.schema('core').from('view_configs')
@@ -350,10 +338,11 @@ const YViewConfigManager: React.FC = () => {
   if (viewName === 'tableview') {
     return (
       <TableViewConfig
+        key={`table-${selectedConfig?.id}`}
         configData={formData}
-        onSave={(updatedData) => handleSave(viewName, updatedData)}
+        onSave={(updatedData: any) => handleSave(viewName, updatedData)}
         metadata={selectedConfig?.v_metadata}
-        entitySchema={selectedSchema || undefined} // Pass entity_schema
+        entitySchema={selectedConfig?.entity_schema}
         availableColumns={data}
       />
     );
@@ -361,9 +350,10 @@ const YViewConfigManager: React.FC = () => {
   if (viewName === 'viewConfig') {
     return (
       <ViewConfigEditor
+        key={`view-${selectedConfig?.id}`}
         entityType={selectedConfig?.entity_type}
         metadata={selectedConfig?.v_metadata}
-        entitySchema={selectedSchema || undefined} // Pass entity_schema
+        entitySchema={selectedConfig?.entity_schema}
       />
     );
   }
@@ -420,20 +410,22 @@ const YViewConfigManager: React.FC = () => {
   if (viewName === 'details_overview') {
     return (
       <ConfigEditor
+        key={`detailsoverview-${selectedConfig?.id}`}
         detailView={selectedConfig?.details_overview}
         entityType={selectedConfig?.entity_type || ''}
         entityId={selectedConfig?.id}
         viewConfigId={selectedConfig?.view_config_id}
-        onSave={(updatedData) => handleSave(viewName, updatedData)}
-        entitySchema={selectedSchema || undefined} // Pass entity_schema
+        onSave={(updatedData: any) => handleSave(viewName, updatedData)}
+        entitySchema={selectedConfig?.entity_schema}
       />
     );
   }
   if (viewName === 'detailview') {
     return (
       <DetailsOverviewConfig
+        key={`detailview-${selectedConfig?.id}`}
         configData={formData}
-        onSave={(updatedData) => handleSave(viewName, updatedData)}
+        onSave={(updatedData: any) => handleSave(viewName, updatedData)}
         metadata={selectedConfig?.v_metadata}
         availableColumns={data}
       />
@@ -442,6 +434,7 @@ const YViewConfigManager: React.FC = () => {
   if (viewName === 'global_access') {
     return (
       <GlobalAccessConfig
+        key={`global-${selectedConfig?.id}`}
         configData={{
           global: selectedConfig?.global || {
             search: { fields: [], placeholder: '' },
@@ -453,7 +446,7 @@ const YViewConfigManager: React.FC = () => {
             canDelete: [],
           },
         }}
-        onSave={(updatedData) => handleSave('global_access', updatedData)}
+        onSave={(updatedData: any) => handleSave('global_access', updatedData)}
         entityType={selectedConfig?.entity_type}
         availableColumns={data.map(d => d.columnname)}
       />
@@ -462,8 +455,9 @@ const YViewConfigManager: React.FC = () => {
   if (viewName === 'blueprint') {
     return (
       <BlueprintConfig
+        key={`blueprint-${selectedConfig?.id}`}
         entityType={selectedConfig?.entity_type || ''}
-        entitySchema={selectedSchema || ''}
+        entitySchema={selectedConfig?.entity_schema || ''}
       />
     );
   }
@@ -483,31 +477,6 @@ const YViewConfigManager: React.FC = () => {
   );
 };
 
-  const handleFetchTable = async () => {
-    try {
-      const { data, error } = await supabase
-        .schema('core').from('view_configs')
-        .select('*')
-        .eq('entity_type', selectedRow);
-      if (error) {
-        message.error(error?.message || 'Failed to fetch configurations');
-      } else {
-        if (data.length > 0) {
-          setSelectedConfig(data[0]);
-          setSelectedWorkflowConfiguration(
-            workflowConfigurations.find(config => config.name === data[0].entity_type) || null
-          );
-        } else {
-          // setSelectedConfig({ entity_type: selectedRow });
-          setSelectedConfig(configs?.find((config) => config?.id === selectedRow) || null);
-          setSelectedWorkflowConfiguration(null);
-        }
-      }
-    } catch (err) {
-      console.error('Error Fetching Config:', err);
-      message.error('An error occurred while fetching the configuration');
-    }
-  };
 
   // Construct Menu items from schemas and configs
   const menuItems = schemaOptions?.map(schema => ({
@@ -537,10 +506,7 @@ const YViewConfigManager: React.FC = () => {
 
     const value = key;
     console.log('Menu item selected:', value);
-    const selectedConfig = configs?.find((config) => config?.id === value);
-    const selectedWorkflowConfiguration = workflowConfigurations?.find(
-      (config) => config?.name === selectedConfig?.entity_type
-    );
+    const selectedConfig = configs?.find((config) => config?.id === key);
     
     // Auto-setup logic (same as dropdown)
     if (selectedConfig?._needsSetup) {
@@ -548,9 +514,7 @@ const YViewConfigManager: React.FC = () => {
     }
     
     setSelectedRow(value);
-    setSelectedSchema(selectedConfig?.entity_schema || null); // Update selectedSchema
     setSelectedConfig(selectedConfig || null);
-    setSelectedWorkflowConfiguration(selectedWorkflowConfiguration || null);
   };
 
   const handleAutoSetup = async (config: YViewConfig) => {
@@ -691,7 +655,7 @@ const YViewConfigManager: React.FC = () => {
               children: (
                 <Metadata
                   entityType={selectedConfig?.entity_type || ''}
-                  entitySchema={selectedSchema || ''}
+                  entitySchema={selectedConfig?.entity_schema || ''}
                   fetchConfigs={fetchConfigs}
                   // NEW: Logical variant awareness
                   isLogicalVariant={selectedConfig?.is_logical_variant || false}
@@ -716,7 +680,7 @@ const YViewConfigManager: React.FC = () => {
               children: (
                 <DynamicViews
                   entityType={selectedConfig?.entity_type || ''}
-                  entitySchema={selectedSchema || undefined}
+                  entitySchema={selectedConfig?.entity_schema || undefined}
                 />
               ),
             },
@@ -798,7 +762,7 @@ const YViewConfigManager: React.FC = () => {
               children: (
                 <DisplayIdConfig
                   entityType={selectedConfig?.entity_type || ''}
-                  entitySchema={selectedSchema || ''}
+                  entitySchema={selectedConfig?.entity_schema || ''}
                   organizationId={organization?.id || ''}
                 />
               ),
