@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Input, Form, Select, Space, Row, Col, Card, message, Tabs, Table, Typography } from 'antd';
-import { SaveOutlined, RocketOutlined, HistoryOutlined, SettingOutlined, DatabaseOutlined, DesktopOutlined } from '@ant-design/icons';
+import { Button, Input, Form, Select, Space, Row, Col, Card, message, Tabs, Table, Typography, Modal, Popconfirm } from 'antd';
+import { SaveOutlined, RocketOutlined, HistoryOutlined, SettingOutlined, DatabaseOutlined, DesktopOutlined, DeleteOutlined } from '@ant-design/icons';
 import { supabase } from '@/core/lib/supabase';
 import { EntityBlueprint } from './types/entityTypes';
 import JsonEditor from '@/modules/ai/components/JsonEditor';
+import ReactDiffViewer from 'react-diff-viewer-continued';
 
 const { Option } = Select;
 const { TextArea } = Input;
 const { TabPane } = Tabs;
-const { Title } = Typography;
+const { Title, Paragraph } = Typography;
 
 interface BlueprintConfigProps {
   entityType: string;
@@ -27,9 +28,13 @@ interface BlueprintHistoryRecord {
 const BlueprintConfig: React.FC<BlueprintConfigProps> = ({ entityType, entitySchema }) => {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [blueprint, setBlueprint] = useState<Partial<EntityBlueprint>>({});
   const [history, setHistory] = useState<BlueprintHistoryRecord[]>([]);
+  const [selectedHistoryRecord, setSelectedHistoryRecord] = useState<BlueprintHistoryRecord | null>(null);
+  const [isHistoryModalVisible, setIsHistoryModalVisible] = useState(false);
+  const [diffActiveKey, setDiffActiveKey] = useState<string>('full');
   const [form] = Form.useForm();
 
   useEffect(() => {
@@ -242,13 +247,127 @@ const BlueprintConfig: React.FC<BlueprintConfigProps> = ({ entityType, entitySch
       title: 'Action',
       key: 'action',
       render: (_: any, record: BlueprintHistoryRecord) => (
-        <Button size="small" onClick={() => {
-          console.log('Restoration not yet implemented in UI', record);
-          message.info('View historical data - implementation pending');
-        }}>View</Button>
+        <Button size="small" onClick={() => handleViewHistory(record)}>View Diff</Button>
       )
     }
   ];
+
+  const configFields = [
+    { key: 'semantics', label: 'Semantics' },
+    { key: 'rules', label: 'Rules' },
+    { key: 'extra_objects', label: 'Extra Objects' },
+    { key: 'ai_metadata', label: 'AI Metadata' },
+    { key: 'ui_general', label: 'UI General' },
+    { key: 'ui_config', label: 'UI Legacy Config' },
+    { key: 'ui_details_overview', label: 'Details Overview' },
+    { key: 'ui_dashboard', label: 'Dashboard Config' },
+    { key: 'jsonb_schema', label: 'JSONB Schema' },
+    { key: 'display_format', label: 'Display Format' },
+    { key: 'sub_panels', label: 'Sub Panels' },
+    { key: 'dependencies', label: 'Dependencies' },
+    { key: 'physical_ddl', label: 'Physical DDL' },
+    { key: 'custom_view_sql', label: 'Custom View SQL' },
+  ];
+
+  const handleViewHistory = (record: BlueprintHistoryRecord) => {
+    setSelectedHistoryRecord(record);
+    setIsHistoryModalVisible(true);
+    setDiffActiveKey('full');
+  };
+
+  const handleRestore = () => {
+    if (!selectedHistoryRecord) return;
+    
+    const data = selectedHistoryRecord.data;
+    if (!data) return;
+
+    // Populate form with historical values
+    form.setFieldsValue({
+      ...data,
+      extra_objects: JSON.stringify(data.extra_objects || {}, null, 2),
+      ui_config: JSON.stringify(data.ui_config || {}, null, 2),
+      ui_general: JSON.stringify(data.ui_general || {}, null, 2),
+      ui_details_overview: JSON.stringify(data.ui_details_overview || {}, null, 2),
+      ui_dashboard: JSON.stringify(data.ui_dashboard || {}, null, 2),
+      semantics: JSON.stringify(data.semantics || {}, null, 2),
+      rules: JSON.stringify(data.rules || {}, null, 2),
+      ai_metadata: JSON.stringify(data.ai_metadata || {}, null, 2),
+      jsonb_schema: JSON.stringify(data.jsonb_schema || {}, null, 2),
+      display_format: JSON.stringify(data.display_format || {}, null, 2),
+      sub_panels: JSON.stringify(data.sub_panels || [], null, 2),
+      dependencies: (data.dependencies || []).join('\n'),
+    });
+
+    message.success('Historical configuration loaded into form. Click Save to persist.');
+  };
+
+  const handleDeleteHistory = async () => {
+    if (!selectedHistoryRecord) return;
+    
+    try {
+      setDeleting(true);
+      const { error } = await supabase
+        .schema('core')
+        .from('entity_blueprint_history')
+        .delete()
+        .eq('id', selectedHistoryRecord.id);
+
+      if (error) throw error;
+
+      message.success('Historical record deleted successfully');
+      setIsHistoryModalVisible(false);
+      
+      // Refresh history list
+      if (blueprint.id) {
+        fetchHistory(blueprint.id);
+      }
+    } catch (error: any) {
+      console.error('Error deleting history:', error);
+      message.error(`Failed to delete history: ${error.message}`);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const normalizeData = (data: any) => {
+    if (!data) return '';
+    const clean = { ...data };
+    const fieldsToRemove = [
+      'id', 'idx', 'created_at', 'updated_at', 'blueprint_id', 
+      'organization_id', 'created_by', 'updated_by', 'version', 
+      'blueprint_hash'
+    ];
+    fieldsToRemove.forEach(f => delete clean[f]);
+    return JSON.stringify(clean, null, 2);
+  };
+
+  const hasFieldChanged = (fieldName: string) => {
+    if (!selectedHistoryRecord) return false;
+    const historicalValue = selectedHistoryRecord.data?.[fieldName];
+    const currentValue = (blueprint as any)?.[fieldName];
+    
+    // Simple comparison for JSON strings vs objects
+    const histStr = typeof historicalValue === 'object' ? JSON.stringify(historicalValue) : String(historicalValue || '');
+    const currStr = typeof currentValue === 'object' ? JSON.stringify(currentValue) : String(currentValue || '');
+    
+    return histStr !== currStr;
+  };
+
+  const getGranularOldValue = () => {
+    if (!selectedHistoryRecord || !diffActiveKey) return '';
+    if (diffActiveKey === 'full') return normalizeData(selectedHistoryRecord.data);
+    
+    const val = selectedHistoryRecord.data?.[diffActiveKey];
+    return typeof val === 'object' ? JSON.stringify(val, null, 2) : String(val || '');
+  };
+
+  const getGranularNewValue = () => {
+    if (!diffActiveKey) return '';
+    if (diffActiveKey === 'full') return normalizeData(blueprint);
+    
+    const val = (blueprint as any)?.[diffActiveKey];
+    return typeof val === 'object' ? JSON.stringify(val, null, 2) : String(val || '');
+  };
 
   if (loading) return <div>Loading blueprint...</div>;
 
@@ -421,6 +540,121 @@ const BlueprintConfig: React.FC<BlueprintConfigProps> = ({ entityType, entitySch
           </Space>
         </div>
       </Form>
+
+      <Modal
+        title={`Blueprint Version Comparison: ${selectedHistoryRecord ? new Date(selectedHistoryRecord.created_at).toLocaleString() : ''}`}
+        open={isHistoryModalVisible}
+        onCancel={() => setIsHistoryModalVisible(false)}
+        width={1400}
+        style={{ top: 20 }}
+        footer={[
+          <Button key="close" onClick={() => setIsHistoryModalVisible(false)}>
+            Close
+          </Button>,
+          <Popconfirm
+            key="delete-confirm"
+            title="Delete this historical version?"
+            description="This action cannot be undone."
+            onConfirm={handleDeleteHistory}
+            okText="Yes, Delete"
+            cancelText="No"
+            okButtonProps={{ danger: true, loading: deleting }}
+          >
+            <Button 
+              key="delete" 
+              danger 
+              icon={<DeleteOutlined />}
+              disabled={deleting}
+            >
+              Delete Version
+            </Button>
+          </Popconfirm>,
+          <Button 
+            key="restore" 
+            type="primary" 
+            icon={<HistoryOutlined />}
+            onClick={handleRestore}
+          >
+            Restore to Form
+          </Button>
+        ]}
+      >
+        {selectedHistoryRecord && (
+          <div style={{ display: 'flex', gap: '24px', height: '75vh' }}>
+            {/* Sidebar for field selection */}
+            <div style={{ width: '250px', borderRight: '1px solid #f0f0f0', overflowY: 'auto', paddingRight: '12px' }}>
+              <div style={{ marginBottom: 16 }}>
+                <Title level={5}>Description:</Title>
+                <Paragraph style={{ fontSize: '13px' }}>{selectedHistoryRecord.description || 'No description provided'}</Paragraph>
+              </div>
+              <Title level={5} style={{ marginBottom: 12 }}>Changed Fields:</Title>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <Button 
+                  type={diffActiveKey === 'full' ? 'primary' : 'text'} 
+                  block 
+                  style={{ textAlign: 'left' }}
+                  onClick={() => setDiffActiveKey('full')}
+                >
+                  Full Document JSON
+                </Button>
+                {configFields.map(field => {
+                  const changed = hasFieldChanged(field.key);
+                  return (
+                    <Button 
+                      key={field.key}
+                      type={diffActiveKey === field.key ? 'primary' : 'text'} 
+                      block 
+                      style={{ 
+                        textAlign: 'left', 
+                        fontWeight: changed ? 'bold' : 'normal',
+                        color: changed && diffActiveKey !== field.key ? '#cf1322' : undefined 
+                      }}
+                      onClick={() => setDiffActiveKey(field.key)}
+                    >
+                      {field.label} {changed && "•"}
+                    </Button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Main Diff Content */}
+            <div style={{ flex: 1, overflowY: 'auto' }}>
+              <Title level={5}>
+                Comparison: {diffActiveKey === 'full' ? 'Full Configuration' : configFields.find(f => f.key === diffActiveKey)?.label}
+              </Title>
+              <div style={{ border: '1px solid #d9d9d9', borderRadius: '4px' }}>
+                <ReactDiffViewer
+                  oldValue={getGranularOldValue()}
+                  newValue={getGranularNewValue()}
+                  splitView={true}
+                  leftTitle="Historical Version (Saved)"
+                  rightTitle="Current Live Version"
+                  styles={{
+                    variables: {
+                      diffViewerBackground: '#fff',
+                      diffViewerColor: '#212529',
+                      addedBackground: '#e6ffed',
+                      addedColor: '#24292e',
+                      removedBackground: '#ffeef0',
+                      removedColor: '#24292e',
+                      wordAddedBackground: '#acf2bd',
+                      wordRemovedBackground: '#fdb8c0',
+                      addedGutterBackground: '#cdffd8',
+                      removedGutterBackground: '#ffdce0',
+                      gutterColor: '#212529',
+                      codeFoldGutterBackground: '#212529',
+                      codeFoldBackground: '#212529',
+                      emptyLineBackground: '#fff',
+                      foldPlaceholderColor: '#212529',
+                    },
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 };

@@ -63,6 +63,7 @@
     "react-big-calendar": "^1.18.0",
     "react-calendar-timeline": "^0.30.0-beta.3",
     "react-device-detect": "^2.2.3",
+    "react-diff-viewer-continued": "^4.2.0",
     "react-dom": "^18.3.1",
     "react-flow-renderer": "^10.3.17",
     "react-grid-layout": "^1.5.1",
