@@ -215,3 +215,45 @@ export interface WizardStep {
   content: React.ReactNode;
   isValid?: () => boolean;
 }
+// ============================================================================
+// Process Blueprint Types (automation schema)
+// ============================================================================
+
+/** 
+ * Process Blueprint configuration
+ * Corresponds to automation.bp_process_blueprints table
+ */
+export interface ProcessBlueprint {
+  id: string;
+  organization_id?: string | null;
+  name: string;
+  description?: string | null;
+  entity_schema: string;
+  entity_type: string;
+  definition: Record<string, any>;
+  version: number;
+  is_active: boolean;
+  metadata: Record<string, any>;
+  blueprint_type: 'lifecycle' | 'approval' | 'orchestration' | 'agentic';
+  intent?: string | null;
+  created_at?: string;
+  updated_at?: string;
+  created_by?: string | null;
+  updated_by?: string | null;
+}
+
+/** 
+ * Process Blueprint History record
+ * Corresponds to automation.bp_process_blueprints_history table
+ */
+export interface ProcessBlueprintHistory {
+  id: string;
+  blueprint_id: string;
+  entity_type?: string | null;
+  entity_schema?: string | null;
+  data: Record<string, any>;
+  version: number;
+  created_at?: string;
+  created_by?: string | null;
+  intent?: string | null;
+}

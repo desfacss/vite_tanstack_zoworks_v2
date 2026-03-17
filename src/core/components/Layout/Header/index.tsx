@@ -219,63 +219,67 @@ export const Header: React.FC<HeaderProps> = ({
 
 
 
-        {/* Center: Location selector (mobile only, if multiple locations) */}
-        {isMobile && currentLocations.length > 1 && (
-          <Select
-            placeholder={t('common.label.location')}
-            value={location?.id}
-            onChange={handleLocationChange}
-            loading={loadingOrgLocs}
-            style={{ width: 120 }}
-            options={currentLocations}
-            disabled={loadingOrgLocs}
-            className="mx-2"
-            size="small"
-          />
-        )}
+        {/* Center: Removed old mobile-only location selector */}
 
 
         {/* Right side: Properly grouped containers */}
-        <div className="flex items-center gap-0 md:gap-4 flex-shrink-0">
+        <div className="flex items-center gap-0 md:gap-4 flex-shrink-0 ml-auto">
 
-          {/* Group 1: Organization Switcher (desktop only) */}
-          {!isMobile && organizationOptions.length > 1 && (
-            <Dropdown
-              menu={{
-                items: userOrgLocations.map(org => ({
-                  key: org.organization_id,
-                  label: (
-                    <div className="flex items-center gap-3 py-1">
-                      <div className="org-switcher-icon">
-                        <Building size={16} />
+          {/* Combined Org & Loc Switcher (all viewports) */}
+          {organizationOptions.length > 0 && (
+            <div className="flex items-center gap-1 md:gap-3">
+              <Dropdown
+                menu={{
+                  items: userOrgLocations.map(org => ({
+                    key: org.organization_id,
+                    label: (
+                      <div className="flex items-center gap-3 py-1">
+                        <div className="org-switcher-icon">
+                          <Building size={16} />
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="font-semibold">{org.organization_name}</span>
+                          <span className="text-xs" style={{ color: 'var(--color-text-tertiary)' }}>
+                            {org.roles?.join(', ')}
+                          </span>
+                        </div>
                       </div>
-                      <div className="flex flex-col">
-                        <span className="font-semibold">{org.organization_name}</span>
-                        <span className="text-xs" style={{ color: 'var(--color-text-tertiary)' }}>
-                          {org.roles?.join(', ')}
-                        </span>
-                      </div>
-                    </div>
-                  ),
-                  onClick: () => handleOrganizationChange(org.organization_id),
-                })),
-              }}
-              trigger={['click']}
-              placement="bottomLeft"
-            >
-              <div className="org-switcher">
-                <div className="org-switcher-icon">
-                  <Building size={18} />
+                    ),
+                    onClick: () => handleOrganizationChange(org.organization_id),
+                  })),
+                }}
+                trigger={['click']}
+                placement="bottomRight"
+              >
+                <div className="org-switcher">
+                  <div className="org-switcher-icon">
+                    <Building size={18} />
+                  </div>
+                  <div className="org-switcher-text">
+                    <span className="org-switcher-name">
+                      {isMobile ? (organization?.name?.substring(0, 8) + (organization?.name?.length > 8 ? '..' : '')) : (organization?.name || 'Select Org')}
+                    </span>
+                  </div>
+                  <ChevronDown size={14} className="org-switcher-arrow opacity-50" />
                 </div>
-                <div className="org-switcher-text">
-                  <span className="org-switcher-name">{organization?.name || 'Select Org'}</span>
-                  {currentLocations.length > 1 && (
-                    <span className="org-switcher-type">{location?.name || 'Location'}</span>
-                  )}
-                </div>
-                <ChevronDown size={16} className="org-switcher-arrow" />
-              </div>
-            </Dropdown>
+              </Dropdown>
+
+              {currentLocations.length > 0 && (
+                <Select
+                  placeholder={t('common.label.location')}
+                  value={location?.id}
+                  onChange={handleLocationChange}
+                  loading={loadingOrgLocs}
+                  style={{ width: isMobile ? 100 : 140 }}
+                  options={currentLocations}
+                  disabled={loadingOrgLocs}
+                  variant="borderless"
+                  size="small"
+                  className="location-select-unified"
+                  suffixIcon={<ChevronDown size={14} className="opacity-50" />}
+                />
+              )}
+            </div>
           )}
 
           {/* Separator between org/loc and icons */}

@@ -554,6 +554,13 @@
         "translationKey": "config",
         "key": "config",
         "submoduleKey": "settings-config"
+      },
+      {
+        "filePath": "src/modules/settings/pages/Config/ProcessBlueprintManager.tsx",
+        "routePath": "/settings/process-blueprints",
+        "translationKey": "process-blueprints",
+        "key": "process-blueprints",
+        "submoduleKey": "settings-process-blueprints"
       }
     ],
     "workforce": [

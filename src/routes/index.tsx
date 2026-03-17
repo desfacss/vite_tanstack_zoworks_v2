@@ -49,6 +49,7 @@ const DripCampaignBuilder = lazy(() => import('@/modules/wa/pages/DripCampaignBu
 const WaTemplateEditor = lazy(() => import('@/modules/wa/pages/TemplateEditor'));
 const WaLayout = lazy(() => import('@/modules/wa/components/WaLayout'));
 const SettingsConfig = lazy(() => import('@/modules/settings/pages/Config'));
+const ProcessBlueprintManager = lazy(() => import('@/modules/settings/pages/Config/ProcessBlueprintManager'));
 
 // Workforce pages
 const WorkforceLeaves = lazy(() => import('@/modules/workforce/pages/Leaves'));
@@ -161,6 +162,7 @@ export const AppRoutes: FC = () => {
                             <Route path="/wa/variables" element={<WaVariables />} />
                         </Route>
                         <Route path="/settings/config" element={<SettingsConfig />} />
+                        <Route path="/settings/process-blueprints" element={<ProcessBlueprintManager />} />
 
                         {/* Workforce */}
                         <Route path="/workforce/leaves" element={<WorkforceLeaves />} />
