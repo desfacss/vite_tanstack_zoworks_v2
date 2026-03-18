@@ -561,6 +561,13 @@
         "translationKey": "process-blueprints",
         "key": "process-blueprints",
         "submoduleKey": "settings-process-blueprints"
+      },
+      {
+        "filePath": "src/modules/settings/pages/Config/MetricViewManager.tsx",
+        "routePath": "/settings/metric-views",
+        "translationKey": "metric-views",
+        "key": "metric-views",
+        "submoduleKey": "settings-metric-views"
       }
     ],
     "workforce": [

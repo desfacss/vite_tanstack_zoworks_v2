@@ -35,8 +35,8 @@ export const UserCard: React.FC<UserCardProps> = ({ user, isSaasAdmin = false })
               {user.name || 'Unknown User'}
             </Title>
             {isSaasAdmin && (
-              <Tag color="gold" icon={<Shield size={12} />}>
-                Admin
+              <Tag color="gold" icon={<Shield size={12} />} className="flex items-center gap-1">
+                SaaS Admin
               </Tag>
             )}
           </div>

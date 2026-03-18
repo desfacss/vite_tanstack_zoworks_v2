@@ -33,7 +33,8 @@ const Profile: React.FC = () => {
     roles, 
     teams, 
     locations, 
-    permissions 
+    permissions,
+    bypass
   } = useAuthStore();
 
   // Fetch extended profile data (manager info, etc.)
@@ -82,7 +83,7 @@ const Profile: React.FC = () => {
           <Col xs={24} lg={12}>
             <div className="space-y-4">
               {/* User Identity Card */}
-              <UserCard user={user} />
+              <UserCard user={user} isSaasAdmin={bypass} />
 
               {/* Organization Context */}
               <OrganizationInfo

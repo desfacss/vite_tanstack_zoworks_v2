@@ -36,14 +36,13 @@ export const ProfileMenu: React.FC = () => {
   const isMobile = useIsMobile();
   const [showActionSheet, setShowActionSheet] = useState(false);
 
-  const { user, organization, clearUserSession, setIsLoggingOut } = useAuthStore();
+  const { user, organization, clearUserSession, setIsLoggingOut, bypass } = useAuthStore();
   const queryClient = useQueryClient();
   const { setShowSettings } = useAuthedLayoutConfig();
   const { t } = useTranslation();
 
-  // Check if user has admin role
-  const roleName = user?.roles?.name || (user?.role_id as any)?.name;
-  const isAdmin = roleName === 'SassAdmin' || roleName === 'Superadmin';
+  // Check if user has admin role - use bypass as the definitive flag for SaaS Admin
+  const isAdmin = bypass;
 
   const handleLogout = async () => {
     setIsLoggingOut(true);

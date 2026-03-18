@@ -50,6 +50,7 @@ const WaTemplateEditor = lazy(() => import('@/modules/wa/pages/TemplateEditor'))
 const WaLayout = lazy(() => import('@/modules/wa/components/WaLayout'));
 const SettingsConfig = lazy(() => import('@/modules/settings/pages/Config'));
 const ProcessBlueprintManager = lazy(() => import('@/modules/settings/pages/Config/ProcessBlueprintManager'));
+const MetricViewManager = lazy(() => import('@/modules/settings/pages/Config/MetricViewManager'));
 
 // Workforce pages
 const WorkforceLeaves = lazy(() => import('@/modules/workforce/pages/Leaves'));
@@ -163,6 +164,7 @@ export const AppRoutes: FC = () => {
                         </Route>
                         <Route path="/settings/config" element={<SettingsConfig />} />
                         <Route path="/settings/process-blueprints" element={<ProcessBlueprintManager />} />
+                        <Route path="/settings/metric-views" element={<MetricViewManager />} />
 
                         {/* Workforce */}
                         <Route path="/workforce/leaves" element={<WorkforceLeaves />} />

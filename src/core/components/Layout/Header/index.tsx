@@ -107,7 +107,7 @@ export const Header: React.FC<HeaderProps> = ({
           name: selectedOrgData.organization_name
         } as Organization);
 
-        navigate('/dashboard');
+        // navigate('/dashboard');
 
         const newLocations = selectedOrgData.locations;
         let targetLocation: Location | null = null;

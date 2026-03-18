@@ -3,7 +3,7 @@ import DynamicViews from '@/core/components/DynamicViews';
 import HierarchicalSortManager from '@/core/components/common/HierarchicalSortManager';
 
 const TeamsUsers: React.FC = () => {
-  const entityType = 'v_organization_users';
+  const entityType = 'organization_users';
   const entitySchema = 'identity';
 
   const tabOptions = [
@@ -16,11 +16,11 @@ const TeamsUsers: React.FC = () => {
   return (
     <div className="space-y-4">
       <HierarchicalSortManager 
-        entityName="v_organization_users" 
+        entityName="organization_users" 
         saveEntityName="organization_users"
         entitySchema={entitySchema} 
         parentColumn={'manager_id'} 
-        displayColumn="user_display"
+        displayColumn="user_id"
         buttonTitle="Org Hierarchy"
       />
       <DynamicViews
