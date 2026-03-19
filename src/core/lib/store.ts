@@ -76,7 +76,7 @@ export interface RpcSessionData {
  */
 export interface UserSessionData extends RpcSessionData {
   user: User;
-  organization: Organization;
+  organization: Organization | null;
   location?: Location | null;
 }
 

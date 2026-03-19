@@ -188,7 +188,7 @@ export const SessionManager = () => {
     if (isLoggingOut) return;
 
     if (isSuccess && data) {
-      if (organization?.id && data.organization.id !== organization.id) {
+      if (organization?.id && data.organization?.id !== organization.id) {
         return;
       }
       setSession(data);
