@@ -66,7 +66,7 @@ export async function register(
     registry.registerAction({
       id: 'timesheet-edit',
       entityTypes: timesheetEntityTypes,
-      position: 'row',
+      position: 'both',
       label: 'Edit',
       component: () => import('./components/Times'),
     });
@@ -74,7 +74,7 @@ export async function register(
     registry.registerAction({
       id: 'timesheet',
       entityTypes: timesheetEntityTypes,
-      position: 'row',
+      position: 'both',
       label: 'Edit',
       component: () => import('./components/Times'),
     });
@@ -88,7 +88,7 @@ export async function register(
     registry.registerAction({
       id: 'expense-edit',
       entityTypes: expenseEntityTypes,
-      position: 'row',
+      position: 'both',
       label: 'Edit',
       component: () => import('./components/Expenses'),
     });
@@ -96,7 +96,7 @@ export async function register(
     registry.registerAction({
       id: 'expense_sheet',
       entityTypes: expenseEntityTypes,
-      position: 'row',
+      position: 'both',
       label: 'Edit',
       component: () => import('./components/Expenses'),
     });

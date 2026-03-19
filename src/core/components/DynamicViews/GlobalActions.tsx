@@ -114,13 +114,14 @@ const GlobalActions: React.FC<GlobalActionsProps> = ({
   };
 
   const handleRegisteredActionClick = useCallback(async (actionId: string) => {
-    const action = registeredActions.find(a => a.id === actionId);
+    // Search the registry directly by ID (more robust than the filtered list)
+    const action = registry.getActionById(actionId);
     if (action) {
       const Component = await action.component();
       setLoadedActionComponent(() => Component.default || Component);
       setActiveActionId(actionId);
     }
-  }, [registeredActions]);
+  }, []);
 
   // Handler for component-type actions (custom components from relative paths)
   const handleComponentActionClick = useCallback(async (formPath: string) => {

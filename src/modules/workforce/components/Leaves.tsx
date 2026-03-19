@@ -20,6 +20,8 @@ const Leaves: React.FC = () => {
       queryConfig: {
         is_pending_approval_view: true,
         manager_id: user?.id,
+        exclude_user_id: user?.id,  // UI-Side Logic: Exclude own records
+        exclude_drafts: true,       // UI-Side Logic: Exclude drafts
         current_time: new Date(),
       }
     })

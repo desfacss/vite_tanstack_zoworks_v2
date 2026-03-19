@@ -4,7 +4,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button, Space, message, Modal, Spin } from 'antd';
-import { CheckCircle, XCircle } from "lucide-react";
+import { CheckCircle, XCircle, RotateCcw } from "lucide-react";
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/core/lib/store';
@@ -29,6 +29,7 @@ const ApprovalActionButtons: React.FC<ApprovalActionButtonsProps> = ({
   automationBpInstanceId,
 }) => {
   const [isApprover, setIsApprover] = useState(false);
+  const [blueprint, setBlueprint] = useState<any>(null);
   const [isCheckingEligibility, setIsCheckingEligibility] = useState(false);
   const { organization, user } = useAuthStore();
   const queryClient = useQueryClient();
@@ -41,11 +42,6 @@ const ApprovalActionButtons: React.FC<ApprovalActionButtonsProps> = ({
       setIsApprover(false);
       return;
     }
-
-    console.log('[ApprovalActionButtons] Checking eligibility:', {
-      entityId, currentStageId, submitterUserId, createdAt,
-      automationBpInstanceId, orgId: organization?.id, userId: user?.id
-    });
 
     // Basic guards
     if (!submitterUserId || !createdAt || !organization?.id || !user?.id || !currentStageId) {
@@ -61,7 +57,6 @@ const ApprovalActionButtons: React.FC<ApprovalActionButtonsProps> = ({
       let blueprintDefinition: any = null;
 
       if (automationBpInstanceId) {
-        // Follow: bp_instance → blueprint_id → bp_process_blueprints.definition
         const { data: bpInstance, error: bpInstanceError } = await supabase
           .schema('automation')
           .from('bp_instances')
@@ -72,23 +67,24 @@ const ApprovalActionButtons: React.FC<ApprovalActionButtonsProps> = ({
         if (bpInstanceError || !bpInstance) {
           console.warn('[ApprovalActionButtons] Could not fetch bp_instance:', bpInstanceError);
         } else {
-          const { data: blueprint, error: blueprintError } = await supabase
+          const { data: blueprintData, error: blueprintError } = await supabase
             .schema('automation')
             .from('bp_process_blueprints')
             .select('definition')
             .eq('id', bpInstance.blueprint_id)
             .single();
 
-          if (blueprintError || !blueprint) {
+          if (blueprintError || !blueprintData) {
             console.warn('[ApprovalActionButtons] Could not fetch blueprint:', blueprintError);
           } else {
-            blueprintDefinition = blueprint.definition;
+            blueprintDefinition = blueprintData.definition;
+            setBlueprint(blueprintDefinition);
           }
         }
       }
 
       if (!blueprintDefinition) {
-        console.warn('[ApprovalActionButtons] No blueprint definition available, cannot determine approvers.');
+        console.warn('[ApprovalActionButtons] No blueprint definition available.');
         setIsApprover(false);
         return;
       }
@@ -122,20 +118,12 @@ const ApprovalActionButtons: React.FC<ApprovalActionButtonsProps> = ({
           p_current_time: new Date().toISOString(),
         });
 
-      console.log('[ApprovalActionButtons] Blueprint RPC result:', {
-        submitterOrgUserId,
-        currentStageId,
-        approvers,
-        myUserId: user?.id
-      });
-
       if (rpcError) {
         console.error('[ApprovalActionButtons] RPC error:', rpcError);
         setIsApprover(false);
         return;
       }
 
-      // ── Step 4: Check if current user is in the approvers list ────────────
       const isEligible = Array.isArray(approvers) &&
         approvers.some((a: any) => a.approver_user_id === user.id);
 
@@ -144,7 +132,6 @@ const ApprovalActionButtons: React.FC<ApprovalActionButtonsProps> = ({
     } catch (err) {
       console.error('[ApprovalActionButtons] Unexpected error:', err);
       setIsApprover(false);
-      message.error('Failed to check approval eligibility.');
     } finally {
       setIsCheckingEligibility(false);
     }
@@ -154,9 +141,9 @@ const ApprovalActionButtons: React.FC<ApprovalActionButtonsProps> = ({
     checkApproverEligibility();
   }, [submitterUserId, createdAt, currentStageId, organization?.id, user?.id, automationBpInstanceId]);
 
-  // ── Approve / Reject mutation ──────────────────────────────────────────────
+  // ── Action Mutation ────────────────────────────────────────────────────────
   const updateStageMutation = useMutation({
-    mutationFn: async (newStageId: 'Approved' | 'Rejected') => {
+    mutationFn: async ({ newStageId, actionName }: { newStageId: string, actionName: string }) => {
       if (!entityId || !entityType) throw new Error('Entity information missing.');
       const payload = {
         id: entityId,
@@ -168,34 +155,87 @@ const ApprovalActionButtons: React.FC<ApprovalActionButtonsProps> = ({
         data: payload
       });
       if (error) throw error;
+      return { newStageId, actionName };
     },
-    onSuccess: (_, newStageId) => {
+    onSuccess: (res) => {
       queryClient.invalidateQueries({ queryKey: [entityType?.split('.')[1], organization?.id] });
-      message.success(`Successfully ${newStageId}!`);
+      message.success(`Successfully ${res.actionName}ed!`);
+      // Optimization: hide buttons immediately
       setIsApprover(false);
     },
-    onError: (error: any, newStageId) => {
-      message.error(error.message || `Failed to ${newStageId.toLowerCase()} ${entityType}.`);
+    onError: (error: any, variables) => {
+      message.error(error.message || `Failed to ${variables.actionName.toLowerCase()} ${entityType}.`);
     },
   });
 
-  const handleAction = (action: 'Approved' | 'Rejected') => {
+  const handleAction = (newStageId: string, actionName: string) => {
     Modal.confirm({
-      title: `${action} Confirmation`,
-      content: `Are you sure you want to ${action.toLowerCase()} this request?`,
-      okText: action,
-      okType: action === 'Rejected' ? 'danger' : 'primary',
+      title: `${actionName} Confirmation`,
+      content: `Are you sure you want to ${actionName.toLowerCase()} this request?`,
+      okText: actionName,
+      okType: newStageId === 'Rejected' || newStageId === 'Cancelled' ? 'danger' : 'primary',
       cancelText: 'Cancel',
-      onOk() { updateStageMutation.mutate(action); },
+      onOk() { updateStageMutation.mutate({ newStageId, actionName }); },
     });
   };
 
-  // ── Render ─────────────────────────────────────────────────────────────────
+  // ── Render Logic ───────────────────────────────────────────────────────────
   if (isCheckingEligibility || updateStageMutation.isPending) {
     return <Spin tip={isCheckingEligibility ? 'Checking approval eligibility...' : 'Submitting...'} style={{ marginTop: 20 }} />;
   }
 
-  if (!isApprover) return null;
+  // Determine available transitions from blueprint
+  const transitions = blueprint?.lifecycle?.transitions || [];
+  const availableTransitions = transitions.filter((t: any) => t.from === currentStageId);
+
+  if (availableTransitions.length === 0) return null;
+
+  const isSubmitter = user?.id === submitterUserId;
+
+  const buttons = availableTransitions.map((t: any) => {
+    const isApprove = t.to === 'Approved';
+    const isReject = t.to === 'Rejected';
+    const isCancel = t.to === 'Cancelled';
+
+    // Permission logic:
+    // - Approve/Reject transitions are for Approvers.
+    // - Cancel transitions are for Submitter OR Approver (if transition exists).
+    const canPerform = (isApprove || isReject) ? isApprover : (isCancel && (isSubmitter || isApprover));
+
+    if (!canPerform) return null;
+
+    let icon = <CheckCircle size={16} />;
+    let btnType: "primary" | "default" | "dashed" | "link" | "text" = "default";
+    let danger = false;
+    let style: React.CSSProperties = {};
+
+    if (isApprove) {
+      btnType = "primary";
+      style = { backgroundColor: '#16a34a', borderColor: '#16a34a' };
+    } else if (isReject) {
+      danger = true;
+      icon = <XCircle size={16} />;
+    } else if (isCancel) {
+      icon = <RotateCcw size={16} />;
+      danger = true;
+    }
+
+    return (
+      <Button
+        key={t.id}
+        type={btnType}
+        danger={danger}
+        icon={icon}
+        loading={updateStageMutation.isPending}
+        onClick={() => handleAction(t.to, t.name || t.to)}
+        style={style}
+      >
+        {t.name || t.to}
+      </Button>
+    );
+  }).filter(Boolean);
+
+  if (buttons.length === 0) return null;
 
   return (
     <Space
@@ -207,23 +247,7 @@ const ApprovalActionButtons: React.FC<ApprovalActionButtonsProps> = ({
         justifyContent: 'flex-start'
       }}
     >
-      <Button
-        type="primary"
-        icon={<CheckCircle size={16} />}
-        loading={updateStageMutation.isPending}
-        onClick={() => handleAction('Approved')}
-        style={{ backgroundColor: '#16a34a', borderColor: '#16a34a' }}
-      >
-        Approve
-      </Button>
-      <Button
-        danger
-        icon={<XCircle size={16} />}
-        loading={updateStageMutation.isPending}
-        onClick={() => handleAction('Rejected')}
-      >
-        Reject
-      </Button>
+      {buttons}
     </Space>
   );
 };

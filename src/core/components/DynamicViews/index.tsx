@@ -1068,6 +1068,25 @@ const DynamicViews: React.FC<DynamicViewsProps> = ({
       }
 
       const currentTabOption = tabOptions.find((tab) => tab.key === currentTab);
+      const tabRpcOverrides = currentTabOption?.queryConfig || {};
+
+      // Handle UI-side exclusions from tabRpcOverrides
+      if (tabRpcOverrides.exclude_user_id) {
+        filters.push({
+          key: 'user_id',
+          operator: '!=',
+          value: tabRpcOverrides.exclude_user_id,
+        });
+      }
+
+      if (tabRpcOverrides.exclude_drafts) {
+        filters.push({
+          key: 'stage_id',
+          operator: '!=',
+          value: 'Draft',
+        });
+      }
+
       if (currentTabOption?.condition) {
         const condition = currentTabOption.condition;
         const filterValue = condition.valueFromContext
@@ -1092,8 +1111,6 @@ const DynamicViews: React.FC<DynamicViewsProps> = ({
           columns: searchFilterConfig?.search_columns || ['name'],
         };
       }
-
-      const tabRpcOverrides = currentTabOption?.queryConfig || {};
 
       let finalEntityType = entityType;
       let finalEntitySchema = entitySchema;

@@ -387,9 +387,8 @@ const RowActions: React.FC<RowActionsProps> = ({
   };
 
   const handleRegistryActionClick = useCallback(async (actionId: string, customRecord?: any) => {
-    // Check entity specific list first, then global registry
-    const action = registry.getActionsForEntity(entityType, 'row').find(a => a.id === actionId)
-      || (registry as any).getActionById?.(actionId);
+    // Check global registry by ID directly (most robust)
+    const action = registry.getActionById(actionId);
 
     if (action) {
       // 1. If no custom record provided OR the record is shallow (no items for timesheet/expense), fetch the full one

@@ -101,6 +101,9 @@ const checkConfigVersion = async () => {
 checkConfigVersion();
 
 // Register AI, Core and E-sign modules (custom forms and components)
+import { register as registerWorkforce } from '@/modules/workforce/registry';
+registerWorkforce();
+
 import('@/modules/ai/registry').then(module => module.register());
 import('@/modules/core/registry').then(module => module.register());
 import('@/modules/esign/registry').then(module => module.registerESignModule());
