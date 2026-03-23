@@ -8,6 +8,8 @@ import TimesheetSettings from './Timesheet';
 import LeaveSettings from './LeaveSettings';
 import LeaveTypes from './LeaveTypes';
 import SettingsWorkforce from './SettingsWorkforce';
+import ModuleConfigForm from './ModuleConfigForm';
+import OrganizationSettings from './OrganizationSettings';
 import { useAuthStore } from '@/core/lib/store';
 import Roles from './Roles';
 import RolesManagement from './RolesManagement';
@@ -43,6 +45,11 @@ const Settings: React.FC = () => {
       children: <Organization />,
     },
     {
+      label: 'Organization Admin',
+      key: 'saas_admin_org',
+      children: <OrganizationSettings />,
+    },
+    {
       label: 'Users',
       key: '1.6',
       children: <Users />,
@@ -71,6 +78,11 @@ const Settings: React.FC = () => {
       label: (organization?.app_settings as any)?.holidays ? 'Location & Holidays' : 'Location',
       key: '4',
       children: <LocationSettings />,
+    },
+    {
+      label: 'Module Configurations',
+      key: '5.1',
+      children: <ModuleConfigForm organization={organization} user={user} />,
     },
     {
       label: 'Module Settings',

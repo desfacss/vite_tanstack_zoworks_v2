@@ -55,7 +55,7 @@ const SettingsWorkforce: React.FC = () => {
       setLoading(true);
 
       const { data: modulesData, error: modulesError } = await supabase
-        .schema('core')
+        .schema('identity')
         .from('modules')
         .select('id, name, settings')
         .eq('is_active', true)

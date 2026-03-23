@@ -473,6 +473,20 @@
         "translationKey": "settings",
         "key": "settings",
         "submoduleKey": "admin-settings"
+      },
+      {
+        "filePath": "src/modules/esign/pages/Envelopes.tsx",
+        "routePath": "/esign",
+        "translationKey": "esign",
+        "key": "esign",
+        "submoduleKey": "admin-esign"
+      },
+      {
+        "filePath": "src/modules/appointments/pages/AdminAppointmentsPage.tsx",
+        "routePath": "/admin/appointments",
+        "translationKey": "appointments",
+        "key": "appointments",
+        "submoduleKey": "admin-appointments"
       }
     ],
     "wa": [

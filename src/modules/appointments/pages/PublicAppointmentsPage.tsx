@@ -10,8 +10,23 @@ import { Spin } from 'antd';
 import { ToastProvider } from '../components/common/Toast';
 
 export default function PublicAppointmentsPage() {
-    const organization = useAuthStore((state) => state.organization);
+    const authOrganization = useAuthStore((state) => state.organization);
+    const [organization, setOrganization] = useState<any>(authOrganization);
     const [view, setView] = useState<'HOME' | 'BOOKING_PAGE' | 'SUCCESS'>('HOME');
+
+    useEffect(() => {
+        if (authOrganization) {
+            setOrganization(authOrganization);
+        } else {
+            const publicOrgId = import.meta.env.VITE_PUBLIC_ORG_ID;
+            if (publicOrgId) {
+                supabase.schema('identity').from('organizations').select('*').eq('id', publicOrgId).single()
+                    .then(({ data }) => {
+                        if (data) setOrganization(data);
+                    });
+            }
+        }
+    }, [authOrganization]);
     const [eventTypes, setEventTypes] = useState<EventType[]>([]);
     const [selectedEventType, setSelectedEventType] = useState<EventType | null>(null);
     const [availabilityRules, setAvailabilityRules] = useState<any[]>([]);

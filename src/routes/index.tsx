@@ -78,6 +78,10 @@ const SignDocument = lazy(() => import('@/modules/esign/pages/SignDocument'));
 const PublicAppointments = lazy(() => import('@/modules/appointments/pages/PublicAppointmentsPage'));
 const AdminAppointments = lazy(() => import('@/modules/appointments/pages/AdminAppointmentsPage'));
 
+// Public Legacy Modules
+const PublicSubscriptions = lazy(() => import('@/pages/public/Subscriptions'));
+const EcomCatalogPage = lazy(() => import('@/modules/catalog/pages/EcomCatalogPage'));
+
 export const AppRoutes: FC = () => {
     const { user, permissions, bypass, setNavigationItems } = useAuthStore(state => ({
         user: state.user,
@@ -108,6 +112,8 @@ export const AppRoutes: FC = () => {
                 <Route element={<PublicLayout />}>
                     <Route path="/" element={<Home />} />
                     <Route path="/appointments" element={<PublicAppointments />} />
+                    <Route path="/subscriptions" element={<PublicSubscriptions />} />
+                    <Route path="/shop" element={<EcomCatalogPage />} />
                     <Route path="/sign/:envelopeId" element={<SignDocument />} />
                     {/* Auth pages moved here - outside AuthGuard */}
                     <Route path="/login" element={<Login />} />

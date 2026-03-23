@@ -81,7 +81,7 @@ const fetchOrganizationUser = async (orgUserId: string): Promise<OrganizationUse
   const { data, error } = await supabase
     .schema('identity')
     .from('organization_users')
-    .select('id, organization_id, user_id, location_id, manager_id, is_active, status, created_at')
+    .select('id, organization_id, user_id, location_id, manager_id, is_active, created_at')
     .eq('id', orgUserId)
     .single();
 

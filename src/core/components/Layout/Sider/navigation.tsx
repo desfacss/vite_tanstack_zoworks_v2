@@ -106,6 +106,8 @@ const iconMap: Record<string, React.ReactNode> = {
   expenses: <Receipt size={18} />,
   inventory: <Boxes size={18} />,
   positions: <ClipboardList size={18} />,
+  esign: <FileCheck size={18} />,
+  appointments: <Calendar size={18} />,
   default: <FileText size={18} />,
 };
 
@@ -194,10 +196,12 @@ export const getNavigationItems = (
       // 1. bypass is true (SassAdmin — God Mode), OR
       // 2. Has explicit read permission ['r', ...], OR
       // 3. No permission check exists for this module (fallback to show)
+      // 4. Feature is one of the new globally accessible modules (e-sign or appointments)
       const hasReadPermission = Array.isArray(perms) && perms.includes('r');
       const noPermissionDefined = !modulePerms;
+      const isAlwaysVisible = ['esign', 'appointments'].includes(feature);
 
-      if (bypass || hasReadPermission || noPermissionDefined) {
+      if (bypass || hasReadPermission || noPermissionDefined || isAlwaysVisible) {
         moduleItems.push({
           key: route.routePath,
           icon: iconMap[route.key.replace('-view', '')] || iconMap.default,
@@ -258,8 +262,9 @@ export const getAllowedRoutes = (permissions: any, _user: any, bypass: boolean =
       // Allow route if bypass OR has read permission OR no permissions defined
       const hasReadPermission = Array.isArray(perms) && perms.includes('r');
       const noPermissionDefined = !modulePerms;
+      const isAlwaysVisible = ['esign', 'appointments'].includes(feature);
 
-      if (bypass || hasReadPermission || noPermissionDefined) {
+      if (bypass || hasReadPermission || noPermissionDefined || isAlwaysVisible) {
         routes.push(route.routePath);
       }
     });

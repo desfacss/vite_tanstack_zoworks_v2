@@ -57,7 +57,7 @@ const RolePermissions: React.FC<RolePermissionsProps> = ({ organization }) => {
         );
 
         if (configError) throw configError;
-        setModules(configData);
+        setModules(configData || {});
 
         const { data: rolesData, error: rolesError } = await supabase
           .schema('identity')
