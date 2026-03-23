@@ -91,6 +91,8 @@
       "timesheets": "Timesheets",
       "ai": "AI",
       "nlp": "Nlp",
+      "commerce": "Commerce",
+
       "select_organization": "Select Organization",
       "branding_saved": "Theme settings saved successfully",
       "label": {
@@ -145,7 +147,16 @@
         "entity_blueprints": "Entity Blueprints",
         "action_approvals": "Action Approvals",
         "tenant_tier_configs": "Tenant Tier Configs",
-        "playbooks": "Playbooks"
+        "playbooks": "Playbooks",
+        "commerce": "Commerce",
+        "commerce-catalog": "Catalog Manager",
+        "commerce-shop-preview": "Shop Preview",
+        "commerce-offerings": "Offerings",
+        "commerce-variants": "Variants",
+        "commerce-prices": "Prices",
+        "commerce-discounts": "Discounts",
+        "commerce-price-lists": "Price Lists",
+        "commerce-customer-segments": "Customer Segments"
       }
     },
     "settings": {

@@ -37,7 +37,12 @@ import {
   Target,
   ClipboardList,
   Receipt,
-  UserSearch
+  UserSearch,
+  ShoppingBag,
+  Tag,
+  Layers,
+  Percent,
+  Eye
 } from 'lucide-react';
 import type { MenuProps } from 'antd';
 import type { TFunction } from 'i18next';
@@ -108,6 +113,16 @@ const iconMap: Record<string, React.ReactNode> = {
   positions: <ClipboardList size={18} />,
   esign: <FileCheck size={18} />,
   appointments: <Calendar size={18} />,
+  // Commerce module icons
+  commerce: <ShoppingBag size={18} />,
+  'commerce-catalog': <Store size={18} />,
+  'commerce-shop-preview': <Eye size={18} />,
+  'commerce-offerings': <Package size={18} />,
+  'commerce-variants': <Tag size={18} />,
+  'commerce-prices': <DollarSign size={18} />,
+  'commerce-discounts': <Percent size={18} />,
+  'commerce-price-lists': <Layers size={18} />,
+  'commerce-customer-segments': <Users size={18} />,
   default: <FileText size={18} />,
 };
 

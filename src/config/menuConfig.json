@@ -807,6 +807,64 @@
         "key": "construction-projects",
         "submoduleKey": "construction-projects"
       }
+    ],
+    "commerce": [
+      {
+        "filePath": "src/modules/catalog/pages/admin/AdminCatalogManager.tsx",
+        "routePath": "/commerce/catalog",
+        "translationKey": "commerce-catalog",
+        "key": "commerce-catalog",
+        "submoduleKey": "commerce-catalog"
+      },
+      {
+        "filePath": "src/modules/catalog/pages/EcomCatalogPage.tsx",
+        "routePath": "/commerce/shop-preview",
+        "translationKey": "commerce-shop-preview",
+        "key": "commerce-shop-preview",
+        "submoduleKey": "commerce-shop-preview"
+      },
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/commerce/offerings",
+        "translationKey": "commerce-offerings",
+        "key": "commerce-offerings",
+        "submoduleKey": "commerce-offerings"
+      },
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/commerce/offering_variants",
+        "translationKey": "commerce-variants",
+        "key": "commerce-variants",
+        "submoduleKey": "commerce-variants"
+      },
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/commerce/offering_prices",
+        "translationKey": "commerce-prices",
+        "key": "commerce-prices",
+        "submoduleKey": "commerce-prices"
+      },
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/commerce/discounts",
+        "translationKey": "commerce-discounts",
+        "key": "commerce-discounts",
+        "submoduleKey": "commerce-discounts"
+      },
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/commerce/price_lists",
+        "translationKey": "commerce-price-lists",
+        "key": "commerce-price-lists",
+        "submoduleKey": "commerce-price_lists"
+      },
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/commerce/customer_segments",
+        "translationKey": "commerce-customer-segments",
+        "key": "commerce-customer-segments",
+        "submoduleKey": "commerce-customer_segments"
+      }
     ]
   },
   "root": [

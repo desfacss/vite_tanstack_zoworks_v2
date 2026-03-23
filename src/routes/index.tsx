@@ -82,6 +82,9 @@ const AdminAppointments = lazy(() => import('@/modules/appointments/pages/AdminA
 const PublicSubscriptions = lazy(() => import('@/pages/public/Subscriptions'));
 const EcomCatalogPage = lazy(() => import('@/modules/catalog/pages/EcomCatalogPage'));
 
+// Commerce Admin Module
+const AdminCatalogManager = lazy(() => import('@/modules/catalog/pages/admin/AdminCatalogManager'));
+
 export const AppRoutes: FC = () => {
     const { user, permissions, bypass, setNavigationItems } = useAuthStore(state => ({
         user: state.user,
@@ -214,6 +217,11 @@ export const AppRoutes: FC = () => {
                         <Route path="/construction/:entity" element={<GenericDynamicPage schema="construction" />} />
                         <Route path="/workforce/:entity" element={<GenericDynamicPage schema="workforce" />} />
                         <Route path="/blueprint/:entity" element={<GenericDynamicPage schema="blueprint" />} />
+
+                        {/* Commerce Admin Routes */}
+                        <Route path="/commerce/catalog" element={<AdminCatalogManager />} />
+                        <Route path="/commerce/shop-preview" element={<EcomCatalogPage />} />
+                        <Route path="/commerce/:entity" element={<GenericDynamicPage schema="catalog" />} />
 
                         {/* 404 */}
                         <Route path="*" element={<NotFound />} />

@@ -302,16 +302,19 @@ const EcomCatalogPage: React.FC = () => {
           .eq('organization_id', selectedOrganization)
       ]);
 
-      // Check for errors
-      const results = [
+      // Check for errors in critical data only — locations/segments are optional
+      const criticalResults = [
         offeringsResult, pricesResult, discountsResult, discountRulesResult,
         bundlesResult, bundleItemsResult, variantsResult, priceListsResult,
-        customerSegmentsResult, locationsResult
       ];
 
-      for (const result of results) {
+      for (const result of criticalResults) {
         if (result.error) throw result.error;
       }
+
+      // Warn but don't throw for optional context data
+      if (customerSegmentsResult.error) console.warn('[Shop] Could not load customer segments:', customerSegmentsResult.error.message);
+      if (locationsResult.error) console.warn('[Shop] Could not load locations:', locationsResult.error.message);
 
       setCatalogData({
         offerings: offeringsResult.data || [],
@@ -332,6 +335,7 @@ const EcomCatalogPage: React.FC = () => {
       setLoading(false);
     }
   };
+
 
   const filteredOfferings = useMemo(() => {
     if (!catalogData) return [];
