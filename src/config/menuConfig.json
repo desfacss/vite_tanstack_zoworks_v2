@@ -487,6 +487,13 @@
         "translationKey": "appointments",
         "key": "appointments",
         "submoduleKey": "admin-appointments"
+      },
+      {
+        "filePath": "src/modules/admin/pages/Settings/Notifications.tsx",
+        "routePath": "/admin/notifications",
+        "translationKey": "system-notifications",
+        "key": "system-notifications",
+        "submoduleKey": "admin-notifications"
       }
     ],
     "wa": [
@@ -864,6 +871,15 @@
         "translationKey": "commerce-customer-segments",
         "key": "commerce-customer-segments",
         "submoduleKey": "commerce-customer_segments"
+      }
+    ],
+    "fsm": [
+      {
+        "filePath": "src/modules/fsm/pages/TrackingPage.tsx",
+        "routePath": "/fsm/tracking",
+        "translationKey": "fsm-tracking",
+        "key": "fsm-tracking",
+        "submoduleKey": "fsm-tracking"
       }
     ]
   },

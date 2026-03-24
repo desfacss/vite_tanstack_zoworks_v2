@@ -156,7 +156,9 @@
         "commerce-prices": "Prices",
         "commerce-discounts": "Discounts",
         "commerce-price-lists": "Price Lists",
-        "commerce-customer-segments": "Customer Segments"
+        "commerce-customer-segments": "Customer Segments",
+        "fsm-tracking": "Tracking",
+        "system-notifications": "Notifications"
       }
     },
     "settings": {

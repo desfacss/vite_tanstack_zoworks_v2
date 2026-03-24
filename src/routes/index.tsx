@@ -32,6 +32,7 @@ const ServiceAssets = lazy(() => import('@/modules/external/pages/ServiceAssets'
 const AdminSettings = lazy(() => import('@/modules/admin/pages/Settings'));
 const AdminBranding = lazy(() => import('@/modules/admin/pages/Settings/Branding'));
 const AdminFormElements = lazy(() => import('@/modules/admin/pages/Settings/FormElements'));
+const AdminNotifications = lazy(() => import('@/modules/admin/pages/Settings/Notifications'));
 const OnboardingRequests = lazy(() => import('@/modules/admin/pages/OnboardingRequests'));
 const Profile = lazy(() => import('../pages/core/Profile'));
 const Settings = lazy(() => import('../pages/core/UserSetting'));
@@ -58,6 +59,9 @@ const WorkforceTimesheets = lazy(() => import('@/modules/workforce/pages/Timeshe
 const WorkforceExpenses = lazy(() => import('@/modules/workforce/pages/Expenses'));
 const TeamsUsers = lazy(() => import('@/modules/workforce/pages/TeamsUsers'));
 const TestRJSFCoreForm = lazy(() => import('../pages/TestRJSFCoreForm'));
+
+// FSM Module
+const FsmTracking = lazy(() => import('@/modules/fsm/pages/TrackingPage'));
 
 
 // Tickets & Documents
@@ -181,9 +185,13 @@ export const AppRoutes: FC = () => {
                         <Route path="/workforce/expenses" element={<WorkforceExpenses />} />
                         <Route path="/workforce/teams-users" element={<TeamsUsers />} />
 
+                        {/* FSM */}
+                        <Route path="/fsm/tracking" element={<FsmTracking />} />
+
                         {/* Admin - Settings & Branding */}
                         <Route path="/admin/settings" element={<AdminSettings />} />
                         <Route path="/admin/branding" element={<AdminBranding />} />
+                        <Route path="/admin/notifications" element={<AdminNotifications />} />
                         <Route path="/admin/form-elements" element={<AdminFormElements />} />
                         <Route path="/admin/onboarding" element={<OnboardingRequests />} />
                         <Route path="/admin/appointments" element={<AdminAppointments />} />

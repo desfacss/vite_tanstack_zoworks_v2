@@ -123,6 +123,8 @@ const iconMap: Record<string, React.ReactNode> = {
   'commerce-discounts': <Percent size={18} />,
   'commerce-price-lists': <Layers size={18} />,
   'commerce-customer-segments': <Users size={18} />,
+  'fsm-tracking': <MapPin size={18} />,
+  'system-notifications': <Bell size={18} />,
   default: <FileText size={18} />,
 };
 
