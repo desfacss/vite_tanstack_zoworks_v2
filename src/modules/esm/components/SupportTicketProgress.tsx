@@ -1,8 +1,7 @@
 // components/SupportTicketProgress.tsx
 import React from 'react';
 import { Steps, Tooltip, Dropdown, Menu } from 'antd';
-import { CheckCircle, Clock, MoreHorizontal } from 'lucide-react';
-// import './SupportTicketProgress.css';
+import { CheckCircleOutlined, ClockCircleOutlined, MoreOutlined } from '@ant-design/icons';
 
 interface SupportTicketProgressProps {
   stages: { id: string; stage_name: string; ordinal: number }[];
@@ -41,12 +40,12 @@ const SupportTicketProgress: React.FC<SupportTicketProgressProps> = ({
     ...(currentStageItem ? [currentStageItem] : []),
   ].sort((a, b) => a.ordinal - b.ordinal);
 
-  // Context menu for past stages (triggered by three dots)
+  // Context menu for past stages
   const pastStagesMenu = (
     <Menu>
       {pastStages.map(stage => (
         <Menu.Item key={stage.id}>
-          {stage.stage_name} {/* Placeholder for view details or other actions */}
+          {stage.stage_name}
         </Menu.Item>
       ))}
     </Menu>
@@ -68,73 +67,61 @@ const SupportTicketProgress: React.FC<SupportTicketProgressProps> = ({
 
   // Map visible stages to Steps items
   const items = [
-    // Past stages dropdown (if any past stages exist)
     ...(pastStages.length > 0
       ? [
-        {
-          title: (
-            <Dropdown overlay={pastStagesMenu} trigger={['click']}>
-              <Tooltip title="View Past Stages">
-                <MoreOutlined style={{ fontSize: 16 }} />
-              </Tooltip>
-            </Dropdown>
-          ),
-          status: 'finish',
-          icon: <CheckCircleOutlined />,
-          className: 'past-stages-dropdown',
-        },
-      ]
+          {
+            title: (
+              <Dropdown overlay={pastStagesMenu} trigger={['click']}>
+                <Tooltip title="View Past Stages">
+                  <MoreOutlined style={{ fontSize: 16 }} />
+                </Tooltip>
+              </Dropdown>
+            ),
+            status: 'finish' as const,
+            icon: <CheckCircleOutlined />,
+          },
+        ]
       : []),
-    // Last completed and current stages
     ...visibleStages.map(stage => ({
       title: (
         <Tooltip title={stage.stage_name}>
           <span
             style={{
-              backgroundColor: stage.id === currentStageId ? 'rgba(var(--color-primary-rgb, 24, 144, 255), 0.3)' : 'transparent',
-              padding: '6px 6px',
-              borderRadius: 10,
+              backgroundColor: stage.id === currentStageId ? 'var(--tenant-primary-light, #e6f7ff)' : 'transparent',
+              padding: '4px 8px',
+              borderRadius: 4,
+              fontWeight: stage.id === currentStageId ? 'bold' : 'normal'
             }}
           >
             {stage.stage_name}
           </span>
         </Tooltip>
       ),
-      status: stage.ordinal < currentOrdinal ? 'finish' : 'process',
-      icon:
-        stage.ordinal < currentOrdinal ? (
-          <CheckCircleOutlined />
-        ) : (
-          <ClockCircleOutlined />
-        ),
-      className: stage.ordinal < currentOrdinal ? 'past-stage' : 'current-stage',
+      status: (stage.ordinal < currentOrdinal ? 'finish' : 'process') as any,
+      icon: stage.ordinal < currentOrdinal ? <CheckCircleOutlined /> : <ClockCircleOutlined />,
     })),
-    ,
-    // Future stages dropdown (if any future stages exist)
     ...(futureStages.length > 0
       ? [
-        {
-          title: (
-            <Dropdown overlay={futureStagesMenu} trigger={['click']}>
-              <Tooltip title="Select Next Stage">
-                <span style={{ cursor: 'pointer' }}>Next Stages</span>
-                <MoreOutlined style={{ fontSize: 16 }} />
-              </Tooltip>
-            </Dropdown>
-          ),
-          status: 'wait',
-          className: 'future-stages-dropdown',
-        },
-      ]
+          {
+            title: (
+              <Dropdown overlay={futureStagesMenu} trigger={['click']}>
+                <Tooltip title="Select Next Stage">
+                  <span style={{ cursor: 'pointer', marginRight: 4 }}>Next Stages</span>
+                  <MoreOutlined style={{ fontSize: 16 }} />
+                </Tooltip>
+              </Dropdown>
+            ),
+            status: 'wait' as const,
+          },
+        ]
       : []),
   ];
 
   return (
-    <div className="">
+    <div style={{ padding: '16px 0' }}>
       <Steps
         current={visibleStages.findIndex(stage => stage.id === currentStageId) + (pastStages.length > 0 ? 1 : 0)}
         items={items}
-        className="support-ticket-progress"
       />
     </div>
   );

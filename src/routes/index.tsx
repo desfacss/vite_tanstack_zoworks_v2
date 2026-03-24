@@ -27,7 +27,8 @@ const Dashboard = lazy(() => import('../pages/Dashboard'));
 const WelcomeHub = lazy(() => import('../core/components/Layout/WelcomeHub'));
 const SamplePage = lazy(() => import('../pages/SamplePage'));
 const Contacts = lazy(() => import('@/modules/crm/pages/Contacts'));
-const Tickets = lazy(() => import('@/modules/tickets/pages/Tickets'));
+const Tickets = lazy(() => import('../modules/esm/pages/Tickets'));
+const QrTicketPage = lazy(() => import('../modules/esm/pages/QrTicketPage'));
 const ServiceAssets = lazy(() => import('@/modules/external/pages/ServiceAssets'));
 const AdminSettings = lazy(() => import('@/modules/admin/pages/Settings'));
 const AdminBranding = lazy(() => import('@/modules/admin/pages/Settings/Branding'));
@@ -128,6 +129,7 @@ export const AppRoutes: FC = () => {
                     <Route path="/reset_password" element={<ResetPassword />} />
                     <Route path="/web_register" element={<WebRegister />} />
                     <Route path="/sign_up" element={<WebRegister />} /> {/* Vector A alias */}
+                    <Route path="/esm/qr-ticket/:assetId?" element={<QrTicketPage />} />
                 </Route>
 
                 {/* Auth-protected routes */}
@@ -146,7 +148,7 @@ export const AppRoutes: FC = () => {
                         <Route path="/crm/contacts" element={<Contacts />} />
 
                         {/* Support - Tickets */}
-                        <Route path="/support/tickets" element={<Tickets />} />
+                        <Route path="/esm/tickets" element={<Tickets />} />
 
                         {/* Service Reports */}
                         <Route path="/support/service-reports" element={<ServiceReports />} />

@@ -416,7 +416,8 @@ const DetailOverview: React.FC<DetailOverviewProps> = ({
     }
 
     const value = getNestedValue(currentData, field.fieldPath);
-    const { icon, label, style, webLink, link, imagePath, displayKey } = field;
+    const { icon, label: propLabel, style, webLink, link, imagePath, displayKey } = field;
+    const label = propLabel || (field as any).fieldName;
 
     // Check if value is a complex object (JSONB column itself)
     const isComplexObject = typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -736,8 +737,13 @@ const DetailOverview: React.FC<DetailOverviewProps> = ({
         <div className="pb-4">
           <QRCard
             f={viewConfig?.general?.features?.qr_form || 'qr_tickets'}
-            i={currentData?.id}
+            i={currentData?.asset_id || currentData?.id}
             display_id={currentData?.display_id}
+            customUrl={
+              viewConfig?.general?.features?.qr_form === 'qr_tickets' && currentData?.asset_id
+                ? `${window.location.protocol}//${window.location.host}/esm/qr-ticket/${currentData.asset_id}`
+                : undefined
+            }
           />
         </div>
       )}

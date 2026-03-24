@@ -1,1 +1,20 @@
-{}
+{
+  "nav": {
+    "title": "Tickets",
+    "my-tickets": "My Tickets",
+    "all-tickets": "All Tickets"
+  },
+  "tabs": {
+    "summary": "Summary",
+    "history": "History",
+    "attachments": "Attachments",
+    "myTickets": "My Tickets",
+    "allTickets": "All Tickets"
+  },
+  "status": {
+    "open": "Open",
+    "inProgress": "In Progress",
+    "resolved": "Resolved",
+    "closed": "Closed"
+  }
+}
