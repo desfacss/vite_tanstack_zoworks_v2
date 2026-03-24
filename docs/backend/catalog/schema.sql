@@ -184,7 +184,21 @@ CREATE TABLE catalog.offerings (
     external_id text,
     version integer DEFAULT 1 NOT NULL,
     entity_instance_id uuid,
-    CONSTRAINT chk_offering_type CHECK ((type = ANY (ARRAY['product'::text, 'service'::text, 'digital'::text, 'custom'::text, 'subscription'::text, 'bundle'::text])))
+    gtin text,
+    mpn text,
+    brand text,
+    weight numeric(10,2),
+    weight_unit text DEFAULT 'kg'::text,
+    dimensions jsonb,
+    return_policy jsonb,
+    certifications jsonb,
+    country_of_origin text,
+    hs_code text,
+    enable_checkout boolean DEFAULT true,
+    popularity_score integer,
+    return_rate numeric(5,4),
+    CONSTRAINT chk_offering_type CHECK ((type = ANY (ARRAY['product'::text, 'service'::text, 'digital'::text, 'custom'::text, 'subscription'::text, 'bundle'::text]))),
+    CONSTRAINT offerings_popularity_score_check CHECK (((popularity_score >= 1) AND (popularity_score <= 5)))
 );
 
 CREATE TABLE catalog.price_lists (
@@ -201,6 +215,16 @@ CREATE TABLE catalog.price_lists (
     updated_at timestamp with time zone DEFAULT now(),
     created_by uuid,
     updated_by uuid
+);
+
+CREATE TABLE catalog.product_qna (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    offering_id uuid NOT NULL,
+    question text NOT NULL,
+    answer text,
+    is_automated boolean DEFAULT false,
+    created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone DEFAULT now()
 );
 
 ALTER TABLE ONLY catalog.asset_categories
@@ -235,6 +259,9 @@ ALTER TABLE ONLY catalog.offerings
 
 ALTER TABLE ONLY catalog.price_lists
     ADD CONSTRAINT price_lists_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY catalog.product_qna
+    ADD CONSTRAINT product_qna_pkey PRIMARY KEY (id);
 
 ALTER TABLE ONLY catalog.asset_categories
     ADD CONSTRAINT asset_categories_org_name_loc_parent_unique UNIQUE (organization_id, location_id, parent_id, name);
@@ -323,6 +350,9 @@ ALTER TABLE ONLY catalog.offerings
 ALTER TABLE ONLY catalog.price_lists
     ADD CONSTRAINT uq_price_list_org_short_code UNIQUE (organization_id, short_code);
 
+ALTER TABLE ONLY catalog.product_qna
+    ADD CONSTRAINT product_qna_offering_id_fkey FOREIGN KEY (offering_id) REFERENCES catalog.offerings(id) ON DELETE CASCADE;
+
 CREATE INDEX categories_details_gin ON catalog.asset_categories USING gin (details);
 
 CREATE INDEX categories_parent_id_idx ON catalog.asset_categories USING btree (parent_id);
@@ -393,6 +423,8 @@ CREATE INDEX idx_offerings_category_id ON catalog.offerings USING btree (categor
 
 CREATE INDEX idx_offerings_code ON catalog.offerings USING btree (short_code);
 
+CREATE INDEX idx_offerings_gtin ON catalog.offerings USING btree (gtin) WHERE (gtin IS NOT NULL);
+
 CREATE INDEX idx_offerings_org_id ON catalog.offerings USING btree (organization_id);
 
 CREATE INDEX idx_offerings_type ON catalog.offerings USING btree (type);
@@ -400,6 +432,8 @@ CREATE INDEX idx_offerings_type ON catalog.offerings USING btree (type);
 CREATE INDEX idx_price_lists_org_id ON catalog.price_lists USING btree (organization_id);
 
 CREATE INDEX idx_price_lists_short_code ON catalog.price_lists USING btree (short_code);
+
+CREATE INDEX idx_product_qna_offering ON catalog.product_qna USING btree (offering_id);
 
 CREATE POLICY "Tenant_Isolation_V5" ON catalog.asset_categories TO authenticated USING ((organization_id = identity.get_current_org_id()));
 
@@ -1121,6 +1155,8 @@ ALTER TABLE catalog.offerings ENABLE ROW LEVEL SECURITY;
 
 ALTER TABLE catalog.price_lists ENABLE ROW LEVEL SECURITY;
 
+ALTER TABLE catalog.product_qna ENABLE ROW LEVEL SECURITY;
+
 ALTER TABLE ONLY catalog.asset_categories FORCE ROW LEVEL SECURITY;
 
 ALTER TABLE ONLY catalog.bundle_items FORCE ROW LEVEL SECURITY;
@@ -1142,6 +1178,8 @@ ALTER TABLE ONLY catalog.offering_variants FORCE ROW LEVEL SECURITY;
 ALTER TABLE ONLY catalog.offerings FORCE ROW LEVEL SECURITY;
 
 ALTER TABLE ONLY catalog.price_lists FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE ONLY catalog.product_qna FORCE ROW LEVEL SECURITY;
 
 CREATE SCHEMA catalog;
 
