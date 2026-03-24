@@ -28,6 +28,7 @@ const MODULE_MANIFEST: Record<string, () => Promise<{ register: ModuleRegisterFn
     erp: () => import('@/modules/erp'),
     esm: () => import('@/modules/esm'),
     tickets: () => import('@/modules/esm'), // Backward compatibility alias
+    archive: () => import('@/modules/archive'),
     wms: () => import('@/modules/wms'),
     pos: () => import('@/modules/pos'),
     landing: () => import('@/modules/landing'),

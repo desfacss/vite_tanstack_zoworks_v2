@@ -4,7 +4,9 @@ import {
     ActionDefinition,
     TabDefinition,
     ViewTypeDefinition,
-    DetailComponentDefinition
+    DetailComponentDefinition,
+    RouteDefinition,
+    NavItemDefinition
 } from './types';
 
 class AppRegistry {
@@ -13,10 +15,26 @@ class AppRegistry {
     private tabs: Map<string, TabDefinition[]> = new Map();
     private viewTypes: Map<string, ViewTypeDefinition> = new Map();
     private detailComponents: Map<string, DetailComponentDefinition> = new Map();
+    private routes: RouteDefinition[] = [];
+    private navigationItems: NavItemDefinition[] = [];
+    private listeners: (() => void)[] = [];
+
+    // Listener management
+    subscribe(listener: () => void) {
+        this.listeners.push(listener);
+        return () => {
+            this.listeners = this.listeners.filter(l => l !== listener);
+        };
+    }
+
+    private emitChange() {
+        this.listeners.forEach(l => l());
+    }
 
     // Module registration
     registerModule(module: ModuleDefinition) {
         this.modules.set(module.id, module);
+        this.emitChange();
     }
 
     getModule(id: string): ModuleDefinition | undefined {
@@ -36,6 +54,7 @@ class AppRegistry {
                 this.actions.set(entityType, [...existing, action]);
             }
         });
+        this.emitChange();
     }
 
     // Tab registration
@@ -47,16 +66,36 @@ class AppRegistry {
                 this.tabs.set(entityType, [...existing, tab]);
             }
         });
+        this.emitChange();
     }
 
     // View Type registration
     registerViewType(viewType: ViewTypeDefinition) {
         this.viewTypes.set(viewType.id, viewType);
+        this.emitChange();
     }
 
-    // Detail Component registration (for Expensesheet, Timesheet, etc.)
     registerDetailComponent(component: DetailComponentDefinition) {
         this.detailComponents.set(component.id, component);
+        this.emitChange();
+    }
+
+    registerRoute(route: RouteDefinition) {
+        this.routes.push(route);
+        this.emitChange();
+    }
+
+    registerNavItem(item: NavItemDefinition) {
+        this.navigationItems.push(item);
+        this.emitChange();
+    }
+
+    getRoutes(): RouteDefinition[] {
+        return this.routes;
+    }
+
+    getNavItems(): NavItemDefinition[] {
+        return this.navigationItems;
     }
 
     getDetailComponent(id: string): DetailComponentDefinition | undefined {

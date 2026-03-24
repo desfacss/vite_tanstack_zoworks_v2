@@ -14,6 +14,7 @@ export interface RouteDefinition {
     path: string;
     component: () => Promise<any>;
     exact?: boolean;
+    label?: string;  // Added for breadcrumbs or nav generation
 }
 
 export interface NavItemDefinition {
