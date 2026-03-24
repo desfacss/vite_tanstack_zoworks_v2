@@ -566,6 +566,8 @@ CREATE POLICY "Allow public registration requests" ON identity.organizations FOR
 
 CREATE POLICY "Authenticated_Access_V5" ON identity.x_segment_rules TO authenticated USING (true);
 
+CREATE POLICY "Config_Insert_V5" ON identity.roles FOR INSERT TO authenticated WITH CHECK ((organization_id = identity.get_current_org_id()));
+
 CREATE POLICY "Config_Tenant_Or_Global_V5" ON identity.roles TO authenticated USING (((organization_id IS NULL) OR (organization_id = identity.get_current_org_id())));
 
 CREATE POLICY "Global_Read_V5" ON identity.modules FOR SELECT TO authenticated USING (true);
@@ -3744,18 +3746,18 @@ CREATE FUNCTION identity.trg_v_location_types_shard() RETURNS trigger
             IF (TG_OP = 'INSERT' OR TG_OP = 'UPDATE') THEN
                             IF (TG_OP = 'INSERT') AND NEW.id IS NULL THEN NEW.id := gen_random_uuid(); END IF;
             IF (TG_OP = 'INSERT') AND NEW.organization_id IS NULL THEN NEW.organization_id := identity.get_current_org_id(); END IF;
-            IF (TG_OP = 'INSERT') THEN
-                IF EXISTS (SELECT 1 FROM identity.location_types WHERE id = NEW.id) THEN
-                    UPDATE identity.location_types SET name = COALESCE(NEW.name, identity.location_types.name), level = COALESCE(NEW.level, identity.location_types.level), created_at = COALESCE(NEW.created_at, identity.location_types.created_at), created_by = COALESCE(NEW.created_by, identity.location_types.created_by), updated_at = COALESCE(NEW.updated_at, identity.location_types.updated_at), updated_by = COALESCE(NEW.updated_by, identity.location_types.updated_by) WHERE id = NEW.id
-                    RETURNING id INTO NEW.id;
-                ELSE
-                    INSERT INTO identity.location_types (id, organization_id, name, level, created_at, created_by, updated_at, updated_by) VALUES (COALESCE(NEW.id::text::uuid, uuid_generate_v4()), NEW.organization_id, NEW.name, COALESCE(NEW.level::text::int2, 0), COALESCE(NEW.created_at::text::timestamptz, now()), NEW.created_by, COALESCE(NEW.updated_at::text::timestamptz, now()), NEW.updated_by)
-                    RETURNING id INTO NEW.id;
-                END IF;
+        IF (TG_OP = 'INSERT') THEN
+            IF EXISTS (SELECT 1 FROM identity.location_types WHERE id = NEW.id AND organization_id = NEW.organization_id) THEN
+                UPDATE identity.location_types SET name = COALESCE(NEW.name::text::text, identity.location_types.name), level = COALESCE(NEW.level::text::int2, identity.location_types.level), created_at = COALESCE(NEW.created_at::text::timestamptz, identity.location_types.created_at), created_by = COALESCE(NEW.created_by::text::uuid, identity.location_types.created_by), updated_at = COALESCE(NEW.updated_at::text::timestamptz, identity.location_types.updated_at), updated_by = COALESCE(NEW.updated_by::text::uuid, identity.location_types.updated_by) WHERE id = NEW.id
+                RETURNING id INTO NEW.id;
             ELSE
-                UPDATE identity.location_types SET name = COALESCE(NEW.name, identity.location_types.name), level = COALESCE(NEW.level, identity.location_types.level), created_at = COALESCE(NEW.created_at, identity.location_types.created_at), created_by = COALESCE(NEW.created_by, identity.location_types.created_by), updated_at = COALESCE(NEW.updated_at, identity.location_types.updated_at), updated_by = COALESCE(NEW.updated_by, identity.location_types.updated_by) WHERE id = OLD.id
+                INSERT INTO identity.location_types (id, organization_id, name, level, created_at, created_by, updated_at, updated_by) VALUES (COALESCE(NEW.id::text::uuid, uuid_generate_v4()), NEW.organization_id::text::uuid, NEW.name::text::text, COALESCE(NEW.level::text::int2, 0), COALESCE(NEW.created_at::text::timestamptz, now()), NEW.created_by::text::uuid, COALESCE(NEW.updated_at::text::timestamptz, now()), NEW.updated_by::text::uuid)
                 RETURNING id INTO NEW.id;
             END IF;
+        ELSE
+            UPDATE identity.location_types SET name = COALESCE(NEW.name::text::text, identity.location_types.name), level = COALESCE(NEW.level::text::int2, identity.location_types.level), created_at = COALESCE(NEW.created_at::text::timestamptz, identity.location_types.created_at), created_by = COALESCE(NEW.created_by::text::uuid, identity.location_types.created_by), updated_at = COALESCE(NEW.updated_at::text::timestamptz, identity.location_types.updated_at), updated_by = COALESCE(NEW.updated_by::text::uuid, identity.location_types.updated_by) WHERE id = OLD.id
+            RETURNING id INTO NEW.id;
+        END IF;
                 RETURN NEW;
             END IF;
             RETURN NULL;
@@ -3771,22 +3773,34 @@ CREATE FUNCTION identity.trg_v_locations_shard() RETURNS trigger
             IF (TG_OP = 'INSERT' OR TG_OP = 'UPDATE') THEN
                             IF (TG_OP = 'INSERT') AND NEW.id IS NULL THEN NEW.id := gen_random_uuid(); END IF;
             IF (TG_OP = 'INSERT') AND NEW.organization_id IS NULL THEN NEW.organization_id := identity.get_current_org_id(); END IF;
+        IF (TG_OP = 'INSERT') THEN
+            IF EXISTS (SELECT 1 FROM identity.locations WHERE id = NEW.id AND organization_id = NEW.organization_id) THEN
+                UPDATE identity.locations SET name = COALESCE(NEW.name::text::text, identity.locations.name), details = COALESCE(to_jsonb(NEW.details::text), identity.locations.details), time_zone = COALESCE(NEW.time_zone::text::text, identity.locations.time_zone), working_hours = COALESCE(to_jsonb(NEW.working_hours::text), identity.locations.working_hours), settings = COALESCE(to_jsonb(NEW.settings::text), identity.locations.settings), service_area = COALESCE(to_jsonb(NEW.service_area::text), identity.locations.service_area), created_by = COALESCE(NEW.created_by::text::uuid, identity.locations.created_by), updated_by = COALESCE(NEW.updated_by::text::uuid, identity.locations.updated_by), created_at = COALESCE(NEW.created_at::text::timestamptz, identity.locations.created_at), updated_at = COALESCE(NEW.updated_at::text::timestamptz, identity.locations.updated_at), is_active = COALESCE(NEW.is_active::text::bool, identity.locations.is_active), short_code = COALESCE(NEW.short_code::text::text, identity.locations.short_code), app_settings = COALESCE(to_jsonb(NEW.app_settings::text), identity.locations.app_settings), parent_id = COALESCE(NEW.parent_id::text::uuid, identity.locations.parent_id), location_type_id = COALESCE(NEW.location_type_id::text::uuid, identity.locations.location_type_id), path = COALESCE(NEW.path::text::ltree, identity.locations.path), deleted_at = COALESCE(NEW.deleted_at::text::timestamptz, identity.locations.deleted_at), vertical = COALESCE(to_jsonb(NEW.vertical::text), identity.locations.vertical), custom = COALESCE(to_jsonb(NEW.custom::text), identity.locations.custom) WHERE id = NEW.id
+                RETURNING id INTO NEW.id;
+            ELSE
+                INSERT INTO identity.locations (id, organization_id, name, details, time_zone, working_hours, settings, service_area, created_by, updated_by, created_at, updated_at, is_active, short_code, app_settings, parent_id, location_type_id, path, deleted_at, vertical, custom) VALUES (COALESCE(NEW.id::text::uuid, uuid_generate_v4()), NEW.organization_id::text::uuid, NEW.name::text::text, COALESCE(to_jsonb(NEW.details::text), '{}'::jsonb), COALESCE(NEW.time_zone::text::text, 'UTC'::text), COALESCE(to_jsonb(NEW.working_hours::text), '{}'::jsonb), COALESCE(to_jsonb(NEW.settings::text), '{}'::jsonb), COALESCE(to_jsonb(NEW.service_area::text), '{}'::jsonb), NEW.created_by::text::uuid, NEW.updated_by::text::uuid, COALESCE(NEW.created_at::text::timestamptz, now()), COALESCE(NEW.updated_at::text::timestamptz, now()), COALESCE(NEW.is_active::text::bool, true), NEW.short_code::text::text, COALESCE(to_jsonb(NEW.app_settings::text), '{}'::jsonb), NEW.parent_id::text::uuid, NEW.location_type_id::text::uuid, NEW.path::text::ltree, NEW.deleted_at::text::timestamptz, COALESCE(to_jsonb(NEW.vertical::text), '{}'::jsonb), COALESCE(to_jsonb(NEW.custom::text), '{}'::jsonb))
+                RETURNING id INTO NEW.id;
+            END IF;
+        ELSE
+            UPDATE identity.locations SET name = COALESCE(NEW.name::text::text, identity.locations.name), details = COALESCE(to_jsonb(NEW.details::text), identity.locations.details), time_zone = COALESCE(NEW.time_zone::text::text, identity.locations.time_zone), working_hours = COALESCE(to_jsonb(NEW.working_hours::text), identity.locations.working_hours), settings = COALESCE(to_jsonb(NEW.settings::text), identity.locations.settings), service_area = COALESCE(to_jsonb(NEW.service_area::text), identity.locations.service_area), created_by = COALESCE(NEW.created_by::text::uuid, identity.locations.created_by), updated_by = COALESCE(NEW.updated_by::text::uuid, identity.locations.updated_by), created_at = COALESCE(NEW.created_at::text::timestamptz, identity.locations.created_at), updated_at = COALESCE(NEW.updated_at::text::timestamptz, identity.locations.updated_at), is_active = COALESCE(NEW.is_active::text::bool, identity.locations.is_active), short_code = COALESCE(NEW.short_code::text::text, identity.locations.short_code), app_settings = COALESCE(to_jsonb(NEW.app_settings::text), identity.locations.app_settings), parent_id = COALESCE(NEW.parent_id::text::uuid, identity.locations.parent_id), location_type_id = COALESCE(NEW.location_type_id::text::uuid, identity.locations.location_type_id), path = COALESCE(NEW.path::text::ltree, identity.locations.path), deleted_at = COALESCE(NEW.deleted_at::text::timestamptz, identity.locations.deleted_at), vertical = COALESCE(to_jsonb(NEW.vertical::text), identity.locations.vertical), custom = COALESCE(to_jsonb(NEW.custom::text), identity.locations.custom) WHERE id = OLD.id
+            RETURNING id INTO NEW.id;
+        END IF;-- Tier 0: Global Object Registration (Immediate)
             IF (TG_OP = 'INSERT') THEN
                 INSERT INTO core.unified_objects (id, organization_id, object_type, name, display_id)
                 VALUES (NEW.id, NEW.organization_id, 'locations', NEW.name, NEW.display_id)
                 ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, updated_at = now();
             END IF;
             IF (TG_OP = 'INSERT') THEN
-                IF EXISTS (SELECT 1 FROM identity.locations WHERE id = NEW.id) THEN
-                    UPDATE identity.locations SET name = COALESCE(NEW.name, identity.locations.name), details = COALESCE(NEW.details, identity.locations.details), time_zone = COALESCE(NEW.time_zone, identity.locations.time_zone), working_hours = COALESCE(NEW.working_hours, identity.locations.working_hours), settings = COALESCE(NEW.settings, identity.locations.settings), service_area = COALESCE(NEW.service_area, identity.locations.service_area), created_by = COALESCE(NEW.created_by, identity.locations.created_by), updated_by = COALESCE(NEW.updated_by, identity.locations.updated_by), created_at = COALESCE(NEW.created_at, identity.locations.created_at), updated_at = COALESCE(NEW.updated_at, identity.locations.updated_at), is_active = COALESCE(NEW.is_active, identity.locations.is_active), short_code = COALESCE(NEW.short_code, identity.locations.short_code), app_settings = COALESCE(NEW.app_settings, identity.locations.app_settings), parent_id = COALESCE(NEW.parent_id, identity.locations.parent_id), location_type_id = COALESCE(NEW.location_type_id, identity.locations.location_type_id), path = COALESCE(NEW.path, identity.locations.path), deleted_at = COALESCE(NEW.deleted_at, identity.locations.deleted_at), vertical = COALESCE(NEW.vertical, identity.locations.vertical), custom = COALESCE(NEW.custom, identity.locations.custom) WHERE id = NEW.id
-                    RETURNING id INTO NEW.id;
+                IF EXISTS (SELECT 1 FROM core.unified_objects WHERE id = NEW.id) THEN
+                    UPDATE core.unified_objects SET object_type = COALESCE(NEW.object_type::text::"varchar", core.unified_objects.object_type), object_subtype = COALESCE(NEW.object_subtype::text::"varchar", core.unified_objects.object_subtype), display_id = COALESCE(NEW.display_id::text::"varchar", core.unified_objects.display_id), created_at = COALESCE(NEW.created_at::text::timestamptz, core.unified_objects.created_at), updated_at = COALESCE(NEW.updated_at::text::timestamptz, core.unified_objects.updated_at), created_by = COALESCE(NEW.created_by::text::uuid, core.unified_objects.created_by), updated_by = COALESCE(NEW.updated_by::text::uuid, core.unified_objects.updated_by), deleted_at = COALESCE(NEW.deleted_at::text::timestamptz, core.unified_objects.deleted_at), entity_schema = COALESCE(NEW.entity_schema::text::text, core.unified_objects.entity_schema), entity_type = COALESCE(NEW.entity_type::text::text, core.unified_objects.entity_type), name = COALESCE(NEW.name::text::text, core.unified_objects.name), module = COALESCE(NEW.module::text::text, core.unified_objects.module) WHERE id = NEW.id 
+                    RETURNING display_id INTO NEW.display_id;
                 ELSE
-                    INSERT INTO identity.locations (id, organization_id, name, details, time_zone, working_hours, settings, service_area, created_by, updated_by, created_at, updated_at, is_active, short_code, app_settings, parent_id, location_type_id, path, deleted_at, vertical, custom) VALUES (COALESCE(NEW.id::text::uuid, uuid_generate_v4()), NEW.organization_id, NEW.name, COALESCE(to_jsonb(NEW.details::text), '{}'::jsonb), COALESCE(NEW.time_zone::text::text, 'UTC'::text), COALESCE(to_jsonb(NEW.working_hours::text), '{}'::jsonb), COALESCE(to_jsonb(NEW.settings::text), '{}'::jsonb), COALESCE(to_jsonb(NEW.service_area::text), '{}'::jsonb), NEW.created_by, NEW.updated_by, COALESCE(NEW.created_at::text::timestamptz, now()), COALESCE(NEW.updated_at::text::timestamptz, now()), COALESCE(NEW.is_active::text::bool, true), NEW.short_code, COALESCE(to_jsonb(NEW.app_settings::text), '{}'::jsonb), NEW.parent_id, NEW.location_type_id, NEW.path, NEW.deleted_at, COALESCE(to_jsonb(NEW.vertical::text), '{}'::jsonb), COALESCE(to_jsonb(NEW.custom::text), '{}'::jsonb))
-                    RETURNING id INTO NEW.id;
+                    INSERT INTO core.unified_objects (id, organization_id, object_type, object_subtype, display_id, created_at, updated_at, created_by, updated_by, deleted_at, entity_schema, entity_type, name, module) VALUES (COALESCE(NEW.id::text::uuid, gen_random_uuid()), NEW.organization_id::text::uuid, NEW.object_type::text::"varchar", NEW.object_subtype::text::"varchar", NEW.display_id::text::"varchar", COALESCE(NEW.created_at::text::timestamptz, now()), COALESCE(NEW.updated_at::text::timestamptz, now()), NEW.created_by::text::uuid, NEW.updated_by::text::uuid, NEW.deleted_at::text::timestamptz, NEW.entity_schema::text::text, NEW.entity_type::text::text, NEW.name::text::text, NEW.module::text::text)
+                    RETURNING display_id INTO NEW.display_id;
                 END IF;
             ELSE
-                UPDATE identity.locations SET name = COALESCE(NEW.name, identity.locations.name), details = COALESCE(NEW.details, identity.locations.details), time_zone = COALESCE(NEW.time_zone, identity.locations.time_zone), working_hours = COALESCE(NEW.working_hours, identity.locations.working_hours), settings = COALESCE(NEW.settings, identity.locations.settings), service_area = COALESCE(NEW.service_area, identity.locations.service_area), created_by = COALESCE(NEW.created_by, identity.locations.created_by), updated_by = COALESCE(NEW.updated_by, identity.locations.updated_by), created_at = COALESCE(NEW.created_at, identity.locations.created_at), updated_at = COALESCE(NEW.updated_at, identity.locations.updated_at), is_active = COALESCE(NEW.is_active, identity.locations.is_active), short_code = COALESCE(NEW.short_code, identity.locations.short_code), app_settings = COALESCE(NEW.app_settings, identity.locations.app_settings), parent_id = COALESCE(NEW.parent_id, identity.locations.parent_id), location_type_id = COALESCE(NEW.location_type_id, identity.locations.location_type_id), path = COALESCE(NEW.path, identity.locations.path), deleted_at = COALESCE(NEW.deleted_at, identity.locations.deleted_at), vertical = COALESCE(NEW.vertical, identity.locations.vertical), custom = COALESCE(NEW.custom, identity.locations.custom) WHERE id = OLD.id
-                RETURNING id INTO NEW.id;
+                UPDATE core.unified_objects SET object_type = COALESCE(NEW.object_type::text::"varchar", core.unified_objects.object_type), object_subtype = COALESCE(NEW.object_subtype::text::"varchar", core.unified_objects.object_subtype), display_id = COALESCE(NEW.display_id::text::"varchar", core.unified_objects.display_id), created_at = COALESCE(NEW.created_at::text::timestamptz, core.unified_objects.created_at), updated_at = COALESCE(NEW.updated_at::text::timestamptz, core.unified_objects.updated_at), created_by = COALESCE(NEW.created_by::text::uuid, core.unified_objects.created_by), updated_by = COALESCE(NEW.updated_by::text::uuid, core.unified_objects.updated_by), deleted_at = COALESCE(NEW.deleted_at::text::timestamptz, core.unified_objects.deleted_at), entity_schema = COALESCE(NEW.entity_schema::text::text, core.unified_objects.entity_schema), entity_type = COALESCE(NEW.entity_type::text::text, core.unified_objects.entity_type), name = COALESCE(NEW.name::text::text, core.unified_objects.name), module = COALESCE(NEW.module::text::text, core.unified_objects.module) WHERE id = OLD.id 
+                RETURNING display_id INTO NEW.display_id;
             END IF;
                 RETURN NEW;
             END IF;
@@ -3982,18 +3996,18 @@ CREATE FUNCTION identity.trg_v_teams_shard() RETURNS trigger
             IF (TG_OP = 'INSERT' OR TG_OP = 'UPDATE') THEN
                             IF (TG_OP = 'INSERT') AND NEW.id IS NULL THEN NEW.id := gen_random_uuid(); END IF;
             IF (TG_OP = 'INSERT') AND NEW.organization_id IS NULL THEN NEW.organization_id := identity.get_current_org_id(); END IF;
-            IF (TG_OP = 'INSERT') THEN
-                IF EXISTS (SELECT 1 FROM identity.teams WHERE id = NEW.id) THEN
-                    UPDATE identity.teams SET name = COALESCE(NEW.name, identity.teams.name), location_id = COALESCE(NEW.location_id, identity.teams.location_id), details = COALESCE(NEW.details, identity.teams.details), created_by = COALESCE(NEW.created_by, identity.teams.created_by), updated_by = COALESCE(NEW.updated_by, identity.teams.updated_by), created_at = COALESCE(NEW.created_at, identity.teams.created_at), updated_at = COALESCE(NEW.updated_at, identity.teams.updated_at) WHERE id = NEW.id
-                    RETURNING id INTO NEW.id;
-                ELSE
-                    INSERT INTO identity.teams (id, organization_id, name, location_id, details, created_by, updated_by, created_at, updated_at) VALUES (COALESCE(NEW.id::text::uuid, uuid_generate_v4()), NEW.organization_id, NEW.name, NEW.location_id, COALESCE(to_jsonb(NEW.details::text), '{}'::jsonb), NEW.created_by, NEW.updated_by, COALESCE(NEW.created_at::text::timestamptz, now()), COALESCE(NEW.updated_at::text::timestamptz, now()))
-                    RETURNING id INTO NEW.id;
-                END IF;
+        IF (TG_OP = 'INSERT') THEN
+            IF EXISTS (SELECT 1 FROM identity.teams WHERE id = NEW.id AND organization_id = NEW.organization_id) THEN
+                UPDATE identity.teams SET name = COALESCE(NEW.name::text::text, identity.teams.name), location_id = COALESCE(NEW.location_id::text::uuid, identity.teams.location_id), details = COALESCE(to_jsonb(NEW.details::text), identity.teams.details), created_by = COALESCE(NEW.created_by::text::uuid, identity.teams.created_by), updated_by = COALESCE(NEW.updated_by::text::uuid, identity.teams.updated_by), created_at = COALESCE(NEW.created_at::text::timestamptz, identity.teams.created_at), updated_at = COALESCE(NEW.updated_at::text::timestamptz, identity.teams.updated_at) WHERE id = NEW.id
+                RETURNING id INTO NEW.id;
             ELSE
-                UPDATE identity.teams SET name = COALESCE(NEW.name, identity.teams.name), location_id = COALESCE(NEW.location_id, identity.teams.location_id), details = COALESCE(NEW.details, identity.teams.details), created_by = COALESCE(NEW.created_by, identity.teams.created_by), updated_by = COALESCE(NEW.updated_by, identity.teams.updated_by), created_at = COALESCE(NEW.created_at, identity.teams.created_at), updated_at = COALESCE(NEW.updated_at, identity.teams.updated_at) WHERE id = OLD.id
+                INSERT INTO identity.teams (id, organization_id, name, location_id, details, created_by, updated_by, created_at, updated_at) VALUES (COALESCE(NEW.id::text::uuid, uuid_generate_v4()), NEW.organization_id::text::uuid, NEW.name::text::text, NEW.location_id::text::uuid, COALESCE(to_jsonb(NEW.details::text), '{}'::jsonb), NEW.created_by::text::uuid, NEW.updated_by::text::uuid, COALESCE(NEW.created_at::text::timestamptz, now()), COALESCE(NEW.updated_at::text::timestamptz, now()))
                 RETURNING id INTO NEW.id;
             END IF;
+        ELSE
+            UPDATE identity.teams SET name = COALESCE(NEW.name::text::text, identity.teams.name), location_id = COALESCE(NEW.location_id::text::uuid, identity.teams.location_id), details = COALESCE(to_jsonb(NEW.details::text), identity.teams.details), created_by = COALESCE(NEW.created_by::text::uuid, identity.teams.created_by), updated_by = COALESCE(NEW.updated_by::text::uuid, identity.teams.updated_by), created_at = COALESCE(NEW.created_at::text::timestamptz, identity.teams.created_at), updated_at = COALESCE(NEW.updated_at::text::timestamptz, identity.teams.updated_at) WHERE id = OLD.id
+            RETURNING id INTO NEW.id;
+        END IF;
                 RETURN NEW;
             END IF;
             RETURN NULL;
@@ -5287,7 +5301,7 @@ BEGIN
     RETURN NEW;
 END;$$;
 
-CREATE VIEW identity.v_location_types AS
+CREATE VIEW identity.v_location_types WITH (security_invoker='on') AS
  SELECT created_at,
     created_by,
     created_by_display,
@@ -5342,13 +5356,6 @@ CREATE VIEW identity.v_locations WITH (security_invoker='on') AS
     "custom__ai_overrides__whatsappOverrides__wabaId",
     deleted_at,
     details,
-    details__address,
-    details__contact_email,
-    details__contact_number,
-    details__contact_person,
-    details__country,
-    details__type,
-    details__zip,
     display_id,
     entity_schema,
     entity_type,
@@ -5403,14 +5410,7 @@ CREATE VIEW identity.v_locations WITH (security_invoker='on') AS
             (base.custom #>> '{ai_overrides,whatsappOverrides,wabaId}'::text[]) AS "custom__ai_overrides__whatsappOverrides__wabaId",
             base.deleted_at,
             base.details,
-            (base.details #>> '{address}'::text[]) AS details__address,
-            (base.details #>> '{contact_email}'::text[]) AS details__contact_email,
-            (base.details #>> '{contact_number}'::text[]) AS details__contact_number,
-            (base.details #>> '{contact_person}'::text[]) AS details__contact_person,
-            (base.details #>> '{country}'::text[]) AS details__country,
-            (base.details #>> '{type}'::text[]) AS details__type,
-            (base.details #>> '{zip}'::text[]) AS details__zip,
-            COALESCE(ext1.display_id) AS display_id,
+            ext1.display_id,
             ext1.entity_schema,
             ext1.entity_type,
             base.id,
@@ -5960,8 +5960,10 @@ CREATE VIEW identity.v_organization_users WITH (security_invoker='on') AS
     deleted_at,
     department,
     details,
+    details__onboarding_status,
     details__person__name__family,
     details__person__name__given,
+    details__title,
     display_id,
     email,
     employment_status,
@@ -6035,9 +6037,11 @@ CREATE VIEW identity.v_organization_users WITH (security_invoker='on') AS
             base.deleted_at,
             ext3.department,
             ext4.details,
+            (ext4.details #>> '{onboarding_status}'::text[]) AS details__onboarding_status,
             (ext4.details #>> '{family,name,person}'::text[]) AS details__person__name__family,
             (ext4.details #>> '{given,name,person}'::text[]) AS details__person__name__given,
-            COALESCE(base.display_id, ext4.display_id) AS display_id,
+            (ext4.details #>> '{title}'::text[]) AS details__title,
+            ext4.display_id,
             ext4.email,
             ext3.employment_status,
             ext3.employment_type,
@@ -6540,7 +6544,7 @@ CREATE VIEW identity.v_roles WITH (security_invoker='on') AS
              LEFT JOIN identity.organizations fk_organization ON ((base.organization_id = fk_organization.id)))
              LEFT JOIN identity.users fk_updated_by ON ((base.updated_by = fk_updated_by.id)))) base_query;
 
-CREATE VIEW identity.v_teams AS
+CREATE VIEW identity.v_teams WITH (security_invoker='on') AS
  SELECT created_at,
     created_by,
     created_by_display,
@@ -6615,7 +6619,7 @@ CREATE VIEW identity.v_user_access_context AS
      LEFT JOIN user_teams_agg uta ON ((uta.organization_user_id = ou.id)))
   WHERE (ou.is_active = true);
 
-CREATE VIEW identity.v_user_roles AS
+CREATE VIEW identity.v_user_roles WITH (security_invoker='on') AS
  SELECT created_at,
     created_by,
     created_by_display,
@@ -6653,7 +6657,7 @@ CREATE VIEW identity.v_user_roles AS
              LEFT JOIN identity.roles fk_role ON ((base.role_id = fk_role.id)))
              LEFT JOIN identity.teams fk_team ON ((base.team_id = fk_team.id)))) base_query;
 
-CREATE VIEW identity.v_user_teams AS
+CREATE VIEW identity.v_user_teams WITH (security_invoker='on') AS
  SELECT created_at,
     created_by,
     created_by_display,
@@ -6692,13 +6696,13 @@ ALTER TABLE identity.locations ENABLE ROW LEVEL SECURITY;
 
 ALTER TABLE identity.modules ENABLE ROW LEVEL SECURITY;
 
-ALTER TABLE identity.org_module_configs ENABLE ROW LEVEL SECURITY;
-
 ALTER TABLE identity.organization_users ENABLE ROW LEVEL SECURITY;
 
 ALTER TABLE identity.organizations ENABLE ROW LEVEL SECURITY;
 
 ALTER TABLE identity.roles ENABLE ROW LEVEL SECURITY;
+
+ALTER TABLE identity.teams ENABLE ROW LEVEL SECURITY;
 
 ALTER TABLE identity.user_roles ENABLE ROW LEVEL SECURITY;
 
