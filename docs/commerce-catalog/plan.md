@@ -1,5 +1,30 @@
 # Ecommerce Platform Implementation Plan
 
+## ✅ Implementation Status (2026-03-24)
+
+| Phase | Status | Notes |
+|-------|--------|-------|
+| **Data Layer** — types, dataService, useCart, useWishlist, useShopConfig | ✅ Done | `src/modules/shop/services/dataService.ts` + hooks |
+| **ShopConfig** — tenant layout config | ✅ Done | `src/modules/shop/types/config.ts` → org app_settings.shop_config |
+| **ShopLayout** — header + footer + Outlet | ✅ Done | `src/modules/shop/pages/ShopLayout.tsx` |
+| **Home Page** (`/shop`) | ✅ Done | Hero config-driven, category grid, featured products |
+| **Product Listing** (`/shop/products`) | ✅ Done | Config-driven columns, filter position, pagination |
+| **Product Details** (`/shop/products/:id`) | ✅ Done | Config-driven tabs, image position, variants |
+| **Search** (`/shop/search`) | ✅ Done | Supabase ilike search |
+| **Cart** (`/shop/cart`) | ✅ Done | localStorage, coupon, free-shipping threshold from config |
+| **Checkout** (`/shop/checkout`) | ✅ Done | Config-driven payment methods + multi-step or single-page |
+| **Order Confirmation** (`/shop/order-confirmation`) | ✅ Done | |
+| **Wishlist** (`/shop/wishlist`) | ✅ Done | Feature-flagged via `features.wishlist` |
+| **Account** (`/shop/account`) | ✅ Done | Mock orders, profile form, address book |
+| **Booking** (`/shop/booking`) | ✅ Done | Real calendar.event_types from Supabase |
+| **Routes** wired in `routes/index.tsx` | ✅ Done | All nested under `<ShopLayout>` |
+| **Org Visibility** — dynamic resolution | ✅ Done | `ShopContext` at layout level |
+| **Top Filter Layout** — PLP horizontal filters | ✅ Done | Config-driven UI in `ProductListingPage` |
+| **Finance schema** (carts, orders, payments) | ⏳ Pending | Mock data used until finance schema is created |
+| **Compare Page** | ⏳ Deferred | Feature-flagged off by default |
+| **Reviews system** | ⏳ Deferred | UI placeholder in PDP tabs |
+
+
 ## Project Summary
 
 Build a **headless, multi-tenant ecommerce platform** supporting:

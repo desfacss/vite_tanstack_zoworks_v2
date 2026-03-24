@@ -821,6 +821,41 @@
     ],
     "commerce": [
       {
+        "filePath": "src/modules/commerce/pages/admin/Dashboard.tsx",
+        "routePath": "/commerce/dashboard",
+        "translationKey": "dashboard",
+        "key": "dashboard",
+        "submoduleKey": "commerce-dashboard"
+      },
+      {
+        "filePath": "src/modules/commerce/pages/admin/OrdersPage.tsx",
+        "routePath": "/commerce/orders",
+        "translationKey": "orders",
+        "key": "commerce-orders",
+        "submoduleKey": "commerce-orders"
+      },
+      {
+        "filePath": "src/modules/commerce/pages/admin/FulfillmentsPage.tsx",
+        "routePath": "/commerce/fulfillments",
+        "translationKey": "fulfillments",
+        "key": "commerce-fulfillments",
+        "submoduleKey": "commerce-fulfillments"
+      },
+      {
+        "filePath": "src/modules/commerce/pages/admin/ReturnsPage.tsx",
+        "routePath": "/commerce/returns",
+        "translationKey": "returns",
+        "key": "commerce-returns",
+        "submoduleKey": "commerce-returns"
+      },
+      {
+        "filePath": "src/modules/commerce/pages/admin/ReviewsPage.tsx",
+        "routePath": "/commerce/reviews",
+        "translationKey": "reviews",
+        "key": "commerce-reviews",
+        "submoduleKey": "commerce-reviews"
+      },
+      {
         "filePath": "src/modules/catalog/pages/admin/AdminCatalogManager.tsx",
         "routePath": "/commerce/catalog",
         "translationKey": "commerce-catalog",
@@ -875,6 +910,13 @@
         "translationKey": "commerce-customer-segments",
         "key": "commerce-customer-segments",
         "submoduleKey": "commerce-customer_segments"
+      },
+      {
+        "filePath": "src/modules/commerce/pages/admin/CommerceSettings.tsx",
+        "routePath": "/commerce/settings",
+        "translationKey": "settings",
+        "key": "settings",
+        "submoduleKey": "commerce-settings"
       }
     ],
     "fsm": [

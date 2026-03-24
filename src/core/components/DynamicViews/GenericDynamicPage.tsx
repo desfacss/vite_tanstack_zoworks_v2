@@ -5,14 +5,15 @@ import menuConfig from '@/config/menuConfig.json';
 
 interface GenericDynamicPageProps {
   schema?: string;
+  entity?: string;
 }
 
-const GenericDynamicPage: React.FC<GenericDynamicPageProps> = ({ schema: propSchema }) => {
+const GenericDynamicPage: React.FC<GenericDynamicPageProps> = ({ schema: propSchema, entity: propEntity }) => {
   const { schema: paramSchema, entity: paramEntity } = useParams<{ schema: string; entity: string }>();
   const location = useLocation();
   
   const schema = (propSchema || paramSchema) as keyof typeof menuConfig.modules;
-  const entity = paramEntity?.replace(/-/g, '_');
+  const entity = (propEntity || paramEntity)?.replace(/-/g, '_');
   
   if (!schema || !entity) {
     return <div>Invalid Route Parameters: Schema={schema}, Entity={entity}</div>;

@@ -76,7 +76,12 @@
         "location-categories": "Location Categories",
         "service-categories": "Service Categories",
         "service-offerings": "Service Offerings",
-        "service-types": "Service Types"
+        "service-types": "Service Types",
+        "commerce": "Commerce",
+        "orders": "Orders",
+        "fulfillments": "Fulfillments",
+        "returns": "Returns",
+        "reviews": "Reviews"
       },
       "action": {
         "save": "Save",

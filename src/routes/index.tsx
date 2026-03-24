@@ -14,6 +14,19 @@ const Networking = lazy(() => import('../modules/archive/pages/Networking'));
 const ProjectPlanPage = lazy(() => import('../modules/archive/pages/ProjectPlanPage'));
 const SchedulerPage = lazy(() => import('../modules/archive/pages/SchedulerPage'));
 
+// Shop module
+const ShopLayout = lazy(() => import('../modules/shop/pages/ShopLayout'));
+const ShopHomePage = lazy(() => import('../modules/shop/pages/HomePage'));
+const ShopPLP = lazy(() => import('../modules/shop/pages/ProductListingPage'));
+const ShopPDP = lazy(() => import('../modules/shop/pages/ProductDetailsPage'));
+const ShopCart = lazy(() => import('../modules/shop/pages/CartPage'));
+const ShopCheckout = lazy(() => import('../modules/shop/pages/CheckoutPage'));
+const ShopOrderConfirmation = lazy(() => import('../modules/shop/pages/OrderConfirmationPage'));
+const ShopWishlist = lazy(() => import('../modules/shop/pages/WishlistPage'));
+const ShopAccount = lazy(() => import('../modules/shop/pages/AccountPage'));
+const ShopBooking = lazy(() => import('../modules/shop/pages/BookingPage'));
+const ShopSearch = lazy(() => import('../modules/shop/pages/SearchResultsPage'));
+
 // Direct imports for critical components
 import PublicLayout from '../core/components/Layout/PublicLayout';
 import AuthGuard from '../core/components/Layout/AuthGuard';
@@ -96,6 +109,12 @@ const EcomCatalogPage = lazy(() => import('@/modules/catalog/pages/EcomCatalogPa
 
 // Commerce Admin Module
 const AdminCatalogManager = lazy(() => import('@/modules/catalog/pages/admin/AdminCatalogManager'));
+const CommerceDashboard = lazy(() => import('@/modules/commerce/pages/admin/Dashboard'));
+const CommerceOrders = lazy(() => import('@/modules/commerce/pages/admin/OrdersPage'));
+const CommerceFulfillments = lazy(() => import('@/modules/commerce/pages/admin/FulfillmentsPage'));
+const CommerceReturns = lazy(() => import('@/modules/commerce/pages/admin/ReturnsPage'));
+const CommerceReviews = lazy(() => import('@/modules/commerce/pages/admin/ReviewsPage'));
+const CommerceSettings = lazy(() => import('@/modules/commerce/pages/admin/CommerceSettings'));
 
 export const AppRoutes: FC = () => {
     const { user, permissions, bypass, setNavigationItems } = useAuthStore(state => ({
@@ -135,7 +154,22 @@ export const AppRoutes: FC = () => {
                     <Route path="/" element={<Home />} />
                     <Route path="/appointments" element={<PublicAppointments />} />
                     <Route path="/subscriptions" element={<PublicSubscriptions />} />
-                    <Route path="/shop" element={<EcomCatalogPage />} />
+                    {/* Shop module — public storefront with nested routes */}
+                    <Route path="/shop" element={<ShopLayout />}>
+                      <Route index element={<ShopHomePage />} />
+                      <Route path="products" element={<ShopPLP />} />
+                      <Route path="products/:id" element={<ShopPDP />} />
+                      <Route path="search" element={<ShopSearch />} />
+                      <Route path="cart" element={<ShopCart />} />
+                      <Route path="checkout" element={<ShopCheckout />} />
+                      <Route path="order-confirmation" element={<ShopOrderConfirmation />} />
+                      <Route path="wishlist" element={<ShopWishlist />} />
+                      <Route path="account" element={<ShopAccount />} />
+                      <Route path="account/:section" element={<ShopAccount />} />
+                      <Route path="booking" element={<ShopBooking />} />
+                      {/* Legacy catalog page at a separate path */}
+                      <Route path="legacy" element={<EcomCatalogPage />} />
+                    </Route>
                     <Route path="/sign/:envelopeId" element={<SignDocument />} />
                     {/* Auth pages moved here - outside AuthGuard */}
                     <Route path="/login" element={<Login />} />
@@ -220,6 +254,21 @@ export const AppRoutes: FC = () => {
                         <Route path="/admin/location-categories" element={<GenericDynamicPage schema="identity" />} />
                         <Route path="/admin/service-categories" element={<GenericDynamicPage schema="identity" />} />
                         <Route path="/admin/service-offerings" element={<GenericDynamicPage schema="identity" />} />
+
+                        {/* Commerce Admin */}
+                        <Route path="/commerce/dashboard" element={<CommerceDashboard />} />
+                        <Route path="/commerce/catalog" element={<AdminCatalogManager />} />
+                        <Route path="/commerce/orders" element={<CommerceOrders />} />
+                        <Route path="/commerce/fulfillments" element={<CommerceFulfillments />} />
+                        <Route path="/commerce/returns" element={<CommerceReturns />} />
+                        <Route path="/commerce/reviews" element={<CommerceReviews />} />
+                        <Route path="/commerce/settings" element={<CommerceSettings />} />
+                        <Route path="/commerce/offerings" element={<GenericDynamicPage schema="catalog" entity="offerings" />} />
+                        <Route path="/commerce/offering_variants" element={<GenericDynamicPage schema="catalog" entity="offering_variants" />} />
+                        <Route path="/commerce/offering_prices" element={<GenericDynamicPage schema="catalog" entity="offering_prices" />} />
+                        <Route path="/commerce/discounts" element={<GenericDynamicPage schema="catalog" entity="discounts" />} />
+                        <Route path="/commerce/price_lists" element={<GenericDynamicPage schema="catalog" entity="price_lists" />} />
+                        <Route path="/commerce/customer_segments" element={<GenericDynamicPage schema="crm" entity="contacts" />} />
                         <Route path="/admin/service-types" element={<GenericDynamicPage schema="identity" />} />
 
                         {/* Profile & Settings */}
