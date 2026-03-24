@@ -1,0 +1,1015 @@
+{
+   "id": "tensile_leads_v1",
+   "process_id": "pro_tensile_lead_conversion",
+   "estimatedVolume": {
+       "value": 10,
+       "timeUnit": "month"
+   },
+   "version": {
+       "number": "1.1",
+       "release_date": "2023-10-01",
+       "changes": [
+           "Added aspirational targets for time/cost",
+           "Included dynamic adaptation rules for CRM downtime"
+       ]
+   },
+   "blueprint": {
+       "dynamic_rules": [
+           {
+               "id": "rule_1",
+               "trigger": "task_delay",
+               "condition": "actual_time > pert_lead_time.likely * 1.2",
+               "actions": [
+                   "notify_role:res_team_sales",
+                   "escalate_to:user_sales_manager"
+               ],
+               "scope": "task"
+           },
+           {
+               "id": "rule_2",
+               "trigger": "material_cost_increase",
+               "condition": "material_cost > costVariability.pessimistic",
+               "actions": [
+                   "switch_material_source:mat_steel_secondary",
+                   "alert:procurement_team"
+               ],
+               "scope": "process"
+           }
+       ],
+       "workflows": [
+           {
+               "id": "wf_lead_to_order",
+               "name": "Tensile Lead Conversion",
+               "goals": [
+                   {
+                       "metric": "lead_completeness",
+                       "target": 0.99,
+                       "unit": "%"
+                   }
+               ],
+               "steps": [
+                   {
+                       "id": "step_1_lead_intake",
+                       "name": "Lead Intake",
+                       "goals": [
+                           {
+                               "metric": "lead_completeness",
+                               "target": 0.99,
+                               "unit": "%"
+                           }
+                       ],
+                       "tasks": [
+                           {
+                               "id": "task_1_1_capture_lead",
+                               "name": "Capture Lead Information",
+                               "description": "Log lead details from email, call, or WhatsApp.",
+                               "raci": {
+                                   "responsible": [
+                                       "res_team_sales"
+                                   ],
+                                   "accountable": [
+                                       "user_sales_manager"
+                                   ],
+                                   "consulted": [
+                                       "leadership"
+                                   ],
+                                   "informed": [
+                                       "customer"
+                                   ]
+                               },
+                               "lead_time": {
+                                   "optimistic": 10,
+                                   "likely": 50,
+                                   "pessimistic": 100,
+                                   "aspirational": 55,
+                                   "uomType": "time",
+                                   "uomBase": "hours",
+                                   "uomDisplay": "hours",
+                                   "reasons": [
+                                       "Unresponsive client",
+                                       "CRM system downtime"
+                                   ]
+                               },
+                               "effort_time": {
+                                   "optimistic": 1,
+                                   "likely": 24,
+                                   "pessimistic": 48,
+                                   "aspirational": 48,
+                                   "uomType": "time",
+                                   "uomBase": "hours",
+                                   "uomDisplay": "hours",
+                                   "reasons": [
+                                       "Unresponsive client",
+                                       "CRM system downtime"
+                                   ]
+                               },
+                               "cost": {
+                                   "optimistic": 1,
+                                   "likely": 24,
+                                   "pessimistic": 48,
+                                   "aspirational": 48,
+                                   "uomType": "time",
+                                   "uomBase": "hours",
+                                   "uomDisplay": "hours",
+                                   "reasons": [
+                                       "Unresponsive client",
+                                       "CRM system downtime"
+                                   ]
+                               },
+                               "tools": [
+                                   "crm_system",
+                                   "communication_platforms"
+                               ],
+                               "checklist": [
+                                   "Record lead source (email, call, WhatsApp)",
+                                   "Capture customer name and contact information",
+                                   "Note initial inquiry details"
+                               ],
+                               "risk": [
+                                   {
+                                       "description": "Unresponsive client",
+                                       "probability": {
+                                           "optimistic": 0.1,
+                                           "likely": 0.2,
+                                           "pessimistic": 0.5
+                                       },
+                                       "impact": 2,
+                                       "impactUnit": "hours"
+                                   },
+                                   {
+                                       "description": "CRM system downtime",
+                                       "probability": {
+                                           "optimistic": 0.1,
+                                           "likely": 0.2,
+                                           "pessimistic": 0.5
+                                       },
+                                       "impact": 2,
+                                       "impactUnit": "hours"
+                                   }
+                               ],
+                               "dependencies": [
+                               ],
+                               "goals": [
+                                   {
+                                       "metric": "lead_completeness",
+                                       "target": 0.99,
+                                       "unit": "%"
+                                   }
+                               ]
+                           }
+                       ]
+                   },
+                   {
+                       "id": "step_2_client_details",
+                       "name": "Client Details Collection",
+                       "goals": [
+                           {
+                               "metric": "client_detail_accuracy",
+                               "target": 0.95,
+                               "unit": "%"
+                           }
+                       ],
+                       "tasks": [
+                           {
+                               "id": "task_2_1_gather_client_info",
+                               "name": "Gather Client Information",
+                               "description": "Collect detailed client information including company details, project scope, and requirements.",
+                               "raci": {
+                                   "responsible": [
+                                       "res_team_sales"
+                                   ],
+                                   "accountable": [
+                                       "user_sales_manager"
+                                   ],
+                                   "consulted": [
+                                       "design_team"
+                                   ],
+                                   "informed": [
+                                       "customer"
+                                   ]
+                               },
+                               "lead_time": {
+                                   "optimistic": 2,
+                                   "likely": 16,
+                                   "pessimistic": 32,
+                                   "aspirational": 12,
+                                   "uomType": "time",
+                                   "uomBase": "hours",
+                                   "uomDisplay": "hours",
+                                   "reasons": [
+                                       "Incomplete client responses",
+                                       "Miscommunication"
+                                   ]
+                               },
+                               "effort_time": {
+                                   "optimistic": 2,
+                                   "likely": 16,
+                                   "pessimistic": 32,
+                                   "aspirational": 12,
+                                   "uomType": "time",
+                                   "uomBase": "hours",
+                                   "uomDisplay": "hours",
+                                   "reasons": [
+                                       "Incomplete client responses",
+                                       "Miscommunication"
+                                   ]
+                               },
+                               "cost": {
+                                   "optimistic": 2,
+                                   "likely": 16,
+                                   "pessimistic": 32,
+                                   "aspirational": 12,
+                                   "uomType": "time",
+                                   "uomBase": "hours",
+                                   "uomDisplay": "hours",
+                                   "reasons": [
+                                       "Incomplete client responses",
+                                       "Miscommunication"
+                                   ]
+                               },
+                               "tools": [
+                                   "crm_system",
+                                   "email_client"
+                               ],
+                               "checklist": [
+                                   "Verify client's company registration details",
+                                   "Confirm project location and timeline",
+                                   "Document client preferences"
+                               ],
+                               "risk": [
+                                   {
+                                       "description": "Incomplete client responses",
+                                       "probability": {
+                                           "optimistic": 0.1,
+                                           "likely": 0.3,
+                                           "pessimistic": 0.6
+                                       },
+                                       "impact": 4,
+                                       "impactUnit": "hours"
+                                   }
+                               ],
+                               "dependencies": [
+                                   {
+                                       "taskId": "task_1_1_capture_lead",
+                                       "type": "FS",
+                                       "lag": 0
+                                   }
+                               ],
+                               "goals": [
+                                   {
+                                       "metric": "client_detail_accuracy",
+                                       "target": 0.95,
+                                       "unit": "%"
+                                   }
+                               ]
+                           }
+                       ]
+                   },
+                   {
+                       "id": "step_3_information_meeting",
+                       "name": "Information Gathering Meeting",
+                       "goals": [
+                           {
+                               "metric": "meeting_efficiency",
+                               "target": 0.9,
+                               "unit": "%"
+                           }
+                       ],
+                       "tasks": [
+                           {
+                               "id": "task_3_1_conduct_meeting",
+                               "name": "Conduct Information Gathering Meeting",
+                               "description": "Organize a meeting with the client to gather all necessary information for the project.",
+                               "raci": {
+                                   "responsible": [
+                                       "res_team_sales"
+                                   ],
+                                   "accountable": [
+                                       "user_sales_manager"
+                                   ],
+                                   "consulted": [
+                                       "design_team",
+                                       "engineering_team"
+                                   ],
+                                   "informed": [
+                                       "customer"
+                                   ]
+                               },
+                               "lead_time": {
+                                   "optimistic": 4,
+                                   "likely": 24,
+                                   "pessimistic": 48,
+                                   "aspirational": 16,
+                                   "uomType": "time",
+                                   "uomBase": "hours",
+                                   "uomDisplay": "hours",
+                                   "reasons": [
+                                       "Scheduling conflicts",
+                                       "Technical issues during meeting"
+                                   ]
+                               },
+                               "effort_time": {
+                                   "optimistic": 4,
+                                   "likely": 24,
+                                   "pessimistic": 48,
+                                   "aspirational": 16,
+                                   "uomType": "time",
+                                   "uomBase": "hours",
+                                   "uomDisplay": "hours",
+                                   "reasons": [
+                                       "Scheduling conflicts",
+                                       "Technical issues during meeting"
+                                   ]
+                               },
+                               "cost": {
+                                   "optimistic": 4,
+                                   "likely": 24,
+                                   "pessimistic": 48,
+                                   "aspirational": 16,
+                                   "uomType": "time",
+                                   "uomBase": "hours",
+                                   "uomDisplay": "hours",
+                                   "reasons": [
+                                       "Scheduling conflicts",
+                                       "Technical issues during meeting"
+                                   ]
+                               },
+                               "tools": [
+                                   "video_conferencing_tool",
+                                   "note_taking_software"
+                               ],
+                               "checklist": [
+                                   "Prepare agenda for the meeting",
+                                   "Invite relevant stakeholders",
+                                   "Record meeting minutes"
+                               ],
+                               "risk": [
+                                   {
+                                       "description": "Scheduling conflicts",
+                                       "probability": {
+                                           "optimistic": 0.1,
+                                           "likely": 0.3,
+                                           "pessimistic": 0.7
+                                       },
+                                       "impact": 6,
+                                       "impactUnit": "hours"
+                                   }
+                               ],
+                               "dependencies": [
+                                   {
+                                       "taskId": "task_2_1_gather_client_info",
+                                       "type": "FS",
+                                       "lag": 0
+                                   }
+                               ],
+                               "goals": [
+                                   {
+                                       "metric": "meeting_efficiency",
+                                       "target": 0.9,
+                                       "unit": "%"
+                                   }
+                               ]
+                           }
+                       ]
+                   },
+                   {
+                       "id": "step_4_drawing_ssr",
+                       "name": "Drawing/SSR Preparation",
+                       "goals": [
+                           {
+                               "metric": "drawing_accuracy",
+                               "target": 0.98,
+                               "unit": "%"
+                           }
+                       ],
+                       "tasks": [
+                           {
+                               "id": "task_4_1_create_drawings",
+                               "name": "Create Drawings/SSR",
+                               "description": "Prepare detailed drawings and specifications based on client requirements.",
+                               "raci": {
+                                   "responsible": [
+                                       "design_team"
+                                   ],
+                                   "accountable": [
+                                       "design_manager"
+                                   ],
+                                   "consulted": [
+                                       "engineering_team"
+                                   ],
+                                   "informed": [
+                                       "customer"
+                                   ]
+                               },
+                               "lead_time": {
+                                   "optimistic": 16,
+                                   "likely": 48,
+                                   "pessimistic": 96,
+                                   "aspirational": 32,
+                                   "uomType": "time",
+                                   "uomBase": "hours",
+                                   "uomDisplay": "hours",
+                                   "reasons": [
+                                       "Complex design requirements",
+                                       "Revisions requested by client"
+                                   ]
+                               },
+                               "effort_time": {
+                                   "optimistic": 16,
+                                   "likely": 48,
+                                   "pessimistic": 96,
+                                   "aspirational": 32,
+                                   "uomType": "time",
+                                   "uomBase": "hours",
+                                   "uomDisplay": "hours",
+                                   "reasons": [
+                                       "Complex design requirements",
+                                       "Revisions requested by client"
+                                   ]
+                               },
+                               "cost": {
+                                   "optimistic": 16,
+                                   "likely": 48,
+                                   "pessimistic": 96,
+                                   "aspirational": 32,
+                                   "uomType": "time",
+                                   "uomBase": "hours",
+                                   "uomDisplay": "hours",
+                                   "reasons": [
+                                       "Complex design requirements",
+                                       "Revisions requested by client"
+                                   ]
+                               },
+                               "tools": [
+                                   "cad_software",
+                                   "project_management_tool"
+                               ],
+                               "checklist": [
+                                   "Review client inputs",
+                                   "Draft initial drawings",
+                                   "Share drawings with client for feedback"
+                               ],
+                               "risk": [
+                                   {
+                                       "description": "Revisions requested by client",
+                                       "probability": {
+                                           "optimistic": 0.2,
+                                           "likely": 0.5,
+                                           "pessimistic": 0.8
+                                       },
+                                       "impact": 12,
+                                       "impactUnit": "hours"
+                                   }
+                               ],
+                               "dependencies": [
+                                   {
+                                       "taskId": "task_3_1_conduct_meeting",
+                                       "type": "SS",
+                                       "lag": 0
+                                   }
+                               ],
+                               "goals": [
+                                   {
+                                       "metric": "drawing_accuracy",
+                                       "target": 0.98,
+                                       "unit": "%"
+                                   }
+                               ]
+                           }
+                       ]
+                   },
+                   {
+                       "id": "step_5_cost_sheet_boq",
+                       "name": "Cost Sheet & BOQ Approval",
+                       "goals": [
+                           {
+                               "metric": "cost_approval_rate",
+                               "target": 0.95,
+                               "unit": "%"
+                           }
+                       ],
+                       "tasks": [
+                           {
+                               "id": "task_5_1_prepare_cost_sheet",
+                               "name": "Prepare Cost Sheet & BOQ",
+                               "description": "Prepare detailed cost sheet and bill of quantities for approval by GM/MD.",
+                               "raci": {
+                                   "responsible": [
+                                       "finance_team"
+                                   ],
+                                   "accountable": [
+                                       "general_manager"
+                                   ],
+                                   "consulted": [
+                                       "procurement_team"
+                                   ],
+                                   "informed": [
+                                       "customer"
+                                   ]
+                               },
+                               "lead_time": {
+                                   "optimistic": 8,
+                                   "likely": 24,
+                                   "pessimistic": 48,
+                                   "aspirational": 16,
+                                   "uomType": "time",
+                                   "uomBase": "hours",
+                                   "uomDisplay": "hours",
+                                   "reasons": [
+                                       "Material cost fluctuations",
+                                       "Approval delays"
+                                   ]
+                               },
+                               "effort_time": {
+                                   "optimistic": 8,
+                                   "likely": 24,
+                                   "pessimistic": 48,
+                                   "aspirational": 16,
+                                   "uomType": "time",
+                                   "uomBase": "hours",
+                                   "uomDisplay": "hours",
+                                   "reasons": [
+                                       "Material cost fluctuations",
+                                       "Approval delays"
+                                   ]
+                               },
+                               "cost": {
+                                   "optimistic": 8,
+                                   "likely": 24,
+                                   "pessimistic": 48,
+                                   "aspirational": 16,
+                                   "uomType": "time",
+                                   "uomBase": "hours",
+                                   "uomDisplay": "hours",
+                                   "reasons": [
+                                       "Material cost fluctuations",
+                                       "Approval delays"
+                                   ]
+                               },
+                               "tools": [
+                                   "spreadsheet_software",
+                                   "erp_system"
+                               ],
+                               "checklist": [
+                                   "Compile material costs",
+                                   "Include labor and overheads",
+                                   "Submit for GM/MD approval"
+                               ],
+                               "risk": [
+                                   {
+                                       "description": "Approval delays",
+                                       "probability": {
+                                           "optimistic": 0.1,
+                                           "likely": 0.3,
+                                           "pessimistic": 0.6
+                                       },
+                                       "impact": 8,
+                                       "impactUnit": "hours"
+                                   }
+                               ],
+                               "dependencies": [
+                                   {
+                                       "taskId": "task_4_1_create_drawings",
+                                       "type": "FS",
+                                       "lag": 0
+                                   }
+                               ],
+                               "goals": [
+                                   {
+                                       "metric": "cost_approval_rate",
+                                       "target": 0.95,
+                                       "unit": "%"
+                                   }
+                               ]
+                           }
+                       ]
+                   },
+                   {
+                       "id": "step_6_techno_commercial_offer",
+                       "name": "Techno Commercial Offer",
+                       "goals": [
+                           {
+                               "metric": "offer_acceptance_rate",
+                               "target": 0.85,
+                               "unit": "%"
+                           }
+                       ],
+                       "tasks": [
+                           {
+                               "id": "task_6_1_submit_offer",
+                               "name": "Submit Techno Commercial Offer",
+                               "description": "Submit the techno-commercial offer to the client for review and acceptance.",
+                               "raci": {
+                                   "responsible": [
+                                       "res_team_sales"
+                                   ],
+                                   "accountable": [
+                                       "user_sales_manager"
+                                   ],
+                                   "consulted": [
+                                       "finance_team"
+                                   ],
+                                   "informed": [
+                                       "customer"
+                                   ]
+                               },
+                               "lead_time": {
+                                   "optimistic": 4,
+                                   "likely": 16,
+                                   "pessimistic": 32,
+                                   "aspirational": 12,
+                                   "uomType": "time",
+                                   "uomBase": "hours",
+                                   "uomDisplay": "hours",
+                                   "reasons": [
+                                       "Client negotiation delays",
+                                       "Internal alignment issues"
+                                   ]
+                               },
+                               "effort_time": {
+                                   "optimistic": 4,
+                                   "likely": 16,
+                                   "pessimistic": 32,
+                                   "aspirational": 12,
+                                   "uomType": "time",
+                                   "uomBase": "hours",
+                                   "uomDisplay": "hours",
+                                   "reasons": [
+                                       "Client negotiation delays",
+                                       "Internal alignment issues"
+                                   ]
+                               },
+                               "cost": {
+                                   "optimistic": 4,
+                                   "likely": 16,
+                                   "pessimistic": 32,
+                                   "aspirational": 12,
+                                   "uomType": "time",
+                                   "uomBase": "hours",
+                                   "uomDisplay": "hours",
+                                   "reasons": [
+                                       "Client negotiation delays",
+                                       "Internal alignment issues"
+                                   ]
+                               },
+                               "tools": [
+                                   "proposal_software",
+                                   "email_client"
+                               ],
+                               "checklist": [
+                                   "Finalize techno-commercial offer document",
+                                   "Send offer to client",
+                                   "Follow up for feedback"
+                               ],
+                               "risk": [
+                                   {
+                                       "description": "Client negotiation delays",
+                                       "probability": {
+                                           "optimistic": 0.1,
+                                           "likely": 0.3,
+                                           "pessimistic": 0.6
+                                       },
+                                       "impact": 6,
+                                       "impactUnit": "hours"
+                                   }
+                               ],
+                               "dependencies": [
+                                   {
+                                       "taskId": "task_5_1_prepare_cost_sheet",
+                                       "type": "FS",
+                                       "lag": 0
+                                   }
+                               ],
+                               "goals": [
+                                   {
+                                       "metric": "offer_acceptance_rate",
+                                       "target": 0.85,
+                                       "unit": "%"
+                                   }
+                               ]
+                           }
+                       ]
+                   },
+                   {
+                       "id": "step_7_finalisation_meeting",
+                       "name": "Finalization Meeting",
+                       "goals": [
+                           {
+                               "metric": "finalization_success_rate",
+                               "target": 0.9,
+                               "unit": "%"
+                           }
+                       ],
+                       "tasks": [
+                           {
+                               "id": "task_7_1_finalize_agreement",
+                               "name": "Finalize Agreement",
+                               "description": "Conduct finalization meeting to address any remaining concerns and finalize the agreement.",
+                               "raci": {
+                                   "responsible": [
+                                       "res_team_sales"
+                                   ],
+                                   "accountable": [
+                                       "user_sales_manager"
+                                   ],
+                                   "consulted": [
+                                       "legal_team"
+                                   ],
+                                   "informed": [
+                                       "customer"
+                                   ]
+                               },
+                               "lead_time": {
+                                   "optimistic": 4,
+                                   "likely": 16,
+                                   "pessimistic": 32,
+                                   "aspirational": 12,
+                                   "uomType": "time",
+                                   "uomBase": "hours",
+                                   "uomDisplay": "hours",
+                                   "reasons": [
+                                       "Contractual disputes",
+                                       "Client indecision"
+                                   ]
+                               },
+                               "effort_time": {
+                                   "optimistic": 4,
+                                   "likely": 16,
+                                   "pessimistic": 32,
+                                   "aspirational": 12,
+                                   "uomType": "time",
+                                   "uomBase": "hours",
+                                   "uomDisplay": "hours",
+                                   "reasons": [
+                                       "Contractual disputes",
+                                       "Client indecision"
+                                   ]
+                               },
+                               "cost": {
+                                   "optimistic": 4,
+                                   "likely": 16,
+                                   "pessimistic": 32,
+                                   "aspirational": 12,
+                                   "uomType": "time",
+                                   "uomBase": "hours",
+                                   "uomDisplay": "hours",
+                                   "reasons": [
+                                       "Contractual disputes",
+                                       "Client indecision"
+                                   ]
+                               },
+                               "tools": [
+                                   "contract_management_tool",
+                                   "video_conferencing_tool"
+                               ],
+                               "checklist": [
+                                   "Address all client queries",
+                                   "Sign off on final terms",
+                                   "Generate contract documents"
+                               ],
+                               "risk": [
+                                   {
+                                       "description": "Contractual disputes",
+                                       "probability": {
+                                           "optimistic": 0.1,
+                                           "likely": 0.3,
+                                           "pessimistic": 0.6
+                                       },
+                                       "impact": 8,
+                                       "impactUnit": "hours"
+                                   }
+                               ],
+                               "dependencies": [
+                                   {
+                                       "taskId": "task_6_1_submit_offer",
+                                       "type": "FS",
+                                       "lag": 0
+                                   }
+                               ],
+                               "goals": [
+                                   {
+                                       "metric": "finalization_success_rate",
+                                       "target": 0.9,
+                                       "unit": "%"
+                                   }
+                               ]
+                           }
+                       ]
+                   },
+                   {
+                       "id": "step_8_order_advance_payment",
+                       "name": "Order & Advance Payment",
+                       "goals": [
+                           {
+                               "metric": "payment_collection_rate",
+                               "target": 0.95,
+                               "unit": "%"
+                           }
+                       ],
+                       "tasks": [
+                           {
+                               "id": "task_8_1_collect_payment",
+                               "name": "Collect Order & Advance Payment",
+                               "description": "Secure order confirmation and collect advance payment as per agreed terms.",
+                               "raci": {
+                                   "responsible": [
+                                       "finance_team"
+                                   ],
+                                   "accountable": [
+                                       "finance_manager"
+                                   ],
+                                   "consulted": [
+                                       "legal_team"
+                                   ],
+                                   "informed": [
+                                       "customer"
+                                   ]
+                               },
+                               "lead_time": {
+                                   "optimistic": 4,
+                                   "likely": 16,
+                                   "pessimistic": 32,
+                                   "aspirational": 12,
+                                   "uomType": "time",
+                                   "uomBase": "hours",
+                                   "uomDisplay": "hours",
+                                   "reasons": [
+                                       "Payment processing delays",
+                                       "Banking issues"
+                                   ]
+                               },
+                               "effort_time": {
+                                   "optimistic": 4,
+                                   "likely": 16,
+                                   "pessimistic": 32,
+                                   "aspirational": 12,
+                                   "uomType": "time",
+                                   "uomBase": "hours",
+                                   "uomDisplay": "hours",
+                                   "reasons": [
+                                       "Payment processing delays",
+                                       "Banking issues"
+                                   ]
+                               },
+                               "cost": {
+                                   "optimistic": 4,
+                                   "likely": 16,
+                                   "pessimistic": 32,
+                                   "aspirational": 12,
+                                   "uomType": "time",
+                                   "uomBase": "hours",
+                                   "uomDisplay": "hours",
+                                   "reasons": [
+                                       "Payment processing delays",
+                                       "Banking issues"
+                                   ]
+                               },
+                               "tools": [
+                                   "payment_gateway",
+                                   "banking_portal"
+                               ],
+                               "checklist": [
+                                   "Issue invoice to client",
+                                   "Track payment status",
+                                   "Confirm receipt of advance payment"
+                               ],
+                               "risk": [
+                                   {
+                                       "description": "Payment processing delays",
+                                       "probability": {
+                                           "optimistic": 0.1,
+                                           "likely": 0.3,
+                                           "pessimistic": 0.6
+                                       },
+                                       "impact": 6,
+                                       "impactUnit": "hours"
+                                   }
+                               ],
+                               "dependencies": [
+                                   {
+                                       "taskId": "task_7_1_finalize_agreement",
+                                       "type": "FS",
+                                       "lag": 0
+                                   }
+                               ],
+                               "goals": [
+                                   {
+                                       "metric": "payment_collection_rate",
+                                       "target": 0.95,
+                                       "unit": "%"
+                                   }
+                               ]
+                           }
+                       ]
+                   },
+                   {
+                       "id": "step_9_ocr_admin_kickoff",
+                       "name": "OCR & Admin/Projects Kickoff",
+                       "goals": [
+                           {
+                               "metric": "kickoff_efficiency",
+                               "target": 0.9,
+                               "unit": "%"
+                           }
+                       ],
+                       "tasks": [
+                           {
+                               "id": "task_9_1_initiate_project",
+                               "name": "Initiate Project Execution",
+                               "description": "Kick off project execution after OCR and administrative formalities are completed.",
+                               "raci": {
+                                   "responsible": [
+                                       "project_manager"
+                                   ],
+                                   "accountable": [
+                                       "operations_manager"
+                                   ],
+                                   "consulted": [
+                                       "admin_team"
+                                   ],
+                                   "informed": [
+                                       "customer"
+                                   ]
+                               },
+                               "lead_time": {
+                                   "optimistic": 8,
+                                   "likely": 24,
+                                   "pessimistic": 48,
+                                   "aspirational": 16,
+                                   "uomType": "time",
+                                   "uomBase": "hours",
+                                   "uomDisplay": "hours",
+                                   "reasons": [
+                                       "Administrative delays",
+                                       "Resource allocation issues"
+                                   ]
+                               },
+                               "effort_time": {
+                                   "optimistic": 8,
+                                   "likely": 24,
+                                   "pessimistic": 48,
+                                   "aspirational": 16,
+                                   "uomType": "time",
+                                   "uomBase": "hours",
+                                   "uomDisplay": "hours",
+                                   "reasons": [
+                                       "Administrative delays",
+                                       "Resource allocation issues"
+                                   ]
+                               },
+                               "cost": {
+                                   "optimistic": 8,
+                                   "likely": 24,
+                                   "pessimistic": 48,
+                                   "aspirational": 16,
+                                   "uomType": "time",
+                                   "uomBase": "hours",
+                                   "uomDisplay": "hours",
+                                   "reasons": [
+                                       "Administrative delays",
+                                       "Resource allocation issues"
+                                   ]
+                               },
+                               "tools": [
+                                   "project_management_tool",
+                                   "resource_planning_software"
+                               ],
+                               "checklist": [
+                                   "Complete OCR formalities",
+                                   "Assign project resources",
+                                   "Schedule kickoff meeting"
+                               ],
+                               "risk": [
+                                   {
+                                       "description": "Administrative delays",
+                                       "probability": {
+                                           "optimistic": 0.1,
+                                           "likely": 0.3,
+                                           "pessimistic": 0.6
+                                       },
+                                       "impact": 8,
+                                       "impactUnit": "hours"
+                                   }
+                               ],
+                               "dependencies": [
+                                   {
+                                       "taskId": "task_8_1_collect_payment",
+                                       "type": "SS",
+                                       "lag": 0
+                                   }
+                               ],
+                               "goals": [
+                                   {
+                                       "metric": "kickoff_efficiency",
+                                       "target": 0.9,
+                                       "unit": "%"
+                                   }
+                               ]
+                           }
+                       ]
+                   }
+               ]
+           }
+       ]
+   }
+}

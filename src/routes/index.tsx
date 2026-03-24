@@ -6,6 +6,13 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from '@/core/lib/store';
 import { useTranslation } from 'react-i18next';
 import { getNavigationItems } from '@/core/components/Layout/Sider/navigation';
+import { registry } from '@/core/registry';
+
+// Lazy load pages
+const ProcessEditor = lazy(() => import('../modules/archive/pages/ProcessEditor'));
+const Networking = lazy(() => import('../modules/archive/pages/Networking'));
+const ProjectPlanPage = lazy(() => import('../modules/archive/pages/ProjectPlanPage'));
+const SchedulerPage = lazy(() => import('../modules/archive/pages/SchedulerPage'));
 
 // Direct imports for critical components
 import PublicLayout from '../core/components/Layout/PublicLayout';
@@ -101,16 +108,23 @@ export const AppRoutes: FC = () => {
 
     console.log('>>> [AppRoutes] State from store - User:', user ? user.id : 'undefined');
 
-    // Set navigation items when user is authenticated
+    // Set navigation items when user is authenticated OR registry changes
     useEffect(() => {
-        if (permissions && user) {
-            console.log('>>> [AppRoutes] Permissions and User exist. Setting Nav Items. Bypass:', bypass);
-            const navItems = getNavigationItems(t, permissions, bypass) || [];
-            setNavigationItems(navItems as any);
-        } else {
-            console.log('>>> [AppRoutes] Permissions or User missing. Clearing nav items.');
-            setNavigationItems([]);
-        }
+        const updateNav = () => {
+            if (permissions && user) {
+                console.log('>>> [AppRoutes] Updating Nav Items. Bypass:', bypass);
+                const navItems = getNavigationItems(t, permissions, bypass) || [];
+                setNavigationItems(navItems as any);
+            } else {
+                setNavigationItems([]);
+            }
+        };
+
+        updateNav();
+
+        // Subscribe to registry changes to pick up lazy-loaded modules
+        const unsubscribe = registry.subscribe(updateNav);
+        return () => unsubscribe();
     }, [permissions, user, bypass, setNavigationItems, t, i18n.language, i18n.isInitialized]);
 
     return (
@@ -189,6 +203,12 @@ export const AppRoutes: FC = () => {
 
                         {/* FSM */}
                         <Route path="/fsm/tracking" element={<FsmTracking />} />
+
+                        {/* Archive */}
+                        <Route path="/archive/processes" element={<ProcessEditor />} />
+                        <Route path="/archive/networking" element={<Networking />} />
+                        <Route path="/archive/project-plan" element={<ProjectPlanPage />} />
+                        <Route path="/archive/scheduler" element={<SchedulerPage />} />
 
                         {/* Admin - Settings & Branding */}
                         <Route path="/admin/settings" element={<AdminSettings />} />

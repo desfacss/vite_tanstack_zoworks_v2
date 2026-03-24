@@ -47,6 +47,7 @@ import {
 import type { MenuProps } from 'antd';
 import type { TFunction } from 'i18next';
 import menuConfig from '@/config/menuConfig.json';
+import { registry } from '@/core/registry';
 
 // Icon mapping based on logical association using Lucide Icons
 const iconMap: Record<string, React.ReactNode> = {
@@ -234,6 +235,45 @@ export const getNavigationItems = (
         icon: iconMap[module] || iconMap.default,
         label: t(`common.label.${module}`),
         children: moduleItems,
+      });
+    }
+  });
+
+  // --- MERGE DYNAMIC ITEMS FROM REGISTRY ---
+  const dynamicItems = registry.getNavItems();
+  
+  // Group dynamic items by parentId
+  const parentMap = new Map<string, any[]>();
+  const rootItems: any[] = [];
+
+  dynamicItems.forEach(item => {
+    if (item.parentId) {
+      const children = parentMap.get(item.parentId) || [];
+      children.push({
+        key: item.path,
+        icon: iconMap[item.icon || 'default'] || iconMap.default,
+        label: item.label, // Assumption: label is already translated or doesn't need it
+      });
+      parentMap.set(item.parentId, children);
+    } else {
+      rootItems.push(item);
+    }
+  });
+
+  rootItems.forEach(root => {
+    const children = parentMap.get(root.key);
+    if (children) {
+      items.push({
+        key: root.key,
+        icon: iconMap[root.icon || 'default'] || iconMap.default,
+        label: root.label,
+        children: children,
+      });
+    } else {
+      items.push({
+        key: root.path,
+        icon: iconMap[root.icon || 'default'] || iconMap.default,
+        label: root.label,
       });
     }
   });
