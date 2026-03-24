@@ -9,13 +9,14 @@ interface QRCardProps {
   f: string; // Form name (e.g., 'qr_tickets')
   i: string; // Entity key value (e.g., asset ID)
   display_id?: string; // Optional display ID for the card
+  customUrl?: string; // Optional custom URL override
 }
 
-const QRCard: React.FC<QRCardProps> = ({ f, i, display_id }) => {
+const QRCard: React.FC<QRCardProps> = ({ f, i, display_id, customUrl }) => {
   const { organization } = useAuthStore();
 
   const baseUrl = `${window.location.protocol}//${window.location.host}`;
-  const qrUrl = `${baseUrl}/submit?f=${encodeURIComponent(f)}&i=${encodeURIComponent(i)}`;
+  const qrUrl = customUrl || `${baseUrl}/submit?f=${encodeURIComponent(f)}&i=${encodeURIComponent(i)}`;
 
   const companyLink = (organization?.app_settings as any)?.custom_domain
     ? `https://${(organization?.app_settings as any)?.custom_domain}`

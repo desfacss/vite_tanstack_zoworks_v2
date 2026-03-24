@@ -93,16 +93,15 @@
         "submoduleKey": "esm-service_catalog"
       },
       {
-        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "filePath": "src/modules/esm/pages/Tickets.tsx",
         "routePath": "/esm/tickets",
         "translationKey": "tickets",
         "key": "esm-tickets",
         "submoduleKey": "esm-tickets",
         "tabs": [
           { "key": "all", "label": "All" },
-          { "key": "open", "label": "Open", "condition": { "field": "status", "value": "open" } },
-          { "key": "in_progress", "label": "In Progress", "condition": { "field": "status", "value": "in_progress" } },
-          { "key": "resolved", "label": "Resolved", "condition": { "field": "status", "value": "resolved" } }
+          { "key": "my", "label": "My Tickets" },
+          { "key": "related", "label": "Related Tickets" }
         ]
       },
       {
@@ -125,29 +124,6 @@
         "translationKey": "projects",
         "key": "esm-projects",
         "submoduleKey": "esm-projects"
-      }
-    ],
-    "support": [
-      {
-        "filePath": "src/modules/tickets/pages/Tickets.tsx",
-        "routePath": "/support/tickets",
-        "translationKey": "tickets",
-        "key": "tickets",
-        "submoduleKey": "support-tickets"
-      },
-      {
-        "filePath": "src/modules/workforce/pages/ServiceReports.tsx",
-        "routePath": "/support/service-reports",
-        "translationKey": "service-reports",
-        "key": "service-reports",
-        "submoduleKey": "support-service-reports"
-      },
-      {
-        "filePath": "src/modules/workforce/pages/ServiceInvoices.tsx",
-        "routePath": "/support/service-invoices",
-        "translationKey": "service-invoices",
-        "key": "service-invoices",
-        "submoduleKey": "support-service-invoices"
       }
     ],
     "external": [

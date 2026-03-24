@@ -18,7 +18,6 @@ type ModuleRegisterFn = (config?: any, enabledLanguages?: string[]) => void | Pr
 // Module manifest - maps module IDs to lazy imports
 const MODULE_MANIFEST: Record<string, () => Promise<{ register: ModuleRegisterFn }>> = {
     core: () => import('@/modules/core'),
-    tickets: () => import('@/modules/tickets'),
     workforce: () => import('@/modules/workforce'),
     fsm: () => import('@/modules/fsm'),
     crm: () => import('@/modules/crm'),
@@ -28,6 +27,7 @@ const MODULE_MANIFEST: Record<string, () => Promise<{ register: ModuleRegisterFn
     catalog: () => import('@/modules/catalog'),
     erp: () => import('@/modules/erp'),
     esm: () => import('@/modules/esm'),
+    tickets: () => import('@/modules/esm'), // Backward compatibility alias
     wms: () => import('@/modules/wms'),
     pos: () => import('@/modules/pos'),
     landing: () => import('@/modules/landing'),
