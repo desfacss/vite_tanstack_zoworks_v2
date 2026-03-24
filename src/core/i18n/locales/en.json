@@ -68,7 +68,15 @@
         "leaves": "Leaves",
         "timesheets": "Timesheets",
         "expenses": "Expenses",
-        "teams": "Teams"
+        "teams": "Teams",
+        "accounts": "Accounts",
+        "leads": "Leads",
+        "deals": "Deals",
+        "prospects": "Prospects",
+        "location-categories": "Location Categories",
+        "service-categories": "Service Categories",
+        "service-offerings": "Service Offerings",
+        "service-types": "Service Types"
       },
       "action": {
         "save": "Save",

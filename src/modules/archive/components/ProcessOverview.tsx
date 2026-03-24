@@ -1,7 +1,7 @@
 // src/modules/archive/components/ProcessOverview.tsx
 import React, { useState } from 'react';
 import { Table, Button, Drawer, Space, Select, InputNumber, Input } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
+import { Plus } from 'lucide-react';
 import AceEditor from 'react-ace';
 import 'ace-builds/src-noconflict/mode-json';
 import 'ace-builds/src-noconflict/theme-monokai';
@@ -195,19 +195,19 @@ const ProcessOverview: React.FC<ProcessOverviewProps> = ({ initialData }) => {
   ];
 
   return (
-    <div style={{ padding: '0 24px' }}>
-      <Space style={{ marginBottom: 16 }}>
-        <h2>Process Blueprint Configuration</h2>
+    <div className="process-overview" style={{ padding: '0 24px' }}>
+      <div className="section-header" style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '16px' }}>
+        <h2 className="text-h2" style={{ margin: 0 }}>Process Blueprint Configuration</h2>
         <Button onClick={() => setJsonVisible(true)} type="dashed">View Source JSON</Button>
-      </Space>
+      </div>
 
-      <h3>Human Resources / Roles</h3>
+      <h3 className="text-h3">Human Resources / Roles</h3>
       <Table columns={roleColumns} dataSource={localData.blueprint.roles} rowKey="roleId" pagination={false} size="small" />
-      <Button onClick={() => addRow('roles')} icon={<PlusOutlined />} style={{ marginTop: 8 }}>Add Role</Button>
+      <Button onClick={() => addRow('roles')} icon={<Plus size={14} />} style={{ marginTop: '8px' }}>Add Role</Button>
 
-      <h3 style={{ marginTop: 24 }}>Materials / Resources</h3>
+      <h3 className="text-h3" style={{ marginTop: '24px' }}>Materials / Resources</h3>
       <Table columns={materialColumns} dataSource={localData.blueprint.materials} rowKey="id" pagination={false} size="small" />
-      <Button onClick={() => addRow('materials')} icon={<PlusOutlined />} style={{ marginTop: 8 }}>Add Material</Button>
+      <Button onClick={() => addRow('materials')} icon={<Plus size={14} />} style={{ marginTop: '8px' }}>Add Material</Button>
 
       <Drawer title="Blueprint JSON" width="60%" onClose={() => setJsonVisible(false)} open={jsonVisible}>
         <AceEditor

@@ -1,9 +1,9 @@
 // src/modules/archive/components/ProjectPlan/ProjectPlan.tsx
 import React, { useState } from 'react';
 import { Card, Input, Tabs, Radio, Typography, Space, Divider } from 'antd';
-import GanttChart from './GanttChart';
-import CalendarChart from './CalendarChart';
-import TimelineChart from './TimelineChart';
+import GanttChart from '../SharedCharts/GanttChart';
+import CalendarChart from '../SharedCharts/CalendarChart';
+import TimelineChart from '../SharedCharts/TimelineChart';
 import processBlueprint from '../../utils/processv5.json';
 import { calculateTaskDates, Task as SchedulerTask } from '../../utils/taskScheduler';
 import dayjs from 'dayjs';
@@ -34,7 +34,7 @@ const ProjectPlan: React.FC = () => {
     {
       key: 'gantt',
       label: 'Gantt Chart',
-      children: <GanttChart processBlueprint={processBlueprint} orderDetails={orderDetails} scenario={scenario} />,
+      children: <GanttChart tasks={tasks} taskDates={taskDates} />,
     },
     {
       key: 'calendar',

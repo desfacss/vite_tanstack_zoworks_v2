@@ -1,7 +1,7 @@
 // src/modules/archive/components/Networking/ChannelTabs.tsx
 import React, { useState, useEffect, useMemo } from 'react';
 import { Tabs, Badge, Spin } from 'antd';
-import { LockOutlined } from '@ant-design/icons';
+import { Lock } from 'lucide-react';
 import { supabase } from '@/core/lib/supabase';
 import { useAuthStore } from '@/core/lib/store';
 import { useQuery } from '@tanstack/react-query';
@@ -73,7 +73,7 @@ const ChannelTabs: React.FC<ChannelTabsProps> = ({ onTotalUnreadChange }) => {
           <Badge count={unreadCount} overflowCount={99} size="small" offset={[10, 0]}>
             <span style={{ display: 'flex', alignItems: 'center' }}>
               {channel.slug}
-              {!isSubscribed && <LockOutlined style={{ marginLeft: 4, fontSize: '10px' }} />}
+              {!isSubscribed && <Lock style={{ marginLeft: 4 }} size={10} />}
             </span>
           </Badge>
         ),

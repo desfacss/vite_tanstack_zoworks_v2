@@ -1,9 +1,9 @@
 // src/modules/archive/components/Scheduler/index.tsx
 import React, { useState, useEffect } from 'react';
 import { Select, Card, Typography, Tabs, Spin, Row, Col, Statistic, Tag, Space, Divider } from 'antd';
-import TimelineChart from './TimelineChart';
-import CalendarChart from './CalendarChart';
-import GanttChart from './GanttChart';
+import TimelineChart from '../SharedCharts/TimelineChart';
+import CalendarChart from '../SharedCharts/CalendarChart';
+import GanttChart from '../SharedCharts/GanttChart';
 import MermaidChart from './MermaidChart';
 import dayjs from 'dayjs';
 
@@ -133,7 +133,6 @@ const Scheduler: React.FC = () => {
           viewMode={viewMode}
           resourceColorMap={resourceColorMap}
           projectColorMap={projectColorMap}
-          scenarioName={scenarioData.scenario.name}
         />
       ),
     },

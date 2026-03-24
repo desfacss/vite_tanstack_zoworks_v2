@@ -1,13 +1,14 @@
 // src/modules/archive/components/ProcessEditVisual.tsx
 import React, { useState, useEffect } from 'react';
 import { 
-  Card, Button, Space, Typography, Drawer, 
-  Form, Input, Select, Tag, Divider, Empty, Spin, message, Tabs
+  Tabs, Button, Space, Card, Typography, Drawer,
+  Form, Input, Select, Tag, Divider, Empty, Spin, message 
 } from 'antd';
+import { useTranslation } from 'react-i18next';
 import { 
-  PlusOutlined, EditOutlined, DeleteOutlined, 
-  SaveOutlined 
-} from '@ant-design/icons';
+  Plus, Pencil, Trash2, 
+  Save 
+} from 'lucide-react';
 import { supabase } from '@/core/lib/supabase';
 import { ProcessData, Stage } from '../types/process';
 import { 
@@ -31,6 +32,7 @@ interface ProcessEditVisualProps {
 }
 
 const ProcessEditVisual: React.FC<ProcessEditVisualProps> = ({ processId, onSave }) => {
+  const { t } = useTranslation('archive');
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [data, setData] = useState<ProcessData | null>(null);
@@ -195,7 +197,7 @@ const ProcessEditVisual: React.FC<ProcessEditVisualProps> = ({ processId, onSave
   };
 
   if (loading) return <div style={{ textAlign: 'center', padding: '50px' }}><Spin size="large" /></div>;
-  if (!data) return <Empty description="No data available" />;
+  if (!data) return <Empty description={t('label.no_stages')} />;
 
   const drawerTabs = [
     {
@@ -203,7 +205,7 @@ const ProcessEditVisual: React.FC<ProcessEditVisualProps> = ({ processId, onSave
       label: 'Basic Info',
       children: (
         <>
-          <Form.Item name="name" label="Stage Name" rules={[{ required: true }]}>
+          <Form.Item name="name" label={t('label.edit')} rules={[{ required: true }]}>
             <Input />
           </Form.Item>
           <Form.Item name="displayLabel" label="Display Label">
@@ -274,8 +276,8 @@ const ProcessEditVisual: React.FC<ProcessEditVisualProps> = ({ processId, onSave
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span>{data.name} <Tag>{data.version}</Tag></span>
             <Space>
-               <Button icon={<PlusOutlined />} onClick={addStage}>Add Stage</Button>
-               <Button type="primary" icon={<SaveOutlined />} loading={saving} onClick={handleSave}>Save</Button>
+               <Button icon={<Plus size={14} />} onClick={addStage}>{t('label.add_stage')}</Button>
+               <Button type="primary" icon={<Save size={14} />} loading={saving} onClick={handleSave}>{t('label.save')}</Button>
             </Space>
           </div>
         }>
@@ -288,8 +290,8 @@ const ProcessEditVisual: React.FC<ProcessEditVisualProps> = ({ processId, onSave
                 style={{ width: 250, borderLeft: '4px solid #1890ff' }}
                 onClick={() => onStageClick(stage)}
                 actions={[
-                  <EditOutlined key="edit" />,
-                  <DeleteOutlined key="delete" onClick={(e) => {
+                   <Pencil size={14} key="edit" />,
+                   <Trash2 size={14} key="delete" onClick={(e) => {
                     e.stopPropagation();
                     setData({ ...data, stages: data.stages.filter(s => s.id !== stage.id) });
                   }} />

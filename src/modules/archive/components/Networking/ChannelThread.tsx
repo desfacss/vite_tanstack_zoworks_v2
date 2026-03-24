@@ -1,7 +1,8 @@
 // src/modules/archive/components/Networking/ChannelThread.tsx
 import React, { useState } from 'react';
 import { List, Avatar, Button, Tag, Spin, Empty, message } from 'antd';
-import { MessageOutlined, DeleteOutlined } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
+import { MessageSquare, Trash2 } from 'lucide-react';
 import { supabase } from '@/core/lib/supabase';
 import { useAuthStore } from '@/core/lib/store';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -19,6 +20,7 @@ interface ChannelThreadProps {
 const PAGE_SIZE = 15;
 
 const ChannelThread: React.FC<ChannelThreadProps> = ({ channelId }) => {
+  const { t } = useTranslation('archive');
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
   const [page] = useState(0);
@@ -79,18 +81,18 @@ const ChannelThread: React.FC<ChannelThreadProps> = ({ channelId }) => {
               <Button 
                 key="reply" 
                 type="link" 
-                icon={<MessageOutlined />} 
+                icon={<MessageSquare size={14} />} 
                 size="small"
                 onClick={() => toggleReplies(item.id)}
               >
-                {item.reply_count > 0 ? `${item.reply_count} Replies` : 'Reply'}
+                {item.reply_count > 0 ? `${item.reply_count} ${t('label.replies')}` : t('label.reply')}
               </Button>,
               user?.id === item.user_id && (
                 <Button 
                   key="delete"
                   type="link" 
                   danger 
-                  icon={<DeleteOutlined />} 
+                  icon={<Trash2 size={14} />} 
                   size="small"
                   onClick={() => deleteMutation.mutate(item.id)}
                 />
@@ -116,7 +118,7 @@ const ChannelThread: React.FC<ChannelThreadProps> = ({ channelId }) => {
           </List.Item>
         )}
       />
-      {messages.length === 0 && <Empty description="No messages yet" />}
+      {messages.length === 0 && <Empty description={t('label.no_messages')} />}
     </div>
   );
 };

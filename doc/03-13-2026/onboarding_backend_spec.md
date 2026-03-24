@@ -140,7 +140,7 @@ SECURITY DEFINER
 
 ---
 
-## 4 — `public.onboard_request_zoworks_account` ✅ Exists · ⚠️ Needs `p_requested_modules` stored
+## 4 — `public.onboard_request_zoworks_account` ✅ Exists · ⚠️ Needs `p_requested_modules`
 
 ### Purpose
 Unified entry point for all three vectors. Creates an **inactive** `identity.organizations` record and upserts a `crm.contacts` Lead. This is the last step the public internet can trigger.
@@ -153,7 +153,7 @@ CREATE OR REPLACE FUNCTION public.onboard_request_zoworks_account(
   p_admin_last_name   text,
   p_admin_email       text,
   p_admin_mobile      text  DEFAULT NULL,
-  p_requested_modules jsonb DEFAULT '[]',   -- e.g. ["crm","engage"]
+  p_requested_modules jsonb DEFAULT '[]',   -- ← NEW: e.g. ["crm","engage"]
   p_details           jsonb DEFAULT '{}'
 )
 RETURNS jsonb   -- { "org_id": uuid, "status": "PENDING" }

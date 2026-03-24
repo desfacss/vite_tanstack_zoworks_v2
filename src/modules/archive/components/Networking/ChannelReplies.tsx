@@ -1,7 +1,8 @@
 // src/modules/archive/components/Networking/ChannelReplies.tsx
 import React, { useState } from 'react';
-import { List, Avatar, Input, Button, Spin, message } from 'antd';
-import { SendOutlined } from '@ant-design/icons';
+import { List, Avatar, Input, Button, Spin, Typography } from 'antd';
+import { useTranslation } from 'react-i18next';
+import { Send } from 'lucide-react';
 import { supabase } from '@/core/lib/supabase';
 import { useAuthStore } from '@/core/lib/store';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -12,6 +13,7 @@ interface ChannelRepliesProps {
 }
 
 const ChannelReplies: React.FC<ChannelRepliesProps> = ({ postId }) => {
+  const { t } = useTranslation('archive');
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
   const [replyText, setReplyText] = useState('');
@@ -49,7 +51,6 @@ const ChannelReplies: React.FC<ChannelRepliesProps> = ({ postId }) => {
       queryClient.invalidateQueries({ queryKey: ['post_replies', postId] });
       queryClient.invalidateQueries({ queryKey: ['channel_messages'] }); // Refresh reply count in thread
       setReplyText('');
-      message.success('Reply added');
     }
   });
 
@@ -61,7 +62,10 @@ const ChannelReplies: React.FC<ChannelRepliesProps> = ({ postId }) => {
   if (isLoading) return <Spin style={{ margin: '10px' }} />;
 
   return (
-    <div style={{ padding: '0 0 0 40px', background: '#fafafa', borderRadius: '4px' }}>
+    <div className="replies-container" style={{ paddingLeft: '40px', background: 'var(--color-bg-tertiary)', borderRadius: 'var(--tenant-border-radius)' }}>
+      <Typography.Text strong style={{ display: 'block', marginBottom: '8px' }}>
+        {t('label.replies')}
+      </Typography.Text>
       <List
         size="small"
         dataSource={replies}
@@ -83,7 +87,7 @@ const ChannelReplies: React.FC<ChannelRepliesProps> = ({ postId }) => {
       <div style={{ display: 'flex', gap: '8px', padding: '10px' }}>
         <Input 
           size="small"
-          placeholder="Write a reply..." 
+          placeholder={t('label.write_reply')} 
           value={replyText} 
           onChange={(e) => setReplyText(e.target.value)}
           onPressEnter={handleSend}
@@ -91,7 +95,7 @@ const ChannelReplies: React.FC<ChannelRepliesProps> = ({ postId }) => {
         <Button 
           size="small"
           type="primary" 
-          icon={<SendOutlined />} 
+          icon={<Send size={14} />} 
           onClick={handleSend}
           loading={replyMutation.isPending}
         />

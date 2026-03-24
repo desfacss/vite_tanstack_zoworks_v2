@@ -111,10 +111,10 @@ UI: pre-fills account display in Step 2 card
 type Module = { key: string; label: string; icon: ReactNode; description: string }
 
 const AVAILABLE_MODULES: Module[] = [
-  { key: 'crm',       label: 'CRM',             icon: <Users/>,          description: 'Contact & Account management' },
-  { key: 'engage',    label: 'Zoworks Engage',   icon: <MessageCircle/>,  description: 'WhatsApp inbox & campaigns' },
-  { key: 'documents', label: 'E-Sign',           icon: <FileSignature/>,  description: 'Document signing' },
-  { key: 'workforce', label: 'Workforce',        icon: <Briefcase/>,      description: 'Leave, timesheets, expenses' },
+  { key: 'crm',       label: 'CRM',             icon: <Users/>,     description: 'Contact & Account management' },
+  { key: 'engage',    label: 'Zoworks Engage',   icon: <MessageCircle/>, description: 'WhatsApp inbox & campaigns' },
+  { key: 'documents', label: 'E-Sign',           icon: <FileSignature/>, description: 'Document signing' },
+  { key: 'workforce', label: 'Workforce',        icon: <Briefcase/>, description: 'Leave, timesheets, expenses' },
 ];
 ```
 
@@ -213,7 +213,7 @@ requested_modules: org.settings?.requested_modules || []
 
 Replace the direct "Approve" button with a two-step confirm that allows module editing.
 
-**Approach**: Open an `<Modal>` on "Approve" click:
+**Approach**: Open an `<Modal>` (or inline drawer) on "Approve" click:
 
 ```
 [ Approve ] click
@@ -271,13 +271,13 @@ const { error } = await supabase.schema('core').rpc('api_new_core_upsert_data', 
   }
 });
 
-// fetchRequests() should filter: IS_ACTIVE = false AND settings->>'status' != 'REJECTED'
+// Then fetchRequests() filters IS_ACTIVE = false AND settings->>'status' != 'REJECTED'
 ```
 
 **Tables written**: `identity.organizations` (settings jsonb)
 
 **Acceptance**:
-- Rejected requests disappear from the pending list.
+- Rejected requests disappear from the pending list (or get a "Rejected" tag).
 - Approved org shows `identity.modules` row in DB with correct sub_modules flags.
 
 ---
@@ -294,7 +294,7 @@ const { error } = await supabase.schema('core').rpc('api_new_core_upsert_data', 
 
 **Data flow**:
 ```
-?org_id=uuid       → onboard_get_org_summary → org name displayed
+?org_id=uuid  → onboard_get_org_summary → org name displayed
 ?modules=crm,engage → shown as read-only Tags (not editable)
 User fills: firstName, lastName, email, mobile
 Submit → onboard_request_zoworks_account

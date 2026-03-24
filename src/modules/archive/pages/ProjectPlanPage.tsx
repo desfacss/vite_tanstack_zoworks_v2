@@ -4,8 +4,10 @@ import ProjectPlan from '../components/ProjectPlan/ProjectPlan';
 
 const ProjectPlanPage: React.FC = () => {
   return (
-    <div style={{ padding: '24px' }}>
-      <ProjectPlan />
+    <div className="page-content layout-canvas">
+      <div className="page-card">
+        <ProjectPlan />
+      </div>
     </div>
   );
 };

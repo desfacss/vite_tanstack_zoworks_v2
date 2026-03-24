@@ -470,6 +470,34 @@
         "translationKey": "system-notifications",
         "key": "system-notifications",
         "submoduleKey": "admin-notifications"
+      },
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/admin/location-categories",
+        "translationKey": "location-categories",
+        "key": "location-categories",
+        "submoduleKey": "admin-location_categories"
+      },
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/admin/service-categories",
+        "translationKey": "service-categories",
+        "key": "service-categories",
+        "submoduleKey": "admin-service_categories"
+      },
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/admin/service-offerings",
+        "translationKey": "service-offerings",
+        "key": "service-offerings",
+        "submoduleKey": "admin-service_offerings"
+      },
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/admin/service-types",
+        "translationKey": "service-types",
+        "key": "service-types",
+        "submoduleKey": "admin-service_types"
       }
     ],
     "wa": [

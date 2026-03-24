@@ -1,0 +1,49 @@
+{
+  "label": {
+    "process_editor": "Process Editor",
+    "networking": "Networking",
+    "project_plan": "Project Plan",
+    "scheduler": "Scheduler",
+    "simulation": "Simulation Suite",
+    "add_stage": "Add Stage",
+    "save": "Save",
+    "edit": "Edit",
+    "delete": "Delete",
+    "version": "Version",
+    "no_stages": "No stages defined. Drag blocks to start designing your process.",
+    "channels": "Channels",
+    "public_channels": "Public Channels",
+    "private_channels": "Private Channels",
+    "new_post": "New Post",
+    "reply": "Reply",
+    "replies": "Replies",
+    "write_reply": "Write a reply...",
+    "no_messages": "No messages yet",
+    "request_join": "Request to Join",
+    "private_channel_msg": "This channel is private",
+    "private_channel_sub": "You need to be a member to view this channel.",
+    "blueprint_config": "Process Blueprint Configuration",
+    "view_source_json": "View Source JSON",
+    "human_resources": "Human Resources / Roles",
+    "materials": "Materials / Resources",
+    "add_role": "Add Role",
+    "add_material": "Add Material",
+    "role_id": "Role ID",
+    "message": "Message",
+    "add_comment": "Add a comment...",
+    "category": "Category",
+    "select_category": "Select Category"
+  },
+  "action": {
+    "cancel": "Cancel",
+    "post": "Post"
+  },
+  "message": {
+    "enter_message": "Please enter a message",
+    "post_success": "Post created successfully",
+    "post_failed": "Failed to create post"
+  },
+  "placeholder": {
+    "whats_on_your_mind": "What's on your mind?"
+  }
+}

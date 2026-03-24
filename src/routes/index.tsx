@@ -217,6 +217,10 @@ export const AppRoutes: FC = () => {
                         <Route path="/admin/form-elements" element={<AdminFormElements />} />
                         <Route path="/admin/onboarding" element={<OnboardingRequests />} />
                         <Route path="/admin/appointments" element={<AdminAppointments />} />
+                        <Route path="/admin/location-categories" element={<GenericDynamicPage schema="identity" />} />
+                        <Route path="/admin/service-categories" element={<GenericDynamicPage schema="identity" />} />
+                        <Route path="/admin/service-offerings" element={<GenericDynamicPage schema="identity" />} />
+                        <Route path="/admin/service-types" element={<GenericDynamicPage schema="identity" />} />
 
                         {/* Profile & Settings */}
                         <Route path="/profile" element={<Profile />} />

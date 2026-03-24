@@ -4,8 +4,10 @@ import Scheduler from '../components/Scheduler';
 
 const SchedulerPage: React.FC = () => {
   return (
-    <div style={{ padding: '24px' }}>
-      <Scheduler />
+    <div className="page-content layout-canvas">
+      <div className="page-card">
+        <Scheduler />
+      </div>
     </div>
   );
 };

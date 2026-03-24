@@ -4,8 +4,10 @@ import ChannelTabs from '../components/Networking/ChannelTabs';
 
 const Networking: React.FC = () => {
   return (
-    <div style={{ padding: '24px' }}>
-      <ChannelTabs />
+    <div className="page-content layout-canvas">
+      <div className="page-card">
+        <ChannelTabs />
+      </div>
     </div>
   );
 };

@@ -86,8 +86,10 @@ class AppRegistry {
     }
 
     registerNavItem(item: NavItemDefinition) {
-        this.navigationItems.push(item);
-        this.emitChange();
+        if (!this.navigationItems.find(n => n.key === item.key)) {
+            this.navigationItems.push(item);
+            this.emitChange();
+        }
     }
 
     getRoutes(): RouteDefinition[] {

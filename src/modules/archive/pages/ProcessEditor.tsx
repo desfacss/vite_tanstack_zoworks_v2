@@ -4,8 +4,10 @@ import ProcessEditVisual from '../components/ProcessEditVisual';
 
 const ProcessEditor: React.FC = () => {
   return (
-    <div style={{ padding: '24px' }}>
-      <ProcessEditVisual />
+    <div className="page-content layout-canvas">
+      <div className="page-card">
+        <ProcessEditVisual />
+      </div>
     </div>
   );
 };

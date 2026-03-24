@@ -1,0 +1,616 @@
+[
+    {
+        "key": "account_id",
+        "tier": 1,
+        "type": "uuid",
+        "is_system": false,
+        "is_virtual": false,
+        "foreign_key": {
+            "reason": "foreign key constraint",
+            "confidence": "high",
+            "source_table": "crm.accounts",
+            "source_column": "id",
+            "display_column": "id"
+        },
+        "is_template": true,
+        "display_name": "Account Id",
+        "is_mandatory": false,
+        "source_table": "crm.deals",
+        "is_searchable": false,
+        "semantic_type": {
+            "role": "dimension",
+            "order": [],
+            "keyword": false,
+            "sub_type": "discrete",
+            "default_aggregation": "count"
+        },
+        "is_displayable": true,
+        "is_phys_generated": false
+    },
+    {
+        "key": "amount",
+        "tier": 1,
+        "type": "numeric",
+        "is_system": false,
+        "is_virtual": false,
+        "foreign_key": null,
+        "is_template": true,
+        "display_name": "Amount",
+        "is_mandatory": false,
+        "source_table": "crm.deals",
+        "is_searchable": false,
+        "semantic_type": {
+            "role": "measure",
+            "order": [],
+            "keyword": false,
+            "sub_type": "continuous",
+            "default_aggregation": "sum"
+        },
+        "is_displayable": true,
+        "is_phys_generated": false
+    },
+    {
+        "key": "automation_bp_instance_id",
+        "tier": 1,
+        "type": "uuid",
+        "is_system": false,
+        "is_virtual": false,
+        "foreign_key": null,
+        "is_template": true,
+        "display_name": "Automation Bp Instance Id",
+        "is_mandatory": false,
+        "source_table": "crm.deals",
+        "is_searchable": false,
+        "semantic_type": {
+            "role": "dimension",
+            "order": [],
+            "keyword": false,
+            "sub_type": "discrete",
+            "default_aggregation": "count"
+        },
+        "is_displayable": true,
+        "is_phys_generated": false
+    },
+    {
+        "key": "automation_esm_instance_id",
+        "tier": 1,
+        "type": "uuid",
+        "is_system": false,
+        "is_virtual": false,
+        "foreign_key": null,
+        "is_template": true,
+        "display_name": "Automation Esm Instance Id",
+        "is_mandatory": false,
+        "source_table": "crm.deals",
+        "is_searchable": false,
+        "semantic_type": {
+            "role": "dimension",
+            "order": [],
+            "keyword": false,
+            "sub_type": "discrete",
+            "default_aggregation": "count"
+        },
+        "is_displayable": true,
+        "is_phys_generated": false
+    },
+    {
+        "key": "close_date",
+        "tier": 1,
+        "type": "date",
+        "is_system": false,
+        "is_virtual": false,
+        "foreign_key": null,
+        "is_template": true,
+        "display_name": "Close Date",
+        "is_mandatory": false,
+        "source_table": "crm.deals",
+        "is_searchable": false,
+        "semantic_type": {
+            "role": "dimension",
+            "order": [],
+            "keyword": false,
+            "sub_type": "temporal",
+            "default_aggregation": "count"
+        },
+        "is_displayable": true,
+        "is_phys_generated": false
+    },
+    {
+        "key": "contact_id",
+        "tier": 1,
+        "type": "uuid",
+        "is_system": false,
+        "is_virtual": false,
+        "foreign_key": {
+            "reason": "foreign key constraint",
+            "confidence": "high",
+            "source_table": "unified.contacts",
+            "source_column": "id",
+            "display_column": "display_id"
+        },
+        "is_template": true,
+        "display_name": "Contact Id",
+        "is_mandatory": false,
+        "source_table": "crm.deals",
+        "is_searchable": false,
+        "semantic_type": {
+            "role": "dimension",
+            "order": [],
+            "keyword": false,
+            "sub_type": "discrete",
+            "default_aggregation": "count"
+        },
+        "is_displayable": true,
+        "is_phys_generated": false
+    },
+    {
+        "key": "created_at",
+        "tier": 1,
+        "type": "timestamptz",
+        "is_system": true,
+        "is_virtual": false,
+        "foreign_key": null,
+        "is_template": true,
+        "display_name": "Created At",
+        "is_mandatory": true,
+        "source_table": "crm.deals",
+        "is_searchable": false,
+        "semantic_type": {
+            "role": "dimension",
+            "order": [],
+            "keyword": false,
+            "sub_type": "temporal",
+            "default_aggregation": "count"
+        },
+        "is_displayable": true,
+        "is_phys_generated": false
+    },
+    {
+        "key": "created_by",
+        "tier": 1,
+        "type": "uuid",
+        "is_system": true,
+        "is_virtual": false,
+        "foreign_key": null,
+        "is_template": true,
+        "display_name": "Created By",
+        "is_mandatory": false,
+        "source_table": "crm.deals",
+        "is_searchable": false,
+        "semantic_type": {
+            "role": "dimension",
+            "order": [],
+            "keyword": false,
+            "sub_type": "discrete",
+            "default_aggregation": "count"
+        },
+        "is_displayable": true,
+        "is_phys_generated": false
+    },
+    {
+        "key": "description",
+        "tier": 1,
+        "type": "text",
+        "is_system": false,
+        "is_virtual": false,
+        "foreign_key": null,
+        "is_template": true,
+        "display_name": "Description",
+        "is_mandatory": false,
+        "source_table": "crm.deals",
+        "is_searchable": true,
+        "semantic_type": {
+            "role": "dimension",
+            "order": [],
+            "keyword": false,
+            "sub_type": "nominal",
+            "default_aggregation": "count"
+        },
+        "is_displayable": true,
+        "is_phys_generated": false
+    },
+    {
+        "key": "display_id",
+        "tier": 1,
+        "type": "text",
+        "is_system": false,
+        "is_virtual": false,
+        "foreign_key": null,
+        "is_template": true,
+        "display_name": "Display Id",
+        "is_mandatory": false,
+        "source_table": "crm.deals",
+        "is_searchable": true,
+        "semantic_type": {
+            "role": "dimension",
+            "order": [],
+            "keyword": false,
+            "sub_type": "discrete",
+            "default_aggregation": "count"
+        },
+        "is_displayable": true,
+        "is_phys_generated": false
+    },
+    {
+        "key": "entity_instance_id",
+        "tier": 1,
+        "type": "uuid",
+        "is_system": false,
+        "is_virtual": false,
+        "foreign_key": {
+            "reason": "Inferred from column name entity_instance_id → table crm.entity_instances (matched: entity_instances)",
+            "confidence": "medium",
+            "source_table": "crm.entity_instances",
+            "source_column": "id",
+            "display_column": "id"
+        },
+        "is_template": true,
+        "display_name": "Entity Instance Id",
+        "is_mandatory": false,
+        "source_table": "crm.deals",
+        "is_searchable": false,
+        "semantic_type": {
+            "role": "dimension",
+            "order": [],
+            "keyword": false,
+            "sub_type": "discrete",
+            "default_aggregation": "count"
+        },
+        "is_displayable": true,
+        "is_phys_generated": false
+    },
+    {
+        "key": "id",
+        "tier": 1,
+        "type": "uuid",
+        "is_system": true,
+        "is_virtual": false,
+        "foreign_key": null,
+        "is_template": true,
+        "display_name": "Id",
+        "is_mandatory": true,
+        "source_table": "crm.deals",
+        "is_searchable": false,
+        "semantic_type": {
+            "role": "dimension",
+            "order": [],
+            "keyword": false,
+            "sub_type": "discrete",
+            "default_aggregation": "count"
+        },
+        "is_displayable": true,
+        "is_phys_generated": false
+    },
+    {
+        "key": "intent_category",
+        "tier": 1,
+        "type": "text",
+        "is_system": false,
+        "is_virtual": false,
+        "foreign_key": null,
+        "is_template": true,
+        "display_name": "Intent Category",
+        "is_mandatory": false,
+        "source_table": "crm.deals",
+        "is_searchable": false,
+        "semantic_type": {
+            "role": "dimension",
+            "order": [],
+            "keyword": false,
+            "sub_type": "nominal",
+            "default_aggregation": "count"
+        },
+        "is_displayable": true,
+        "is_phys_generated": false
+    },
+    {
+        "key": "module",
+        "tier": 1,
+        "type": "text",
+        "is_system": false,
+        "is_virtual": false,
+        "foreign_key": null,
+        "is_template": true,
+        "display_name": "Module",
+        "is_mandatory": false,
+        "source_table": "crm.deals",
+        "is_searchable": false,
+        "semantic_type": {
+            "role": "dimension",
+            "order": [],
+            "keyword": false,
+            "sub_type": "nominal",
+            "default_aggregation": "count"
+        },
+        "is_displayable": true,
+        "is_phys_generated": false
+    },
+    {
+        "key": "name",
+        "tier": 1,
+        "type": "text",
+        "is_system": false,
+        "is_virtual": false,
+        "foreign_key": null,
+        "is_template": true,
+        "display_name": "Name",
+        "is_mandatory": true,
+        "source_table": "crm.deals",
+        "is_searchable": true,
+        "semantic_type": {
+            "role": "dimension",
+            "order": [],
+            "keyword": false,
+            "sub_type": "nominal",
+            "default_aggregation": "count"
+        },
+        "is_displayable": true,
+        "is_phys_generated": false
+    },
+    {
+        "key": "organization_id",
+        "tier": 1,
+        "type": "uuid",
+        "is_system": true,
+        "is_virtual": false,
+        "foreign_key": {
+            "reason": "Inferred from column name organization_id → table unified.organizations (matched: organizations)",
+            "confidence": "medium",
+            "source_table": "unified.organizations",
+            "source_column": "id",
+            "display_column": "name"
+        },
+        "is_template": true,
+        "display_name": "Organization Id",
+        "is_mandatory": true,
+        "source_table": "crm.deals",
+        "is_searchable": false,
+        "semantic_type": {
+            "role": "dimension",
+            "order": [],
+            "keyword": false,
+            "sub_type": "discrete",
+            "default_aggregation": "count"
+        },
+        "is_displayable": true,
+        "is_phys_generated": false
+    },
+    {
+        "key": "owner_id",
+        "tier": 1,
+        "type": "uuid",
+        "is_system": false,
+        "is_virtual": false,
+        "foreign_key": null,
+        "is_template": true,
+        "display_name": "Owner Id",
+        "is_mandatory": false,
+        "source_table": "crm.deals",
+        "is_searchable": false,
+        "semantic_type": {
+            "role": "dimension",
+            "order": [],
+            "keyword": false,
+            "sub_type": "discrete",
+            "default_aggregation": "count"
+        },
+        "is_displayable": true,
+        "is_phys_generated": false
+    },
+    {
+        "key": "priority",
+        "tier": 1,
+        "type": "text",
+        "is_system": false,
+        "is_virtual": false,
+        "foreign_key": {
+            "reason": "categorical match: priority",
+            "confidence": "medium",
+            "enum_filter": {
+                "value_type": "priority"
+            },
+            "source_table": "core.enums",
+            "source_column": "value",
+            "display_column": "value"
+        },
+        "is_template": true,
+        "display_name": "Priority",
+        "is_mandatory": false,
+        "source_table": "crm.deals",
+        "is_searchable": false,
+        "semantic_type": {
+            "role": "dimension",
+            "order": [],
+            "keyword": false,
+            "sub_type": "nominal",
+            "default_aggregation": "count"
+        },
+        "is_displayable": true,
+        "is_phys_generated": false
+    },
+    {
+        "key": "probability",
+        "tier": 1,
+        "type": "numeric",
+        "is_system": false,
+        "is_virtual": false,
+        "foreign_key": null,
+        "is_template": true,
+        "display_name": "Probability",
+        "is_mandatory": false,
+        "source_table": "crm.deals",
+        "is_searchable": false,
+        "semantic_type": {
+            "role": "measure",
+            "order": [],
+            "keyword": false,
+            "sub_type": "continuous",
+            "default_aggregation": "sum"
+        },
+        "is_displayable": true,
+        "is_phys_generated": false
+    },
+    {
+        "key": "search_vector",
+        "tier": 1,
+        "type": "tsvector",
+        "is_system": false,
+        "is_virtual": false,
+        "foreign_key": null,
+        "is_template": true,
+        "display_name": "Search Vector",
+        "is_mandatory": false,
+        "source_table": "crm.deals",
+        "is_searchable": false,
+        "semantic_type": {
+            "role": "dimension",
+            "order": [],
+            "keyword": false,
+            "sub_type": "nominal",
+            "default_aggregation": "count"
+        },
+        "is_displayable": true,
+        "is_phys_generated": true
+    },
+    {
+        "key": "stage",
+        "tier": 1,
+        "type": "text",
+        "is_system": false,
+        "is_virtual": false,
+        "foreign_key": null,
+        "is_template": true,
+        "display_name": "Stage",
+        "is_mandatory": false,
+        "source_table": "crm.deals",
+        "is_searchable": false,
+        "semantic_type": {
+            "role": "dimension",
+            "order": [],
+            "keyword": false,
+            "sub_type": "nominal",
+            "default_aggregation": "count"
+        },
+        "is_displayable": true,
+        "is_phys_generated": false
+    },
+    {
+        "key": "stage_id",
+        "tier": 1,
+        "type": "character varying",
+        "is_system": false,
+        "is_virtual": false,
+        "foreign_key": null,
+        "is_template": true,
+        "display_name": "Stage Id",
+        "is_mandatory": true,
+        "source_table": "crm.deals",
+        "is_searchable": false,
+        "semantic_type": {
+            "role": "dimension",
+            "order": [],
+            "keyword": false,
+            "sub_type": "discrete",
+            "default_aggregation": "count"
+        },
+        "is_displayable": true,
+        "is_phys_generated": false
+    },
+    {
+        "key": "state_category",
+        "tier": 1,
+        "type": "text",
+        "is_system": false,
+        "is_virtual": false,
+        "foreign_key": null,
+        "is_template": true,
+        "display_name": "State Category",
+        "is_mandatory": false,
+        "source_table": "crm.deals",
+        "is_searchable": false,
+        "semantic_type": {
+            "role": "dimension",
+            "order": [],
+            "keyword": false,
+            "sub_type": "nominal",
+            "default_aggregation": "count"
+        },
+        "is_displayable": true,
+        "is_phys_generated": false
+    },
+    {
+        "key": "status",
+        "tier": 1,
+        "type": "text",
+        "is_system": false,
+        "is_virtual": false,
+        "foreign_key": {
+            "reason": "categorical match: status",
+            "confidence": "medium",
+            "enum_filter": {
+                "value_type": "status"
+            },
+            "source_table": "core.enums",
+            "source_column": "value",
+            "display_column": "value"
+        },
+        "is_template": true,
+        "display_name": "Status",
+        "is_mandatory": true,
+        "source_table": "crm.deals",
+        "is_searchable": false,
+        "semantic_type": {
+            "role": "dimension",
+            "order": [],
+            "keyword": false,
+            "sub_type": "nominal",
+            "default_aggregation": "count"
+        },
+        "is_displayable": true,
+        "is_phys_generated": false
+    },
+    {
+        "key": "updated_at",
+        "tier": 1,
+        "type": "timestamptz",
+        "is_system": true,
+        "is_virtual": false,
+        "foreign_key": null,
+        "is_template": true,
+        "display_name": "Updated At",
+        "is_mandatory": true,
+        "source_table": "crm.deals",
+        "is_searchable": false,
+        "semantic_type": {
+            "role": "dimension",
+            "order": [],
+            "keyword": false,
+            "sub_type": "temporal",
+            "default_aggregation": "count"
+        },
+        "is_displayable": true,
+        "is_phys_generated": false
+    },
+    {
+        "key": "updated_by",
+        "tier": 1,
+        "type": "uuid",
+        "is_system": true,
+        "is_virtual": false,
+        "foreign_key": null,
+        "is_template": true,
+        "display_name": "Updated By",
+        "is_mandatory": false,
+        "source_table": "crm.deals",
+        "is_searchable": false,
+        "semantic_type": {
+            "role": "dimension",
+            "order": [],
+            "keyword": false,
+            "sub_type": "discrete",
+            "default_aggregation": "count"
+        },
+        "is_displayable": true,
+        "is_phys_generated": false
+    }
+]

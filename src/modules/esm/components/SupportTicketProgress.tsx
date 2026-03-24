@@ -1,7 +1,7 @@
 // components/SupportTicketProgress.tsx
 import React from 'react';
 import { Steps, Tooltip, Dropdown, Menu } from 'antd';
-import { CheckCircleOutlined, ClockCircleOutlined, MoreOutlined } from '@ant-design/icons';
+import { CheckCircle, Clock, MoreHorizontal } from 'lucide-react';
 
 interface SupportTicketProgressProps {
   stages: { id: string; stage_name: string; ordinal: number }[];
@@ -73,12 +73,12 @@ const SupportTicketProgress: React.FC<SupportTicketProgressProps> = ({
             title: (
               <Dropdown overlay={pastStagesMenu} trigger={['click']}>
                 <Tooltip title="View Past Stages">
-                  <MoreOutlined style={{ fontSize: 16 }} />
+                  <MoreHorizontal size={16} />
                 </Tooltip>
               </Dropdown>
             ),
             status: 'finish' as const,
-            icon: <CheckCircleOutlined />,
+            icon: <CheckCircle size={16} />,
           },
         ]
       : []),
@@ -98,7 +98,7 @@ const SupportTicketProgress: React.FC<SupportTicketProgressProps> = ({
         </Tooltip>
       ),
       status: (stage.ordinal < currentOrdinal ? 'finish' : 'process') as any,
-      icon: stage.ordinal < currentOrdinal ? <CheckCircleOutlined /> : <ClockCircleOutlined />,
+      icon: stage.ordinal < currentOrdinal ? <CheckCircle size={16} /> : <Clock size={16} />,
     })),
     ...(futureStages.length > 0
       ? [
@@ -107,7 +107,7 @@ const SupportTicketProgress: React.FC<SupportTicketProgressProps> = ({
               <Dropdown overlay={futureStagesMenu} trigger={['click']}>
                 <Tooltip title="Select Next Stage">
                   <span style={{ cursor: 'pointer', marginRight: 4 }}>Next Stages</span>
-                  <MoreOutlined style={{ fontSize: 16 }} />
+                  <MoreHorizontal size={16} />
                 </Tooltip>
               </Dropdown>
             ),

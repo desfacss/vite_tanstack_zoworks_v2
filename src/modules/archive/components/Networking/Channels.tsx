@@ -1,7 +1,8 @@
 // src/modules/archive/components/Networking/Channels.tsx
 import React, { useState } from 'react';
-import { Card, Button, Result, Spin } from 'antd';
-import { LockOutlined, PlusOutlined } from '@ant-design/icons';
+import { Card, Button, Result, Spin, message } from 'antd';
+import { useTranslation } from 'react-i18next';
+import { Lock, MessageSquarePlus } from 'lucide-react';
 import { supabase } from '@/core/lib/supabase';
 import { useAuthStore } from '@/core/lib/store';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -14,6 +15,7 @@ interface ChannelsProps {
 }
 
 const Channels: React.FC<ChannelsProps> = ({ channelId, isPrivate }) => {
+  const { t } = useTranslation('archive');
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
   const [showPostForm, setShowPostForm] = useState(false);
@@ -58,7 +60,7 @@ const Channels: React.FC<ChannelsProps> = ({ channelId, isPrivate }) => {
   if (!isAuthorized && !channel.is_public) {
     return (
       <Result
-        icon={<LockOutlined />}
+        icon={<Lock size={48} />}
         title="This channel is private"
         subTitle="You need to be a member to view this channel."
         extra={<Button type="primary" onClick={handleJoinRequest}>Request to Join</Button>}
@@ -70,12 +72,8 @@ const Channels: React.FC<ChannelsProps> = ({ channelId, isPrivate }) => {
     <Card 
       title={channel.slug} 
       extra={
-        <Button 
-          type="primary" 
-          icon={<PlusOutlined />} 
-          onClick={() => setShowPostForm(true)}
-        >
-          New Post
+        <Button type="primary" icon={<MessageSquarePlus size={14} />} onClick={() => message.info('Coming soon')}>
+          {t('label.new_post')}
         </Button>
       }
       bordered={false}
