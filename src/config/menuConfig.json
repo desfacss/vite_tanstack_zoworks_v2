@@ -498,6 +498,27 @@
         "translationKey": "service-types",
         "key": "service-types",
         "submoduleKey": "admin-service_types"
+      },
+      {
+        "filePath": "src/modules/admin/pages/Settings/Branding.tsx",
+        "routePath": "/admin/branding",
+        "translationKey": "branding",
+        "key": "branding",
+        "submoduleKey": "admin-branding"
+      },
+      {
+        "filePath": "src/modules/admin/pages/Settings/FormElements.tsx",
+        "routePath": "/admin/form-elements",
+        "translationKey": "form-elements",
+        "key": "form-elements",
+        "submoduleKey": "admin-form_elements"
+      },
+      {
+        "filePath": "src/modules/admin/pages/OnboardingRequests.tsx",
+        "routePath": "/admin/onboarding",
+        "translationKey": "onboarding",
+        "key": "onboarding",
+        "submoduleKey": "admin-onboarding"
       }
     ],
     "wa": [

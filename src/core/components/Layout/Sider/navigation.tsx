@@ -42,7 +42,10 @@ import {
   Tag,
   Layers,
   Percent,
-  Eye
+  Eye,
+  Palette,
+  LayoutTemplate,
+  ClipboardCheck
 } from 'lucide-react';
 import type { MenuProps } from 'antd';
 import type { TFunction } from 'i18next';
@@ -126,6 +129,9 @@ const iconMap: Record<string, React.ReactNode> = {
   'commerce-customer-segments': <Users size={18} />,
   'fsm-tracking': <MapPin size={18} />,
   'system-notifications': <Bell size={18} />,
+  branding: <Palette size={18} />,
+  'form-elements': <LayoutTemplate size={18} />,
+  onboarding: <ClipboardCheck size={18} />,
   default: <FileText size={18} />,
 };
 

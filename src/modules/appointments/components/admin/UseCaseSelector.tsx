@@ -5,8 +5,7 @@ import { ChevronDown, Loader2 } from 'lucide-react';
 interface Organization {
   id: string;
   name: string;
-  slug: string;
-  logo_url?: string;
+  // logo_url?: string;
 }
 
 interface UseCaseSelectorProps {
@@ -26,9 +25,9 @@ export function UseCaseSelector({ selectedOrganizationId, onOrganizationChange }
   async function loadOrganizations() {
     try {
       const { data, error } = await supabase
-        .schema('calendar')
+        .schema('identity')
         .from('organizations')
-        .select('id, name, slug, logo_url')
+        .select('id, name')
         .order('name');
 
       if (error) throw error;
@@ -99,7 +98,7 @@ export function UseCaseSelector({ selectedOrganizationId, onOrganizationChange }
               >
                 <div className="flex-1">
                   <div className="font-medium text-gray-900">{org.name}</div>
-                  <div className="text-xs text-gray-500">{org.slug}</div>
+                  <div className="text-xs text-gray-500">{org.name}</div>
                 </div>
                 {selectedOrganizationId === org.id && (
                   <div className="w-2 h-2 bg-blue-600 rounded-full" />

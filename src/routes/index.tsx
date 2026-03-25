@@ -26,6 +26,8 @@ const ShopWishlist = lazy(() => import('../modules/shop/pages/WishlistPage'));
 const ShopAccount = lazy(() => import('../modules/shop/pages/AccountPage'));
 const ShopBooking = lazy(() => import('../modules/shop/pages/BookingPage'));
 const ShopSearch = lazy(() => import('../modules/shop/pages/SearchResultsPage'));
+const ShopCategory = lazy(() => import('../modules/shop/pages/CategoryLandingPage'));
+const ShopBrand = lazy(() => import('../modules/shop/pages/BrandPage'));
 
 // Direct imports for critical components
 import PublicLayout from '../core/components/Layout/PublicLayout';
@@ -159,6 +161,8 @@ export const AppRoutes: FC = () => {
                       <Route index element={<ShopHomePage />} />
                       <Route path="products" element={<ShopPLP />} />
                       <Route path="products/:id" element={<ShopPDP />} />
+                      <Route path="category/:slug" element={<ShopCategory />} />
+                      <Route path="brand/:brandName" element={<ShopBrand />} />
                       <Route path="search" element={<ShopSearch />} />
                       <Route path="cart" element={<ShopCart />} />
                       <Route path="checkout" element={<ShopCheckout />} />

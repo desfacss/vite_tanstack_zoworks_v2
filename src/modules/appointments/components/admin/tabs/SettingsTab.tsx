@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import {
   Settings,
@@ -14,7 +14,7 @@ import {
   Calendar,
 } from 'lucide-react';
 import { useToast } from '../../common/Toast';
-import { detectUserTimezone, COMMON_TIMEZONES } from '../../../lib/utils/timezoneUtils';
+import { COMMON_TIMEZONES } from '../../../lib/utils/timezoneUtils';
 
 interface SettingsTabProps {
   organizationId: string | null;
@@ -49,7 +49,7 @@ export function SettingsTab({ organizationId }: SettingsTabProps) {
       setLoading(true);
 
       const { data, error } = await supabase
-        .schema('calendar')
+        .schema('identity')
         .from('organizations')
         .select('*')
         .eq('id', organizationId)
@@ -74,7 +74,7 @@ export function SettingsTab({ organizationId }: SettingsTabProps) {
       setSaving(true);
 
       const { error } = await supabase
-        .schema('calendar')
+        .schema('identity')
         .from('organizations')
         .update({
           timezone,

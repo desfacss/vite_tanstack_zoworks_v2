@@ -72,7 +72,7 @@ export function LocationsTab({ organizationId }: LocationsTabProps) {
 
       const [locationsData, territoriesData] = await Promise.all([
         supabase
-          .schema('calendar')
+          .schema('identity')
           .from('locations')
           .select('*')
           .eq('organization_id', organizationId)

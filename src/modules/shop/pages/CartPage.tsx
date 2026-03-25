@@ -76,8 +76,8 @@ const CartPage: React.FC = () => {
                 </div>
               </div>
               <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                <div className="shop-price" style={{ marginBottom: 6 }}>₹{item.line_total.toLocaleString()}</div>
-                <div style={{ fontSize: 12, color: 'var(--shop-muted)', marginBottom: 8 }}>₹{item.unit_price.toLocaleString()} each</div>
+                <div className="shop-price" style={{ marginBottom: 6 }}><span style={{ fontWeight: 600 }}>₹{item.line_total.toLocaleString()}</span></div>
+                <div style={{ fontSize: 12, color: 'var(--shop-muted)', marginBottom: 8 }}>₹{item.price.toLocaleString()} each</div>
                 <button
                   className="shop-btn shop-btn-sm"
                   style={{ color: '#dc2626', borderColor: 'currentColor', background: 'transparent', border: '1px solid currentColor' }}

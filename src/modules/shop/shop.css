@@ -672,6 +672,98 @@
   color: var(--shop-primary);
 }
 
+/* ─── Search Suggestions ──────────────────────────── */
+.shop-search-wrapper {
+  flex: 1;
+  max-width: 440px;
+  position: relative;
+}
+.shop-search-spinner {
+  position: absolute;
+  right: 40px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--shop-muted);
+}
+.shop-search-clear {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--shop-muted);
+  padding: 4px;
+  display: flex;
+}
+.shop-search-clear:hover { color: var(--shop-primary); }
+
+.shop-search-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  background: var(--shop-card-bg);
+  border: 1px solid var(--shop-border);
+  border-radius: var(--shop-radius);
+  box-shadow: var(--shop-shadow-lg);
+  z-index: 1000;
+  overflow: hidden;
+}
+.shop-search-suggestion {
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+  border-bottom: 1px solid var(--shop-border);
+}
+.shop-search-suggestion:last-child { border-bottom: none; }
+.shop-search-suggestion:hover { background: var(--shop-bg); }
+
+/* ─── Review System ────────────────────────────────── */
+.shop-review-system { padding-top: 24px; }
+.shop-review-summary-layout {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 40px;
+  background: var(--shop-bg);
+  padding: 24px;
+  border-radius: var(--shop-radius);
+  margin-bottom: 32px;
+  align-items: center;
+}
+@media (max-width: 768px) {
+  .shop-review-summary-layout { grid-template-columns: 1fr; gap: 24px; text-align: center; }
+}
+.shop-review-overall { display: flex; flex-direction: column; align-items: center; }
+.shop-review-bars { display: flex; flex-direction: column; gap: 8px; }
+.shop-review-bar-row { display: flex; align-items: center; gap: 12px; }
+.shop-review-bar-bg { flex: 1; height: 6px; background: var(--shop-border); border-radius: 3px; overflow: hidden; }
+.shop-review-bar-fill { height: 100%; background: var(--shop-primary); border-radius: 3px; }
+.shop-review-cta { border-left: 1px solid var(--shop-border); padding-left: 32px; }
+@media (max-width: 768px) { .shop-review-cta { border-left: none; padding-left: 0; border-top: 1px solid var(--shop-border); padding-top: 24px; } }
+
+.shop-review-form .shop-form-group { margin-bottom: 20px; }
+
+/* ─── FAQ Section ──────────────────────────────────── */
+.shop-faq-item:hover { border-color: var(--shop-primary) !important; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+
+/* ─── Category Header ───────────────────────────────── */
+.shop-category-header {
+  border-bottom: 1px solid var(--shop-border);
+  padding-bottom: 24px;
+}
+.shop-category-description {
+  font-size: 15px;
+  line-height: 1.6;
+  max-width: 720px;
+}
+
 /* ─── Animations ──────────────────────────────────── */
 @keyframes shopFadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 .shop-fade-in { animation: shopFadeIn 0.3s ease-out; }
+@keyframes shopSpin { from { transform: translateY(-50%) rotate(0deg); } to { transform: translateY(-50%) rotate(360deg); } }
+.shop-spin { animation: shopSpin 1s linear infinite; }

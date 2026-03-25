@@ -3,6 +3,8 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../hooks/useCart';
 import { useShopConfig } from '../hooks/useShopConfig';
+import { createOrder } from '../services/dataService';
+import type { Address, CartItem } from '../types';
 
 const PAYMENT_LABELS: Record<string, { label: string; icon: string }> = {
   card:       { label: 'Credit / Debit Card', icon: '💳' },
@@ -14,8 +16,9 @@ const PAYMENT_LABELS: Record<string, { label: string; icon: string }> = {
 
 const CheckoutPage: React.FC = () => {
   const config = useShopConfig();
-  const { cart, clearCart } = useCart();
+  const { cart, cartId, clearCart } = useCart();
   const navigate = useNavigate();
+  const [error, setError] = useState<string | null>(null);
 
   const isMultiStep = config.checkout_type === 'multi_step';
   const [step, setStep] = useState(1);
@@ -28,14 +31,48 @@ const CheckoutPage: React.FC = () => {
     same_as_shipping: true, notes: '',
   });
 
-  const set = (k: string, v: string | boolean) => setForm(f => ({ ...f, [k]: v }));
+  const set = (k: string, v: string | boolean) => setForm((f: any) => ({ ...f, [k]: v }));
 
-  const handlePlaceOrder = () => {
+  const handlePlaceOrder = async () => {
+    if (!cartId) {
+      setError('Cart session expired. Please refresh and try again.');
+      return;
+    }
+    setError(null);
     setPlacing(true);
-    setTimeout(() => {
-      clearCart();
-      navigate('/shop/order-confirmation', { state: { order_display_id: `ZW-${Date.now()}` } });
-    }, 1200);
+
+    const shippingAddress: Address = {
+      id: crypto.randomUUID(),
+      full_name: form.full_name,
+      phone: form.phone,
+      line1: form.line1,
+      city: form.city,
+      state: form.state,
+      postal_code: form.postal_code,
+      country: form.country,
+    };
+
+    try {
+      const result = await createOrder(cartId, form.email, shippingAddress);
+
+      if (result) {
+        clearCart();
+        navigate('/shop/order-confirmation', { 
+          state: { 
+            order_id: result.order_id,
+            order_number: result.order_number,
+            total: result.total_amount
+          } 
+        });
+      } else {
+        setError('Failed to place order. Please try again.');
+        setPlacing(false);
+      }
+    } catch (err) {
+      console.error("Error placing order:", err);
+      setError('An unexpected error occurred. Please try again.');
+      setPlacing(false);
+    }
   };
 
   const steps = isMultiStep
@@ -53,6 +90,12 @@ const CheckoutPage: React.FC = () => {
   return (
     <div className="shop-container shop-page shop-fade-in">
       <h1 className="shop-page-title" style={{ marginBottom: 24 }}>Checkout</h1>
+      
+      {error && (
+        <div className="shop-alert alert-error" style={{ marginBottom: 24 }}>
+          {error}
+        </div>
+      )}
 
       {/* Step Indicator (multi-step only) */}
       {isMultiStep && (
@@ -186,7 +229,7 @@ const CheckoutPage: React.FC = () => {
         {/* ── Order Summary ── */}
         <div className="shop-cart-summary" style={{ position: 'sticky', top: 72 }}>
           <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 16 }}>Order Summary</h3>
-          {cart.items.map(item => (
+          {cart.items.map((item: CartItem) => (
             <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '6px 0', borderBottom: '1px solid var(--shop-border)' }}>
               <span style={{ flex: 1, color: 'var(--shop-text)' }}>{item.product.name} <span style={{ color: 'var(--shop-muted)' }}>×{item.quantity}</span></span>
               <span style={{ fontWeight: 600, color: 'var(--shop-text)' }}>₹{item.line_total.toLocaleString()}</span>
@@ -200,7 +243,7 @@ const CheckoutPage: React.FC = () => {
           <div className="shop-summary-row"><span>Tax</span><span>₹{cart.tax_total.toLocaleString()}</span></div>
           <div className="shop-summary-row total"><span>Total</span><span>₹{cart.grand_total.toLocaleString()}</span></div>
 
-          {(!isMultiStep || step === 3) && (
+          {(showReview || !isMultiStep) && (
             <button
               className="shop-btn shop-btn-primary"
               style={{ width: '100%', marginTop: 16 }}

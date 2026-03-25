@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Users, Calendar, MapPin, TrendingUp, Loader2 } from 'lucide-react';
 
@@ -40,7 +40,7 @@ export function OverviewTab({ organizationId }: OverviewTabProps) {
       setLoading(true);
 
       const { data: org } = await supabase
-        .schema('calendar')
+        .schema('identity')
         .from('organizations')
         .select('name')
         .eq('id', organizationId)
@@ -60,7 +60,7 @@ export function OverviewTab({ organizationId }: OverviewTabProps) {
           .select('id', { count: 'exact' })
           .eq('organization_id', organizationId),
         supabase
-          .schema('calendar')
+          .schema('identity')
           .from('locations')
           .select('id', { count: 'exact' })
           .eq('organization_id', organizationId),

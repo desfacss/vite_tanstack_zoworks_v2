@@ -105,7 +105,7 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket_id, asset_id, onSuccess 
 
         // Fetch contracts (Assuming external.contracts is correct)
         const { data: contractData, error: contractError } = await supabase
-          .schema('external')
+          .schema('esm')
           .from('contracts')
           .select('id, display_id')
           .eq('is_active', true);
@@ -367,7 +367,7 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket_id, asset_id, onSuccess 
             });
             // Fetch contacts for the asset's account_id
             const { data: contactData, error: contactError } = await supabase
-              .schema('external')
+              .schema('esm')
               .from('contacts')
               .select('id, name')
               .eq('account_id', assetData.account_id);
@@ -529,25 +529,30 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket_id, asset_id, onSuccess 
       let newTicketId: string | null = null;
 
       if (!isEditMode) {
-        // *** CHANGE: Using ESM RPC to create. ***
-        const { data, error } = await supabase.schema('esm').rpc('fn_tkt_create_manual_v1', {
-          p_organization_id: organization.id,
-          p_location_id: location?.is_default ? values.location_id : location.id,
-          p_account_id: values.account_id,
-          p_contact_id: values.contact_id || null,
-          p_created_by: user.id,
-          p_assignee_id: values.assignee_id || null,
-          p_field_agent_id: values.field_agent_id || null,
-          p_subject: values.subject,
-          p_description: values.description || null,
-          p_status: values.stage_id || 'open',
-          p_stage_id: values.stage_id,
-          p_category_id: values.category_id || null,
-          p_asset_id: values.asset_id || asset_id || null,
-          p_contract_id: values.contract_id || null,
-          p_priority_id: values.priority_id || null,
-          p_schedule_at: values.schedule?.toISOString() || null,
-          p_receiver_emails: values.receiver_emails || []
+        // *** CHANGE: Using Standard Core RPC to create. ***
+        const { data, error } = await supabase.schema('core').rpc('api_new_core_upsert_data', {
+          table_name: 'esm.tickets',
+          data: {
+            organization_id: organization.id,
+            location_id: location?.is_default ? values.location_id : location.id,
+            account_id: values.account_id,
+            contact_id: values.contact_id || null,
+            created_by: user.id,
+            assignee_id: values.assignee_id || null,
+            field_agent_id: values.field_agent_id || null,
+            subject: values.subject,
+            stage_id: values.stage_id,
+            category_id: values.category_id || null,
+            asset_id: values.asset_id || asset_id || null,
+            contract_id: values.contract_id || null,
+            reported_at: dayjs().format('YYYY-MM-DD HH:mm:ss'),
+            receivers: values.receiver_emails ? { emails: values.receiver_emails } : { emails: [] },
+            details: {
+              description: values.description || null,
+              schedule: values.schedule ? values.schedule.toISOString() : null,
+              priority_id: values.priority_id || null,
+            }
+          }
         });
 
         if (error) {
@@ -555,8 +560,7 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket_id, asset_id, onSuccess 
           throw new Error(`Failed to create ticket: ${error.message}`);
         }
 
-        const rpcResult = data as unknown as { ticketId: string };
-        newTicketId = rpcResult.ticketId;
+        newTicketId = data;
       } else {
         const ticketData = {
           subject: values.subject,
@@ -568,8 +572,8 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket_id, asset_id, onSuccess 
           field_agent_id: values.field_agent_id || null,
           location_id: location?.is_default ? values.location_id : location?.id,
           organization_id: organization?.id,
-          // **CHANGE**: Using toISOString() on a dayjs object which inherently handles TZ if constructed correctly
-          reported_at: new Date().toISOString(),
+          // **CHANGE**: Using dayjs format which is more likely to be accepted by the RPC/DB
+          reported_at: dayjs().format('YYYY-MM-DD HH:mm:ss'),
           receivers: values.receiver_emails ? { emails: values.receiver_emails } : { emails: [] },
           details: {
             description: values.description || null,

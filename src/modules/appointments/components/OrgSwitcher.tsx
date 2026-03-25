@@ -17,9 +17,9 @@ export function OrgSwitcher() {
     async function loadOrganizations() {
         try {
             const { data, error } = await supabase
-                .schema('calendar')
+                .schema('identity')
                 .from('organizations')
-                .select('id, name, slug, logo_url')
+                .select('id, name')
                 .order('name');
 
             if (error) throw error;
@@ -59,7 +59,7 @@ export function OrgSwitcher() {
             <button className="flex items-center gap-2 px-3 py-2 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors border border-gray-200 min-w-[200px]">
                 <div className="w-8 h-8 bg-blue-100 rounded-md flex items-center justify-center overflow-hidden">
                     {selectedOrganization?.logo_url ? (
-                        <img src={selectedOrganization.logo_url} alt={selectedOrganization.name} className="w-full h-full object-cover" />
+                        <img src={selectedOrganization?.logo_url} alt={selectedOrganization?.name} className="w-full h-full object-cover" />
                     ) : (
                         <Building2 className="w-5 h-5 text-blue-600" />
                     )}

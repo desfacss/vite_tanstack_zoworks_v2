@@ -331,7 +331,7 @@ export async function seedUseCaseData(useCaseKey: string) {
     if (data.locations && data.locations.length > 0) {
         for (const location of data.locations) {
             const { data: insertedLocation, error: locationError } = await supabase
-                .schema('calendar')
+                .schema('identity')
                 .from('locations')
                 .upsert({
                     ...location,

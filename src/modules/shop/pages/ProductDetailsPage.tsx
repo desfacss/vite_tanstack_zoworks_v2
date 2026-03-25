@@ -5,7 +5,9 @@ import { Heart, Share2, Shield, Truck, RefreshCw } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
 import { useCart } from '../hooks/useCart';
 import { useWishlist } from '../hooks/useWishlist';
-import { getProductById, getFeaturedProducts } from '../services/dataService';
+import { getProductById, getFeaturedProducts, getProducts } from '../services/dataService';
+import ReviewSystem from '../components/product/ReviewSystem';
+import FAQSection from '../components/product/FAQSection';
 import type { Product, ProductVariant } from '../types';
 
 const ProductDetailsPage: React.FC = () => {
@@ -31,8 +33,14 @@ const ProductDetailsPage: React.FC = () => {
       setProduct(p);
       setSelectedImageIdx(0);
       setSelectedVariant(null);
+      if (p?.category_id) {
+        getProducts(orgId, { category_id: p.category_id, limit: 5 }).then(res => {
+          setRelated(res.products.filter((item: Product) => item.id !== p.id));
+        });
+      } else {
+        getFeaturedProducts(orgId, 4).then(setRelated);
+      }
     }).finally(() => setLoading(false));
-    getFeaturedProducts(orgId, 4).then(setRelated);
   }, [id, orgId]);
 
   const images: string[] = product?.meta?.images || [];
@@ -274,18 +282,10 @@ const ProductDetailsPage: React.FC = () => {
                 </div>
               )}
               {activeTab === 'reviews' && (
-                <div className="shop-empty" style={{ padding: '40px 0' }}>
-                  <div className="shop-empty-icon">⭐</div>
-                  <h3>No Reviews Yet</h3>
-                  <p>Be the first to review this product.</p>
-                </div>
+                <ReviewSystem offeringId={product.id} orgId={orgId} />
               )}
               {activeTab === 'faq' && (
-                <div className="shop-empty" style={{ padding: '40px 0' }}>
-                  <div className="shop-empty-icon">❓</div>
-                  <h3>No FAQs Yet</h3>
-                  <p>Questions will appear here once added.</p>
-                </div>
+                <FAQSection faqs={product.meta?.faqs} />
               )}
             </div>
           )}

@@ -1,10 +1,26 @@
 // src/modules/shop/services/dataService.ts
 import { supabase } from '@/lib/supabase';
-import type { Product, Category, ProductFilters, Order, Address, Discount } from '../types';
+import type { Product, Category, ProductFilters, Order, Address, Review, Discount } from '../types';
 
 // const ORG_ID = () => import.meta.env.VITE_PUBLIC_ORG_ID as string;
 
 // ─── Categories ───────────────────────────────────────────────────────────────
+
+export async function getCategoryBySlug(orgId: string, slug: string): Promise<Category | null> {
+  const { data, error } = await supabase
+    .schema('catalog')
+    .from('categories')
+    .select('*')
+    .eq('organization_id', orgId)
+    .eq('slug', slug)
+    .single();
+
+  if (error) {
+    console.error('getCategoryBySlug:', error);
+    return null;
+  }
+  return data;
+}
 
 export async function getCategories(orgId: string): Promise<Category[]> {
   const { data, error } = await supabase
@@ -20,7 +36,7 @@ export async function getCategories(orgId: string): Promise<Category[]> {
 // ─── Products ─────────────────────────────────────────────────────────────────
 
 export async function getProducts(orgId: string, filters: ProductFilters = {}): Promise<{ products: Product[]; total: number }> {
-  const { category_id, search, min_price, max_price, type, sort = 'newest', page = 1, limit = 24 } = filters;
+  const { category_id, brand, sort, page = 1, limit = 24, min_price, max_price, search, type } = filters;
 
   let query = supabase.schema('catalog').from('offerings').select(`
     *,
@@ -33,6 +49,7 @@ export async function getProducts(orgId: string, filters: ProductFilters = {}): 
   if (category_id) query = query.eq('category_id', category_id);
   if (search) query = query.ilike('name', `%${search}%`);
   if (type) query = query.eq('type', type);
+  if (brand) query = query.eq('brand', brand);
 
   // Sorting
   if (sort === 'newest') query = query.order('created_at', { ascending: false });
@@ -129,67 +146,213 @@ export async function getDiscountByCode(code: string): Promise<Discount | null> 
   return data;
 }
 
-// ─── Mock Orders (finance schema not yet live) ────────────────────────────────
+// ─── Real Orders (commerce schema) ───────────────────────────────────────────
 
-const MOCK_ORDERS: Order[] = [
-  {
-    id: 'ord-001',
-    display_id: 'ZW-2024-001',
-    status: 'delivered',
-    payment_status: 'paid',
-    subtotal: 2499,
-    discount_total: 0,
-    shipping_total: 99,
-    tax_total: 225,
-    grand_total: 2823,
-    shipping_address: { id: 'addr-1', full_name: 'Jane Doe', phone: '9876543210', line1: '123 Main St', city: 'Bangalore', state: 'Karnataka', postal_code: '560001', country: 'IN' },
-    billing_address: { id: 'addr-1', full_name: 'Jane Doe', phone: '9876543210', line1: '123 Main St', city: 'Bangalore', state: 'Karnataka', postal_code: '560001', country: 'IN' },
-    created_at: new Date(Date.now() - 7 * 24 * 3600000).toISOString(),
-    items: [
-      { id: 'oi-1', offering_id: 'p1', product_name: 'Premium Widget', quantity: 2, unit_price: 1249.5, discount_amount: 0, line_total: 2499 }
-    ]
-  },
-  {
-    id: 'ord-002',
-    display_id: 'ZW-2024-002',
-    status: 'processing',
-    payment_status: 'paid',
-    subtotal: 5999,
-    discount_total: 600,
-    shipping_total: 0,
-    tax_total: 539,
-    grand_total: 5938,
-    shipping_address: { id: 'addr-1', full_name: 'Jane Doe', phone: '9876543210', line1: '123 Main St', city: 'Bangalore', state: 'Karnataka', postal_code: '560001', country: 'IN' },
-    billing_address: { id: 'addr-1', full_name: 'Jane Doe', phone: '9876543210', line1: '123 Main St', city: 'Bangalore', state: 'Karnataka', postal_code: '560001', country: 'IN' },
-    created_at: new Date(Date.now() - 2 * 24 * 3600000).toISOString(),
-    items: [
-      { id: 'oi-2', offering_id: 'p2', product_name: 'Pro Service Package', quantity: 1, unit_price: 5999, discount_amount: 600, line_total: 5399 }
-    ]
+export async function getOrders(orgId: string, customerId: string): Promise<Order[]> {
+  const { data, error } = await supabase
+    .schema('commerce')
+    .from('orders')
+    .select(`
+      *,
+      items:order_items (
+        *,
+        offering:offering_id ( name )
+      )
+    `)
+    .eq('organization_id', orgId)
+    .eq('customer_id', customerId)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('getOrders:', error);
+    return [];
   }
-];
 
-export function getMockOrders(): Order[] { return MOCK_ORDERS; }
-export function getMockOrderById(id: string): Order | undefined { return MOCK_ORDERS.find(o => o.id === id); }
-
-// ─── Mock Addresses ───────────────────────────────────────────────────────────
-
-const STORAGE_KEY = 'shop_addresses';
-
-export function getSavedAddresses(): Address[] {
-  try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-  } catch { return []; }
+  return (data || []).map(normalizeOrder);
 }
 
-export function saveAddress(address: Address): void {
-  const addresses = getSavedAddresses();
-  const idx = addresses.findIndex(a => a.id === address.id);
-  if (idx >= 0) addresses[idx] = address;
-  else addresses.push(address);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(addresses));
+export async function getOrderById(orderId: string): Promise<Order | null> {
+  const { data, error } = await supabase
+    .schema('commerce')
+    .from('orders')
+    .select(`
+      *,
+      items:order_items (
+        *,
+        offering:offering_id ( name )
+      )
+    `)
+    .eq('id', orderId)
+    .single();
+
+  if (error) {
+    console.error('getOrderById:', error);
+    return null;
+  }
+
+  return normalizeOrder(data);
 }
 
-export function deleteAddress(id: string): void {
-  const addresses = getSavedAddresses().filter(a => a.id !== id);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(addresses));
+function normalizeOrder(raw: any): Order {
+  return {
+    ...raw,
+    items: (raw.items || []).map((item: any) => ({
+      ...item,
+      product_name: item.offering?.name || item.name
+    })),
+    subtotal: raw.subtotal_price || 0,
+    discount_total: raw.total_discounts || 0,
+    shipping_total: raw.total_shipping || 0,
+    tax_total: raw.total_tax || 0,
+    grand_total: raw.total_price || 0,
+    display_id: raw.order_number || raw.id.slice(0, 8)
+  };
 }
+
+// ─── Real Addresses (crm schema) ──────────────────────────────────────────────
+
+export async function getCustomerAddresses(customerId: string): Promise<Address[]> {
+  const { data, error } = await supabase
+    .schema('crm')
+    .from('contacts')
+    .select('details')
+    .eq('id', customerId)
+    .single();
+
+  if (error) {
+    console.error('getCustomerAddresses:', error);
+    return [];
+  }
+
+  return data?.details?.shipping_addresses || [];
+}
+
+export async function saveAddress(customerId: string, address: Address): Promise<void> {
+  // 1. Get current addresses
+  const currentAddresses = await getCustomerAddresses(customerId);
+  
+  // 2. Update or append
+  let updated;
+  if (!address.id) {
+    address.id = crypto.randomUUID();
+    updated = [...currentAddresses, address];
+  } else {
+    updated = currentAddresses.map(a => a.id === address.id ? address : a);
+    if (!updated.find(a => a.id === address.id)) {
+      updated.push(address);
+    }
+  }
+
+  // 3. Save back to contacts.details
+  const { error } = await supabase
+    .schema('crm')
+    .from('contacts')
+    .update({ 
+      details: { 
+        shipping_addresses: updated 
+      } 
+    })
+    .eq('id', customerId);
+
+  if (error) console.error('saveAddress:', error);
+}
+
+export async function deleteAddress(customerId: string, addressId: string): Promise<void> {
+  const currentAddresses = await getCustomerAddresses(customerId);
+  const updated = currentAddresses.filter(a => a.id !== addressId);
+
+  const { error } = await supabase
+    .schema('crm')
+    .from('contacts')
+    .update({ 
+      details: { 
+        shipping_addresses: updated 
+      } 
+    })
+    .eq('id', customerId);
+
+  if (error) console.error('deleteAddress:', error);
+}
+
+export async function createOrder(cartId: string, email: string, shippingAddress: Address, billingAddress?: Address): Promise<{ order_id: string, order_number: string, total_amount: number, payment_link: string } | null> {
+  const { data, error } = await supabase
+    .schema('commerce')
+    .rpc('create_order_with_payment', {
+      p_cart_id: cartId,
+      p_email: email,
+      p_shipping_address: shippingAddress,
+      p_billing_address: billingAddress || shippingAddress
+    });
+
+  if (error) {
+    console.error('createOrder RPC error:', error);
+    return null;
+  }
+
+  return data;
+}
+
+// ─── Reviews ──────────────────────────────────────────────────────────────────
+
+export async function getProductReviews(orgId: string, offeringId: string): Promise<Review[]> {
+  const { data, error } = await supabase
+    .schema('commerce')
+    .from('reviews')
+    .select(`
+      *,
+      customer:crm.contacts!customer_id ( first_name, last_name )
+    `)
+    .eq('organization_id', orgId)
+    .eq('offering_id', offeringId)
+    .eq('status', 'approved')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('getProductReviews error:', error);
+    return [];
+  }
+
+  return (data || []).map((r: any) => ({
+    ...r,
+    customer_name: r.customer ? `${r.customer.first_name || ''} ${r.customer.last_name || ''}`.trim() : 'Anonymous'
+  }));
+}
+
+export async function submitReview(orgId: string, review: Omit<Review, 'id' | 'created_at' | 'status' | 'is_verified_purchase'>): Promise<boolean> {
+  const { error } = await supabase
+    .schema('commerce')
+    .from('reviews')
+    .insert({
+      organization_id: orgId,
+      ...review,
+      status: 'pending' // Default to pending for moderation
+    });
+
+  if (error) {
+    console.error('submitReview error:', error);
+    return false;
+  }
+  return true;
+}
+
+export async function getSearchSuggestions(orgId: string, query: string): Promise<Product[]> {
+  if (!query.trim()) return [];
+  const { data, error } = await supabase
+    .schema('catalog')
+    .from('offerings')
+    .select('id, name, type')
+    .eq('organization_id', orgId)
+    .eq('is_active', true)
+    .ilike('name', `%${query}%`)
+    .limit(5);
+
+  if (error) {
+    console.error('getSearchSuggestions error:', error);
+    return [];
+  }
+  return data as Product[];
+}
+
+// ─── Mock Helpers (Compatibility) ──────────────────────────────────────────
+export function getMockOrders(): Order[] { return []; }
+export function getSavedAddressesLegacy(): Address[] { return []; }

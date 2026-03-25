@@ -310,6 +310,10 @@ export const useAuthStore = create<AuthState>()(
       storage: secureStorage,
       // NOTE: isLoggingOut is NOT added here, ensuring it is transient (memory only)
       partialize: (state) => ({
+        user: state.user,
+        organization: state.organization,
+        location: state.location,
+        permissions: state.permissions,
         viewPreferences: state.viewPreferences,
         navigationItems: state.navigationItems,
         mobilePreferences: state.mobilePreferences,

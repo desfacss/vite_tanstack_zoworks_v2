@@ -43,8 +43,10 @@ export async function checkDatabaseHealth(): Promise<DatabaseHealth> {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
 
+      const schema = ['organizations', 'locations'].includes(tableName) ? 'identity' : 'calendar';
+
       const { count, error } = await supabase
-        .schema('calendar')
+        .schema(schema)
         .from(tableName)
         .select('*', { count: 'exact', head: true })
         .abortSignal(controller.signal);

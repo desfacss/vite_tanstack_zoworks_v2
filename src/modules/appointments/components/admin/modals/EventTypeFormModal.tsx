@@ -101,9 +101,10 @@ export function EventTypeFormModal({
   async function loadLocations() {
     try {
       const { data, error } = await supabase
-        .schema('calendar')
+        .schema('identity')
         .from('locations')
-        .select('id, name, address, city')
+        // .select('id, name, address, city')
+        .select('id, name')
         .eq('organization_id', organizationId)
         .order('name');
 

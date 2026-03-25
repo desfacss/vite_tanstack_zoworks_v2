@@ -81,7 +81,10 @@
         "orders": "Orders",
         "fulfillments": "Fulfillments",
         "returns": "Returns",
-        "reviews": "Reviews"
+        "reviews": "Reviews",
+        "branding": "Branding",
+        "form-elements": "Form Elements",
+        "onboarding": "Onboarding"
       },
       "action": {
         "save": "Save",

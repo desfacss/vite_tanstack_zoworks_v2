@@ -69,7 +69,7 @@ export function ServiceSelection({ organizationId, onSelectService, onBack }: Se
         (eventTypes || []).map(async (et) => {
           if (et.location_id) {
             const { data: location } = await supabase
-              .schema('calendar')
+              .schema('identity')
               .from('locations')
               .select('name')
               .eq('id', et.location_id)

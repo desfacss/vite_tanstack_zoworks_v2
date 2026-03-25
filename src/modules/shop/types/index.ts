@@ -56,6 +56,7 @@ export interface Product {
     images?: string[];
     featured?: boolean;
     tags?: string[];
+    faqs?: Array<{ question: string; answer: string }>;
     [key: string]: any;
   };
   created_at: string;
@@ -73,7 +74,7 @@ export interface CartItem {
   product: Product;
   variant?: ProductVariant | null;
   quantity: number;
-  unit_price: number;
+  price: number;
   line_total: number;
   added_at: string;
 }
@@ -109,7 +110,7 @@ export interface OrderItem {
   product_name: string;
   variant_label?: string;
   quantity: number;
-  unit_price: number;
+  price: number;
   discount_amount: number;
   line_total: number;
   product?: Product;
@@ -134,9 +135,10 @@ export interface Order {
 
 export interface ProductFilters {
   category_id?: string;
-  search?: string;
+  brand?: string;
   min_price?: number;
   max_price?: number;
+  search?: string;
   type?: string;
   sort?: 'newest' | 'price_asc' | 'price_desc' | 'popularity';
   page?: number;
@@ -151,6 +153,25 @@ export interface Discount {
   is_active: boolean;
   min_order_amount?: number;
   expires_at?: string;
+}
+
+export interface Review {
+  id: string;
+  offering_id: string;
+  customer_id: string;
+  rating: number;
+  title?: string;
+  content?: string;
+  is_verified_purchase: boolean;
+  status: 'pending' | 'approved' | 'rejected';
+  created_at: string;
+  customer_name?: string; // To be joined
+}
+
+export interface RatingSummary {
+  average_rating: number;
+  total_reviews: number;
+  rating_distribution: Record<number, number>;
 }
 
 // Calendar / Booking types (from calendar schema)
