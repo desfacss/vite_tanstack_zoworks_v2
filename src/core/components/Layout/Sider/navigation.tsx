@@ -10,6 +10,7 @@ import {
   BarChart3,
   LayoutDashboard,
   List,
+  Activity,
   Car,
   Building,
   Headphones,
@@ -132,6 +133,7 @@ const iconMap: Record<string, React.ReactNode> = {
   branding: <Palette size={18} />,
   'form-elements': <LayoutTemplate size={18} />,
   onboarding: <ClipboardCheck size={18} />,
+  observability: <Activity size={18} />,
   default: <FileText size={18} />,
 };
 

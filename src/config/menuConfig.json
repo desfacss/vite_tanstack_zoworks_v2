@@ -614,6 +614,13 @@
         "translationKey": "metric-views",
         "key": "metric-views",
         "submoduleKey": "settings-metric-views"
+      },
+      {
+        "filePath": "src/modules/settings/pages/Observability/ObservabilityDashboard.tsx",
+        "routePath": "/settings/observability",
+        "translationKey": "observability",
+        "key": "observability",
+        "submoduleKey": "settings-observability"
       }
     ],
     "workforce": [
