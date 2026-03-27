@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Button, Select, Popconfirm, Card, Typography, Drawer, Form, Input, Switch, Space, Row, Col, Divider, Tag, Badge, Tooltip, Empty, Descriptions } from 'antd';
-import { Plus, Trash2, Zap, Settings, MousePointer, Shield, Layout, GripVertical, AlertCircle, ChevronRight, Activity, Bell, LucideIcon, Globe, Database, PlusSquare, Code } from 'lucide-react';
+import { Button, Select, Popconfirm, Card, Typography, Drawer, Form, Input, Switch, Space, Row, Col, Divider, Tag, Badge, Tooltip, Empty } from 'antd';
+import { Plus, Trash2, Zap, GripVertical, Activity, Bell, Globe, Database, PlusSquare, Code } from 'lucide-react';
 import { 
   DndContext, 
   closestCenter, 
@@ -45,7 +45,7 @@ interface AutomationManagerProps {
   automations: Automation[];
   onChange: (automations: Automation[]) => void;
   stages: { id: string; name: string }[];
-  transitions: { id: string; name: string }[];
+  transitions: { id: string; label?: string; name?: string }[];
   fields: any[]; // Entity metadata fields
 }
 
@@ -181,6 +181,8 @@ const AutomationManager: React.FC<AutomationManagerProps> = ({ automations, onCh
   );
 
   const data = Array.isArray(automations) ? automations : [];
+  const stageList = Array.isArray(stages) ? stages : [];
+  const transitionList = Array.isArray(transitions) ? transitions : [];
 
   const getEventTagColor = (event: string) => {
     switch(event) {
@@ -232,17 +234,17 @@ const AutomationManager: React.FC<AutomationManagerProps> = ({ automations, onCh
               <div style={{ flex: 1 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px' }}>
                   <Text strong>{a.name || 'Untitled Automation'}</Text>
-                  <Tag color={getEventTagColor(a.event)} size="small">
+                  <Tag color={getEventTagColor(a.event)}>
                     {a.event.toUpperCase().replace('_', ' ')}
                   </Tag>
-                  {a.stop_on_failure && <Tooltip title="Stops if any step fails"><Tag color="error" size="small">Critical</Tag></Tooltip>}
+                  {a.stop_on_failure && <Tooltip title="Stops if any step fails"><Tag color="error">Critical</Tag></Tooltip>}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                    <Text type="secondary" style={{ fontSize: '11px' }}>
                       {a.event === 'on_enter' || a.event === 'on_exit' ? (
-                        `Target: ${stages.find(s => s.id === a.target_id)?.name || a.target_id || 'Any'}`
+                        `Target: ${stageList.find(s => s.id === a.target_id)?.name || a.target_id || 'Any'}`
                       ) : a.event === 'on_transition' ? (
-                        `Transition: ${transitions.find(t => t.id === a.target_id)?.name || a.target_id || 'Any'}`
+                        `Transition: ${transitionList.find(t => t.id === a.target_id)?.label || transitionList.find(t => t.id === a.target_id)?.name || a.target_id || 'Any'}`
                       ) : 'Trigger: Data change'}
                    </Text>
                    <Divider type="vertical" />
@@ -350,7 +352,7 @@ const AutomationManager: React.FC<AutomationManagerProps> = ({ automations, onCh
                       return (
                         <Form.Item label="Target Stage" name="target_id">
                           <Select placeholder="Pick a stage">
-                             {stages.map(s => <Option key={s.id} value={s.id}>{s.name}</Option>)}
+                             {stageList.map(s => <Option key={s.id} value={s.id}>{s.name}</Option>)}
                           </Select>
                         </Form.Item>
                       );
@@ -358,7 +360,9 @@ const AutomationManager: React.FC<AutomationManagerProps> = ({ automations, onCh
                       return (
                         <Form.Item label="Target Transition" name="target_id">
                           <Select placeholder="Pick a transition">
-                             {transitions.map(t => <Option key={t.id} value={t.id}>{t.name}</Option>)}
+                             {transitionList.map(t => (
+                               <Option key={t.id} value={t.id}>{t.label || t.name || t.id}</Option>
+                             ))}
                           </Select>
                         </Form.Item>
                       );
@@ -373,7 +377,7 @@ const AutomationManager: React.FC<AutomationManagerProps> = ({ automations, onCh
           <Divider orientation="left">Trigger Conditions</Divider>
           <div style={{ background: '#f9f9f9', padding: '16px', borderRadius: '8px', border: '1px solid #f0f0f0', marginBottom: 24 }}>
             <Form.Item name="condition">
-              <QueryBuilder fields={qbFields} onQueryChange={(q) => form.setFieldValue('condition', q)} />
+              <QueryBuilder fields={qbFields} onQueryChange={(q: any) => form.setFieldValue('condition', q)} />
             </Form.Item>
           </div>
 

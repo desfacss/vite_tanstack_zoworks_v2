@@ -476,6 +476,7 @@ const ProcessBlueprintConfig: React.FC<ProcessBlueprintConfigProps> = ({ bluepri
                   <AutomationManager 
                     automations={blueprint.definition?.automations || []}
                     stages={blueprint.definition?.lifecycle?.stages || []}
+                    transitions={blueprint.definition?.lifecycle?.transitions || []}
                     fields={entityMetadata}
                     onChange={(automations) => updateDefinition('automations', automations)}
                   />
