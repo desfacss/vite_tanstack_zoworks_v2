@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Button, Select, Popconfirm, Card, Typography, Drawer, Form, Input, Switch, Space, Row, Col, Divider, Tag, Badge, Tooltip, Empty } from 'antd';
-import { Plus, Trash2, Zap, GripVertical, Activity, Bell, Globe, Database, PlusSquare, Code } from 'lucide-react';
+import { Button, Select, Popconfirm, Card, Typography, Drawer, Form, Input, Switch, Space, Row, Col, Divider, Tag, Badge, Tooltip, Empty, Segmented } from 'antd';
+import { Plus, Trash2, Zap, GripVertical, Activity, Mail, Globe, Database, PlusSquare, Code } from 'lucide-react';
 import { 
   DndContext, 
   closestCenter, 
@@ -76,10 +76,10 @@ const SortableActionItem: React.FC<SortableActionItemProps> = ({ action, index, 
 
   const ACTION_TYPES = [
     { label: 'Update Field', value: 'update_field', icon: Database },
-    { label: 'Send Notification', value: 'send_notification', icon: Bell },
+    { label: 'Send Email', value: 'send_email', icon: Mail },
     { label: 'Trigger Webhook', value: 'trigger_webhook', icon: Globe },
-    { label: 'Create Task', value: 'create_task', icon: PlusSquare },
-    { label: 'Execute Script', value: 'execute_script', icon: Code },
+    { label: 'Create Entity (Task/etc)', value: 'create_entity', icon: PlusSquare },
+    { label: 'Remote Call (RPC)', value: 'rpc', icon: Code },
   ];
 
   return (
@@ -113,9 +113,10 @@ const SortableActionItem: React.FC<SortableActionItemProps> = ({ action, index, 
 const AutomationManager: React.FC<AutomationManagerProps> = ({ automations, onChange, stages, transitions, fields }) => {
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [viewMode, setViewMode] = useState<'list' | 'grouped'>('list');
   const [form] = Form.useForm();
 
-  const handleAdd = () => {
+  const handleAdd = (defaults?: Partial<Automation>) => {
     const newAutomation: Automation = {
       name: 'New Automation',
       event: 'on_enter',
@@ -123,7 +124,8 @@ const AutomationManager: React.FC<AutomationManagerProps> = ({ automations, onCh
       condition: { combinator: 'and', rules: [] },
       is_active: true,
       stop_on_failure: false,
-      priority: 1
+      priority: 1,
+      ...defaults
     };
     const newList = [...(Array.isArray(automations) ? automations : []), newAutomation];
     onChange(newList);
@@ -134,10 +136,12 @@ const AutomationManager: React.FC<AutomationManagerProps> = ({ automations, onCh
     setEditingIndex(index);
     form.setFieldsValue({
       ...automation,
-      // Provide defaults for actions if they don't have the new nested config
+      // Ensure the condition is a valid RuleGroupType for react-querybuilder
+      condition: automation.condition || { combinator: 'and', rules: [] },
+      // Provide defaults for actions
       actions: (automation.actions || []).map(a => ({
         type: a.type,
-        config: a.config || (a as any).payload || {} // Backwards compatibility for payload
+        config: a.config || (a as any).payload || {}
       }))
     });
     setDrawerVisible(true);
@@ -190,99 +194,130 @@ const AutomationManager: React.FC<AutomationManagerProps> = ({ automations, onCh
       case 'on_exit': return 'cyan';
       case 'on_transition': return 'purple';
       case 'on_field_change': return 'orange';
+      case 'on_sla_breach': return 'red';
+      case 'on_cron': return 'green';
       default: return 'default';
     }
   };
 
+  const groupedData = React.useMemo(() => {
+    const groups: Record<string, Record<string, { automations: (Automation & { originalIndex: number })[], label: string }>> = {
+      on_enter: {},
+      on_exit: {},
+      on_transition: {},
+      other: {}
+    };
+
+    data.forEach((a, index) => {
+      const typeKey = (['on_enter', 'on_exit', 'on_transition'].includes(a.event)) ? a.event : 'other';
+      const targetKey = a.target_id || 'any';
+      
+      if (!groups[typeKey][targetKey]) {
+        let label = 'Any Target';
+        if (targetKey !== 'any') {
+            if (typeKey === 'on_transition') {
+                label = transitionList.find(t => t.id === targetKey)?.label || transitionList.find(t => t.id === targetKey)?.name || targetKey;
+            } else {
+                label = stageList.find(s => s.id === targetKey)?.name || targetKey;
+            }
+        }
+        groups[typeKey][targetKey] = { automations: [], label };
+      }
+      groups[typeKey][targetKey].automations.push({ ...a, originalIndex: index });
+    });
+
+    return groups;
+  }, [data, stageList, transitionList]);
+
   return (
     <div className="automation-manager">
       <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Title level={5} style={{ margin: 0 }}>Workflow Automations</Title>
-        <Button type="primary" icon={<Plus size={16} />} onClick={handleAdd}>
+        <Space size="large">
+            <Title level={5} style={{ margin: 0 }}>Workflow Automations</Title>
+            <Segmented
+                size="small"
+                options={[
+                    { label: 'List Snapshot', value: 'list' },
+                    { label: 'Organized / Grouped', value: 'grouped' }
+                ]}
+                value={viewMode}
+                onChange={(val: any) => setViewMode(val)}
+            />
+        </Space>
+        <Button type="primary" icon={<Plus size={16} />} onClick={() => handleAdd()}>
           Add Automation
         </Button>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-        {data.map((a, index) => (
-          <Card 
-            key={index} 
-            size="small" 
-            hoverable
-            className="automation-card" 
-            style={{ 
-              borderRadius: '8px', 
-              borderLeft: `4px solid ${a.is_active ? '#1677ff' : '#d9d9d9'}`,
-              opacity: a.is_active ? 1 : 0.7
-            }}
-            onClick={() => openEditor(index, a)}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <div style={{ 
-                width: 32, 
-                height: 32, 
-                borderRadius: '8px', 
-                background: '#f0f0f0',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#1677ff'
-              }}>
-                <Zap size={18} fill={a.is_active ? '#1677ff' : 'none'} />
-              </div>
-
-              <div style={{ flex: 1 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px' }}>
-                  <Text strong>{a.name || 'Untitled Automation'}</Text>
-                  <Tag color={getEventTagColor(a.event)}>
-                    {a.event.toUpperCase().replace('_', ' ')}
-                  </Tag>
-                  {a.stop_on_failure && <Tooltip title="Stops if any step fails"><Tag color="error">Critical</Tag></Tooltip>}
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                   <Text type="secondary" style={{ fontSize: '11px' }}>
-                      {a.event === 'on_enter' || a.event === 'on_exit' ? (
-                        `Target: ${stageList.find(s => s.id === a.target_id)?.name || a.target_id || 'Any'}`
-                      ) : a.event === 'on_transition' ? (
-                        `Transition: ${transitionList.find(t => t.id === a.target_id)?.label || transitionList.find(t => t.id === a.target_id)?.name || a.target_id || 'Any'}`
-                      ) : 'Trigger: Data change'}
-                   </Text>
-                   <Divider type="vertical" />
-                   <div style={{ display: 'flex', gap: '4px' }}>
-                     {(a.actions || []).map((act, i) => (
-                        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '2px', background: '#f5f5f5', padding: '1px 6px', borderRadius: '4px' }}>
-                          <Text type="secondary" style={{ fontSize: '10px' }}>{i + 1}. {act.type.split('_')[0]}</Text>
-                        </div>
-                     ))}
-                   </div>
-                </div>
-              </div>
-
-              <Space split={<Divider type="vertical" />}>
-                {a.condition?.rules && a.condition.rules.length > 0 && (
-                  <Badge dot color="#52c41a">
-                    <Activity size={14} color="#8c8c8c" />
-                  </Badge>
-                )}
-                <Popconfirm 
-                  title="Remove this automation?" 
-                  onConfirm={(e) => {
-                    e?.stopPropagation();
-                    handleDelete(index);
-                  }}
-                  onCancel={(e) => e?.stopPropagation()}
-                >
-                  <Button 
-                    type="text" 
-                    danger 
-                    icon={<Trash2 size={16} />} 
-                    onClick={(e) => e.stopPropagation()} 
-                  />
-                </Popconfirm>
-              </Space>
-            </div>
-          </Card>
-        ))}
+        {viewMode === 'list' ? (
+          data.map((a, index) => (
+            <AutomationCard 
+              key={index} 
+              automation={a} 
+              index={index} 
+              onEdit={() => openEditor(index, a)}
+              onDelete={() => handleDelete(index)}
+              stageList={stageList}
+              transitionList={transitionList}
+              eventTagColor={getEventTagColor(a.event)}
+            />
+          ))
+        ) : (
+          <Space direction="vertical" style={{ width: '100%' }} size="large">
+             {Object.entries(groupedData).map(([type, targets]) => {
+                if (Object.keys(targets).length === 0) return null;
+                
+                return (
+                  <div key={type}>
+                    <Divider orientation="left" style={{ margin: '8px 0 16px' }}>
+                      <Text type="secondary" style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                        {type.replace('_', ' ').toUpperCase()} TRIGGERS
+                      </Text>
+                    </Divider>
+                    
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      {Object.entries(targets).map(([targetId, { automations: groupItems, label }]) => (
+                        <Card 
+                            key={targetId}
+                            size="small" 
+                            title={<Space><Text strong>{label}</Text> <Badge count={groupItems.length} size="small" style={{ backgroundColor: '#f0f0f0', color: '#8c8c8c', boxShadow: 'none' }} /></Space>}
+                            extra={
+                                <Button 
+                                    type="link" 
+                                    size="small" 
+                                    icon={<Plus size={14} />} 
+                                    onClick={() => handleAdd({ event: type as any, target_id: targetId === 'any' ? undefined : targetId, name: `Automation for ${label}` })}
+                                >
+                                    Quick Add
+                                </Button>
+                            }
+                            style={{ borderRadius: '8px', border: '1px solid #f0f0f0' }}
+                            headStyle={{ background: '#fafafa', minHeight: '36px', padding: '0 12px' }}
+                        >
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                {groupItems.map((a) => (
+                                    <AutomationCard 
+                                        key={a.originalIndex}
+                                        automation={a}
+                                        index={a.originalIndex}
+                                        onEdit={() => openEditor(a.originalIndex, a)}
+                                        onDelete={() => handleDelete(a.originalIndex)}
+                                        stageList={stageList}
+                                        transitionList={transitionList}
+                                        eventTagColor={getEventTagColor(a.event)}
+                                        compact
+                                    />
+                                ))}
+                            </div>
+                        </Card>
+                      ))}
+                    </div>
+                  </div>
+                );
+             })}
+          </Space>
+        )}
 
         {data.length === 0 && (
           <div style={{ padding: '40px', textAlign: 'center', background: '#fafafa', borderRadius: '12px', border: '1px dashed #d9d9d9' }}>
@@ -442,5 +477,107 @@ const AutomationManager: React.FC<AutomationManagerProps> = ({ automations, onCh
     </div>
   );
 };
+
+// Extracted Automation Card for reuse in both views
+const AutomationCard: React.FC<{ 
+  automation: Automation; 
+  index: number; 
+  onEdit: () => void; 
+  onDelete: () => void; 
+  stageList: any[]; 
+  transitionList: any[]; 
+  eventTagColor: string; 
+  compact?: boolean;
+}> = ({ automation, index, onEdit, onDelete, stageList, transitionList, eventTagColor, compact }) => (
+  <Card 
+    size="small" 
+    hoverable
+    className="automation-card" 
+    style={{ 
+      borderRadius: '8px', 
+      borderLeft: `4px solid ${automation.is_active ? '#1677ff' : '#d9d9d9'}`,
+      opacity: automation.is_active ? 1 : 0.7,
+      background: compact ? '#fff' : undefined,
+      margin: compact ? 0 : undefined
+    }}
+    onClick={onEdit}
+  >
+    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+      {!compact && (
+        <div style={{ 
+          width: 32, 
+          height: 32, 
+          borderRadius: '8px', 
+          background: '#f0f0f0',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: '#1677ff'
+        }}>
+          <Zap size={18} fill={automation.is_active ? '#1677ff' : 'none'} />
+        </div>
+      )}
+
+      <div style={{ flex: 1 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px' }}>
+          <Text strong style={{ fontSize: compact ? '13px' : '14px' }}>{automation.name || 'Untitled Automation'}</Text>
+          {!compact && (
+            <Tag color={eventTagColor}>
+              {automation.event.toUpperCase().replace('_', ' ')}
+            </Tag>
+          )}
+          {automation.stop_on_failure && <Tooltip title="Stops if any step fails"><Tag color="error">Critical</Tag></Tooltip>}
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+           {!compact && (
+              <Text type="secondary" style={{ fontSize: '11px' }}>
+                {automation.event === 'on_enter' || automation.event === 'on_exit' ? (
+                  `Target: ${stageList.find(s => s.id === automation.target_id)?.name || automation.target_id || 'Any'}`
+                ) : automation.event === 'on_transition' ? (
+                  `Transition: ${transitionList.find(t => t.id === automation.target_id)?.label || transitionList.find(t => t.id === automation.target_id)?.name || automation.target_id || 'Any'}`
+                ) : 'Trigger: Data change'}
+              </Text>
+           )}
+           {compact && (
+              <Text type="secondary" style={{ fontSize: '11px' }}>
+                 {automation.actions.length} steps configured
+              </Text>
+           )}
+           <Divider type="vertical" />
+           <div style={{ display: 'flex', gap: '4px' }}>
+             {(automation.actions || []).map((act, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '2px', background: '#f5f5f5', padding: '1px 6px', borderRadius: '4px' }}>
+                  <Text type="secondary" style={{ fontSize: '10px' }}>{i + 1}. {act.type?.split('_')[0] || 'unknown'}</Text>
+                </div>
+             ))}
+           </div>
+        </div>
+      </div>
+
+      <Space split={<Divider type="vertical" />}>
+        {automation.condition?.rules && automation.condition.rules.length > 0 && (
+          <Badge dot color="#52c41a">
+            <Activity size={14} color="#8c8c8c" />
+          </Badge>
+        )}
+        <Popconfirm 
+          title="Remove this automation?" 
+          onConfirm={(e) => {
+            e?.stopPropagation();
+            onDelete();
+          }}
+          onCancel={(e) => e?.stopPropagation()}
+        >
+          <Button 
+            type="text" 
+            danger 
+            icon={<Trash2 size={16} />} 
+            onClick={(e) => e.stopPropagation()} 
+          />
+        </Popconfirm>
+      </Space>
+    </div>
+  </Card>
+);
 
 export default AutomationManager;

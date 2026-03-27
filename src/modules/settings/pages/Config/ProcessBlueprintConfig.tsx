@@ -40,6 +40,60 @@ interface ProcessBlueprintConfigProps {
 
 const CATEGORIES = ["NEW", "IN_PROGRESS", "CLOSED_WON", "CLOSED_LOST", "CANCELLED"];
 
+// Helper to convert nested backend automations to a flat array for the UI
+const flattenAutomations = (nested: any) => {
+  if (!nested || typeof nested !== 'object') return [];
+  const flat: any[] = [];
+  
+  Object.entries(nested).forEach(([event, targets]: [string, any]) => {
+    if (targets && typeof targets === 'object') {
+      Object.entries(targets).forEach(([target_id, config]: [string, any]) => {
+        flat.push({
+          event,
+          target_id,
+          name: config.name || `${event} ${target_id}`,
+          actions: (config.actions || []).map((a: any) => ({
+            ...a,
+            type: a.type || a.action_type || 'unknown'
+          })),
+          is_active: config.is_active !== false,
+          stop_on_failure: config.stop_on_failure || config.abort_on_failure || false,
+          priority: config.priority || 1
+        });
+      });
+    }
+  });
+  
+  return flat;
+};
+
+// Helper to convert flat UI automations back to nested backend structure
+const nestAutomations = (flat: any[]) => {
+  if (!Array.isArray(flat)) return {};
+  const nested: any = {};
+  
+  flat.forEach(a => {
+    if (!a.event || !a.target_id) return;
+    
+    if (!nested[a.event]) nested[a.event] = {};
+    nested[a.event][a.target_id] = {
+      name: a.name,
+      actions: (a.actions || []).map((act: any) => {
+        const { type, ...rest } = act;
+        return {
+          ...rest,
+          action_type: type, // Ensure backend gets 'action_type' back
+        };
+      }),
+      is_active: a.is_active,
+      stop_on_failure: a.stop_on_failure,
+      priority: a.priority
+    };
+  });
+  
+  return nested;
+};
+
 const ProcessBlueprintConfig: React.FC<ProcessBlueprintConfigProps> = ({ blueprintId, onSaveSuccess }) => {
   const { organization } = useAuthStore();
   const [loading, setLoading] = useState(false);
@@ -129,7 +183,7 @@ const ProcessBlueprintConfig: React.FC<ProcessBlueprintConfigProps> = ({ bluepri
             transitions: lifecycle.transitions || [],
             ...lifecycle
           },
-          automations: rawDefinition.automations || [],
+          automations: flattenAutomations(rawDefinition.automations),
           sla_rules: rawDefinition.sla_rules || []
         };
         
@@ -230,7 +284,10 @@ const ProcessBlueprintConfig: React.FC<ProcessBlueprintConfigProps> = ({ bluepri
         blueprint_type: values.blueprint_type,
         intent: values.intent,
         is_active: values.is_active,
-        definition,
+        definition: {
+          ...definition,
+          automations: nestAutomations(definition.automations || [])
+        },
         metadata,
         organization_id: organization?.id,
         updated_at: new Date().toISOString(),

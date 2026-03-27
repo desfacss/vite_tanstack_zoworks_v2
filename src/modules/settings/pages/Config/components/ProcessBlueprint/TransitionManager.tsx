@@ -1,25 +1,33 @@
 import React, { useState } from 'react';
 import { Button, Select, Popconfirm, Card, Typography, Drawer, Form, Input, Switch, Space, Row, Col, Divider, Tag, Badge, ColorPicker, Tooltip } from 'antd';
 import { Plus, Trash2, ArrowRight, Settings, MousePointer, Zap, Shield } from 'lucide-react';
-import { QueryBuilder, RuleGroupType } from 'react-querybuilder';
+import { QueryBuilder } from 'react-querybuilder';
 
 const { Text, Title } = Typography;
 const { Option } = Select;
 
 interface Transition {
   id?: string;
-  label?: string; // Align with backend 'label'
+  label?: string;
   from: string;
   to: string;
   type?: 'forward' | 'backward' | 'cancellation' | 'other';
-  trigger?: 'manual' | 'auto'; // Align with backend 'trigger'
-  is_manual?: boolean; // Keep for internal UI toggle if needed, but primary is trigger
-  button_text?: string;
-  button_color?: string;
-  confirmation_required?: boolean;
-  confirmation_message?: string;
-  required_fields?: string[];
-  condition?: RuleGroupType;
+  trigger?: 'manual' | 'auto';
+  is_manual?: boolean;
+  
+  // Nested structure from backend
+  ui?: {
+    icon?: string;
+    button_variant?: string;
+    confirm_message?: string;
+    button_color?: string; // We map this from/to the flat picker
+  };
+  guard_rules?: {
+    allowed_roles?: string[];
+    validation_rpc?: string;
+    required_fields?: string[];
+  };
+  condition?: any;
 }
 
 interface TransitionManagerProps {
@@ -59,9 +67,16 @@ const TransitionManager: React.FC<TransitionManagerProps> = ({ transitions, onCh
       type: 'forward',
       trigger: 'manual',
       is_manual: true,
-      button_text: 'Continue',
-      condition: { combinator: 'and', rules: [] },
-      required_fields: []
+      ui: {
+        icon: 'arrow-right',
+        button_variant: 'primary',
+        button_color: '#1677ff'
+      },
+      guard_rules: {
+        allowed_roles: [],
+        required_fields: []
+      },
+      condition: { combinator: 'and', rules: [] }
     };
     
     const newList = [...(Array.isArray(transitions) ? transitions : []), newTransition];
@@ -76,9 +91,16 @@ const TransitionManager: React.FC<TransitionManagerProps> = ({ transitions, onCh
     form.setFieldsValue({
       ...transition,
       // Map 'trigger' to 'is_manual' for the UI switch
-      is_manual: transition.trigger === 'manual' || transition.is_manual,
-      // Ensure color picker gets a hex string
-      button_color: transition.button_color || '#1677ff'
+      is_manual: transition.trigger === 'manual' || (transition as any).is_manual,
+      // Unpack nested UI
+      icon: transition.ui?.icon,
+      button_variant: transition.ui?.button_variant || 'primary',
+      confirm_message: transition.ui?.confirm_message,
+      button_color: transition.ui?.button_color || '#1677ff',
+      // Unpack nested guard rules
+      allowed_roles: transition.guard_rules?.allowed_roles || [],
+      validation_rpc: transition.guard_rules?.validation_rpc,
+      required_fields: transition.guard_rules?.required_fields || []
     });
     setDrawerVisible(true);
   };
@@ -87,11 +109,11 @@ const TransitionManager: React.FC<TransitionManagerProps> = ({ transitions, onCh
     form.validateFields().then(values => {
       const newList = [...(Array.isArray(transitions) ? transitions : [])];
       
-      // Auto-derive type if not explicitly overridden by user recently
       if (editingIndex !== null) {
         const fromStage = stages.find(s => s.id === values.from);
         const toStage = stages.find(s => s.id === values.to);
         
+        // Auto-derive type
         if (fromStage && toStage && !values.type_override) {
           if (toStage.category === 'CLOSED_LOST' || toStage.category === 'CANCELLED') {
             values.type = 'cancellation';
@@ -102,10 +124,35 @@ const TransitionManager: React.FC<TransitionManagerProps> = ({ transitions, onCh
           }
         }
 
-        // Map UI switch back to 'trigger'
-        values.trigger = values.is_manual ? 'manual' : 'auto';
+        // Reconstruct nested structures
+        const updatedTransition: Transition = {
+          ...newList[editingIndex],
+          ...values,
+          trigger: values.is_manual ? 'manual' : 'auto',
+          ui: {
+            icon: values.icon,
+            button_variant: values.button_variant,
+            confirm_message: values.confirm_message,
+            button_color: typeof values.button_color === 'string' ? values.button_color : values.button_color?.toHexString?.() || '#1677ff'
+          },
+          guard_rules: {
+            allowed_roles: values.allowed_roles,
+            validation_rpc: values.validation_rpc,
+            required_fields: values.required_fields
+          }
+        };
         
-        newList[editingIndex] = { ...newList[editingIndex], ...values };
+        // Clean up flat fields that are now nested
+        delete (updatedTransition as any).icon;
+        delete (updatedTransition as any).button_variant;
+        delete (updatedTransition as any).confirm_message;
+        delete (updatedTransition as any).button_color;
+        delete (updatedTransition as any).allowed_roles;
+        delete (updatedTransition as any).validation_rpc;
+        delete (updatedTransition as any).required_fields;
+        delete (updatedTransition as any).is_manual;
+
+        newList[editingIndex] = updatedTransition;
         onChange(newList);
       }
       setDrawerVisible(false);
@@ -177,13 +224,13 @@ const TransitionManager: React.FC<TransitionManagerProps> = ({ transitions, onCh
                 <Space>
                     <Divider type="vertical" />
                     {(t.trigger === 'manual' || t.is_manual) && (
-                        <Tooltip title={`Button: ${t.button_text || 'Continue'}`}>
-                            <Badge dot status="processing" style={{ color: t.button_color || '#1677ff' }} />
+                        <Tooltip title={`Button: ${t.label || 'Continue'}`}>
+                            <Badge dot status="processing" style={{ color: t.ui?.button_color || '#1677ff' }} />
                         </Tooltip>
                     )}
-                    {t.required_fields && t.required_fields.length > 0 && (
-                        <Tooltip title={`${t.required_fields.length} required fields`}>
-                            <Badge count={t.required_fields.length} size="small" style={{ backgroundColor: '#faad14' }} />
+                    {t.guard_rules?.required_fields && t.guard_rules.required_fields.length > 0 && (
+                        <Tooltip title={`${t.guard_rules.required_fields.length} required fields`}>
+                            <Badge count={t.guard_rules.required_fields.length} size="small" style={{ backgroundColor: '#faad14' }} />
                         </Tooltip>
                     )}
                     {t.condition && (t.condition as any).rules?.length > 0 && (
@@ -266,7 +313,7 @@ const TransitionManager: React.FC<TransitionManagerProps> = ({ transitions, onCh
           </Row>
 
           <Row gutter={16}>
-            <Col span={12}>
+            <Col span={8}>
               <Form.Item label="Transition Type" name="type">
                 <Select placeholder="Auto-derive or select">
                   <Option value="forward">Forward</Option>
@@ -276,10 +323,20 @@ const TransitionManager: React.FC<TransitionManagerProps> = ({ transitions, onCh
                 </Select>
               </Form.Item>
             </Col>
-            <Col span={12}>
+            <Col span={8}>
               <Form.Item label="Trigger Mode" name="is_manual" valuePropName="checked">
                 <Switch checkedChildren="Manual" unCheckedChildren="Auto" />
               </Form.Item>
+            </Col>
+            <Col span={8}>
+               <Form.Item label="Button Variant" name="button_variant">
+                  <Select>
+                    <Option value="primary">Primary (Glow)</Option>
+                    <Option value="secondary">Secondary (Soft)</Option>
+                    <Option value="danger">Danger (Red)</Option>
+                    <Option value="ghost">Ghost (Outline)</Option>
+                  </Select>
+               </Form.Item>
             </Col>
           </Row>
 
@@ -294,32 +351,25 @@ const TransitionManager: React.FC<TransitionManagerProps> = ({ transitions, onCh
                 <Card size="small" style={{ background: '#f9f9f9', marginBottom: '20px' }}>
                   <Row gutter={16}>
                     <Col span={8}>
-                      <Form.Item label="Button Text" name="button_text">
+                      <Form.Item label="Button Text (UI)" name="label">
                         <Input placeholder="Next Stage" />
                       </Form.Item>
                     </Col>
-                    <Col span={6}>
-                       <Form.Item label="Button Color" name="button_color">
+                    <Col span={4}>
+                      <Form.Item label="Icon" name="icon">
+                        <Input placeholder="e.g. play, check" />
+                      </Form.Item>
+                    </Col>
+                    <Col span={4}>
+                       <Form.Item label="Color" name="button_color">
                           <ColorPicker 
                             presets={[{ label: 'Presets', colors: PRESET_COLORS.map(c => c.color) }]} 
-                            showText
                           />
                        </Form.Item>
                     </Col>
-                    <Col span={10}>
-                       <Form.Item label="Confirmation Required" name="confirmation_required" valuePropName="checked">
-                          <Switch />
-                       </Form.Item>
-                       <Form.Item 
-                         noStyle
-                         shouldUpdate={(prev: any, curr: any) => prev.confirmation_required !== curr.confirmation_required}
-                       >
-                         {() => {
-                           const confirmReq = form.getFieldValue('confirmation_required');
-                           return confirmReq && (
-                             <Input placeholder="Are you sure you want to move this forward?" style={{ marginTop: '30px' }} />
-                           );
-                         }}
+                    <Col span={8}>
+                       <Form.Item label="Confirm Msg" name="confirm_message">
+                          <Input placeholder="Are you sure?" />
                        </Form.Item>
                     </Col>
                   </Row>
@@ -330,6 +380,25 @@ const TransitionManager: React.FC<TransitionManagerProps> = ({ transitions, onCh
 
           <Divider orientation="left"><Space><Shield size={16} />Pre-requisites & Rules</Space></Divider>
           
+          <Row gutter={16}>
+            <Col span={12}>
+                <Form.Item label="Allowed Roles (Guard Rules)" name="allowed_roles">
+                    <Select mode="multiple" placeholder="ADMIN, DISPATCHER..." style={{ width: '100%' }}>
+                        <Option value="ADMIN">ADMIN</Option>
+                        <Option value="DISPATCHER">DISPATCHER</Option>
+                        <Option value="TECHNICIAN">TECHNICIAN</Option>
+                        <Option value="BRANCH_MANAGER">BRANCH_MANAGER</Option>
+                        <Option value="CUSTOMER">CUSTOMER</Option>
+                    </Select>
+                </Form.Item>
+            </Col>
+            <Col span={12}>
+                <Form.Item label="Validation RPC (Server-side)" name="validation_rpc">
+                    <Input placeholder="schema.function_name" />
+                </Form.Item>
+            </Col>
+          </Row>
+
           <Form.Item label="Required Fields (Must be filled to enable transition)" name="required_fields">
             <Select mode="multiple" placeholder="Select fields" style={{ width: '100%' }}>
               {(Array.isArray(fields) ? fields : []).map(f => (
