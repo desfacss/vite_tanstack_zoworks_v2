@@ -15,7 +15,7 @@ pnpm-lock.yaml
 dist
 dist-ssr
 *.local
-*dump.sql
+# *dump.sql
 zo_*
 # Editor directories and files
 .vscode/*
