@@ -114,15 +114,23 @@ const ProcessBlueprintConfig: React.FC<ProcessBlueprintConfigProps> = ({ bluepri
 
       if (data) {
         // Sanitize definition to ensure all required nested properties exist
+        const rawDefinition = data.definition || {};
+        const lifecycle = rawDefinition.lifecycle || {};
+        const stages = (lifecycle.stages || []).map((s: any, idx: number) => ({
+          ...s,
+          sequence: s.sequence || idx + 1
+        }));
+
         const sanitizedDefinition = {
-          ...data.definition,
+          ...rawDefinition,
           lifecycle: {
-            stages: [],
-            transitions: [],
-            ...(data.definition?.lifecycle || {})
+            startStateId: lifecycle.startStateId || "new",
+            stages,
+            transitions: lifecycle.transitions || [],
+            ...lifecycle
           },
-          automations: data.definition?.automations || [],
-          sla_rules: data.definition?.sla_rules || []
+          automations: rawDefinition.automations || [],
+          sla_rules: rawDefinition.sla_rules || []
         };
         
         const sanitizedData = { ...data, definition: sanitizedDefinition };
@@ -268,8 +276,24 @@ const ProcessBlueprintConfig: React.FC<ProcessBlueprintConfigProps> = ({ bluepri
   };
 
   const handleLifecycleChange = (key: string, value: any) => {
-    const newLifecycle = { ...blueprint.definition?.lifecycle, [key]: value };
-    updateDefinition('lifecycle', newLifecycle);
+    const currentLifecycle = blueprint.definition?.lifecycle || {};
+    const newLifecycle = { ...currentLifecycle, [key]: value };
+    
+    // Ensure the main definition is updated
+    const newDefinition = { 
+      ...blueprint.definition, 
+      lifecycle: newLifecycle 
+    };
+    
+    setBlueprint(prev => ({ 
+      ...prev, 
+      definition: newDefinition 
+    }));
+
+    // Keep the JSON string in sync for the Advanced tab
+    form.setFieldsValue({
+      definitionStr: JSON.stringify(newDefinition, null, 2)
+    });
   };
 
   const handleCompile = async (activate = false) => {
