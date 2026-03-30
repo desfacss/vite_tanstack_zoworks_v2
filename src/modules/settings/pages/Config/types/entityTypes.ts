@@ -137,6 +137,7 @@ export interface EntityBlueprint {
   classification?: string | null;
   version?: number | null;
   blueprint_hash?: string | null;
+  is_active?: boolean | null;
   created_at?: string;
   updated_at?: string;
 }

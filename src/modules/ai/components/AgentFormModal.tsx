@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Form, Input, Select, Switch, Tabs, Row, Col, message, Divider, Typography, Button, Space } from 'antd';
+import { Form, Input, Select, Switch, Tabs, Row, Col, message, Divider, Typography, Button, Space, InputNumber, Slider } from 'antd';
+import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 import { AgentRecord } from '../types';
 import JsonEditor from './JsonEditor';
 import { supabase } from '@/lib/supabase';
@@ -7,7 +8,7 @@ import { useAuthStore } from '@/core/lib/store';
 
 const { TextArea } = Input;
 const { Option } = Select;
-const { Title, Text } = Typography;
+const { Title } = Typography;
 
 // Props interface matching GlobalActions expectations
 interface AgentFormProps {
@@ -17,6 +18,30 @@ interface AgentFormProps {
     onClose: () => void;
 }
 
+const PROVIDERS = [
+    { label: 'Gemini', value: 'gemini' },
+    { label: 'OpenAI', value: 'openai' },
+    { label: 'Anthropic', value: 'anthropic' },
+];
+
+const MODELS = [
+    { label: 'Gemini 1.5 Flash', value: 'gemini-1.5-flash', provider: 'gemini' },
+    { label: 'Gemini 1.5 Pro', value: 'gemini-1.5-pro', provider: 'gemini' },
+    { label: 'Gemini 2.0 Flash Exp', value: 'gemini-2.0-flash-exp', provider: 'gemini' },
+    { label: 'GPT-4o', value: 'gpt-4o', provider: 'openai' },
+    { label: 'GPT-4o Mini', value: 'gpt-4o-mini', provider: 'openai' },
+    { label: 'Claude 3.5 Sonnet', value: 'claude-3-5-sonnet-latest', provider: 'anthropic' },
+];
+
+const AGENT_PATTERNS = [
+    { label: 'ReAct', value: 'react' },
+    { label: 'Router', value: 'router' },
+    { label: 'Planner', value: 'planner' },
+    { label: 'Workflow', value: 'workflow' },
+    { label: 'Autonomous', value: 'autonomous' },
+    { label: 'Swarm', value: 'swarm' },
+];
+
 const defaultModelConfig = {
     temp: 0.7,
     model: 'gemini-2.0-flash-exp',
@@ -24,7 +49,7 @@ const defaultModelConfig = {
     max_tokens: 4096
 };
 
-const defaultPlanningConfig = {
+const defaultPlanningConfig: any = {
     agent_pattern: ['react', 'router'],
     entities_access: {},
     allowed_patterns: ['react', 'router'],
@@ -40,7 +65,6 @@ const defaultPlanningConfig = {
 };
 
 const AgentForm: React.FC<AgentFormProps> = ({
-    entityType,
     parentEditItem,
     onSuccess,
     onClose
@@ -60,22 +84,19 @@ const AgentForm: React.FC<AgentFormProps> = ({
         loadOrganizations();
         
         if (initialData && mode === 'edit') {
+            const config = initialData.config || {};
             form.setFieldsValue({
-                agent_key: initialData.agent_key,
-                name: initialData.name,
-                description: initialData.description || '',
-                system_prompt: initialData.system_prompt,
-                role_level: initialData.role_level || 'specialist',
-                model_config: JSON.stringify(initialData.model_config || defaultModelConfig, null, 2),
-                planning_config: JSON.stringify(initialData.planning_config || defaultPlanningConfig, null, 2),
-                organization_id: initialData.organization_id,
-                is_active: initialData.is_active !== false,
-                parent_agent_key: initialData.parent_agent_key,
-                required_module_key: initialData.required_module_key,
-                agent_layer: initialData.agent_layer || 3,
-                domain: initialData.domain || 'global',
-                config: JSON.stringify(initialData.config || {}, null, 2),
-                semantics: JSON.stringify(initialData.semantics || {}, null, 2),
+                ...initialData,
+                model_config: initialData.model_config || defaultModelConfig,
+                planning_config: initialData.planning_config || defaultPlanningConfig,
+                // Extract common config fields for UI widgets
+                config_routing_entities: config.routing?.entities || [],
+                config_routing_keywords: config.routing?.keywords || [],
+                config_patterns: config.patterns || [],
+                // The editor will show everything except what we extracted (optional)
+                // For simplicity, we'll keep the full JSON in the editor but synced
+                config: JSON.stringify(config, null, 2),
+                semantics: initialData.semantics || {},
             });
         } else {
             form.setFieldsValue({
@@ -84,10 +105,13 @@ const AgentForm: React.FC<AgentFormProps> = ({
                 agent_layer: 3,
                 domain: 'global',
                 organization_id: organization?.id,
-                model_config: JSON.stringify(defaultModelConfig, null, 2),
-                planning_config: JSON.stringify(defaultPlanningConfig, null, 2),
-                config: JSON.stringify({}, null, 2),
-                semantics: JSON.stringify({}, null, 2),
+                model_config: defaultModelConfig,
+                planning_config: defaultPlanningConfig,
+                config_routing_entities: [],
+                config_routing_keywords: [],
+                config_patterns: [],
+                config: '{}',
+                semantics: {},
             });
         }
     }, [initialData, mode, form, organization]);
@@ -123,47 +147,44 @@ const AgentForm: React.FC<AgentFormProps> = ({
         }
     };
 
-    const validateJSON = (jsonString: string): boolean => {
-        try {
-            JSON.parse(jsonString || '{}');
-            return true;
-        } catch {
-            return false;
-        }
-    };
-
     const handleSubmit = async () => {
         try {
             const values = await form.validateFields();
-            
-            // Validate all JSON fields
-            const jsonFields = ['model_config', 'planning_config', 'config', 'semantics'];
-            for (const field of jsonFields) {
-                if (!validateJSON(values[field])) {
-                    message.error(`Invalid JSON in ${field}`);
-                    return;
-                }
-            }
-
             setLoading(true);
 
+            // Parse config if it's a string (from JsonEditor)
+            let configObj: any = {};
+            try {
+                configObj = typeof values.config === 'string' ? JSON.parse(values.config || '{}') : values.config || {};
+            } catch (e) {
+                message.error('Invalid JSON in System Config');
+                setLoading(false);
+                return;
+            }
+
+            // Sync from UI widgets back to config object
+            if (values.config_routing_entities || values.config_routing_keywords) {
+                configObj.routing = {
+                    ...(configObj.routing || {}),
+                    entities: values.config_routing_entities || [],
+                    keywords: values.config_routing_keywords || [],
+                };
+            }
+            if (values.config_patterns) {
+                configObj.patterns = values.config_patterns;
+            }
+
+            // Directly use objects from form
             const payload: Partial<AgentRecord> = {
-                agent_key: values.agent_key,
-                name: values.name,
-                description: values.description,
-                system_prompt: values.system_prompt,
-                role_level: values.role_level,
-                model_config: JSON.parse(values.model_config || '{}'),
-                planning_config: JSON.parse(values.planning_config || '{}'),
+                ...values,
+                config: configObj,
                 organization_id: values.organization_id || organization?.id,
-                is_active: values.is_active,
-                parent_agent_key: values.parent_agent_key,
-                required_module_key: values.required_module_key,
-                agent_layer: values.agent_layer,
-                domain: values.domain,
-                config: JSON.parse(values.config || '{}'),
-                semantics: JSON.parse(values.semantics || '{}'),
             };
+
+            // Clean up temporary form fields
+            delete (payload as any).config_routing_entities;
+            delete (payload as any).config_routing_keywords;
+            delete (payload as any).config_patterns;
 
             if (mode === 'create') {
                 const { error } = await supabase
@@ -191,6 +212,70 @@ const AgentForm: React.FC<AgentFormProps> = ({
         } finally {
             setLoading(false);
         }
+    };
+
+    // Sub-components for dynamic lists
+    const EntitiesAccessInput = ({ value = {}, onChange }: { value?: Record<string, string>, onChange?: (val: Record<string, string>) => void }) => {
+        const rules = Object.entries(value).map(([entity, access]) => ({ entity, access: access as string }));
+
+        const handleRuleChange = (index: number, key: 'entity' | 'access', val: string) => {
+            const newRules = [...rules];
+            newRules[index] = { ...newRules[index], [key]: val };
+            const newValue = Object.fromEntries(newRules.map(r => [r.entity, r.access]));
+            onChange?.(newValue);
+        };
+
+        const addRule = () => {
+            onChange?.({ ...value, '': 'READ' });
+        };
+
+        const removeRule = (entity: string) => {
+            const newValue = { ...value };
+            delete newValue[entity];
+            onChange?.(newValue);
+        };
+
+        return (
+            <div style={{ background: '#f8f9fa', padding: '12px', borderRadius: '8px', border: '1px solid #d9d9d9' }}>
+                <Title level={5} style={{ fontSize: '14px', marginBottom: '12px' }}>Entities Access Rules</Title>
+                {rules.map((rule, idx) => (
+                    <Row key={idx} gutter={8} style={{ marginBottom: '8px' }}>
+                        <Col span={14}>
+                            <Input 
+                                placeholder="schema.table" 
+                                size="small"
+                                value={rule.entity} 
+                                onChange={e => handleRuleChange(idx, 'entity', e.target.value)}
+                            />
+                        </Col>
+                        <Col span={7}>
+                            <Select 
+                                value={rule.access} 
+                                size="small"
+                                style={{ width: '100%' }}
+                                onChange={val => handleRuleChange(idx, 'access', val)}
+                            >
+                                <Option value="READ">READ</Option>
+                                <Option value="CRUD">CRUD</Option>
+                                <Option value="ADMIN">ADMIN</Option>
+                            </Select>
+                        </Col>
+                        <Col span={3}>
+                            <Button 
+                                type="text" 
+                                size="small"
+                                danger 
+                                icon={<DeleteOutlined />} 
+                                onClick={() => removeRule(rule.entity)} 
+                            />
+                        </Col>
+                    </Row>
+                ))}
+                <Button type="dashed" size="small" onClick={addRule} block icon={<PlusOutlined />}>
+                    Add Access Rule
+                </Button>
+            </div>
+        );
     };
 
     const tabItems = [
@@ -244,53 +329,53 @@ const AgentForm: React.FC<AgentFormProps> = ({
                 <Row gutter={[16, 16]}>
                     <Col span={8}>
                         <Form.Item name="role_level" label="Role Level">
-                            <Select>
-                                <Option value="specialist">Specialist</Option>
-                                <Option value="orchestrator">Orchestrator</Option>
-                                <Option value="supervisor">Supervisor</Option>
-                                <Option value="router">Router</Option>
+                            <Select size="small">
+                                <Select.Option value="specialist">Specialist</Select.Option>
+                                <Select.Option value="orchestrator">Orchestrator</Select.Option>
+                                <Select.Option value="supervisor">Supervisor</Select.Option>
+                                <Select.Option value="router">Router</Select.Option>
                             </Select>
                         </Form.Item>
                     </Col>
                     <Col span={8}>
                         <Form.Item name="agent_layer" label="Agent Layer">
-                            <Input type="number" />
+                            <InputNumber size="small" style={{ width: '100%' }} min={0} max={10} />
                         </Form.Item>
                     </Col>
                     <Col span={8}>
                         <Form.Item name="domain" label="Domain">
-                            <Input placeholder="e.g., global" />
+                            <Input size="small" placeholder="e.g., global" />
                         </Form.Item>
                     </Col>
                     <Col span={12}>
                         <Form.Item name="parent_agent_key" label="Parent Agent">
-                            <Select allowClear placeholder="Select parent agent">
+                            <Select size="small" allowClear placeholder="Select parent agent">
                                 {agents.map(agent => (
-                                    <Option key={agent.agent_key} value={agent.agent_key}>
+                                    <Select.Option key={agent.agent_key} value={agent.agent_key}>
                                         {agent.name} ({agent.role_level})
-                                    </Option>
+                                    </Select.Option>
                                 ))}
                             </Select>
                         </Form.Item>
                     </Col>
                     <Col span={12}>
                         <Form.Item name="required_module_key" label="Required Module">
-                            <Select allowClear placeholder="Select module">
-                                <Option value="hr">HR</Option>
-                                <Option value="crm">CRM</Option>
-                                <Option value="ctrm">CTRM</Option>
-                                <Option value="support">Support</Option>
-                                <Option value="ai">AI</Option>
+                            <Select size="small" allowClear placeholder="Select module">
+                                <Select.Option value="hr">HR</Select.Option>
+                                <Select.Option value="crm">CRM</Select.Option>
+                                <Select.Option value="ctrm">CTRM</Select.Option>
+                                <Select.Option value="support">Support</Select.Option>
+                                <Select.Option value="ai">AI</Select.Option>
                             </Select>
                         </Form.Item>
                     </Col>
                     <Col span={12}>
                         <Form.Item name="organization_id" label="Organization">
-                            <Select allowClear placeholder="Select organization (optional)">
+                            <Select size="small" allowClear placeholder="Select organization (optional)">
                                 {organizations.map(org => (
-                                    <Option key={org.id} value={org.id}>
+                                    <Select.Option key={org.id} value={org.id}>
                                         {org.name}
-                                    </Option>
+                                    </Select.Option>
                                 ))}
                             </Select>
                         </Form.Item>
@@ -307,16 +392,41 @@ const AgentForm: React.FC<AgentFormProps> = ({
             key: 'model',
             label: 'Model Config',
             children: (
-                <div>
-                    <Text type="secondary">Configure the AI model settings</Text>
-                    <Divider />
-                    <Form.Item name="model_config">
-                        <JsonEditor
-                            defaultValue={defaultModelConfig}
-                            placeholder="Model configuration JSON"
-                            rows={10}
-                        />
-                    </Form.Item>
+                <div style={{ padding: '4px' }}>
+                    <Row gutter={[24, 16]}>
+                        <Col span={12}>
+                            <Form.Item name={['model_config', 'provider']} label="AI Provider">
+                                <Select size="small" options={PROVIDERS} />
+                            </Form.Item>
+                        </Col>
+                        <Col span={12}>
+                            <Form.Item name={['model_config', 'model']} label="Model Name">
+                                <Select 
+                                    size="small"
+                                    showSearch 
+                                    options={MODELS} 
+                                    filterOption={(input, option) => (option?.label ?? '').toLowerCase().includes(input.toLowerCase())}
+                                />
+                            </Form.Item>
+                        </Col>
+                        <Col span={12}>
+                            <Form.Item name={['model_config', 'temp']} label="Temperature">
+                                <Row gutter={12} align="middle">
+                                    <Col span={16}>
+                                        <Slider min={0} max={1} step={0.1} />
+                                    </Col>
+                                    <Col span={8}>
+                                        <InputNumber size="small" min={0} max={1} step={0.1} style={{ width: '100%' }} />
+                                    </Col>
+                                </Row>
+                            </Form.Item>
+                        </Col>
+                        <Col span={12}>
+                            <Form.Item name={['model_config', 'max_tokens']} label="Max Tokens">
+                                <InputNumber size="small" style={{ width: '100%' }} min={1} step={1024} />
+                            </Form.Item>
+                        </Col>
+                    </Row>
                 </div>
             )
         },
@@ -324,16 +434,45 @@ const AgentForm: React.FC<AgentFormProps> = ({
             key: 'planning',
             label: 'Planning Config',
             children: (
-                <div>
-                    <Text type="secondary">Configure agent patterns, routing, and behavior</Text>
-                    <Divider />
-                    <Form.Item name="planning_config">
-                        <JsonEditor
-                            defaultValue={defaultPlanningConfig}
-                            placeholder="Planning configuration JSON"
-                            rows={15}
-                        />
-                    </Form.Item>
+                <div style={{ padding: '4px' }}>
+                    <Row gutter={[24, 16]}>
+                        <Col span={12}>
+                            <Form.Item name={['planning_config', 'agent_pattern']} label="Agent Patterns">
+                                <Select size="small" mode="tags" placeholder="Select patterns" options={AGENT_PATTERNS} />
+                            </Form.Item>
+                        </Col>
+                        <Col span={12}>
+                            <Form.Item name={['planning_config', 'allowed_patterns']} label="Allowed Patterns">
+                                <Select size="small" mode="tags" placeholder="Select allowed patterns" options={AGENT_PATTERNS} />
+                            </Form.Item>
+                        </Col>
+                        <Col span={24}>
+                            <Form.Item name={['planning_config', 'routing_entities']} label="Routing Entities">
+                                <Select size="small" mode="tags" placeholder="e.g., deals, leads, accounts" tokenSeparators={[',']} />
+                            </Form.Item>
+                        </Col>
+                        <Col span={24}>
+                            <Form.Item name={['planning_config', 'routing_keywords']} label="Routing Keywords">
+                                <Select size="small" mode="tags" placeholder="Add keywords for routing" tokenSeparators={[',']} />
+                            </Form.Item>
+                        </Col>
+                        <Col span={24}>
+                            <Form.Item name={['planning_config', 'entities_access']}>
+                                <EntitiesAccessInput />
+                            </Form.Item>
+                        </Col>
+                        <Col span={24}>
+                            <Form.Item name={['planning_config', 'presentation_strategy', 'preferred_formats']} label="Preferred Presentation Formats">
+                                <Select size="small" mode="tags" placeholder="e.g., table, summary, chart">
+                                    <Select.Option value="table">Table</Select.Option>
+                                    <Select.Option value="summary">Summary</Select.Option>
+                                    <Select.Option value="chart">Chart</Select.Option>
+                                    <Select.Option value="bar_chart">Bar Chart</Select.Option>
+                                    <Select.Option value="markdown">Markdown</Select.Option>
+                                </Select>
+                            </Form.Item>
+                        </Col>
+                    </Row>
                 </div>
             )
         },
@@ -341,22 +480,67 @@ const AgentForm: React.FC<AgentFormProps> = ({
             key: 'advanced',
             label: 'Advanced',
             children: (
-                <Row gutter={[16, 16]}>
+                <Row gutter={[24, 12]}>
                     <Col span={24}>
-                        <Title level={5}>Additional Configuration</Title>
-                        <Form.Item name="config">
-                            <JsonEditor
-                                placeholder="Additional config JSON"
-                                rows={8}
-                            />
+                        <Title level={5}>Semantics & Scope</Title>
+                        <Divider style={{ margin: '4px 0 12px' }} />
+                    </Col>
+                    <Col span={24}>
+                        <Form.Item name={['semantics', 'role']} label="Semantic Role">
+                            <TextArea rows={2} placeholder="Explain the agent's persona semantically" />
+                        </Form.Item>
+                    </Col>
+                    <Col span={12}>
+                        <Form.Item name={['semantics', 'positive_scope']} label="Positive Scope">
+                            <TextArea rows={3} placeholder="What this agent IS responsible for" />
+                        </Form.Item>
+                    </Col>
+                    <Col span={12}>
+                        <Form.Item name={['semantics', 'negative_scope']} label="Negative Scope">
+                            <TextArea rows={3} placeholder="What this agent IS NOT responsible for" />
                         </Form.Item>
                     </Col>
                     <Col span={24}>
-                        <Title level={5}>Semantics</Title>
-                        <Form.Item name="semantics">
+                        <Form.Item name={['semantics', 'handoff_to']} label="Allowed Handoffs">
+                            <Select size="small" mode="multiple" placeholder="Select target agents">
+                                {agents.map(agent => (
+                                    <Select.Option key={agent.agent_key} value={agent.agent_key}>
+                                        {agent.name}
+                                    </Select.Option>
+                                ))}
+                            </Select>
+                        </Form.Item>
+                    </Col>
+                    
+                    <Col span={24}>
+                        <Title level={5}>Extra System Routing</Title>
+                        <Divider style={{ margin: '4px 0 12px' }} />
+                        <Row gutter={16}>
+                            <Col span={12}>
+                                <Form.Item name="config_routing_entities" label="System Routing Entities">
+                                    <Select size="small" mode="tags" placeholder="Entities in extra config" />
+                                </Form.Item>
+                            </Col>
+                            <Col span={12}>
+                                <Form.Item name="config_routing_keywords" label="System Routing Keywords">
+                                    <Select size="small" mode="tags" placeholder="Keywords in extra config" />
+                                </Form.Item>
+                            </Col>
+                            <Col span={24}>
+                                <Form.Item name="config_patterns" label="System Patterns">
+                                    <Select size="small" mode="tags" placeholder="Patterns in extra config" options={AGENT_PATTERNS} />
+                                </Form.Item>
+                            </Col>
+                        </Row>
+                    </Col>
+
+                    <Col span={24}>
+                        <Title level={5}>Miscellaneous Config (JSON)</Title>
+                        <Divider style={{ margin: '4px 0 12px' }} />
+                        <Form.Item name="config">
                             <JsonEditor
-                                placeholder="Semantics JSON"
-                                rows={8}
+                                placeholder="Additional system config JSON"
+                                rows={6}
                             />
                         </Form.Item>
                     </Col>
@@ -366,7 +550,7 @@ const AgentForm: React.FC<AgentFormProps> = ({
     ];
 
     return (
-        <div>
+        <div style={{ height: '70vh', overflowY: 'auto', paddingRight: '12px' }}>
             <Form
                 form={form}
                 layout="vertical"
@@ -375,14 +559,22 @@ const AgentForm: React.FC<AgentFormProps> = ({
                 <Tabs items={tabItems} />
             </Form>
             
-            <Divider />
-            
-            <Space style={{ float: 'right' }}>
-                <Button onClick={onClose}>Cancel</Button>
-                <Button type="primary" onClick={handleSubmit} loading={loading}>
-                    {mode === 'create' ? 'Create' : 'Update'}
-                </Button>
-            </Space>
+            <div style={{ 
+                position: 'sticky', 
+                bottom: 0, 
+                background: '#fff', 
+                padding: '16px 0', 
+                borderTop: '1px solid #f0f0f0',
+                zIndex: 10,
+                textAlign: 'right'
+            }}>
+                <Space>
+                    <Button onClick={onClose}>Cancel</Button>
+                    <Button type="primary" onClick={handleSubmit} loading={loading}>
+                        {mode === 'create' ? 'Create Agent' : 'Update Agent'}
+                    </Button>
+                </Space>
+            </div>
         </div>
     );
 };

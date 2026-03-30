@@ -4,9 +4,9 @@ import { Input, Alert } from 'antd';
 const { TextArea } = Input;
 
 interface JsonEditorProps {
-    value?: string;
-    onChange?: (value: string) => void;
-    defaultValue?: Record<string, any>;
+    value?: any;
+    onChange?: (value: any) => void;
+    defaultValue?: any;
     placeholder?: string;
     rows?: number;
     disabled?: boolean;
@@ -26,26 +26,40 @@ const JsonEditor: React.FC<JsonEditorProps> = ({
 }) => {
     const [jsonText, setJsonText] = useState<string>('');
     const [error, setError] = useState<string>('');
+    const isObjectMode = React.useRef(false);
 
     useEffect(() => {
         if (value !== undefined) {
-            setJsonText(value);
-            validateJson(value);
+            const stringValue = typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value || '');
+            if (typeof value === 'object' && value !== null) {
+                isObjectMode.current = true;
+            }
+            // Only update text state if it's actually different to avoid cursor jumps
+            if (stringValue !== jsonText) {
+                setJsonText(stringValue);
+            }
+            setError(''); 
         } else {
-            const initialValue = JSON.stringify(defaultValue, null, 2);
+            const initialValue = typeof defaultValue === 'object' 
+                ? JSON.stringify(defaultValue, null, 2) 
+                : String(defaultValue || '');
+            if (typeof defaultValue === 'object' && defaultValue !== null) {
+                isObjectMode.current = true;
+            }
             setJsonText(initialValue);
-            onChange?.(initialValue);
+            onChange?.(defaultValue);
         }
     }, [value]);
 
-    const validateJson = (text: string): boolean => {
-        if (!text || text.trim() === '') {
+    const validateJson = (text: any): boolean => {
+        const str = typeof text === 'string' ? text : JSON.stringify(text);
+        if (!str || str.trim() === '') {
             setError('');
             return true;
         }
 
         try {
-            JSON.parse(text);
+            JSON.parse(str);
             setError('');
             return true;
         } catch (e: any) {
@@ -57,8 +71,18 @@ const JsonEditor: React.FC<JsonEditorProps> = ({
     const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         const newValue = e.target.value;
         setJsonText(newValue);
-        validateJson(newValue);
-        onChange?.(newValue);
+        const isValid = validateJson(newValue);
+        
+        if (isValid && isObjectMode.current) {
+            try {
+                onChange?.(JSON.parse(newValue));
+            } catch (e) {
+                // If parsing fails despite validateJson passing (unlikely), send as is
+                onChange?.(newValue);
+            }
+        } else {
+            onChange?.(newValue);
+        }
     };
 
     const handleBlur = () => {
@@ -68,7 +92,11 @@ const JsonEditor: React.FC<JsonEditorProps> = ({
                 const parsed = JSON.parse(jsonText);
                 const formatted = JSON.stringify(parsed, null, 2);
                 setJsonText(formatted);
-                onChange?.(formatted);
+                if (isObjectMode.current) {
+                    onChange?.(parsed);
+                } else {
+                    onChange?.(formatted);
+                }
             } catch (e) {
                 // Keep as is if invalid
             }

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Input, Form, Select, Space, Row, Col, Card, message, Tabs, Table, Typography, Modal, Popconfirm } from 'antd';
-import { SaveOutlined, RocketOutlined, HistoryOutlined, SettingOutlined, DatabaseOutlined, DesktopOutlined, DeleteOutlined } from '@ant-design/icons';
+import { Button, Input, Form, Select, Space, Row, Col, Card, message, Tabs, Table, Typography, Modal, Popconfirm, Switch, Divider, Tooltip, Tag, Collapse } from 'antd';
+import { SaveOutlined, RocketOutlined, HistoryOutlined, SettingOutlined, DatabaseOutlined, DesktopOutlined, DeleteOutlined, InfoCircleOutlined, PlusOutlined } from '@ant-design/icons';
 import { supabase } from '@/core/lib/supabase';
 import { EntityBlueprint } from './types/entityTypes';
 import JsonEditor from '@/modules/ai/components/JsonEditor';
@@ -64,18 +64,18 @@ const BlueprintConfig: React.FC<BlueprintConfigProps> = ({ entityType, entitySch
         setBlueprint(data);
         form.setFieldsValue({
           ...data,
-          extra_objects: JSON.stringify(data.extra_objects || {}, null, 2),
-          ui_config: JSON.stringify(data.ui_config || {}, null, 2),
-          ui_general: JSON.stringify(data.ui_general || {}, null, 2),
-          ui_details_overview: JSON.stringify(data.ui_details_overview || {}, null, 2),
-          ui_dashboard: JSON.stringify(data.ui_dashboard || {}, null, 2),
-          semantics: JSON.stringify(data.semantics || {}, null, 2),
-          rules: JSON.stringify(data.rules || {}, null, 2),
-          ai_metadata: JSON.stringify(data.ai_metadata || {}, null, 2),
-          jsonb_schema: JSON.stringify(data.jsonb_schema || {}, null, 2),
-          display_format: JSON.stringify(data.display_format || {}, null, 2),
-          sub_panels: JSON.stringify(data.sub_panels || [], null, 2),
-          dependencies: (data.dependencies || []).join('\n'),
+          extra_objects: data.extra_objects || {},
+          ui_config: data.ui_config || {},
+          ui_general: data.ui_general || {},
+          ui_details_overview: data.ui_details_overview || {},
+          ui_dashboard: data.ui_dashboard || {},
+          semantics: data.semantics || {},
+          rules: data.rules || {},
+          ai_metadata: data.ai_metadata || {},
+          jsonb_schema: data.jsonb_schema || {},
+          display_format: data.display_format || {},
+          sub_panels: data.sub_panels || [],
+          dependencies: data.dependencies || [],
         });
         fetchHistory(data.id);
       } else {
@@ -98,20 +98,7 @@ const BlueprintConfig: React.FC<BlueprintConfigProps> = ({ entityType, entitySch
           display_format: {},
         };
         setBlueprint(defaults);
-        form.setFieldsValue({
-          ...defaults,
-          ai_metadata: JSON.stringify(defaults.ai_metadata, null, 2),
-          extra_objects: JSON.stringify(defaults.extra_objects, null, 2),
-          ui_config: JSON.stringify(defaults.ui_config, null, 2),
-          ui_general: JSON.stringify(defaults.ui_general, null, 2),
-          ui_details_overview: JSON.stringify(defaults.ui_details_overview, null, 2),
-          ui_dashboard: JSON.stringify(defaults.ui_dashboard, null, 2),
-          semantics: JSON.stringify(defaults.semantics, null, 2),
-          rules: JSON.stringify(defaults.rules, null, 2),
-          sub_panels: JSON.stringify(defaults.sub_panels, null, 2),
-          jsonb_schema: JSON.stringify(defaults.jsonb_schema, null, 2),
-          display_format: JSON.stringify(defaults.display_format, null, 2),
-        });
+        form.setFieldsValue(defaults);
         setHistory([]);
       }
     } catch (error: any) {
@@ -152,18 +139,6 @@ const BlueprintConfig: React.FC<BlueprintConfigProps> = ({ entityType, entitySch
         entity_type: sanitizedEntityType,
         entity_schema: entitySchema,
         ...values,
-        extra_objects: JSON.parse(values.extra_objects || '{}'),
-        ui_config: JSON.parse(values.ui_config || '{}'),
-        ui_general: JSON.parse(values.ui_general || '{}'),
-        ui_details_overview: JSON.parse(values.ui_details_overview || '{}'),
-        ui_dashboard: JSON.parse(values.ui_dashboard || '{}'),
-        semantics: JSON.parse(values.semantics || '{}'),
-        rules: JSON.parse(values.rules || '{}'),
-        ai_metadata: JSON.parse(values.ai_metadata || '{}'),
-        jsonb_schema: JSON.parse(values.jsonb_schema || '{}'),
-        display_format: JSON.parse(values.display_format || '{}'),
-        sub_panels: JSON.parse(values.sub_panels || '[]'),
-        dependencies: (values.dependencies || '').split('\n').map((s: string) => s.trim()).filter(Boolean),
         updated_at: new Date().toISOString(),
       };
 
@@ -284,18 +259,18 @@ const BlueprintConfig: React.FC<BlueprintConfigProps> = ({ entityType, entitySch
     // Populate form with historical values
     form.setFieldsValue({
       ...data,
-      extra_objects: JSON.stringify(data.extra_objects || {}, null, 2),
-      ui_config: JSON.stringify(data.ui_config || {}, null, 2),
-      ui_general: JSON.stringify(data.ui_general || {}, null, 2),
-      ui_details_overview: JSON.stringify(data.ui_details_overview || {}, null, 2),
-      ui_dashboard: JSON.stringify(data.ui_dashboard || {}, null, 2),
-      semantics: JSON.stringify(data.semantics || {}, null, 2),
-      rules: JSON.stringify(data.rules || {}, null, 2),
-      ai_metadata: JSON.stringify(data.ai_metadata || {}, null, 2),
-      jsonb_schema: JSON.stringify(data.jsonb_schema || {}, null, 2),
-      display_format: JSON.stringify(data.display_format || {}, null, 2),
-      sub_panels: JSON.stringify(data.sub_panels || [], null, 2),
-      dependencies: (data.dependencies || []).join('\n'),
+      extra_objects: data.extra_objects || {},
+      ui_config: data.ui_config || {},
+      ui_general: data.ui_general || {},
+      ui_details_overview: data.ui_details_overview || {},
+      ui_dashboard: data.ui_dashboard || {},
+      semantics: data.semantics || {},
+      rules: data.rules || {},
+      ai_metadata: data.ai_metadata || {},
+      jsonb_schema: data.jsonb_schema || {},
+      display_format: data.display_format || {},
+      sub_panels: data.sub_panels || [],
+      dependencies: data.dependencies || [],
     });
 
     message.success('Historical configuration loaded into form. Click Save to persist.');
@@ -378,7 +353,16 @@ const BlueprintConfig: React.FC<BlueprintConfigProps> = ({ entityType, entitySch
         layout="vertical"
         onFinish={handleSave}
       >
-        <Card title="General Information" style={{ marginBottom: 24 }}>
+        <Card 
+          title={
+            <Space>
+              <span>General Information</span>
+              {blueprint.id && <Tag color="blue">{blueprint.id}</Tag>}
+              {blueprint.is_active ? <Tag color="success">Active</Tag> : <Tag color="default">Inactive</Tag>}
+            </Space>
+          } 
+          style={{ marginBottom: 24 }}
+        >
           <Row gutter={24}>
             <Col span={12}>
               <Form.Item name="display_name" label="Display Name">
@@ -387,11 +371,11 @@ const BlueprintConfig: React.FC<BlueprintConfigProps> = ({ entityType, entitySch
             </Col>
             <Col span={6}>
               <Form.Item name="classification" label="Classification" initialValue="transactional">
-                <Select>
+                <Select size="small">
                   <Option value="transactional">Transactional</Option>
                   <Option value="master">Master</Option>
-                  <Option value="lifecycle">Lifecycle</Option>
-                  <Option value="reference">Reference</Option>
+                  <Option value="configuration">Configuration</Option>
+                  <Option value="analytical">Analytical</Option>
                 </Select>
               </Form.Item>
             </Col>
@@ -417,8 +401,8 @@ const BlueprintConfig: React.FC<BlueprintConfigProps> = ({ entityType, entitySch
               </Form.Item>
             </Col>
           </Row>
-          <Form.Item name="dependencies" label="Dependencies (one per line)">
-            <TextArea rows={3} placeholder="e.g.\nexternal.contacts\nexternal.accounts" />
+          <Form.Item name="dependencies" label="Dependencies">
+            <Select mode="tags" style={{ width: '100%' }} placeholder="Add table dependencies (e.g. core.unified_objects)" size="small" />
           </Form.Item>
         </Card>
 
@@ -434,72 +418,289 @@ const BlueprintConfig: React.FC<BlueprintConfigProps> = ({ entityType, entitySch
             </Card>
           </TabPane>
           <TabPane tab={<span><SettingOutlined />Main Configs</span>} key="json">
-            <Card>
-              <Row gutter={24}>
-                <Col span={12}>
-                  <Form.Item name="semantics" label="Semantics (JSON)">
-                    <JsonEditor rows={6} placeholder="Define semantic fields and types..." />
+            <Card title="Semantics & Context" size="small" style={{ marginBottom: 16 }}>
+              <Row gutter={16}>
+                <Col span={8}>
+                  <Form.Item name={['semantics', 'context', 'title']} label="Display Title">
+                    <Input placeholder="e.g. Accounts" size="small" />
                   </Form.Item>
                 </Col>
-                <Col span={12}>
-                  <Form.Item name="rules" label="Rules (JSON)">
-                    <JsonEditor rows={6} placeholder="Define validation or business rules..." />
+                <Col span={8}>
+                  <Form.Item name={['semantics', 'context', 'module']} label="Module">
+                    <Input placeholder="e.g. crm" size="small" />
+                  </Form.Item>
+                </Col>
+                <Col span={8}>
+                  <Form.Item name={['semantics', 'context', 'status']} label="Status">
+                    <Select size="small">
+                      <Option value="draft">Draft</Option>
+                      <Option value="alpha">Alpha</Option>
+                      <Option value="beta">Beta</Option>
+                      <Option value="applied">Applied</Option>
+                    </Select>
                   </Form.Item>
                 </Col>
               </Row>
-              <Row gutter={24}>
-                <Col span={12}>
-                  <Form.Item name="extra_objects" label="Extra Objects (JSON)">
-                    <JsonEditor rows={6} placeholder="Extended database objects definition..." />
-                  </Form.Item>
-                </Col>
-                <Col span={12}>
-                  <Form.Item name="ai_metadata" label="AI Metadata (JSON)">
-                    <JsonEditor rows={6} placeholder="AI training and processing metadata..." />
-                  </Form.Item>
-                </Col>
-              </Row>
-                <Form.Item name="sub_panels" label="Sub Panels (JSON)">
-                  <JsonEditor rows={6} placeholder="Definition for related sub-panels..." />
-                </Form.Item>
+              <Form.Item name={['semantics', 'context', 'description']} label="Semantic Description">
+                <TextArea rows={2} placeholder="Explain the purpose of this entity for AI context..." size="small" />
+              </Form.Item>
+              <Form.Item name={['semantics', 'context', 'keywords']} label="Search Keywords">
+                <Select mode="tags" size="small" placeholder="Add keywords for AI discovery..." />
+              </Form.Item>
             </Card>
+
+            <Card title="Registration & Lifecycle Rules" size="small" style={{ marginBottom: 16 }}>
+              <Row gutter={24}>
+                <Col span={12}>
+                  <Form.Item name={['rules', 'registration', 'mode']} label="Registration Mode">
+                    <Select size="small">
+                      <Option value="anchor">Anchor (Base Table)</Option>
+                      <Option value="graduated">Graduated (Promotion)</Option>
+                      <Option value="none">None</Option>
+                    </Select>
+                  </Form.Item>
+                </Col>
+                <Col span={6}>
+                  <Form.Item name={['rules', 'registration', 'is_graduated_only']} label="Graduated Only" valuePropName="checked">
+                    <Switch size="small" />
+                  </Form.Item>
+                </Col>
+                <Col span={6}>
+                  <Form.Item name={['rules', 'registration', 'migrated_to_column']} label="Migrated" valuePropName="checked">
+                    <Switch size="small" />
+                  </Form.Item>
+                </Col>
+              </Row>
+            </Card>
+
+            <Collapse ghost size="small">
+              <Collapse.Panel header="Advanced Configuration (Raw JSON)" key="advanced">
+                <Row gutter={16}>
+                  <Col span={12}>
+                    <Form.Item name="semantics" label="Raw Semantics">
+                      <JsonEditor rows={6} />
+                    </Form.Item>
+                  </Col>
+                  <Col span={12}>
+                    <Form.Item name="rules" label="Raw Rules">
+                      <JsonEditor rows={6} />
+                    </Form.Item>
+                  </Col>
+                </Row>
+                <Row gutter={16}>
+                  <Col span={12}>
+                    <Form.Item name="ai_metadata" label="AI Metadata">
+                      <JsonEditor rows={6} />
+                    </Form.Item>
+                  </Col>
+                  <Col span={12}>
+                    <Form.Item name="extra_objects" label="Extra Objects">
+                      <JsonEditor rows={6} />
+                    </Form.Item>
+                  </Col>
+                </Row>
+              </Collapse.Panel>
+            </Collapse>
           </TabPane>
           <TabPane tab={<span><DesktopOutlined />UI Settings</span>} key="ui">
-            <Card>
-              <Row gutter={24}>
+            <Card title="View Configuration" size="small" style={{ marginBottom: 16 }}>
+              <Row gutter={16}>
                 <Col span={12}>
-                  <Form.Item name="ui_config" label="UI Legacy Config (JSON)">
-                    <JsonEditor rows={6} placeholder="Legacy UI settings..." />
+                  <Form.Item name={['ui_general', 'default_view']} label="Default View">
+                    <Select size="small">
+                      <Option value="tableview">Table View</Option>
+                      <Option value="gridview">Grid View</Option>
+                      <Option value="kanbanview">Kanban View</Option>
+                      <Option value="detailview">Detail View</Option>
+                      <Option value="mapview">Map View</Option>
+                      <Option value="calendarview">Calendar View</Option>
+                    </Select>
                   </Form.Item>
                 </Col>
                 <Col span={12}>
-                  <Form.Item name="ui_general" label="UI General (JSON)">
-                    <JsonEditor rows={6} placeholder="General UI settings, icons, actions..." />
-                  </Form.Item>
-                </Col>
-              </Row>
-              <Row gutter={24}>
-                <Col span={12}>
-                  <Form.Item name="ui_details_overview" label="Details Overview (JSON)">
-                    <JsonEditor rows={6} placeholder="Layout for details view..." />
-                  </Form.Item>
-                </Col>
-                <Col span={12}>
-                  <Form.Item name="ui_dashboard" label="Dashboard Config (JSON)">
-                    <JsonEditor rows={6} placeholder="Widgets and charts config..." />
+                  <Form.Item name={['ui_general', 'available_views']} label="Enabled Views">
+                    <Select mode="multiple" size="small" placeholder="Select views available to users">
+                      <Option value="tableview">Table View</Option>
+                      <Option value="gridview">Grid View</Option>
+                      <Option value="kanbanview">Kanban View</Option>
+                      <Option value="detailview">Detail View</Option>
+                      <Option value="mapview">Map View</Option>
+                      <Option value="calendarview">Calendar View</Option>
+                      <Option value="metricsview">Metrics View</Option>
+                    </Select>
                   </Form.Item>
                 </Col>
               </Row>
             </Card>
+
+            <Card title="Feature Flags" size="small" style={{ marginBottom: 16 }}>
+              <Row gutter={[16, 8]}>
+                {['print', 'export', 'import', 'kanban', 'sorting', 'calendar', 'filtering', 'export_pdf', 'pagination', 'bulk_actions'].map(feature => (
+                  <Col span={6} key={feature}>
+                    <Form.Item 
+                      name={['ui_general', 'features', feature]} 
+                      label={feature.split('_').map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' ')} 
+                      valuePropName="checked"
+                      style={{ marginBottom: 0 }}
+                    >
+                      <Switch size="small" />
+                    </Form.Item>
+                  </Col>
+                ))}
+              </Row>
+            </Card>
+
+            <Card title="Details View Tabs" size="small">
+              <Form.List name={['ui_details_overview', 'staticTabs']}>
+                {(fields, { add, remove }) => (
+                  <>
+                    {fields.map(({ key, name, ...restField }) => (
+                      <Space key={key} style={{ display: 'flex', marginBottom: 8 }} align="baseline">
+                        <Form.Item
+                          {...restField}
+                          name={[name, 'tab']}
+                          rules={[{ required: true, message: 'Missing tab name' }]}
+                        >
+                          <Input placeholder="Tab ID" size="small" />
+                        </Form.Item>
+                        <Form.Item
+                          {...restField}
+                          name={[name, 'label']}
+                          rules={[{ required: true, message: 'Missing label' }]}
+                        >
+                          <Input placeholder="Label" size="small" />
+                        </Form.Item>
+                        <Form.Item
+                          {...restField}
+                          name={[name, 'order']}
+                        >
+                          <Input placeholder="Order" type="number" size="small" />
+                        </Form.Item>
+                        <DeleteOutlined onClick={() => remove(name)} style={{ color: '#ff4d4f' }} />
+                      </Space>
+                    ))}
+                    <Button type="dashed" onClick={() => add()} block icon={<PlusOutlined />} size="small">
+                      Add Static Tab
+                    </Button>
+                  </>
+                )}
+              </Form.List>
+              
+              <Divider dashed style={{ margin: '16px 0' }} />
+              
+              <Form.List name={['ui_details_overview', 'dynamicTabs']}>
+                {(fields, { add, remove }) => (
+                  <>
+                    {fields.map(({ key, name, ...restField }) => (
+                      <Space key={key} style={{ display: 'flex', marginBottom: 8 }} align="baseline">
+                        <Form.Item
+                          {...restField}
+                          name={[name, 'label']}
+                          rules={[{ required: true, message: 'Missing label' }]}
+                        >
+                          <Input placeholder="Label (e.g. Contacts)" size="small" />
+                        </Form.Item>
+                        <Form.Item
+                          {...restField}
+                          name={[name, 'props', 'entityType']}
+                          rules={[{ required: true, message: 'Missing entity type' }]}
+                        >
+                          <Input placeholder="Entity (schema.table)" size="small" />
+                        </Form.Item>
+                        <Form.Item
+                          {...restField}
+                          name={[name, 'order']}
+                        >
+                          <Input placeholder="Order" type="number" size="small" />
+                        </Form.Item>
+                        <DeleteOutlined onClick={() => remove(name)} style={{ color: '#ff4d4f' }} />
+                      </Space>
+                    ))}
+                    <Button type="dashed" onClick={() => add()} block icon={<PlusOutlined />} size="small">
+                      Add Dynamic Panel
+                    </Button>
+                  </>
+                )}
+              </Form.List>
+            </Card>
+
+            <Collapse ghost size="small" style={{ marginTop: 16 }}>
+              <Collapse.Panel header="Advanced UI JSON" key="ui_advanced">
+                 <Row gutter={16}>
+                  <Col span={12}>
+                    <Form.Item name="ui_general" label="Raw UI General">
+                      <JsonEditor rows={6} />
+                    </Form.Item>
+                  </Col>
+                  <Col span={12}>
+                    <Form.Item name="ui_details_overview" label="Raw Details Overview">
+                      <JsonEditor rows={6} />
+                    </Form.Item>
+                  </Col>
+                </Row>
+                <Row gutter={16}>
+                  <Col span={12}>
+                    <Form.Item name="ui_dashboard" label="Raw Dashboard Config">
+                      <JsonEditor rows={6} />
+                    </Form.Item>
+                  </Col>
+                  <Col span={12}>
+                    <Form.Item name="ui_config" label="Legacy Config">
+                      <JsonEditor rows={6} />
+                    </Form.Item>
+                  </Col>
+                </Row>
+              </Collapse.Panel>
+            </Collapse>
           </TabPane>
           <TabPane tab={<span><SettingOutlined />Schema & Format</span>} key="schema">
-            <Card>
-              <Form.Item name="jsonb_schema" label="JSONB Schema (JSON)">
-                <JsonEditor rows={10} placeholder="Full JSONB schema definition..." />
+            <Card title="Display Formatting" size="small" style={{ marginBottom: 16 }}>
+              <Row gutter={16}>
+                <Col span={12}>
+                  <Form.Item 
+                    name={['display_format', 'format']} 
+                    label={
+                      <span>
+                        ID Format Pattern&nbsp;
+                        <Tooltip title="Pattern for auto-generated IDs, e.g. DOC-{SEQ}">
+                          <InfoCircleOutlined />
+                        </Tooltip>
+                      </span>
+                    }
+                  >
+                    <Input placeholder="e.g. {PREFIX}-{SEQ}" size="small" />
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item name={['display_format', 'counter_padding']} label="Counter Padding">
+                    <Input type="number" placeholder="e.g. 5" size="small" />
+                  </Form.Item>
+                </Col>
+              </Row>
+            </Card>
+
+            <Card title="JSONB Structure & Validation" size="small">
+              <Form.Item 
+                name="jsonb_schema" 
+                label={
+                  <span>
+                    Constraint Schema (JSON Schema)&nbsp;
+                    <Tooltip title="Validates the 'details' JSONB column structure">
+                      <InfoCircleOutlined />
+                    </Tooltip>
+                  </span>
+                }
+              >
+                <JsonEditor rows={12} placeholder="Full JSONB schema definition..." />
               </Form.Item>
-              <Form.Item name="display_format" label="Display Format (JSON)">
-                <JsonEditor rows={6} placeholder="Field formatting and masks..." />
-              </Form.Item>
+              
+              <Collapse ghost size="small">
+                <Collapse.Panel header="Advanced Format JSON" key="format_advanced">
+                  <Form.Item name="display_format" label="Raw Display Format">
+                    <JsonEditor rows={6} />
+                  </Form.Item>
+                </Collapse.Panel>
+              </Collapse>
             </Card>
           </TabPane>
           {blueprint.id && (
