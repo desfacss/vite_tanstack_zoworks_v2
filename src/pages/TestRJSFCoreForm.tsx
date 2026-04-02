@@ -235,10 +235,11 @@ const TestRJSFCoreForm = () => {
             setSelectedFormId(null);
             setLoadingSavedForms(true);
             try {
-                // Determine search pattern: if crm.accounts then search for crm_accounts
+                // Determine search patterns: if crm.accounts then search for crm_accounts and accounts
                 const searchPattern = selectedEntity.replace('.', '_');
+                const entityName = selectedEntity.includes('.') ? selectedEntity.split('.')[1] : selectedEntity;
                 
-                const { data, error } = await supabase
+                let { data, error } = await supabase
                     .schema('core')
                     .from('forms')
                     .select('id, name, organization_id')
@@ -246,6 +247,20 @@ const TestRJSFCoreForm = () => {
                     .order('name', { ascending: true });
 
                 if (error) throw error;
+
+                // Fallback to searching only the entity name if no results found for schema_entity
+                if ((!data || data.length === 0) && entityName !== searchPattern) {
+                    const { data: fallbackData, error: fallbackError } = await supabase
+                        .schema('core')
+                        .from('forms')
+                        .select('id, name, organization_id')
+                        .ilike('name', `%${entityName}%`)
+                        .order('name', { ascending: true });
+
+                    if (fallbackError) throw fallbackError;
+                    data = fallbackData;
+                }
+
                 setSavedForms(data || []);
             } catch (err: any) {
                 console.error('Failed to fetch saved forms:', err);

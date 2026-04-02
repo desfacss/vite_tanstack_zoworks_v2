@@ -86,11 +86,15 @@ export const dateRenderer = (value: string | Date | null | undefined) => {
     const date = dayjs(value);
     if (!date.isValid()) return <span className="text-muted-foreground">-</span>;
 
+    const format = typeof value === 'string' && (value.includes('T') || value.includes(' ')) 
+        ? 'MMM D, YYYY, h:mm A' 
+        : 'MMM D, YYYY';
+
     return (
-        <Tooltip title={date.format('MMM D, YYYY h:mm A')}>
-            <span className="text-muted-foreground flex items-center gap-1.5">
+        <Tooltip title={date.fromNow()}>
+            <span className="text-muted-foreground flex items-center gap-1.5 whitespace-nowrap">
                 <Calendar size={12} className="opacity-60" />
-                <span>{date.fromNow()}</span>
+                <span>{date.format(format)}</span>
             </span>
         </Tooltip>
     );

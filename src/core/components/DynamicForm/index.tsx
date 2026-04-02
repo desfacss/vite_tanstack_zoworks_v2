@@ -25,6 +25,7 @@ interface DynamicFormProps {
   formData?: any;
   updateId?: string | number;
   onFinish: (formData: any) => void;
+  entityType?: string;
 }
 
 interface CustomSubmitButton {
@@ -162,7 +163,7 @@ const applyFilter = (
   }
 };
 
-const DynamicForm: React.FC<DynamicFormProps> = ({ schemas, formData, updateId, onFinish }) => {
+const DynamicForm: React.FC<DynamicFormProps> = ({ schemas, formData, updateId, onFinish, entityType }) => {
   const [schema, setSchema] = useState<any>();
   const [loading, setLoading] = useState<boolean>(true);
   const [userId, setUserId] = useState<string | undefined>();
@@ -505,6 +506,16 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ schemas, formData, updateId, 
         initialFormData = { ...initialFormData, user_id: user.id };
       }
 
+      // Prefill object_type if it exists in schema and is currently empty
+      const tableName = entityType?.split('.').pop() || schemas?.db_schema?.table?.split('.').pop();
+      if (
+        schemas?.data_schema?.properties?.object_type &&
+        (initialFormData?.object_type === undefined || initialFormData?.object_type === null) &&
+        tableName
+      ) {
+        initialFormData = { ...initialFormData, object_type: tableName };
+      }
+
       initialFormData = formatDatesInFormData(initialFormData, schemas?.ui_schema, schemas?.data_schema);
       setLocalFormData(initialFormData);
 
@@ -513,7 +524,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ schemas, formData, updateId, 
       setLoading(false);
     };
     initialSetup();
-  }, [schemas, organization, formData, location, user]);
+  }, [schemas, organization, formData, location, user, entityType]);
 
   useEffect(() => {
     if (!schemas || !localFormData) return;

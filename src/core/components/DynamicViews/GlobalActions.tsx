@@ -79,6 +79,7 @@ const GlobalActions: React.FC<GlobalActionsProps> = ({
         ...(metadata?.some((field: any) => field.key === "updated_by") && user?.id ? { updated_by: user?.id } : {}),
         ...(metadata?.some((field: any) => field.key === "team_id") && (user as any)?.team_id && (user as any)?.team_id[0] ? { team_id: (user as any)?.team_id[0] } : {}),
         ...(metadata?.some((field: any) => field.key === "location_id") && location?.id ? { location_id: location?.id } : {}),
+        ...(metadata?.some((field: any) => field.key === "object_type") && entityType ? { object_type: entityType.split('.').pop() } : {}),
         // ...(metadata?.some((field: any) => field.key === "location_id") && location?.id && isLocationPartition(permissions, path?.pathname) ? { location_id: location?.id } : {}),
       };
 
@@ -304,7 +305,8 @@ const GlobalActions: React.FC<GlobalActionsProps> = ({
               ui_schema: formConfig.ui_schema || {},
               db_schema: formConfig.db_schema || {},
             }}
-            onFinish={(vals) => createMutation.mutate(vals)}
+            entityType={entityType}
+            onFinish={(vals: any) => createMutation.mutate(vals)}
           />
         ) : (
           <Spin />

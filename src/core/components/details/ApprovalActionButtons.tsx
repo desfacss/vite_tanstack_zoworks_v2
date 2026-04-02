@@ -36,7 +36,7 @@ const ApprovalActionButtons: React.FC<ApprovalActionButtonsProps> = ({
 
   const checkApproverEligibility = async () => {
     // PRE-EMPTIVE GUARD: If record is already in a terminal stage, don't show buttons
-    const terminalStages = ['Approved', 'Rejected', 'Cancelled'];
+    const terminalStages = ['Rejected', 'Cancelled'];
     if (currentStageId && terminalStages.includes(currentStageId)) {
       console.log('[ApprovalActionButtons] Record is in a terminal stage, hiding buttons.');
       setIsApprover(false);
@@ -113,7 +113,7 @@ const ApprovalActionButtons: React.FC<ApprovalActionButtonsProps> = ({
           p_submitter_org_user_id: submitterOrgUserId,
           p_organization_id: organization.id,
           p_blueprint_definition: blueprintDefinition,
-          p_current_stage_id: currentStageId,
+          p_current_stage_id: currentStageId === 'Approved' ? 'Submitted' : currentStageId,
           p_created_at: createdAt,
           p_current_time: new Date().toISOString(),
         });
@@ -159,7 +159,10 @@ const ApprovalActionButtons: React.FC<ApprovalActionButtonsProps> = ({
     },
     onSuccess: (res) => {
       queryClient.invalidateQueries({ queryKey: [entityType?.split('.')[1], organization?.id] });
-      message.success(`Successfully ${res.actionName}ed!`);
+      const conjugated = res.actionName === 'Approve' ? 'Approved' : 
+                         res.actionName === 'Reject' ? 'Rejected' : 
+                         res.actionName === 'Cancel' ? 'Cancelled' : (res.actionName + 'ed');
+      message.success(`Successfully ${conjugated}!`);
       // Optimization: hide buttons immediately
       setIsApprover(false);
     },
@@ -200,7 +203,14 @@ const ApprovalActionButtons: React.FC<ApprovalActionButtonsProps> = ({
     // Permission logic:
     // - Approve/Reject transitions are for Approvers.
     // - Cancel transitions are for Submitter OR Approver (if transition exists).
-    const canPerform = (isApprove || isReject) ? isApprover : (isCancel && (isSubmitter || isApprover));
+    //   - If stage is 'Submitted', only Submitter (Owner) can cancel.
+    //   - If stage is 'Approved', both Submitter and Approver (Manager) can cancel.
+    const canPerform = (isApprove || isReject) 
+      ? isApprover 
+      : (isCancel && (
+          (currentStageId === 'Submitted' && isSubmitter) || 
+          (currentStageId === 'Approved' && (isSubmitter || isApprover))
+        ));
 
     if (!canPerform) return null;
 
@@ -220,6 +230,10 @@ const ApprovalActionButtons: React.FC<ApprovalActionButtonsProps> = ({
       danger = true;
     }
 
+    const displayLabel = t.to === 'Approved' ? 'Approve' : 
+                         t.to === 'Rejected' ? 'Reject' : 
+                         t.to === 'Cancelled' ? 'Cancel' : (t.name || t.to);
+
     return (
       <Button
         key={t.id}
@@ -227,10 +241,10 @@ const ApprovalActionButtons: React.FC<ApprovalActionButtonsProps> = ({
         danger={danger}
         icon={icon}
         loading={updateStageMutation.isPending}
-        onClick={() => handleAction(t.to, t.name || t.to)}
+        onClick={() => handleAction(t.to, displayLabel)}
         style={style}
       >
-        {t.name || t.to}
+        {displayLabel}
       </Button>
     );
   }).filter(Boolean);

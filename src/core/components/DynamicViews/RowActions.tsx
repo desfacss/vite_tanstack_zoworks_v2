@@ -151,6 +151,7 @@ const RowActions: React.FC<RowActionsProps> = ({
         id: values.id || record.id, // Include id in data object for update
         ...(metadata.some((field: any) => field.key === 'organization_id') ? { organization_id: organization.id } : {}),
         ...(metadata.some((field: any) => field.key === 'updated_by') ? { updated_by: user.id } : {}),
+        ...(metadata.some((field: any) => field.key === 'object_type') ? { object_type: entityType.split('.').pop() } : {}),
       };
 
       // 1. Update main record
@@ -553,8 +554,9 @@ console.log("filteredActions", filteredActions);
               ui_schema: formConfig.ui_schema || {},
               db_schema: formConfig.db_schema || {},
             }}
+            entityType={entityType}
             formData={enhancedRecord}
-            onFinish={(vals) => updateMutation.mutate(vals)}
+            onFinish={(vals: any) => updateMutation.mutate(vals)}
           />
         ) : <Spin />}
       </Drawer>
