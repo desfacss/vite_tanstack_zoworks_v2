@@ -4,10 +4,21 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button, Space, message, Modal, Spin } from 'antd';
-import { CheckCircle, XCircle, RotateCcw } from "lucide-react";
+import { CheckCircle, XCircle, RotateCcw, Send, AlertTriangle, Edit, HelpCircle } from "lucide-react";
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/core/lib/store';
+
+const LUCIDE_ICON_MAP: Record<string, React.ReactNode> = {
+  'check': <CheckCircle size={16} />,
+  'x': <XCircle size={16} />,
+  'x-circle': <XCircle size={16} />,
+  'rotate-ccw': <RotateCcw size={16} />,
+  'send': <Send size={16} />,
+  'alert-triangle': <AlertTriangle size={16} />,
+  'edit': <Edit size={16} />,
+  'help': <HelpCircle size={16} />,
+};
 
 interface ApprovalActionButtonsProps {
   entityId: string;
@@ -35,13 +46,8 @@ const ApprovalActionButtons: React.FC<ApprovalActionButtonsProps> = ({
   const queryClient = useQueryClient();
 
   const checkApproverEligibility = async () => {
-    // PRE-EMPTIVE GUARD: If record is already in a terminal stage, don't show buttons
-    const terminalStages = ['Rejected', 'Cancelled'];
-    if (currentStageId && terminalStages.includes(currentStageId)) {
-      console.log('[ApprovalActionButtons] Record is in a terminal stage, hiding buttons.');
-      setIsApprover(false);
-      return;
-    }
+    // PRE-EMPTIVE GUARD: If no blueprint available, don't show buttons
+    // The previous terminalStages guard is removed to rely on available transitions.
 
     // Basic guards
     if (!submitterUserId || !createdAt || !organization?.id || !user?.id || !currentStageId) {
@@ -159,9 +165,13 @@ const ApprovalActionButtons: React.FC<ApprovalActionButtonsProps> = ({
     },
     onSuccess: (res) => {
       queryClient.invalidateQueries({ queryKey: [entityType?.split('.')[1], organization?.id] });
-      const conjugated = res.actionName === 'Approve' ? 'Approved' : 
-                         res.actionName === 'Reject' ? 'Rejected' : 
-                         res.actionName === 'Cancel' ? 'Cancelled' : (res.actionName + 'ed');
+      const action = res.actionName.toLowerCase();
+      const conjugated = action === 'approve' ? 'Approved' : 
+                         action === 'reject' ? 'Rejected' : 
+                         action === 'cancel' ? 'Cancelled' : 
+                         action === 'submit' ? 'Submitted' : 
+                         action === 'revise' ? 'Revised' : 
+                         `${res.actionName} completed`;
       message.success(`Successfully ${conjugated}!`);
       // Optimization: hide buttons immediately
       setIsApprover(false);
@@ -171,10 +181,10 @@ const ApprovalActionButtons: React.FC<ApprovalActionButtonsProps> = ({
     },
   });
 
-  const handleAction = (newStageId: string, actionName: string) => {
+  const handleAction = (newStageId: string, actionName: string, confirmMessage?: string) => {
     Modal.confirm({
       title: `${actionName} Confirmation`,
-      content: `Are you sure you want to ${actionName.toLowerCase()} this request?`,
+      content: confirmMessage || `Are you sure you want to ${actionName.toLowerCase()} this request?`,
       okText: actionName,
       okType: newStageId === 'Rejected' || newStageId === 'Cancelled' ? 'danger' : 'primary',
       cancelText: 'Cancel',
@@ -196,43 +206,57 @@ const ApprovalActionButtons: React.FC<ApprovalActionButtonsProps> = ({
   const isSubmitter = user?.id === submitterUserId;
 
   const buttons = availableTransitions.map((t: any) => {
-    const isApprove = t.to === 'Approved';
-    const isReject = t.to === 'Rejected';
-    const isCancel = t.to === 'Cancelled';
+    const isApprove = t.to === 'Approved' || t.id?.includes('APPROVE');
+    const isReject = t.to === 'Rejected' || t.id?.includes('REJECT');
+    const isCancel = t.to === 'Cancelled' || t.id?.includes('CANCEL');
 
-    // Permission logic:
-    // - Approve/Reject transitions are for Approvers.
-    // - Cancel transitions are for Submitter OR Approver (if transition exists).
-    //   - If stage is 'Submitted', only Submitter (Owner) can cancel.
-    //   - If stage is 'Approved', both Submitter and Approver (Manager) can cancel.
-    const canPerform = (isApprove || isReject) 
-      ? isApprover 
-      : (isCancel && (
-          (currentStageId === 'Submitted' && isSubmitter) || 
-          (currentStageId === 'Approved' && (isSubmitter || isApprover))
-        ));
+    // DYNAMIC PERMISSION LOGIC (using guard_rules.allowed_roles from blueprint)
+    // If no roles defined, fallback to standard role checking.
+    const allowedRoles = t.guard_rules?.allowed_roles || [];
+    let canPerform = false;
+
+    if (allowedRoles.length === 0) {
+      // Default fallback logic if guard_rules is empty:
+      canPerform = (isApprove || isReject) 
+        ? isApprover 
+        : (isCancel && (
+            (currentStageId === 'Submitted' && isSubmitter) || 
+            (currentStageId === 'Approved' && (isSubmitter || isApprover))
+          )) || (!isApprove && !isReject && !isCancel && isSubmitter); // Default other actions to Owner
+    } else {
+      // Precise role-based logic:
+      const includesOwner = allowedRoles.includes('OWNER') || allowedRoles.includes('SELF');
+      const includesApprover = allowedRoles.some((r: string) => 
+        ['APPROVER', 'MANAGER', 'HR_MANAGER', 'FINANCE'].includes(r)
+      );
+
+      canPerform = (includesOwner && isSubmitter) || (includesApprover && isApprover);
+    }
 
     if (!canPerform) return null;
 
-    let icon = <CheckCircle size={16} />;
+    // DYNAMIC UI METADATA
+    const ui = t.ui || {};
+    const icon = LUCIDE_ICON_MAP[ui.icon] || (isApprove ? <CheckCircle size={16} /> : isReject ? <XCircle size={16} /> : isCancel ? <RotateCcw size={16} /> : <HelpCircle size={16} />);
+    
+    // Ant Design button type & styles
     let btnType: "primary" | "default" | "dashed" | "link" | "text" = "default";
-    let danger = false;
+    let danger = ui.button_variant === 'danger' || isReject || isCancel;
     let style: React.CSSProperties = {};
 
-    if (isApprove) {
+    if (ui.button_variant === 'primary' || isApprove) {
       btnType = "primary";
-      style = { backgroundColor: '#16a34a', borderColor: '#16a34a' };
-    } else if (isReject) {
-      danger = true;
-      icon = <XCircle size={16} />;
-    } else if (isCancel) {
-      icon = <RotateCcw size={16} />;
-      danger = true;
+      if (isApprove) style = { backgroundColor: '#16a34a', borderColor: '#16a34a' }; // Keep green for Approve
+    } else if (ui.button_variant === 'secondary') {
+      btnType = "default";
     }
 
-    const displayLabel = t.to === 'Approved' ? 'Approve' : 
-                         t.to === 'Rejected' ? 'Reject' : 
-                         t.to === 'Cancelled' ? 'Cancel' : (t.name || t.to);
+    // Use blueprint label if available, otherwise verb-mapped status
+    const label = t.label || t.name || (
+      t.to === 'Approved' ? 'Approve' : 
+      t.to === 'Rejected' ? 'Reject' : 
+      t.to === 'Cancelled' ? 'Cancel' : t.to
+    );
 
     return (
       <Button
@@ -241,10 +265,10 @@ const ApprovalActionButtons: React.FC<ApprovalActionButtonsProps> = ({
         danger={danger}
         icon={icon}
         loading={updateStageMutation.isPending}
-        onClick={() => handleAction(t.to, displayLabel)}
+        onClick={() => handleAction(t.to, label, ui.confirm_message)}
         style={style}
       >
-        {displayLabel}
+        {label}
       </Button>
     );
   }).filter(Boolean);
