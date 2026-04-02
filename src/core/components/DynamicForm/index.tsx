@@ -175,8 +175,8 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ schemas, formData, updateId, 
   // 🎯 FIX: Use a ref to hold the *active* button's default values for reliable sync access in onSubmit
   const activeButtonDefaultsRef = useRef<{ [key: string]: any } | null>(null);
 
-  const { organization: userOrganization, location } = useAuthStore();
-
+  const { organization: userOrganization, location, user } = useAuthStore();
+  
   const getOrganization = async (): Promise<void> => {
     if (userOrganization?.id) {
       setOrganization(userOrganization);
@@ -398,13 +398,14 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ schemas, formData, updateId, 
       const noId = enumValue?.no_id || false;
       let filterConditions: FilterType[] = enumValue?.filter || enumValue?.filters || [];
 
-      if (enumValue?.dependsOnColumn && formData[enumValue?.dependsOnField]) {
+      const dependsOnField = enumValue?.dependsOnField;
+      if (enumValue?.dependsOnColumn && dependsOnField && formData[dependsOnField]) {
         filterConditions = [
           ...filterConditions,
           {
             key: enumValue.dependsOnColumn,
             operator: 'eq',
-            value: formData[enumValue?.dependsOnField],
+            value: formData[dependsOnField],
           },
         ];
       }
@@ -421,12 +422,13 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ schemas, formData, updateId, 
             })
           );
         } else if (enumValue?.table && enumValue?.column) {
+          const enumColumn = enumValue.column;
           promises.push(
-            fetchDataForDropdown(enumValue?.schema, enumValue?.table, enumValue?.column, filterConditions, noId, false).then((options) => {
+            fetchDataForDropdown(enumValue?.schema, enumValue?.table, enumColumn, filterConditions, noId, false).then((options) => {
               obj[key] = {
                 ...obj[key],
-                enum: options?.map((item: any) => (noId ? item[`${enumValue?.column}`] : item?.id)),
-                enumNames: options?.map((item: any) => item[`${enumValue?.column}`]),
+                enum: options?.map((item: any) => (noId ? item[enumColumn] : item?.id)),
+                enumNames: options?.map((item: any) => item[enumColumn]),
               };
             })
           );
@@ -495,6 +497,14 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ schemas, formData, updateId, 
         initialFormData = { ...initialFormData, location_id: location.id };
       }
 
+      if (
+        schemas?.data_schema?.properties?.user_id &&
+        (initialFormData?.user_id === undefined || initialFormData?.user_id === null) &&
+        user?.id
+      ) {
+        initialFormData = { ...initialFormData, user_id: user.id };
+      }
+
       initialFormData = formatDatesInFormData(initialFormData, schemas?.ui_schema, schemas?.data_schema);
       setLocalFormData(initialFormData);
 
@@ -503,7 +513,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ schemas, formData, updateId, 
       setLoading(false);
     };
     initialSetup();
-  }, [schemas, organization, formData, location]);
+  }, [schemas, organization, formData, location, user]);
 
   useEffect(() => {
     if (!schemas || !localFormData) return;

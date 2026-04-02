@@ -119,6 +119,17 @@ const CommerceReturns = lazy(() => import('@/modules/commerce/pages/admin/Return
 const CommerceReviews = lazy(() => import('@/modules/commerce/pages/admin/ReviewsPage'));
 const CommerceSettings = lazy(() => import('@/modules/commerce/pages/admin/CommerceSettings'));
 
+// Migration Module
+const MigrationDataExplorer = lazy(() => import('../modules/migration/pages/DataExplorer'));
+const MigrationGeofenceMap = lazy(() => import('../modules/migration/pages/GeofenceMap'));
+const MigrationLegacyTickets = lazy(() => import('../modules/migration/pages/LegacyTickets'));
+const MigrationWorkflowPage = lazy(() => import('../modules/migration/pages/WorkflowMigrationPage'));
+const MigrationActivities = lazy(() => import('../modules/migration/pages/LegacyActivities'));
+const MigrationTeams = lazy(() => import('../modules/migration/pages/LegacyTeams'));
+const MigrationNlpPage = lazy(() => import('../modules/migration/pages/NlpMigrationPage'));
+const MigrationAiQueryPage = lazy(() => import('../modules/migration/pages/AiQueryMigrationPage'));
+const MigrationTrackingPage = lazy(() => import('../modules/migration/pages/TrackingMigrationPage'));
+
 export const AppRoutes: FC = () => {
     const { user, permissions, bypass, setNavigationItems } = useAuthStore(state => ({
         user: state.user,
@@ -311,6 +322,17 @@ export const AppRoutes: FC = () => {
                         <Route path="/commerce/catalog" element={<AdminCatalogManager />} />
                         <Route path="/commerce/shop-preview" element={<EcomCatalogPage />} />
                         <Route path="/commerce/:entity" element={<GenericDynamicPage schema="catalog" />} />
+
+                        {/* Migration Module */}
+                        <Route path="/migration/data" element={<MigrationDataExplorer />} />
+                        <Route path="/migration/geofence" element={<MigrationGeofenceMap />} />
+                        <Route path="/migration/tickets" element={<MigrationLegacyTickets />} />
+                        <Route path="/migration/workflows" element={<MigrationWorkflowPage />} />
+                        <Route path="/migration/activities" element={<MigrationActivities />} />
+                        <Route path="/migration/teams" element={<MigrationTeams />} />
+                        <Route path="/migration/nlp" element={<MigrationNlpPage />} />
+                        <Route path="/migration/ai" element={<MigrationAiQueryPage />} />
+                        <Route path="/migration/tracking" element={<MigrationTrackingPage />} />
 
                         {/* 404 */}
                         <Route path="*" element={<NotFound />} />

@@ -107,6 +107,8 @@ registerWorkforce();
 import('@/modules/ai/registry').then(module => module.register());
 import('@/modules/core/registry').then(module => module.register());
 import('@/modules/esign/registry').then(module => module.registerESignModule());
+import { register as registerMigration } from '@/modules/migration/registry';
+registerMigration();
 
 function App() {
   useEffect(() => {
