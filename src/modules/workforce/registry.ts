@@ -63,19 +63,29 @@ export async function register(
       order: 20,
     });
 
+    // Global Add Action
+    registry.registerAction({
+      id: 'timesheet-add',
+      entityTypes: timesheetEntityTypes,
+      position: 'global',
+      label: 'Add Timesheet',
+      component: () => import('./components/Times'),
+    });
+
+    // Row Edit Action
     registry.registerAction({
       id: 'timesheet-edit',
       entityTypes: timesheetEntityTypes,
-      position: 'both',
+      position: 'row',
       label: 'Edit',
       component: () => import('./components/Times'),
     });
-    // Add alias for 'timesheet' if form name in DB is just 'timesheet'
+
     registry.registerAction({
       id: 'timesheet',
       entityTypes: timesheetEntityTypes,
       position: 'both',
-      label: 'Edit',
+      label: 'Timesheet',
       component: () => import('./components/Times'),
     });
     console.log('[Workforce] ✓ Timesheets registered');
@@ -85,19 +95,30 @@ export async function register(
   if (subModules.expenses !== false) {
     const expenseEntityTypes = ['expense_sheets', 'workforce.expense_sheets', 'expense_sheet', 'expense_sheet_items'];
 
+    // Global Add Action
+    registry.registerAction({
+      id: 'expense-add',
+      entityTypes: expenseEntityTypes,
+      position: 'global',
+      label: 'Add Expense',
+      component: () => import('./components/Expenses'),
+    });
+
+    // Row Edit Action
     registry.registerAction({
       id: 'expense-edit',
       entityTypes: expenseEntityTypes,
-      position: 'both',
+      position: 'row',
       label: 'Edit',
       component: () => import('./components/Expenses'),
     });
-    // Alias to match potentially shorter form names in DB
+
+    // Alias for backward compatibility or direct DB form matches
     registry.registerAction({
       id: 'expense_sheet',
       entityTypes: expenseEntityTypes,
       position: 'both',
-      label: 'Edit',
+      label: 'Expense Sheet',
       component: () => import('./components/Expenses'),
     });
     console.log('[Workforce] ✓ Expenses registered');
@@ -105,7 +126,7 @@ export async function register(
 
   // 6. Register Leaves Actions
   if (subModules.leaves !== false) {
-    const leaveEntityTypes = ['leave_applications', 'workforce.leave_applications', 'leave_application'];
+    // const leaveEntityTypes = ['leave_applications', 'workforce.leave_applications', 'leave_application'];
 
     // Note: If no specialized Leave component exists, we'll let it fallback to DynamicForm
     // or we can register a placeholder if we find one later.

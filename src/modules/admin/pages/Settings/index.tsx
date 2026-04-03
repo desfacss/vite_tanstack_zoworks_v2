@@ -30,53 +30,43 @@ const Settings: React.FC = () => {
   // Define the tab items as an array
   const items = [
     {
-      label: 'Mermaid Viewer',
-      key: '1',
-      children: <MermaidViewer />,
-    },
-    {
-      label: 'Doc Viewer',
-      key: '1.1',
-      children: <GoogleDocViewer docLink={"https://docs.google.com/document/d/1PiXZcV9EtkHY5LRhA6cc6jxL_7Owsu-_VtOJ-jbbE2Q/edit?tab=t.0"} height="600px" />,
-    },
-    {
-      label: 'Organization',
-      key: '1.5',
-      children: <Organization />,
-    },
-    {
       label: 'Organization Admin',
-      key: 'saas_admin_org',
+      key: '1',
       children: <OrganizationSettings />,
     },
     {
+      label: 'Organization',
+      key: '2',
+      children: <Organization />,
+    },
+    {
       label: 'Users',
-      key: '1.6',
+      key: '3',
       children: <Users />,
     },
     {
       label: 'Teams',
-      key: '1.7',
+      key: '4',
       children: <Teams />,
     },
     {
       label: 'Roles Management',
-      key: '1.8',
+      key: '5',
       children: <RolesManagement />,
     },
     {
       label: 'Roles (DynamicViews)',
-      key: '2',
+      key: '6',
       children: <Roles />,
     },
     {
       label: 'Roles & Permission',
-      key: '3',
+      key: '7',
       children: <RoleFeatureEdit organization={organization} />,
     },
     {
       label: (organization?.app_settings as any)?.holidays ? 'Location & Holidays' : 'Location',
-      key: '4',
+      key: '8',
       children: <LocationSettings />,
     },
     {
@@ -86,13 +76,23 @@ const Settings: React.FC = () => {
     },
     {
       label: 'Module Settings',
-      key: '5',
+      key: '9',
       children: <SettingsWorkforce />,
     },
     {
       label: 'Entity Config',
-      key: '6',
+      key: '10',
       children: <EntityConfig />,
+    },
+    {
+      label: 'Mermaid Viewer',
+      key: '11',
+      children: <MermaidViewer />,
+    },
+    {
+      label: 'Doc Viewer',
+      key: '12',
+      children: <GoogleDocViewer docLink={"https://docs.google.com/document/d/1PiXZcV9EtkHY5LRhA6cc6jxL_7Owsu-_VtOJ-jbbE2Q/edit?tab=t.0"} height="600px" />,
     },
   ];
 

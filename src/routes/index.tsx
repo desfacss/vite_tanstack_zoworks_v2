@@ -59,6 +59,7 @@ const AdminNotifications = lazy(() => import('@/modules/admin/pages/Settings/Not
 const OnboardingRequests = lazy(() => import('@/modules/admin/pages/OnboardingRequests'));
 const Profile = lazy(() => import('../pages/core/Profile'));
 const Settings = lazy(() => import('../pages/core/UserSetting'));
+const LocationsPage = lazy(() => import('../pages/identity/LocationsPage'));
 const WaInbox = lazy(() => import('@/modules/wa/pages/InboxPage'));
 const WaSequences = lazy(() => import('@/modules/wa/pages/SequencesPage'));
 const WaTemplates = lazy(() => import('@/modules/wa/pages/TemplatesPage'));
@@ -305,6 +306,7 @@ export const AppRoutes: FC = () => {
                         <Route path="/external/:entity" element={<GenericDynamicPage schema="external" />} />
                         <Route path="/hr/:entity" element={<GenericDynamicPage schema="hr" />} />
                         <Route path="/unified/:entity" element={<GenericDynamicPage schema="unified" />} />
+                        <Route path="/identity/locations" element={<LocationsPage />} />
                         <Route path="/identity/:entity" element={<GenericDynamicPage schema="identity" />} />
                         <Route path="/core/:entity" element={<GenericDynamicPage schema="core" />} />
                         <Route path="/ai/:entity" element={<GenericDynamicPage schema="ai_mcp" />} />

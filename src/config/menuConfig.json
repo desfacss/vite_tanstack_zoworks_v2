@@ -365,7 +365,7 @@
         "submoduleKey": "identity-location_types"
       },
       {
-        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "filePath": "src/pages/identity/LocationsPage.tsx",
         "routePath": "/identity/locations",
         "translationKey": "locations",
         "key": "identity-locations",
