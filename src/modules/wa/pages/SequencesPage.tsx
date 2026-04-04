@@ -264,7 +264,7 @@ const SequencesPage: React.FC = () => {
                 setShowCreateModal(false);
                 form.resetFields();
                 if (newCampaign && newCampaign.id) {
-                    navigate(`/sequences/${newCampaign.id}`);
+                    navigate(`/wa/sequences/${newCampaign.id}`);
                 }
             } catch (e) {
                 message.error("Failed to create campaign");
@@ -289,7 +289,7 @@ const SequencesPage: React.FC = () => {
             const cloned = await cloneCampaign.mutateAsync(id);
             message.success("Sequence cloned!");
             if (cloned?.id) {
-                navigate(`/sequences/${cloned.id}`);
+                navigate(`/wa/sequences/${cloned.id}`);
             }
         } catch (e) {
             message.error("Failed to clone sequence");
@@ -370,7 +370,7 @@ const SequencesPage: React.FC = () => {
                             <SequenceCard
                                 key={sequence.id}
                                 sequence={sequence}
-                                onSelect={() => viewMode === 'my-sequences' ? navigate(`/sequences/${sequence.id}`) : handleClone(sequence.id)}
+                                onSelect={() => viewMode === 'my-sequences' ? navigate(`/wa/sequences/${sequence.id}`) : handleClone(sequence.id)}
                                 onToggleStatus={() => handleToggleStatus(sequence)}
                                 onClone={() => handleClone(sequence.id)}
                                 onDelete={() => setDeleteConfirmId(sequence.id)}

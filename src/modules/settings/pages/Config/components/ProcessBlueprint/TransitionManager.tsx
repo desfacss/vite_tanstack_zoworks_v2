@@ -1,10 +1,8 @@
-import React, { useState } from 'react';
-import { Button, Select, Popconfirm, Card, Typography, Drawer, Form, Input, Switch, Space, Row, Col, Divider, Tag, Badge, ColorPicker, Tooltip } from 'antd';
-import { Plus, Trash2, ArrowRight, Settings, MousePointer, Zap, Shield } from 'lucide-react';
-import { QueryBuilder } from 'react-querybuilder';
+import React from 'react';
+import { Button, Card, Typography, Popconfirm, Tag, Space, Divider, Badge, Tooltip } from 'antd';
+import { Plus, Trash2, ArrowRight, MousePointer, Zap, Shield } from 'lucide-react';
 
 const { Text, Title } = Typography;
-const { Option } = Select;
 
 interface Transition {
   id?: string;
@@ -14,13 +12,11 @@ interface Transition {
   type?: 'forward' | 'backward' | 'cancellation' | 'other';
   trigger?: 'manual' | 'auto';
   is_manual?: boolean;
-  
-  // Nested structure from backend
   ui?: {
     icon?: string;
     button_variant?: string;
     confirm_message?: string;
-    button_color?: string; // We map this from/to the flat picker
+    button_color?: string;
   };
   guard_rules?: {
     allowed_roles?: string[];
@@ -35,22 +31,10 @@ interface TransitionManagerProps {
   onChange: (transitions: Transition[]) => void;
   stages: { id: string; name: string; sequence?: number; category?: string }[];
   fields: any[]; // Entity metadata fields
+  onEdit: (index: number, transition: Transition) => void;
 }
 
-const PRESET_COLORS = [
-  { label: 'Primary', color: '#1677ff' },
-  { label: 'Success', color: '#52c41a' },
-  { label: 'Warning', color: '#faad14' },
-  { label: 'Danger', color: '#ff4d4f' },
-  { label: 'Info', color: '#722ed1' },
-  { label: 'Neutral', color: '#8c8c8c' }
-];
-
-const TransitionManager: React.FC<TransitionManagerProps> = ({ transitions, onChange, stages, fields }) => {
-  const [drawerVisible, setDrawerVisible] = useState(false);
-  const [editingIndex, setEditingIndex] = useState<number | null>(null);
-  const [form] = Form.useForm();
-
+const TransitionManager: React.FC<TransitionManagerProps> = ({ transitions, onChange, stages, fields, onEdit }) => {
   const handleAdd = () => {
     const stageList = Array.isArray(stages) ? stages : [];
     const fromStage = stageList[0]?.id || '';
@@ -83,92 +67,12 @@ const TransitionManager: React.FC<TransitionManagerProps> = ({ transitions, onCh
     onChange(newList);
     
     // Open editor for the new transition
-    openEditor(newList.length - 1, newTransition);
-  };
-
-  const openEditor = (index: number, transition: Transition) => {
-    setEditingIndex(index);
-    form.setFieldsValue({
-      ...transition,
-      // Map 'trigger' to 'is_manual' for the UI switch
-      is_manual: transition.trigger === 'manual' || (transition as any).is_manual,
-      // Unpack nested UI
-      icon: transition.ui?.icon,
-      button_variant: transition.ui?.button_variant || 'primary',
-      confirm_message: transition.ui?.confirm_message,
-      button_color: transition.ui?.button_color || '#1677ff',
-      // Unpack nested guard rules
-      allowed_roles: transition.guard_rules?.allowed_roles || [],
-      validation_rpc: transition.guard_rules?.validation_rpc,
-      required_fields: transition.guard_rules?.required_fields || []
-    });
-    setDrawerVisible(true);
-  };
-
-  const saveDetails = () => {
-    form.validateFields().then(values => {
-      const newList = [...(Array.isArray(transitions) ? transitions : [])];
-      
-      if (editingIndex !== null) {
-        const fromStage = stages.find(s => s.id === values.from);
-        const toStage = stages.find(s => s.id === values.to);
-        
-        // Auto-derive type
-        if (fromStage && toStage && !values.type_override) {
-          if (toStage.category === 'CLOSED_LOST' || toStage.category === 'CANCELLED') {
-            values.type = 'cancellation';
-          } else if ((toStage.sequence || 0) > (fromStage.sequence || 0)) {
-            values.type = 'forward';
-          } else if ((toStage.sequence || 0) < (fromStage.sequence || 0)) {
-            values.type = 'backward';
-          }
-        }
-
-        // Reconstruct nested structures
-        const updatedTransition: Transition = {
-          ...newList[editingIndex],
-          ...values,
-          trigger: values.is_manual ? 'manual' : 'auto',
-          ui: {
-            icon: values.icon,
-            button_variant: values.button_variant,
-            confirm_message: values.confirm_message,
-            button_color: typeof values.button_color === 'string' ? values.button_color : values.button_color?.toHexString?.() || '#1677ff'
-          },
-          guard_rules: {
-            allowed_roles: values.allowed_roles,
-            validation_rpc: values.validation_rpc,
-            required_fields: values.required_fields
-          }
-        };
-        
-        // Clean up flat fields that are now nested
-        delete (updatedTransition as any).icon;
-        delete (updatedTransition as any).button_variant;
-        delete (updatedTransition as any).confirm_message;
-        delete (updatedTransition as any).button_color;
-        delete (updatedTransition as any).allowed_roles;
-        delete (updatedTransition as any).validation_rpc;
-        delete (updatedTransition as any).required_fields;
-        delete (updatedTransition as any).is_manual;
-
-        newList[editingIndex] = updatedTransition;
-        onChange(newList);
-      }
-      setDrawerVisible(false);
-    });
+    onEdit(newList.length - 1, newTransition);
   };
 
   const handleDelete = (index: number) => {
     onChange((Array.isArray(transitions) ? transitions : []).filter((_, i) => i !== index));
   };
-
-  // Convert entity metadata to QueryBuilder fields
-  const qbFields = (Array.isArray(fields) ? fields : []).map(f => ({
-    name: f.key,
-    label: f.display_name || f.key,
-    type: f.type === 'integer' || f.type === 'number' ? 'number' : f.type === 'boolean' ? 'boolean' : 'string',
-  }));
 
   const data = Array.isArray(transitions) ? transitions : [];
   const stageList = Array.isArray(stages) ? stages : [];
@@ -190,7 +94,7 @@ const TransitionManager: React.FC<TransitionManagerProps> = ({ transitions, onCh
             hoverable
             className="transition-card" 
             style={{ borderRadius: '8px', border: '1px solid #f0f0f0' }}
-            onClick={() => openEditor(index, t)}
+            onClick={() => onEdit(index, t)}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <div style={{ 
@@ -264,174 +168,10 @@ const TransitionManager: React.FC<TransitionManagerProps> = ({ transitions, onCh
         )}
       </div>
 
-      <Drawer
-        title={
-          <Space>
-            <Settings size={18} />
-            Edit Transition: {data[editingIndex ?? -1]?.label || data[editingIndex ?? -1]?.id}
-          </Space>
-        }
-        width={720}
-        onClose={() => setDrawerVisible(false)}
-        open={drawerVisible}
-        extra={
-          <Space>
-            <Button onClick={() => setDrawerVisible(false)}>Cancel</Button>
-            <Button type="primary" onClick={saveDetails}>Save Changes</Button>
-          </Space>
-        }
-      >
-        <Form form={form} layout="vertical">
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item label="Transition ID (Key)" name="id" rules={[{ required: true }]}>
-                <Input placeholder="e.g. T_TRIAGE" disabled={editingIndex !== null} />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item label="Display Name (Label)" name="label" rules={[{ required: true }]}>
-                <Input placeholder="e.g. Move to Prospecting" />
-              </Form.Item>
-            </Col>
-          </Row>
-
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item label="From Stage" name="from" rules={[{ required: true }]}>
-                <Select placeholder="Select source stage">
-                  {stageList.map(s => <Option key={s.id} value={s.id}>{s.name}</Option>)}
-                </Select>
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item label="To Stage" name="to" rules={[{ required: true }]}>
-                <Select placeholder="Select target stage">
-                  {stageList.map(s => <Option key={s.id} value={s.id}>{s.name}</Option>)}
-                </Select>
-              </Form.Item>
-            </Col>
-          </Row>
-
-          <Row gutter={16}>
-            <Col span={8}>
-              <Form.Item label="Transition Type" name="type">
-                <Select placeholder="Auto-derive or select">
-                  <Option value="forward">Forward</Option>
-                  <Option value="backward">Backward (Correction)</Option>
-                  <Option value="cancellation">Cancellation</Option>
-                  <Option value="other">Other / Parallel</Option>
-                </Select>
-              </Form.Item>
-            </Col>
-            <Col span={8}>
-              <Form.Item label="Trigger Mode" name="is_manual" valuePropName="checked">
-                <Switch checkedChildren="Manual" unCheckedChildren="Auto" />
-              </Form.Item>
-            </Col>
-            <Col span={8}>
-               <Form.Item label="Button Variant" name="button_variant">
-                  <Select>
-                    <Option value="primary">Primary (Glow)</Option>
-                    <Option value="secondary">Secondary (Soft)</Option>
-                    <Option value="danger">Danger (Red)</Option>
-                    <Option value="ghost">Ghost (Outline)</Option>
-                  </Select>
-               </Form.Item>
-            </Col>
-          </Row>
-
-          <Divider orientation="left"><Space><MousePointer size={16} />UI Customization @ Manual</Space></Divider>
-          
-          <Form.Item noStyle shouldUpdate={(prev: any, curr: any) => prev.is_manual !== curr.is_manual}>
-            {() => {
-              const isManual = form.getFieldValue('is_manual');
-              if (!isManual) return null;
-              
-              return (
-                <Card size="small" style={{ background: '#f9f9f9', marginBottom: '20px' }}>
-                  <Row gutter={16}>
-                    <Col span={8}>
-                      <Form.Item label="Button Text (UI)" name="label">
-                        <Input placeholder="Next Stage" />
-                      </Form.Item>
-                    </Col>
-                    <Col span={4}>
-                      <Form.Item label="Icon" name="icon">
-                        <Input placeholder="e.g. play, check" />
-                      </Form.Item>
-                    </Col>
-                    <Col span={4}>
-                       <Form.Item label="Color" name="button_color">
-                          <ColorPicker 
-                            presets={[{ label: 'Presets', colors: PRESET_COLORS.map(c => c.color) }]} 
-                          />
-                       </Form.Item>
-                    </Col>
-                    <Col span={8}>
-                       <Form.Item label="Confirm Msg" name="confirm_message">
-                          <Input placeholder="Are you sure?" />
-                       </Form.Item>
-                    </Col>
-                  </Row>
-                </Card>
-              );
-            }}
-          </Form.Item>
-
-          <Divider orientation="left"><Space><Shield size={16} />Pre-requisites & Rules</Space></Divider>
-          
-          <Row gutter={16}>
-            <Col span={12}>
-                <Form.Item label="Allowed Roles (Guard Rules)" name="allowed_roles">
-                    <Select mode="multiple" placeholder="ADMIN, DISPATCHER..." style={{ width: '100%' }}>
-                        <Option value="ADMIN">ADMIN</Option>
-                        <Option value="DISPATCHER">DISPATCHER</Option>
-                        <Option value="TECHNICIAN">TECHNICIAN</Option>
-                        <Option value="BRANCH_MANAGER">BRANCH_MANAGER</Option>
-                        <Option value="CUSTOMER">CUSTOMER</Option>
-                    </Select>
-                </Form.Item>
-            </Col>
-            <Col span={12}>
-                <Form.Item label="Validation RPC (Server-side)" name="validation_rpc">
-                    <Input placeholder="schema.function_name" />
-                </Form.Item>
-            </Col>
-          </Row>
-
-          <Form.Item label="Required Fields (Must be filled to enable transition)" name="required_fields">
-            <Select mode="multiple" placeholder="Select fields" style={{ width: '100%' }}>
-              {(Array.isArray(fields) ? fields : []).map(f => (
-                <Option key={f.key} value={f.key}>{f.display_name || f.key}</Option>
-              ))}
-            </Select>
-          </Form.Item>
-
-          <div style={{ marginTop: '20px' }}>
-            <Title level={5} style={{ fontSize: '14px', marginBottom: '12px' }}>Automation Rules (Conditions)</Title>
-            <Form.Item name="condition">
-              <QueryBuilder 
-                fields={qbFields}
-                onQueryChange={(q: any) => form.setFieldValue('condition', q)}
-              />
-            </Form.Item>
-          </div>
-        </Form>
-      </Drawer>
-
       <style>{`
         .transition-card:hover {
           border-color: #1677ff !important;
           background: #fafafa;
-        }
-        .transition-manager .queryBuilder {
-          padding: 0;
-          border: none;
-        }
-        .transition-manager .ruleGroup {
-          background: #f9f9f9;
-          border: 1px solid #f0f0f0;
-          border-radius: 8px;
         }
       `}</style>
     </div>

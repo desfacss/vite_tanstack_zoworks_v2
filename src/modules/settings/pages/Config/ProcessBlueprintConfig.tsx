@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Input, Form, Select, Row, Col, Card, message, Tabs, Table, Typography, Modal, Switch, Space, Badge, Alert } from 'antd';
+import { Button, Input, Form, Select, Row, Col, Card, message, Tabs, Table, Typography, Modal, Switch, Space, Badge, Alert, Drawer, Divider, ColorPicker, InputNumber, Collapse, Tooltip } from 'antd';
 import { 
   Save, 
   Play, 
@@ -14,7 +14,13 @@ import {
   Layout,
   Settings as SettingsIcon,
   History as HistoryIcon,
-  ChevronRight
+  ChevronRight,
+  Plus,
+  Trash2,
+  Users,
+  DollarSign,
+  MousePointer,
+  Shield
 } from 'lucide-react';
 import { supabase } from '@/core/lib/supabase';
 import { useAuthStore } from '@/core/lib/store';
@@ -24,6 +30,9 @@ import ReactDiffViewer from 'react-diff-viewer-continued';
 import StageManager from './components/ProcessBlueprint/StageManager';
 import TransitionManager from './components/ProcessBlueprint/TransitionManager';
 import AutomationManager from './components/ProcessBlueprint/AutomationManager';
+import VisualFlowManager from './components/ProcessBlueprint/VisualFlowManager';
+import AssignmentEditor from './components/ProcessBlueprint/AssignmentEditor';
+import { QueryBuilder } from 'react-querybuilder';
 
 // Import Query Builder CSS if available, otherwise we use standard styles
 import 'react-querybuilder/dist/query-builder.css';
@@ -108,6 +117,14 @@ const ProcessBlueprintConfig: React.FC<ProcessBlueprintConfigProps> = ({ bluepri
   const [entityMetadata, setEntityMetadata] = useState<any[]>([]);
   
   const [form] = Form.useForm();
+  const [stageForm] = Form.useForm();
+  const [transitionForm] = Form.useForm();
+  
+  // Centralized editing states
+  const [editingStage, setEditingStage] = useState<any>(null);
+  const [isStageDrawerVisible, setIsStageDrawerVisible] = useState(false);
+  const [editingTransitionIndex, setEditingTransitionIndex] = useState<number | null>(null);
+  const [isTransitionDrawerVisible, setIsTransitionDrawerVisible] = useState(false);
 
   useEffect(() => {
     if (blueprintId) {
@@ -332,24 +349,120 @@ const ProcessBlueprintConfig: React.FC<ProcessBlueprintConfigProps> = ({ bluepri
     });
   };
 
-  const handleLifecycleChange = (key: string, value: any) => {
-    const currentLifecycle = blueprint.definition?.lifecycle || {};
-    const newLifecycle = { ...currentLifecycle, [key]: value };
-    
-    // Ensure the main definition is updated
-    const newDefinition = { 
-      ...blueprint.definition, 
-      lifecycle: newLifecycle 
-    };
-    
-    setBlueprint(prev => ({ 
-      ...prev, 
-      definition: newDefinition 
-    }));
 
-    // Keep the JSON string in sync for the Advanced tab
+
+  const handlePositionsChange = (positions: Record<string, { x: number, y: number }>) => {
+    setBlueprint(prev => {
+      const newMetadata = {
+        ...(prev.metadata || {}),
+        visual_layout: {
+          ...(prev.metadata?.visual_layout || {}),
+          positions
+        }
+      };
+      return { ...prev, metadata: newMetadata };
+    });
+    
+    // Also update form optionally or just rely on state
     form.setFieldsValue({
-      definitionStr: JSON.stringify(newDefinition, null, 2)
+      metadataStr: JSON.stringify({
+        ...(blueprint.metadata || {}),
+        visual_layout: {
+          ...(blueprint.metadata?.visual_layout || {}),
+          positions
+        }
+      }, null, 2)
+    });
+  };
+
+  // Stage Editing Logic
+  const openStageEditor = (stage: any) => {
+    setEditingStage(stage);
+    stageForm.setFieldsValue(stage);
+    setIsStageDrawerVisible(true);
+  };
+
+  const saveStageDetails = () => {
+    stageForm.validateFields().then(values => {
+      const stages = blueprint.definition?.lifecycle?.stages || [];
+      const newStages = stages.map((s: any) => s.id === editingStage?.id ? { ...s, ...values } : s);
+      handleLifecycleChange('stages', newStages);
+      setIsStageDrawerVisible(false);
+      setEditingStage(null);
+    });
+  };
+
+  const calculatePERT = () => {
+    const vals = stageForm.getFieldsValue();
+    const o = vals.time_estimates?.optimistic_hours || 0;
+    const m = vals.time_estimates?.most_likely_hours || 0;
+    const p = vals.time_estimates?.pessimistic_hours || 0;
+    const pert = (o + 4 * m + p) / 6;
+    stageForm.setFieldValue(['time_estimates', 'pert_expected_hours'], parseFloat(pert.toFixed(2)));
+  };
+
+  // Transition Editing Logic
+  const openTransitionEditor = (index: number, transition: any) => {
+    setEditingTransitionIndex(index);
+    transitionForm.setFieldsValue({
+      ...transition,
+      is_manual: transition.trigger === 'manual' || (transition as any).is_manual,
+      icon: transition.ui?.icon,
+      button_variant: transition.ui?.button_variant || 'primary',
+      confirm_message: transition.ui?.confirm_message,
+      button_color: transition.ui?.button_color || '#1677ff',
+      allowed_roles: transition.guard_rules?.allowed_roles || [],
+      validation_rpc: transition.guard_rules?.validation_rpc,
+      required_fields: transition.guard_rules?.required_fields || []
+    });
+    setIsTransitionDrawerVisible(true);
+  };
+
+  const saveTransitionDetails = () => {
+    transitionForm.validateFields().then(values => {
+      const transitions = [...(blueprint.definition?.lifecycle?.transitions || [])];
+      const stages = blueprint.definition?.lifecycle?.stages || [];
+      
+      if (editingTransitionIndex !== null) {
+        const fromStage = stages.find((s: any) => s.id === values.from);
+        const toStage = stages.find((s: any) => s.id === values.to);
+        
+        // Auto-derive type
+        if (fromStage && toStage && !values.type_override) {
+          if (toStage.category === 'CLOSED_LOST' || toStage.category === 'CANCELLED') {
+            values.type = 'cancellation';
+          } else if ((toStage.sequence || 0) > (fromStage.sequence || 0)) {
+            values.type = 'forward';
+          } else if ((toStage.sequence || 0) < (fromStage.sequence || 0)) {
+            values.type = 'backward';
+          }
+        }
+
+        // Reconstruct nested structures
+        const updatedTransition: any = {
+          ...transitions[editingTransitionIndex],
+          ...values,
+          trigger: values.is_manual ? 'manual' : 'auto',
+          ui: {
+            icon: values.icon,
+            button_variant: values.button_variant,
+            confirm_message: values.confirm_message,
+            button_color: typeof values.button_color === 'string' ? values.button_color : values.button_color?.toHexString?.() || '#1677ff'
+          },
+          guard_rules: {
+            allowed_roles: values.allowed_roles,
+            validation_rpc: values.validation_rpc,
+            required_fields: values.required_fields
+          }
+        };
+        
+        // Clean up flat fields
+        ['icon', 'button_variant', 'confirm_message', 'button_color', 'allowed_roles', 'validation_rpc', 'required_fields', 'is_manual'].forEach(f => delete updatedTransition[f]);
+
+        transitions[editingTransitionIndex] = updatedTransition;
+        handleLifecycleChange('transitions', transitions);
+      }
+      setIsTransitionDrawerVisible(false);
     });
   };
 
@@ -382,15 +495,41 @@ const ProcessBlueprintConfig: React.FC<ProcessBlueprintConfigProps> = ({ bluepri
 
   const syncBasicFieldsToDefinition = () => {
     const currentValues = form.getFieldsValue();
-    const updatedDef = {
-      ...blueprint.definition,
-      name: currentValues.name,
-      entity_schema: currentValues.entity_schema,
-      entity_type: currentValues.entity_type,
-      blueprint_type: currentValues.blueprint_type,
-    };
-    setBlueprint(prev => ({ ...prev, ...currentValues, definition: updatedDef }));
-    form.setFieldsValue({ definitionStr: JSON.stringify(updatedDef, null, 2) });
+    setBlueprint(prev => {
+      const updatedDef = {
+        ...(prev.definition || {}),
+        name: currentValues.name,
+        entity_schema: currentValues.entity_schema,
+        entity_type: currentValues.entity_type,
+        blueprint_type: currentValues.blueprint_type,
+      };
+      
+      // Update definition string in form only if it changed dramatically? 
+      // Actually just sync it back
+      form.setFieldsValue({ 
+        definitionStr: JSON.stringify(updatedDef, null, 2) 
+      });
+      
+      return { ...prev, ...currentValues, definition: updatedDef };
+    });
+  };
+
+  const handleLifecycleChange = (key: string, value: any) => {
+    setBlueprint(prev => {
+      const currentLifecycle = prev.definition?.lifecycle || {};
+      const newLifecycle = { ...currentLifecycle, [key]: value };
+      
+      const newDefinition = { 
+        ...prev.definition, 
+        lifecycle: newLifecycle 
+      };
+      
+      form.setFieldsValue({
+        definitionStr: JSON.stringify(newDefinition, null, 2)
+      });
+      
+      return { ...prev, definition: newDefinition };
+    });
   };
 
 
@@ -506,13 +645,29 @@ const ProcessBlueprintConfig: React.FC<ProcessBlueprintConfigProps> = ({ bluepri
             </Card>
 
             {/* --- MAIN TABS --- */}
-            <Tabs defaultActiveKey="stages" type="card" className="blueprint-tabs">
+            <Tabs defaultActiveKey="visual" type="card" className="blueprint-tabs" destroyInactiveTabPane={false}>
+              <TabPane tab={<Space><Eye size={16} />Visual Flow</Space>} key="visual">
+                <Card bordered={false} bodyStyle={{ padding: '12px' }}>
+                  <VisualFlowManager 
+                    stages={blueprint.definition?.lifecycle?.stages || []}
+                    transitions={blueprint.definition?.lifecycle?.transitions || []}
+                    metadata={blueprint.metadata}
+                    onNodeClick={openStageEditor}
+                    onEdgeClick={openTransitionEditor}
+                    onPositionsChange={handlePositionsChange}
+                    onStagesChange={(stages) => handleLifecycleChange('stages', stages)}
+                    onTransitionsChange={(transitions) => handleLifecycleChange('transitions', transitions)}
+                  />
+                </Card>
+              </TabPane>
+
               <TabPane tab={<Space><Layout size={16} />Stages</Space>} key="stages">
                 <Card bordered={false}>
                   <StageManager 
                     stages={blueprint.definition?.lifecycle?.stages || []} 
                     categories={CATEGORIES}
                     onChange={(stages) => handleLifecycleChange('stages', stages)}
+                    onEdit={openStageEditor}
                   />
                 </Card>
               </TabPane>
@@ -524,6 +679,7 @@ const ProcessBlueprintConfig: React.FC<ProcessBlueprintConfigProps> = ({ bluepri
                     stages={blueprint.definition?.lifecycle?.stages || []}
                     fields={entityMetadata}
                     onChange={(transitions) => handleLifecycleChange('transitions', transitions)}
+                    onEdit={openTransitionEditor}
                   />
                 </Card>
               </TabPane>
@@ -683,6 +839,314 @@ const ProcessBlueprintConfig: React.FC<ProcessBlueprintConfigProps> = ({ bluepri
           </Col>
         </Row>
       </Form>
+
+      {/* --- CENTRALIZED STAGE EDITOR --- */}
+      <Drawer
+        title={
+          <Space>
+            <Layout size={18} />
+            Edit Stage: {editingStage?.name}
+          </Space>
+        }
+        width={720}
+        onClose={() => setIsStageDrawerVisible(false)}
+        open={isStageDrawerVisible}
+        extra={
+          <Space>
+            <Button onClick={() => setIsStageDrawerVisible(false)}>Cancel</Button>
+            <Button type="primary" onClick={saveStageDetails}>Save Changes</Button>
+          </Space>
+        }
+      >
+        <Form form={stageForm} layout="vertical">
+          <Row gutter={16}>
+            <Col span={8}>
+              <Form.Item label="Stage ID (Key)" name="id" rules={[{ required: true }]}>
+                <Input placeholder="e.g. drafting" disabled={editingStage?.id === 'new'} />
+              </Form.Item>
+            </Col>
+            <Col span={8}>
+              <Form.Item label="Display Name" name="name" rules={[{ required: true }]}>
+                <Input placeholder="e.g. Drafting Phase" />
+              </Form.Item>
+            </Col>
+            <Col span={4}>
+              <Form.Item label="Category" name="category" rules={[{ required: true }]}>
+                <Select>
+                  {CATEGORIES.map(cat => (
+                    <Option key={cat} value={cat}>{cat}</Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            </Col>
+            <Col span={4}>
+              <Form.Item label="Color" name="color">
+                <ColorPicker />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Form.Item label="Description" name="description">
+            <Input.TextArea rows={2} placeholder="Briefly describe what happens in this stage..." />
+          </Form.Item>
+
+          <Divider orientation="left">Role Assignment (RACI)</Divider>
+          
+          <Collapse 
+            defaultActiveKey={['responsible']} 
+            ghost
+            items={[
+              {
+                key: 'responsible',
+                label: <Space><Users size={16} /> <Text strong>Responsible (The Doer)</Text></Space>,
+                children: (
+                  <Form.Item name={['raci', 'responsible']}>
+                    <AssignmentEditor label="Who is responsible for completing this stage?" onChange={(val) => stageForm.setFieldValue(['raci', 'responsible'], val)} />
+                  </Form.Item>
+                )
+              },
+              {
+                key: 'others',
+                label: <Space><Shield size={16} /> <Text>Accountable, Consulted, Informed</Text></Space>,
+                children: (
+                  <Row gutter={[16, 16]}>
+                    <Col span={24}>
+                        <Form.Item label="Accountable (The Owner)" name={['raci', 'accountable']}>
+                          <AssignmentEditor label="Ultimately answerable for the correct completion" onChange={(val) => stageForm.setFieldValue(['raci', 'accountable'], val)} />
+                        </Form.Item>
+                    </Col>
+                    <Col span={12}>
+                        <Form.Item label="Consulted" name={['raci', 'consulted']}>
+                          <AssignmentEditor label="Opinion is sought before action" onChange={(val) => stageForm.setFieldValue(['raci', 'consulted'], val)} />
+                        </Form.Item>
+                    </Col>
+                    <Col span={12}>
+                        <Form.Item label="Informed" name={['raci', 'informed']}>
+                          <AssignmentEditor label="Kept up-to-date on progress" onChange={(val) => stageForm.setFieldValue(['raci', 'informed'], val)} />
+                        </Form.Item>
+                    </Col>
+                  </Row>
+                )
+              }
+            ]}
+          />
+
+          <Divider orientation="left">Performance & Cost</Divider>
+
+          <Row gutter={16}>
+            <Col span={16}>
+              <Card size="small" title={<Space><Clock size={16} /> Time Estimates (Hours)</Space>}>
+                <Row gutter={8}>
+                  <Col span={8}>
+                    <Form.Item label="Optimistic" name={['time_estimates', 'optimistic_hours']}>
+                      <InputNumber style={{ width: '100%' }} min={0} onChange={calculatePERT} />
+                    </Form.Item>
+                  </Col>
+                  <Col span={8}>
+                    <Form.Item label="Most Likely" name={['time_estimates', 'most_likely_hours']}>
+                      <InputNumber style={{ width: '100%' }} min={0} onChange={calculatePERT} />
+                    </Form.Item>
+                  </Col>
+                  <Col span={8}>
+                    <Form.Item label="Pessimistic" name={['time_estimates', 'pessimistic_hours']}>
+                      <InputNumber style={{ width: '100%' }} min={0} onChange={calculatePERT} />
+                    </Form.Item>
+                  </Col>
+                </Row>
+                <div style={{ background: '#f5f5f5', padding: '8px', borderRadius: '4px', textAlign: 'center' }}>
+                  <Text type="secondary" style={{ fontSize: '12px' }}>PERT Expected Duration: </Text>
+                  <Form.Item name={['time_estimates', 'pert_expected_hours']} noStyle shouldUpdate>
+                    {() => (
+                      <Text strong style={{ color: '#1677ff' }}>{stageForm.getFieldValue(['time_estimates', 'pert_expected_hours']) || 0}</Text>
+                    )}
+                  </Form.Item>
+                  <Text type="secondary" style={{ fontSize: '12px' }}> hours</Text>
+                </div>
+              </Card>
+            </Col>
+            <Col span={8}>
+              <Card size="small" title={<Space><DollarSign size={16} /> Cost Estimates</Space>}>
+                <Form.Item label="Fixed Cost" name={['cost_estimates', 'fixed_cost']}>
+                  <InputNumber style={{ width: '100%' }} min={0} prefix="$" />
+                </Form.Item>
+                <Form.Item label="Cost Center" name={['cost_estimates', 'cost_center']}>
+                  <Input placeholder="e.g. OP-2024" />
+                </Form.Item>
+              </Card>
+            </Col>
+          </Row>
+        </Form>
+      </Drawer>
+
+      {/* --- CENTRALIZED TRANSITION EDITOR --- */}
+      <Drawer
+        title={
+          <Space>
+            <SettingsIcon size={18} />
+            Edit Transition: {blueprint.definition?.lifecycle?.transitions?.[editingTransitionIndex ?? -1]?.label || blueprint.definition?.lifecycle?.transitions?. [editingTransitionIndex ?? -1]?.id}
+          </Space>
+        }
+        width={720}
+        onClose={() => setIsTransitionDrawerVisible(false)}
+        open={isTransitionDrawerVisible}
+        extra={
+          <Space>
+            <Button onClick={() => setIsTransitionDrawerVisible(false)}>Cancel</Button>
+            <Button type="primary" onClick={saveTransitionDetails}>Save Changes</Button>
+          </Space>
+        }
+      >
+        <Form form={transitionForm} layout="vertical">
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item label="Transition ID (Key)" name="id" rules={[{ required: true }]}>
+                <Input placeholder="e.g. T_TRIAGE" disabled={editingTransitionIndex !== null} />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item label="Display Name (Label)" name="label" rules={[{ required: true }]}>
+                <Input placeholder="e.g. Move to Prospecting" />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item label="From Stage" name="from" rules={[{ required: true }]}>
+                <Select placeholder="Select source stage">
+                  {(blueprint.definition?.lifecycle?.stages || []).map((s: any) => <Option key={s.id} value={s.id}>{s.name}</Option>)}
+                </Select>
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item label="To Stage" name="to" rules={[{ required: true }]}>
+                <Select placeholder="Select target stage">
+                  {(blueprint.definition?.lifecycle?.stages || []).map((s: any) => <Option key={s.id} value={s.id}>{s.name}</Option>)}
+                </Select>
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Row gutter={16}>
+            <Col span={8}>
+              <Form.Item label="Transition Type" name="type">
+                <Select placeholder="Auto-derive or select">
+                  <Option value="forward">Forward</Option>
+                  <Option value="backward">Backward (Correction)</Option>
+                  <Option value="cancellation">Cancellation</Option>
+                  <Option value="other">Other / Parallel</Option>
+                </Select>
+              </Form.Item>
+            </Col>
+            <Col span={8}>
+              <Form.Item label="Trigger Mode" name="is_manual" valuePropName="checked">
+                <Switch checkedChildren="Manual" unCheckedChildren="Auto" />
+              </Form.Item>
+            </Col>
+            <Col span={8}>
+               <Form.Item label="Button Variant" name="button_variant">
+                  <Select>
+                    <Option value="primary">Primary (Glow)</Option>
+                    <Option value="secondary">Secondary (Soft)</Option>
+                    <Option value="danger">Danger (Red)</Option>
+                    <Option value="ghost">Ghost (Outline)</Option>
+                  </Select>
+               </Form.Item>
+            </Col>
+          </Row>
+
+          <Divider orientation="left"><Space><MousePointer size={16} />UI Customization @ Manual</Space></Divider>
+          
+          <Form.Item noStyle shouldUpdate={(prev: any, curr: any) => prev.is_manual !== curr.is_manual}>
+            {() => {
+              const isManual = transitionForm.getFieldValue('is_manual');
+              if (!isManual) return null;
+              
+              const PRESET_COLORS = [
+                { label: 'Primary', color: '#1677ff' },
+                { label: 'Success', color: '#52c41a' },
+                { label: 'Warning', color: '#faad14' },
+                { label: 'Danger', color: '#ff4d4f' },
+                { label: 'Info', color: '#722ed1' },
+                { label: 'Neutral', color: '#8c8c8c' }
+              ];
+
+              return (
+                <Card size="small" style={{ background: '#f9f9f9', marginBottom: '20px' }}>
+                  <Row gutter={16}>
+                    <Col span={8}>
+                      <Form.Item label="Button Text (UI)" name="label">
+                        <Input placeholder="Next Stage" />
+                      </Form.Item>
+                    </Col>
+                    <Col span={4}>
+                      <Form.Item label="Icon" name="icon">
+                        <Input placeholder="e.g. play, check" />
+                      </Form.Item>
+                    </Col>
+                    <Col span={4}>
+                       <Form.Item label="Color" name="button_color">
+                          <ColorPicker 
+                            presets={[{ label: 'Presets', colors: PRESET_COLORS.map(c => c.color) }]} 
+                          />
+                       </Form.Item>
+                    </Col>
+                    <Col span={8}>
+                       <Form.Item label="Confirm Msg" name="confirm_message">
+                          <Input placeholder="Are you sure?" />
+                       </Form.Item>
+                    </Col>
+                  </Row>
+                </Card>
+              );
+            }}
+          </Form.Item>
+
+          <Divider orientation="left"><Space><Shield size={16} />Pre-requisites & Rules</Space></Divider>
+          
+          <Row gutter={16}>
+            <Col span={12}>
+                <Form.Item label="Allowed Roles (Guard Rules)" name="allowed_roles">
+                    <Select mode="multiple" placeholder="ADMIN, DISPATCHER..." style={{ width: '100%' }}>
+                        <Option value="ADMIN">ADMIN</Option>
+                        <Option value="DISPATCHER">DISPATCHER</Option>
+                        <Option value="TECHNICIAN">TECHNICIAN</Option>
+                        <Option value="BRANCH_MANAGER">BRANCH_MANAGER</Option>
+                        <Option value="CUSTOMER">CUSTOMER</Option>
+                    </Select>
+                </Form.Item>
+            </Col>
+            <Col span={12}>
+                <Form.Item label="Validation RPC (Server-side)" name="validation_rpc">
+                    <Input placeholder="schema.function_name" />
+                </Form.Item>
+            </Col>
+          </Row>
+
+          <Form.Item label="Required Fields (Must be filled to enable transition)" name="required_fields">
+            <Select mode="multiple" placeholder="Select fields" style={{ width: '100%' }}>
+              {(entityMetadata).map(f => (
+                <Option key={f.key} value={f.key}>{f.display_name || f.key}</Option>
+              ))}
+            </Select>
+          </Form.Item>
+
+          <div style={{ marginTop: '20px' }}>
+            <Title level={5} style={{ fontSize: '14px', marginBottom: '12px' }}>Automation Rules (Conditions)</Title>
+            <Form.Item name="condition">
+              <QueryBuilder 
+                fields={(entityMetadata).map(f => ({
+                  name: f.key,
+                  label: f.display_name || f.key,
+                  type: f.type === 'integer' || f.type === 'number' ? 'number' : f.type === 'boolean' ? 'boolean' : 'string',
+                }))}
+                onQueryChange={(q: any) => transitionForm.setFieldValue('condition', q)}
+                query={transitionForm.getFieldValue('condition')}
+              />
+            </Form.Item>
+          </div>
+        </Form>
+      </Drawer>
 
       {/* --- HISTORY COMPARISON MODAL --- */}
       <Modal
