@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Input, Form, Select, Row, Col, Card, message, Tabs, Table, Typography, Modal, Switch, Space, Badge, Alert, Drawer, Divider, ColorPicker, InputNumber, Collapse, Tooltip } from 'antd';
+import { Button, Input, Form, Select, Row, Col, Card, message, Tabs, Table, Typography, Modal, Switch, Space, Badge, Alert, Drawer, Divider, ColorPicker, InputNumber, Collapse, Tooltip, Empty } from 'antd';
 import { 
   Save, 
   Play, 
@@ -15,7 +15,10 @@ import {
   DollarSign,
   MousePointer,
   Shield,
+  Mail,
+  Edit,
   ArrowRight,
+  GripVertical,
   Plus,
   Layout,
   XCircle,
@@ -33,8 +36,6 @@ import ReactDiffViewer from 'react-diff-viewer-continued';
 import StageManager from './components/ProcessBlueprint/StageManager';
 import TransitionManager from './components/ProcessBlueprint/TransitionManager';
 import AutomationManager from './components/ProcessBlueprint/AutomationManager';
-import SlaRulesManager from './components/ProcessBlueprint/SlaRulesManager';
-import ActionConfigForm from './components/ProcessBlueprint/ActionConfigForm';
 import VisualFlowManager from './components/ProcessBlueprint/VisualFlowManager';
 import AssignmentEditor from './components/ProcessBlueprint/AssignmentEditor';
 import { QueryBuilder } from 'react-querybuilder';
@@ -52,7 +53,7 @@ interface ProcessBlueprintConfigProps {
   onSaveSuccess?: (blueprint: ProcessBlueprint) => void;
 }
 
-const CATEGORIES = ["NEW", "IN_PROGRESS", "CLOSED_WON", "CLOSED_LOST", "CANCELLED"];
+const CATEGORIES = ["NEW", "OPEN", "IN_PROGRESS", "COMPLETE", "WON", "LOST"];
 
 // --- REUSABLE MODERN COMPONENTS ---
 
@@ -100,7 +101,61 @@ const CardRadioGroup = ({ value, onChange, options }: any) => (
   </Row>
 );
 
+const ActionListEditor = ({ value = [], onChange }: any) => {
+  const addAction = (type: string) => {
+    const newAction = {
+      id: `act_${Date.now()}`,
+      type,
+      name: `New ${type} Action`,
+      config: {}
+    };
+    onChange([...value, newAction]);
+  };
 
+  const removeAction = (id: string) => {
+    onChange(value.filter((a: any) => a.id !== id));
+  };
+
+  const updateAction = (id: string, updates: any) => {
+    onChange(value.map((a: any) => a.id === id ? { ...a, ...updates } : a));
+  };
+
+  return (
+    <div style={{ padding: '12px', background: '#f5f5f5', borderRadius: '12px', border: '1px dashed #d9d9d9' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
+        <Text strong>Workflow Actions</Text>
+        <Space>
+           <Button size="small" type="primary" onClick={() => addAction('send_email')} icon={<Mail size={14} />}>Add Email</Button>
+           <Button size="small" onClick={() => addAction('update_record')} icon={<Edit size={14} />}>Update Field</Button>
+           <Button size="small" onClick={() => addAction('webhook')} icon={<Activity size={14} />}>Webhook</Button>
+        </Space>
+      </div>
+      
+      {value.length === 0 ? (
+        <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="No actions defined" />
+      ) : (
+        <Space direction="vertical" style={{ width: '100%' }} size={8}>
+          {value.map((action: any, idx: number) => (
+            <Card key={action.id || idx} size="small" bodyStyle={{ padding: '8px 12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <GripVertical size={16} color="#bfbfbf" style={{ cursor: 'grab' }} />
+                <Badge count={idx + 1} style={{ backgroundColor: '#f0f0f0', color: '#8c8c8c' }} />
+                <div style={{ flex: 1 }}>
+                  <Text strong>{action.name}</Text>
+                  <div style={{ fontSize: '11px', color: '#8c8c8c' }}>{action.type}</div>
+                </div>
+                <Space>
+                  <Button size="small" type="text" icon={<Edit size={14} />} />
+                  <Button size="small" type="text" danger icon={<Trash2 size={14} />} onClick={() => removeAction(action.id)} />
+                </Space>
+              </div>
+            </Card>
+          ))}
+        </Space>
+      )}
+    </div>
+  );
+};
 
 // Helper to convert nested backend automations to a flat array for the UI
 const flattenAutomations = (nested: any) => {
@@ -116,7 +171,7 @@ const flattenAutomations = (nested: any) => {
           name: config.name || `${event} ${target_id}`,
           actions: (config.actions || []).map((a: any) => ({
             ...a,
-            action_type: a.action_type || a.type || 'unknown'
+            type: a.type || a.action_type || 'unknown'
           })),
           is_active: config.is_active !== false,
           stop_on_failure: config.stop_on_failure || config.abort_on_failure || false,
@@ -141,9 +196,10 @@ const nestAutomations = (flat: any[]) => {
     nested[a.event][a.target_id] = {
       name: a.name,
       actions: (a.actions || []).map((act: any) => {
+        const { type, ...rest } = act;
         return {
-          ...act,
-          action_type: act.action_type || act.type,
+          ...rest,
+          action_type: type, // Ensure backend gets 'action_type' back
         };
       }),
       is_active: a.is_active,
@@ -206,7 +262,7 @@ const ProcessBlueprintConfig: React.FC<ProcessBlueprintConfigProps> = ({ bluepri
           ],
           transitions: []
         },
-        automations: { on_stage_entry: {}, on_stage_exit: {}, on_transition: {} },
+        automations: [],
         sla_rules: []
       },
       metadata: {},
@@ -355,10 +411,7 @@ const ProcessBlueprintConfig: React.FC<ProcessBlueprintConfigProps> = ({ bluepri
         is_active: values.is_active,
         definition: {
           ...definition,
-          // Preserve automations: if flat array (from AutomationManager), nest it back; if already object, pass through
-          automations: Array.isArray(definition.automations)
-            ? nestAutomations(definition.automations)
-            : (definition.automations || { on_stage_entry: {}, on_stage_exit: {}, on_transition: {} }),
+          automations: nestAutomations(definition.automations || [])
         },
         metadata,
         organization_id: organization?.id,
@@ -440,38 +493,7 @@ const ProcessBlueprintConfig: React.FC<ProcessBlueprintConfigProps> = ({ bluepri
   const saveStageDetails = () => {
     stageForm.validateFields().then(values => {
       const stages = blueprint.definition?.lifecycle?.stages || [];
-      const newStages = stages.map((s: any) => {
-        if (s.id !== editingStage?.id) return s;
-        return {
-          ...s, // preserve fields not in form: cancellation_rules, approval_rules, etc.
-          id: values.id,
-          name: values.name,
-          category: values.category,
-          sequence: values.sequence ?? s.sequence,
-          description: values.description || '',
-          raci: {
-            responsible: values.raci?.responsible ?? (s.raci?.responsible || ''),
-            accountable: values.raci?.accountable ?? (s.raci?.accountable || ''),
-            consulted: Array.isArray(values.raci?.consulted) ? values.raci.consulted : (s.raci?.consulted || []),
-            informed: Array.isArray(values.raci?.informed) ? values.raci.informed : (s.raci?.informed || []),
-          },
-          time_estimates: {
-            optimistic_hours: values.time_estimates?.optimistic_hours ?? null,
-            most_likely_hours: values.time_estimates?.most_likely_hours ?? null,
-            pessimistic_hours: values.time_estimates?.pessimistic_hours ?? null,
-            aspirational_hours: s.time_estimates?.aspirational_hours ?? null,
-            pert_expected_hours: values.time_estimates?.pert_expected_hours ?? null,
-          },
-          cost_estimates: {
-            fixed_cost: values.cost_estimates?.fixed_cost ?? s.cost_estimates?.fixed_cost ?? 0,
-            cost_center: values.cost_estimates?.cost_center ?? s.cost_estimates?.cost_center ?? '',
-            labor_cost_per_hour: values.cost_estimates?.labor_cost_per_hour ?? s.cost_estimates?.labor_cost_per_hour ?? null,
-            aspirational_total_cost: s.cost_estimates?.aspirational_total_cost ?? null,
-          },
-          cancellation_rules: values.cancellation_rules ?? s.cancellation_rules,
-          approval_rules: values.approval_rules ?? s.approval_rules,
-        };
-      });
+      const newStages = stages.map((s: any) => s.id === editingStage?.id ? { ...s, ...values } : s);
       handleLifecycleChange('stages', newStages);
       setIsStageDrawerVisible(false);
       setEditingStage(null);
@@ -490,96 +512,68 @@ const ProcessBlueprintConfig: React.FC<ProcessBlueprintConfigProps> = ({ bluepri
   // Transition Editing Logic
   const openTransitionEditor = (index: number, transition: any) => {
     setEditingTransitionIndex(index);
-    // Load on_transition actions from automations, not from the transition object itself
-    const automations = blueprint.definition?.automations;
-    let onTransitionActions: any[] = [];
-    if (automations && !Array.isArray(automations)) {
-      onTransitionActions = automations.on_transition?.[transition.id]?.actions || [];
-    } else if (Array.isArray(automations)) {
-      const entry = automations.find((a: any) => a.event === 'on_transition' && a.target_id === transition.id);
-      onTransitionActions = entry?.actions || [];
-    }
     transitionForm.setFieldsValue({
-      id: transition.id,
-      label: transition.label,
-      from: transition.from,   // single string
-      to: transition.to,
-      trigger: transition.trigger || 'manual',
-      condition_type: transition.condition?.type || 'always',
-      condition_expression: transition.condition?.expression || '',
-      icon: transition.ui?.icon || '',
+      ...transition,
+      trigger_type: transition.trigger || (transition.is_manual ? 'manual' : 'auto'),
+      icon: transition.ui?.icon,
       button_variant: transition.ui?.button_variant || 'primary',
-      confirm_message: transition.ui?.confirm_message || '',
+      confirm_message: transition.ui?.confirm_message,
+      button_color: transition.ui?.button_color || '#1677ff',
       allowed_roles: transition.guard_rules?.allowed_roles || [],
-      validation_rpc: transition.guard_rules?.validation_rpc || '',
+      validation_rpc: transition.guard_rules?.validation_rpc,
       required_fields: transition.guard_rules?.required_fields || [],
-      action_list: onTransitionActions,
+      action_list: transition.actions || []
     });
     setIsTransitionDrawerVisible(true);
   };
 
   const saveTransitionDetails = () => {
     transitionForm.validateFields().then(values => {
-      if (editingTransitionIndex === null) return;
       const transitions = [...(blueprint.definition?.lifecycle?.transitions || [])];
-      const existingTransition = transitions[editingTransitionIndex];
-
-      // Build properly structured condition object
-      const condition = values.condition_type === 'always'
-        ? { type: 'always' }
-        : { type: values.condition_type || 'field_check', expression: values.condition_expression || '' };
-
-      // Schema-correct transition — NO is_manual, NO trigger_type, NO actions array
-      const updatedTransition: any = {
-        id: existingTransition.id,
-        from: values.from,         // single string
-        to: values.to,
-        label: values.label,
-        trigger: values.trigger || 'manual',  // 'manual' | 'automatic'
-        condition,
-        ui: {
-          icon: values.icon || null,
-          button_variant: values.button_variant || 'primary',
-          confirm_message: values.confirm_message || null,
-        },
-        guard_rules: {
-          allowed_roles: values.allowed_roles || [],
-          validation_rpc: values.validation_rpc || null,
-          required_fields: values.required_fields || [],
-        },
-      };
-      transitions[editingTransitionIndex] = updatedTransition;
-
-      // action_list belongs in automations.on_transition, NOT on the transition object
-      setBlueprint(prev => {
-        const newLifecycle = { ...prev.definition?.lifecycle, transitions };
-        const existingAutomations = prev.definition?.automations;
-        let updatedAutomations: any;
-        if (Array.isArray(existingAutomations)) {
-          // Flat format used by AutomationManager tab
-          const filtered = existingAutomations.filter(
-            (a: any) => !(a.event === 'on_transition' && a.target_id === updatedTransition.id)
-          );
-          if (values.action_list?.length > 0) {
-            filtered.push({ event: 'on_transition', target_id: updatedTransition.id,
-              name: `on_transition:${updatedTransition.id}`, actions: values.action_list, is_active: true });
+      const stages = blueprint.definition?.lifecycle?.stages || [];
+      
+      if (editingTransitionIndex !== null) {
+        const fromStage = stages.find((s: any) => s.id === values.from);
+        const toStage = stages.find((s: any) => s.id === values.to);
+        
+        // Auto-derive type
+        if (fromStage && toStage && !values.type_override) {
+          if (toStage.category === 'CLOSED_LOST' || toStage.category === 'CANCELLED') {
+            values.type = 'cancellation';
+          } else if ((toStage.sequence || 0) > (fromStage.sequence || 0)) {
+            values.type = 'forward';
+          } else if ((toStage.sequence || 0) < (fromStage.sequence || 0)) {
+            values.type = 'backward';
           }
-          updatedAutomations = filtered;
-        } else {
-          // Nested object format
-          const nested = { ...(existingAutomations || {}) };
-          const onTransition = { ...(nested.on_transition || {}) };
-          if (values.action_list?.length > 0) {
-            onTransition[updatedTransition.id] = { actions: values.action_list };
-          } else {
-            delete onTransition[updatedTransition.id];
-          }
-          updatedAutomations = { ...nested, on_transition: onTransition };
         }
-        const newDefinition = { ...prev.definition, lifecycle: newLifecycle, automations: updatedAutomations };
-        form.setFieldsValue({ definitionStr: JSON.stringify(newDefinition, null, 2) });
-        return { ...prev, definition: newDefinition };
-      });
+
+        // Reconstruct nested structures
+        const updatedTransition: any = {
+          ...transitions[editingTransitionIndex],
+          ...values,
+          trigger: values.trigger_type, // Map trigger_type to trigger field
+          is_manual: values.trigger_type === 'manual',
+          ui: {
+            icon: values.icon,
+            button_variant: values.button_variant,
+            confirm_message: values.confirm_message,
+            button_color: typeof values.button_color === 'string' ? values.button_color : values.button_color?.toHexString?.() || '#1677ff'
+          },
+          guard_rules: {
+            allowed_roles: values.allowed_roles,
+            validation_rpc: values.validation_rpc,
+            required_fields: values.required_fields
+          },
+          // Map action_list back to actions
+          actions: values.action_list || []
+        };
+        
+        // Clean up flat fields
+        ['icon', 'button_variant', 'confirm_message', 'button_color', 'allowed_roles', 'validation_rpc', 'required_fields', 'is_manual', 'trigger_type'].forEach(f => delete updatedTransition[f]);
+
+        transitions[editingTransitionIndex] = updatedTransition;
+        handleLifecycleChange('transitions', transitions);
+      }
       setIsTransitionDrawerVisible(false);
     });
   };
@@ -814,16 +808,6 @@ const ProcessBlueprintConfig: React.FC<ProcessBlueprintConfigProps> = ({ bluepri
                 </Card>
               </TabPane>
 
-              <TabPane tab={<Space><Clock size={16} />SLA Rules</Space>} key="sla_rules">
-                <Card bordered={false}>
-                  <SlaRulesManager 
-                    slaRules={blueprint.definition?.sla_rules || []}
-                    stages={blueprint.definition?.lifecycle?.stages || []}
-                    onChange={(rules) => updateDefinition('sla_rules', rules)}
-                  />
-                </Card>
-              </TabPane>
-
               <TabPane tab={<Space><FileCode size={16} />Advanced (JSON)</Space>} key="raw">
                 <Card bordered={false}>
                   <Title level={5}>Raw Blueprint Definition</Title>
@@ -1002,22 +986,22 @@ const ProcessBlueprintConfig: React.FC<ProcessBlueprintConfigProps> = ({ bluepri
                 </Form.Item>
               </Col>
               <Col span={12}>
+                <Form.Item label="Display Label" name="display_label">
+                  <Input placeholder="Enter display label" />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
                 <Form.Item label="Stage ID" name="id" rules={[{ required: true }]}>
-                  <Input placeholder="draft" disabled={!!editingStage?.id} />
+                  <Input placeholder="draft" disabled={editingStage?.id !== 'new'} />
                 </Form.Item>
-                <Text type="secondary" style={{ fontSize: '10px', display: 'block', marginTop: -8 }}>Used internally — cannot change after creation</Text>
+                <Text type="secondary" style={{ fontSize: '10px', display: 'block', marginTop: -8 }}>Used internally to reference this stage</Text>
               </Col>
-              <Col span={24}>
-                <Form.Item label="Description" name="description">
-                  <Input.TextArea placeholder="Describe what happens in this stage and any important context for assignees" rows={2} />
-                </Form.Item>
-              </Col>
-              <Col span={12}>
+              <Col span={6}>
                 <Form.Item label="Sequence" name="sequence">
-                  <InputNumber style={{ width: '100%' }} min={1} />
+                  <InputNumber style={{ width: '100%' }} />
                 </Form.Item>
               </Col>
-              <Col span={12}>
+              <Col span={6}>
                  <Form.Item label="Color" name="color">
                    <ColorPicker style={{ width: '100%' }} />
                  </Form.Item>
@@ -1026,48 +1010,60 @@ const ProcessBlueprintConfig: React.FC<ProcessBlueprintConfigProps> = ({ bluepri
           </Card>
 
           <div style={{ marginBottom: 24 }}>
-            <Title level={5} style={{ marginBottom: 8 }}>System Status Category</Title>
-            <Text type="secondary" style={{ fontSize: '12px', display: 'block', marginBottom: 12 }}>
-              Maps this stage to a system lifecycle category. The automation engine uses this to evaluate business rules.
-            </Text>
-            <Form.Item name="category" rules={[{ required: true, message: 'Category is required' }]}>
+            <Title level={5} style={{ marginBottom: 16 }}>System Status Category</Title>
+            <Form.Item name="category" rules={[{ required: true }]}>
               <CardRadioGroup 
                 options={[
-                  { value: 'NEW', label: 'New', description: 'Initial state — entity just created', icon: <Plus />, span: 8 },
-                  { value: 'IN_PROGRESS', label: 'In Progress', description: 'Actively being worked on', icon: <Activity />, span: 8 },
-                  { value: 'CLOSED_WON', label: 'Closed Won', description: 'Successfully completed', icon: <CheckCircle2 />, span: 8 },
-                  { value: 'CLOSED_LOST', label: 'Closed Lost', description: 'Rejected, lost or failed', icon: <XCircle />, span: 8 },
-                  { value: 'CANCELLED', label: 'Cancelled', description: 'Cancelled or abandoned', icon: <AlertTriangle />, span: 8 },
+                  { value: 'NEW', label: 'New', description: 'Initial state for new entities', icon: <Plus /> },
+                  { value: 'OPEN', label: 'Open', description: 'Open and available for work', icon: <ArrowRight /> },
+                  { value: 'IN_PROGRESS', label: 'In Progress', description: 'Currently being worked on', icon: <Activity /> },
+                  { value: 'COMPLETE', label: 'Complete', description: 'Successfully completed', icon: <CheckCircle2 /> },
+                  { value: 'WON', label: 'Closed Won', description: 'Process ended successfully', icon: <Zap /> },
+                  { value: 'LOST', label: 'Closed Lost', description: 'Process ended unsuccessfully', icon: <XCircle /> },
+                  { value: 'CANCELLED', label: 'Cancelled', description: 'Cancelled or abandoned', icon: <AlertTriangle /> }
                 ]}
               />
             </Form.Item>
           </div>
 
+          <Card size="small" title="Event Configuration (Optional)" style={{ marginBottom: 24, borderRadius: '12px' }}>
+            <Row gutter={16}>
+              <Col span={12}>
+                <Form.Item label="On Entry Event Name" name={['events', 'on_entry']}>
+                  <Input placeholder="e.g. stage.entered" />
+                </Form.Item>
+                <Text type="secondary" style={{ fontSize: '10px', display: 'block', marginTop: -8 }}>Event triggered when entering this stage</Text>
+              </Col>
+              <Col span={12}>
+                <Form.Item label="On Exit Event Name" name={['events', 'on_exit']}>
+                  <Input placeholder="e.g. stage.exited" />
+                </Form.Item>
+                <Text type="secondary" style={{ fontSize: '10px', display: 'block', marginTop: -8 }}>Event triggered when exiting this stage</Text>
+              </Col>
+            </Row>
+          </Card>
 
-          <Card size="small" title="RACI Matrix — Role Assignment" style={{ marginBottom: 24, borderRadius: '12px' }}>
-            <Paragraph type="secondary" style={{ fontSize: '12px' }}>
-              Use role IDs (e.g. <code>SALES_REP</code>, <code>HR</code>) or dynamic values (e.g. <code>{"{{entity.user_id}}"}</code>).
-              Consulted and Informed accept multiple values.
-            </Paragraph>
+          <Card size="small" title="Role Assignment (RACI matrix)" style={{ marginBottom: 24, borderRadius: '12px' }}>
+            <Paragraph type="secondary" style={{ fontSize: '12px' }}>Define roles and responsibilities for this stage</Paragraph>
             <Row gutter={[16, 16]}>
               <Col span={12}>
-                <Form.Item label="Responsible — does the work" name={['raci', 'responsible']}>
-                  <Input placeholder="e.g. HR, {{entity.user_id}}" />
+                <Form.Item label="Responsible" name={['raci', 'responsible']}>
+                   <AssignmentEditor label="Who does the work" />
                 </Form.Item>
               </Col>
               <Col span={12}>
-                <Form.Item label="Accountable — ultimate owner" name={['raci', 'accountable']}>
-                  <Input placeholder="e.g. HIRING_MANAGER, {{entity.user_id}}.manager_id" />
+                <Form.Item label="Accountable" name={['raci', 'accountable']}>
+                   <AssignmentEditor label="Who is ultimately responsible" />
                 </Form.Item>
               </Col>
               <Col span={12}>
-                <Form.Item label="Consulted — provides input" name={['raci', 'consulted']}>
-                  <Select mode="tags" placeholder="e.g. FINANCE, LEGAL" tokenSeparators={[',']} />
+                <Form.Item label="Consulted" name={['raci', 'consulted']}>
+                   <AssignmentEditor label="Who provides input" />
                 </Form.Item>
               </Col>
               <Col span={12}>
-                <Form.Item label="Informed — kept in the loop" name={['raci', 'informed']}>
-                  <Select mode="tags" placeholder="e.g. ACCOUNT_MANAGEMENT" tokenSeparators={[',']} />
+                <Form.Item label="Informed" name={['raci', 'informed']}>
+                   <AssignmentEditor label="Who needs to be kept informed" />
                 </Form.Item>
               </Col>
             </Row>
@@ -1098,114 +1094,6 @@ const ProcessBlueprintConfig: React.FC<ProcessBlueprintConfigProps> = ({ bluepri
                </Form.Item>
             </div>
           </Card>
-
-          <Card size="small" title="Cost Estimates" style={{ borderRadius: '12px', marginBottom: 24 }}>
-            <Row gutter={16}>
-              <Col span={8}>
-                <Form.Item label="Fixed Cost" name={['cost_estimates', 'fixed_cost']}>
-                  <InputNumber style={{ width: '100%' }} min={0} />
-                </Form.Item>
-              </Col>
-              <Col span={8}>
-                <Form.Item label="Cost Center" name={['cost_estimates', 'cost_center']}>
-                  <Input placeholder="e.g. HR_OPERATIONS" />
-                </Form.Item>
-              </Col>
-              <Col span={8}>
-                <Form.Item label="Labor Cost / Hr" name={['cost_estimates', 'labor_cost_per_hour']}>
-                  <InputNumber style={{ width: '100%' }} min={0} />
-                </Form.Item>
-              </Col>
-            </Row>
-          </Card>
-
-          <Form.Item noStyle shouldUpdate={(prev, curr) => prev.category !== curr.category}>
-             {({ getFieldValue }) => {
-                const category = getFieldValue('category');
-                const bpType = form.getFieldValue('blueprint_type');
-                
-                return (
-                   <>
-                     {bpType === 'approval' && category === 'IN_PROGRESS' && (
-                        <Card size="small" title="Approval Rules" style={{ borderRadius: '12px', marginBottom: 24, border: '1px solid #1677ff' }}>
-                           <Row gutter={16}>
-                              <Col span={12}>
-                                 <Form.Item name={['approval_rules', 'rejection_requires_reason']} valuePropName="checked">
-                                    <Switch checkedChildren="Reason Required" unCheckedChildren="No Reason" />
-                                 </Form.Item>
-                              </Col>
-                              <Col span={12}>
-                                 <Form.Item label="Auto-Approve After (Hrs)" name={['approval_rules', 'auto_approve_after_hours']} style={{ marginBottom: 8 }}>
-                                    <InputNumber style={{ width: '100%' }} min={1} />
-                                 </Form.Item>
-                              </Col>
-                           </Row>
-                           <Divider orientation="left" style={{ margin: '12px 0', fontSize: 13 }}>Approval Phases</Divider>
-                           <Form.List name={['approval_rules', 'phases']}>
-                              {(phases, { add, remove }) => (
-                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                    {phases.map((phase, index) => (
-                                       <div key={phase.key} style={{ padding: 12, background: '#fafafa', border: '1px solid #d9d9d9', borderRadius: 8 }}>
-                                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                                             <Text strong>Phase {index + 1}</Text>
-                                             <Button type="text" danger size="small" icon={<Trash2 size={14} />} onClick={() => remove(phase.name)} />
-                                          </div>
-                                          <Row gutter={8}>
-                                             <Col span={12}>
-                                                <Form.Item label="Phase ID" name={[phase.name, 'phase_id']} rules={[{ required: true }]} style={{ marginBottom: 8 }}>
-                                                   <Input size="small" placeholder="L1_MANAGER" />
-                                                </Form.Item>
-                                             </Col>
-                                             <Col span={6}>
-                                                <Form.Item label="Window (Hrs)" name={[phase.name, 'time_window_hours']} style={{ marginBottom: 8 }}>
-                                                   <InputNumber size="small" style={{ width: '100%' }} />
-                                                </Form.Item>
-                                             </Col>
-                                             <Col span={6}>
-                                                <Form.Item label="Escalate To" name={[phase.name, 'escalation_on_breach', 'action']} style={{ marginBottom: 8 }}>
-                                                   <Select size="small" options={[{value: 'expand_pool', label: 'Expand Pool'}, {value: 'auto_approve', label: 'Auto Approve'}]} />
-                                                </Form.Item>
-                                             </Col>
-                                          </Row>
-                                       </div>
-                                    ))}
-                                    <Button type="dashed" block size="small" onClick={() => add({ phase_id: `PHASE_${phases.length + 1}` })}>+ Add Approval Phase</Button>
-                                 </div>
-                              )}
-                           </Form.List>
-                        </Card>
-                     )}
-
-                     {(category === 'CANCELLED' || category === 'CLOSED_LOST') && (
-                        <Card size="small" title="Cancellation Rules" style={{ borderRadius: '12px', marginBottom: 24, border: '1px solid #ffa39e' }}>
-                           <Row gutter={16}>
-                              <Col span={12}>
-                                 <Form.Item name={['cancellation_rules', 'requires_approval']} valuePropName="checked">
-                                    <Switch checkedChildren="Requires Approval" unCheckedChildren="No Approval Needed" />
-                                 </Form.Item>
-                              </Col>
-                           </Row>
-                           <Row gutter={16}>
-                              <Col span={12}>
-                                 <Form.Item label="Time Constraint Type" name={['cancellation_rules', 'time_constraint', 'type']}>
-                                    <Select options={[{value: 'ALWAYS', label: 'Always'}, {value: 'BEFORE_FIELD_DATE', label: 'Before Field Date'}]} />
-                                 </Form.Item>
-                              </Col>
-                              <Col span={12}>
-                                 <Form.Item label="Validation Condition" name={['cancellation_rules', 'time_constraint', 'condition']}>
-                                    <Input placeholder="start_date > now()" />
-                                 </Form.Item>
-                              </Col>
-                           </Row>
-                           <Form.Item label="Reversal Actions (Tags)" name={['cancellation_rules', 'reversal_actions']}>
-                              <Select mode="tags" placeholder="e.g. reverse_ledger, notify_finance" tokenSeparators={[',']} />
-                           </Form.Item>
-                        </Card>
-                     )}
-                   </>
-                );
-             }}
-          </Form.Item>
         </Form>
       </Drawer>
 
@@ -1249,8 +1137,8 @@ const ProcessBlueprintConfig: React.FC<ProcessBlueprintConfigProps> = ({ bluepri
                 <Text type="secondary" style={{ fontSize: '10px', display: 'block', marginTop: -8 }}>Used internally to reference this transition</Text>
               </Col>
               <Col span={12}>
-                <Form.Item label="From Stage" name="from" rules={[{ required: true }]}>
-                   <Select placeholder="Stage this transition starts from">
+                <Form.Item label="From Stage(s)" name="from" rules={[{ required: true }]}>
+                   <Select mode="multiple" placeholder="Stages this transition can start from">
                       {(blueprint.definition?.lifecycle?.stages || []).map((s: any) => <Option key={s.id} value={s.id}>{s.name}</Option>)}
                    </Select>
                 </Form.Item>
@@ -1266,159 +1154,55 @@ const ProcessBlueprintConfig: React.FC<ProcessBlueprintConfigProps> = ({ bluepri
           </Card>
 
           <div style={{ marginBottom: 24 }}>
-            <Title level={5} style={{ marginBottom: 8 }}>Trigger Type</Title>
-            <Text type="secondary" style={{ fontSize: '12px', display: 'block', marginBottom: 12 }}>
-              How this transition is initiated. Use <code>automatic</code> for system-driven transitions (e.g. scheduled, date-based).
-            </Text>
-            <Form.Item name="trigger" rules={[{ required: true }]}>
+            <Title level={5} style={{ marginBottom: 16 }}>Trigger Configuration</Title>
+            <Form.Item name="trigger_type" rules={[{ required: true }]}>
               <CardRadioGroup 
                 options={[
-                  { value: 'manual', label: 'Manual', description: 'User clicks a button to trigger', icon: <MousePointer />, span: 12 },
-                  { value: 'automatic', label: 'Automatic', description: 'System triggers when condition is met', icon: <Zap />, span: 12 },
+                  { value: 'manual', label: 'Manual', description: 'User-initiated transition', icon: <MousePointer /> },
+                  { value: 'auto', label: 'Automatic', description: 'Happens automatically when entry conditions met', icon: <Zap /> },
+                  { value: 'event', label: 'Event-Based', description: 'Triggered by external events', icon: <Activity /> },
+                  { value: 'time', label: 'Time-Based', description: 'Triggered after time threshold', icon: <Clock /> }
                 ]}
               />
             </Form.Item>
           </div>
 
-          <Card size="small" title="Condition" style={{ marginBottom: 24, borderRadius: '12px' }}>
-            <Paragraph type="secondary" style={{ fontSize: '12px' }}>
-              When must this transition be available? Use <code>always</code> for unconditional, or define an expression.
-            </Paragraph>
-            <Row gutter={16}>
-              <Col span={8}>
-                <Form.Item label="Condition Type" name="condition_type">
-                  <Select>
-                    <Option value="always">Always</Option>
-                    <Option value="field_check">Field Check</Option>
-                    <Option value="expression">Expression</Option>
-                  </Select>
-                </Form.Item>
-              </Col>
-              <Col span={16}>
-                <Form.Item
-                  noStyle
-                  shouldUpdate={(prev, curr) => prev.condition_type !== curr.condition_type}
-                >
-                  {({ getFieldValue }) =>
-                    getFieldValue('condition_type') !== 'always' ? (
-                      <Form.Item label="Expression" name="condition_expression">
-                        <Input.TextArea
-                          placeholder="e.g. total_amount > 0 AND has_receipts = true"
-                          rows={2}
-                        />
-                      </Form.Item>
-                    ) : null
-                  }
-                </Form.Item>
-              </Col>
-            </Row>
+          <Card size="small" title="Condition (Optional)" style={{ marginBottom: 24, borderRadius: '12px' }}>
+            <Paragraph type="secondary" style={{ fontSize: '12px' }}>Optional condition that must be met for this transition to be available</Paragraph>
+            <Form.Item label="Condition Rule" name="condition">
+               <Input.TextArea placeholder="e.g. {{entity.assignee_id}} IS NOT NULL" rows={3} />
+            </Form.Item>
           </Card>
 
-          <Card size="small" title="Guard Rails" style={{ marginBottom: 24, borderRadius: '12px' }}>
-            <Paragraph type="secondary" style={{ fontSize: '12px' }}>
-              Control who can trigger this transition and what fields must be populated first.
-            </Paragraph>
-            <Row gutter={16}>
-              <Col span={12}>
-                <Form.Item label="Allowed Roles" name="allowed_roles">
-                  <Select
-                    mode="tags"
-                    placeholder="e.g. APPROVER, HR_MANAGER, OWNER"
-                    tokenSeparators={[',']}
-                  />
-                </Form.Item>
-                <Text type="secondary" style={{ fontSize: '11px', display: 'block', marginTop: -8 }}>Use OWNER for entity owner, APPROVER for approval roles</Text>
-              </Col>
-              <Col span={12}>
-                <Form.Item label="Required Fields" name="required_fields">
-                  <Select
-                    mode="tags"
-                    placeholder="e.g. details.rejection_reason, total_amount"
-                    tokenSeparators={[',']}
-                  />
-                </Form.Item>
-              </Col>
-              <Col span={24}>
-                <Form.Item label="Validation RPC (optional)" name="validation_rpc">
-                  <Input placeholder="e.g. workforce.util_check_leave_balance" />
-                </Form.Item>
-              </Col>
-            </Row>
-          </Card>
-
-          <Card size="small" title="on_transition Actions" style={{ marginBottom: 24, borderRadius: '12px' }}>
-            <Paragraph type="secondary" style={{ fontSize: '12px' }}>
-              Actions that run when this transition fires. Stored in <code>automations.on_transition</code>.
-            </Paragraph>
-            <Form.List name="action_list">
-              {(fields, { add, remove }) => (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                  {fields.map((field, index) => (
-                    <Badge.Ribbon key={field.key} text={`Step ${index + 1}`}>
-                      <Card size="small" style={{ border: '1px solid #1677ff' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                          <Form.Item name={[field.name, 'action_type']} noStyle>
-                            <Select 
-                              options={[
-                                { label: 'Send Email', value: 'send_email' },
-                                { label: 'Send Notification', value: 'send_notification' },
-                                { label: 'Update Entity', value: 'update_entity' },
-                                { label: 'Create Entity', value: 'create_entity' },
-                                { label: 'Remote Call (RPC)', value: 'rpc' },
-                              ]} 
-                              style={{ width: 200 }}
-                            />
-                          </Form.Item>
-                          <Button type="text" danger size="small" icon={<Trash2 size={14} />} onClick={() => remove(field.name)} />
-                        </div>
-                        <Form.Item noStyle shouldUpdate={(prev, curr) => prev?.action_list?.[field.name]?.action_type !== curr?.action_list?.[field.name]?.action_type}>
-                          {({ getFieldValue }) => (
-                            <ActionConfigForm 
-                              type={getFieldValue(['action_list', field.name, 'action_type']) || 'send_email'} 
-                              namePrefix={['action_list', field.name]} 
-                            />
-                          )}
-                        </Form.Item>
-                      </Card>
-                    </Badge.Ribbon>
-                  ))}
-                  <Button 
-                    type="dashed" 
-                    block 
-                    icon={<Plus size={16} />} 
-                    onClick={() => add({ action_type: 'send_email', name: 'New Transition Step', config: {}, priority: (fields.length + 1) * 10, retry_policy: { max_retries: 3, delay_seconds: 60 } })}
-                    style={{ borderColor: '#1677ff', color: '#1677ff' }}
-                  >
-                    Add Transition Step
-                  </Button>
-                </div>
-              )}
-            </Form.List>
+          <Card size="small" title="Workflow Actions" style={{ marginBottom: 24, borderRadius: '12px' }}>
+             <Paragraph type="secondary" style={{ fontSize: '12px' }}>Actions that execute when this transition completes</Paragraph>
+             <Form.Item name="action_list">
+                <ActionListEditor />
+             </Form.Item>
           </Card>
 
           <Card size="small" title="UI Customization" style={{ borderRadius: '12px' }}>
-            <Row gutter={16}>
-              <Col span={8}>
-                <Form.Item label="Button Variant" name="button_variant">
-                  <Select>
-                    <Option value="primary">Primary</Option>
-                    <Option value="secondary">Secondary</Option>
-                    <Option value="danger">Danger (Red)</Option>
-                    <Option value="warning">Warning (Orange)</Option>
-                  </Select>
-                </Form.Item>
-              </Col>
-              <Col span={8}>
-                <Form.Item label="Icon" name="icon">
-                  <Input placeholder="check, send, x-circle, alert-triangle" />
-                </Form.Item>
-              </Col>
-              <Col span={8}>
-                <Form.Item label="Confirm Message (optional)" name="confirm_message">
-                  <Input placeholder="Are you sure?" />
-                </Form.Item>
-              </Col>
-            </Row>
+             <Row gutter={16}>
+               <Col span={8}>
+                  <Form.Item label="Button Variant" name="button_variant">
+                    <Select>
+                      <Option value="primary">Primary (Glow)</Option>
+                      <Option value="secondary">Secondary (Soft)</Option>
+                      <Option value="danger">Danger (Red)</Option>
+                    </Select>
+                  </Form.Item>
+               </Col>
+               <Col span={8}>
+                  <Form.Item label="Icon" name="icon">
+                    <Input placeholder="check, play, arrow-right" />
+                  </Form.Item>
+               </Col>
+               <Col span={8}>
+                  <Form.Item label="Color" name="button_color">
+                    <ColorPicker />
+                  </Form.Item>
+               </Col>
+             </Row>
           </Card>
         </Form>
       </Drawer>

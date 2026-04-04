@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Input, Form, Select, Row, Col, Card, message, Tabs, Table, Typography, Modal, Switch, Space, Badge, Alert, Drawer, Divider, ColorPicker, InputNumber, Collapse, Tooltip } from 'antd';
+import { Button, Input, Form, Select, Row, Col, Card, message, Tabs, Table, Typography, Modal, Switch, Space, Badge, Alert, Drawer, Divider, ColorPicker, InputNumber, Collapse, Tooltip, Empty } from 'antd';
 import { 
   Save, 
   Play, 
@@ -15,7 +15,10 @@ import {
   DollarSign,
   MousePointer,
   Shield,
+  Mail,
+  Edit,
   ArrowRight,
+  GripVertical,
   Plus,
   Layout,
   XCircle,
@@ -33,8 +36,6 @@ import ReactDiffViewer from 'react-diff-viewer-continued';
 import StageManager from './components/ProcessBlueprint/StageManager';
 import TransitionManager from './components/ProcessBlueprint/TransitionManager';
 import AutomationManager from './components/ProcessBlueprint/AutomationManager';
-import SlaRulesManager from './components/ProcessBlueprint/SlaRulesManager';
-import ActionConfigForm from './components/ProcessBlueprint/ActionConfigForm';
 import VisualFlowManager from './components/ProcessBlueprint/VisualFlowManager';
 import AssignmentEditor from './components/ProcessBlueprint/AssignmentEditor';
 import { QueryBuilder } from 'react-querybuilder';
@@ -100,7 +101,51 @@ const CardRadioGroup = ({ value, onChange, options }: any) => (
   </Row>
 );
 
+const ActionListEditor = ({ value = [], onChange }: any) => {
+  const addAction = (action_type: string) => {
+    onChange([...value, {
+      name: `New ${action_type} action`,
+      action_type,
+      config: {},
+      priority: (value.length + 1) * 10,
+      retry_policy: { max_retries: 3, delay_seconds: 60 }
+    }]);
+  };
+  const removeAction = (idx: number) => onChange(value.filter((_: any, i: number) => i !== idx));
 
+  return (
+    <div style={{ padding: '12px', background: '#f5f5f5', borderRadius: '12px', border: '1px dashed #d9d9d9' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
+        <Text strong>on_transition Actions</Text>
+        <Space>
+          <Button size="small" type="primary" onClick={() => addAction('send_email')} icon={<Mail size={14} />}>Email</Button>
+          <Button size="small" onClick={() => addAction('send_notification')} icon={<Activity size={14} />}>Notify</Button>
+          <Button size="small" onClick={() => addAction('update_entity')} icon={<Edit size={14} />}>Update</Button>
+          <Button size="small" onClick={() => addAction('rpc')} icon={<Zap size={14} />}>RPC</Button>
+        </Space>
+      </div>
+      {value.length === 0 ? (
+        <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="No transition actions defined" />
+      ) : (
+        <Space direction="vertical" style={{ width: '100%' }} size={8}>
+          {value.map((action: any, idx: number) => (
+            <Card key={idx} size="small" bodyStyle={{ padding: '8px 12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <GripVertical size={16} color="#bfbfbf" style={{ cursor: 'grab' }} />
+                <Badge count={idx + 1} style={{ backgroundColor: '#f0f0f0', color: '#8c8c8c' }} />
+                <div style={{ flex: 1 }}>
+                  <Text strong>{action.name}</Text>
+                  <div style={{ fontSize: '11px', color: '#8c8c8c' }}>{action.action_type}</div>
+                </div>
+                <Button size="small" type="text" danger icon={<Trash2 size={14} />} onClick={() => removeAction(idx)} />
+              </div>
+            </Card>
+          ))}
+        </Space>
+      )}
+    </div>
+  );
+};
 
 // Helper to convert nested backend automations to a flat array for the UI
 const flattenAutomations = (nested: any) => {
@@ -116,7 +161,7 @@ const flattenAutomations = (nested: any) => {
           name: config.name || `${event} ${target_id}`,
           actions: (config.actions || []).map((a: any) => ({
             ...a,
-            action_type: a.action_type || a.type || 'unknown'
+            type: a.type || a.action_type || 'unknown'
           })),
           is_active: config.is_active !== false,
           stop_on_failure: config.stop_on_failure || config.abort_on_failure || false,
@@ -141,9 +186,10 @@ const nestAutomations = (flat: any[]) => {
     nested[a.event][a.target_id] = {
       name: a.name,
       actions: (a.actions || []).map((act: any) => {
+        const { type, ...rest } = act;
         return {
-          ...act,
-          action_type: act.action_type || act.type,
+          ...rest,
+          action_type: type, // Ensure backend gets 'action_type' back
         };
       }),
       is_active: a.is_active,
@@ -462,14 +508,12 @@ const ProcessBlueprintConfig: React.FC<ProcessBlueprintConfigProps> = ({ bluepri
             aspirational_hours: s.time_estimates?.aspirational_hours ?? null,
             pert_expected_hours: values.time_estimates?.pert_expected_hours ?? null,
           },
-          cost_estimates: {
-            fixed_cost: values.cost_estimates?.fixed_cost ?? s.cost_estimates?.fixed_cost ?? 0,
-            cost_center: values.cost_estimates?.cost_center ?? s.cost_estimates?.cost_center ?? '',
-            labor_cost_per_hour: values.cost_estimates?.labor_cost_per_hour ?? s.cost_estimates?.labor_cost_per_hour ?? null,
-            aspirational_total_cost: s.cost_estimates?.aspirational_total_cost ?? null,
+          cost_estimates: s.cost_estimates || {
+            fixed_cost: 0,
+            cost_center: '',
+            labor_cost_per_hour: null,
+            aspirational_total_cost: null,
           },
-          cancellation_rules: values.cancellation_rules ?? s.cancellation_rules,
-          approval_rules: values.approval_rules ?? s.approval_rules,
         };
       });
       handleLifecycleChange('stages', newStages);
@@ -814,16 +858,6 @@ const ProcessBlueprintConfig: React.FC<ProcessBlueprintConfigProps> = ({ bluepri
                 </Card>
               </TabPane>
 
-              <TabPane tab={<Space><Clock size={16} />SLA Rules</Space>} key="sla_rules">
-                <Card bordered={false}>
-                  <SlaRulesManager 
-                    slaRules={blueprint.definition?.sla_rules || []}
-                    stages={blueprint.definition?.lifecycle?.stages || []}
-                    onChange={(rules) => updateDefinition('sla_rules', rules)}
-                  />
-                </Card>
-              </TabPane>
-
               <TabPane tab={<Space><FileCode size={16} />Advanced (JSON)</Space>} key="raw">
                 <Card bordered={false}>
                   <Title level={5}>Raw Blueprint Definition</Title>
@@ -1098,114 +1132,6 @@ const ProcessBlueprintConfig: React.FC<ProcessBlueprintConfigProps> = ({ bluepri
                </Form.Item>
             </div>
           </Card>
-
-          <Card size="small" title="Cost Estimates" style={{ borderRadius: '12px', marginBottom: 24 }}>
-            <Row gutter={16}>
-              <Col span={8}>
-                <Form.Item label="Fixed Cost" name={['cost_estimates', 'fixed_cost']}>
-                  <InputNumber style={{ width: '100%' }} min={0} />
-                </Form.Item>
-              </Col>
-              <Col span={8}>
-                <Form.Item label="Cost Center" name={['cost_estimates', 'cost_center']}>
-                  <Input placeholder="e.g. HR_OPERATIONS" />
-                </Form.Item>
-              </Col>
-              <Col span={8}>
-                <Form.Item label="Labor Cost / Hr" name={['cost_estimates', 'labor_cost_per_hour']}>
-                  <InputNumber style={{ width: '100%' }} min={0} />
-                </Form.Item>
-              </Col>
-            </Row>
-          </Card>
-
-          <Form.Item noStyle shouldUpdate={(prev, curr) => prev.category !== curr.category}>
-             {({ getFieldValue }) => {
-                const category = getFieldValue('category');
-                const bpType = form.getFieldValue('blueprint_type');
-                
-                return (
-                   <>
-                     {bpType === 'approval' && category === 'IN_PROGRESS' && (
-                        <Card size="small" title="Approval Rules" style={{ borderRadius: '12px', marginBottom: 24, border: '1px solid #1677ff' }}>
-                           <Row gutter={16}>
-                              <Col span={12}>
-                                 <Form.Item name={['approval_rules', 'rejection_requires_reason']} valuePropName="checked">
-                                    <Switch checkedChildren="Reason Required" unCheckedChildren="No Reason" />
-                                 </Form.Item>
-                              </Col>
-                              <Col span={12}>
-                                 <Form.Item label="Auto-Approve After (Hrs)" name={['approval_rules', 'auto_approve_after_hours']} style={{ marginBottom: 8 }}>
-                                    <InputNumber style={{ width: '100%' }} min={1} />
-                                 </Form.Item>
-                              </Col>
-                           </Row>
-                           <Divider orientation="left" style={{ margin: '12px 0', fontSize: 13 }}>Approval Phases</Divider>
-                           <Form.List name={['approval_rules', 'phases']}>
-                              {(phases, { add, remove }) => (
-                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                    {phases.map((phase, index) => (
-                                       <div key={phase.key} style={{ padding: 12, background: '#fafafa', border: '1px solid #d9d9d9', borderRadius: 8 }}>
-                                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                                             <Text strong>Phase {index + 1}</Text>
-                                             <Button type="text" danger size="small" icon={<Trash2 size={14} />} onClick={() => remove(phase.name)} />
-                                          </div>
-                                          <Row gutter={8}>
-                                             <Col span={12}>
-                                                <Form.Item label="Phase ID" name={[phase.name, 'phase_id']} rules={[{ required: true }]} style={{ marginBottom: 8 }}>
-                                                   <Input size="small" placeholder="L1_MANAGER" />
-                                                </Form.Item>
-                                             </Col>
-                                             <Col span={6}>
-                                                <Form.Item label="Window (Hrs)" name={[phase.name, 'time_window_hours']} style={{ marginBottom: 8 }}>
-                                                   <InputNumber size="small" style={{ width: '100%' }} />
-                                                </Form.Item>
-                                             </Col>
-                                             <Col span={6}>
-                                                <Form.Item label="Escalate To" name={[phase.name, 'escalation_on_breach', 'action']} style={{ marginBottom: 8 }}>
-                                                   <Select size="small" options={[{value: 'expand_pool', label: 'Expand Pool'}, {value: 'auto_approve', label: 'Auto Approve'}]} />
-                                                </Form.Item>
-                                             </Col>
-                                          </Row>
-                                       </div>
-                                    ))}
-                                    <Button type="dashed" block size="small" onClick={() => add({ phase_id: `PHASE_${phases.length + 1}` })}>+ Add Approval Phase</Button>
-                                 </div>
-                              )}
-                           </Form.List>
-                        </Card>
-                     )}
-
-                     {(category === 'CANCELLED' || category === 'CLOSED_LOST') && (
-                        <Card size="small" title="Cancellation Rules" style={{ borderRadius: '12px', marginBottom: 24, border: '1px solid #ffa39e' }}>
-                           <Row gutter={16}>
-                              <Col span={12}>
-                                 <Form.Item name={['cancellation_rules', 'requires_approval']} valuePropName="checked">
-                                    <Switch checkedChildren="Requires Approval" unCheckedChildren="No Approval Needed" />
-                                 </Form.Item>
-                              </Col>
-                           </Row>
-                           <Row gutter={16}>
-                              <Col span={12}>
-                                 <Form.Item label="Time Constraint Type" name={['cancellation_rules', 'time_constraint', 'type']}>
-                                    <Select options={[{value: 'ALWAYS', label: 'Always'}, {value: 'BEFORE_FIELD_DATE', label: 'Before Field Date'}]} />
-                                 </Form.Item>
-                              </Col>
-                              <Col span={12}>
-                                 <Form.Item label="Validation Condition" name={['cancellation_rules', 'time_constraint', 'condition']}>
-                                    <Input placeholder="start_date > now()" />
-                                 </Form.Item>
-                              </Col>
-                           </Row>
-                           <Form.Item label="Reversal Actions (Tags)" name={['cancellation_rules', 'reversal_actions']}>
-                              <Select mode="tags" placeholder="e.g. reverse_ledger, notify_finance" tokenSeparators={[',']} />
-                           </Form.Item>
-                        </Card>
-                     )}
-                   </>
-                );
-             }}
-          </Form.Item>
         </Form>
       </Drawer>
 
@@ -1350,50 +1276,9 @@ const ProcessBlueprintConfig: React.FC<ProcessBlueprintConfigProps> = ({ bluepri
             <Paragraph type="secondary" style={{ fontSize: '12px' }}>
               Actions that run when this transition fires. Stored in <code>automations.on_transition</code>.
             </Paragraph>
-            <Form.List name="action_list">
-              {(fields, { add, remove }) => (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                  {fields.map((field, index) => (
-                    <Badge.Ribbon key={field.key} text={`Step ${index + 1}`}>
-                      <Card size="small" style={{ border: '1px solid #1677ff' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                          <Form.Item name={[field.name, 'action_type']} noStyle>
-                            <Select 
-                              options={[
-                                { label: 'Send Email', value: 'send_email' },
-                                { label: 'Send Notification', value: 'send_notification' },
-                                { label: 'Update Entity', value: 'update_entity' },
-                                { label: 'Create Entity', value: 'create_entity' },
-                                { label: 'Remote Call (RPC)', value: 'rpc' },
-                              ]} 
-                              style={{ width: 200 }}
-                            />
-                          </Form.Item>
-                          <Button type="text" danger size="small" icon={<Trash2 size={14} />} onClick={() => remove(field.name)} />
-                        </div>
-                        <Form.Item noStyle shouldUpdate={(prev, curr) => prev?.action_list?.[field.name]?.action_type !== curr?.action_list?.[field.name]?.action_type}>
-                          {({ getFieldValue }) => (
-                            <ActionConfigForm 
-                              type={getFieldValue(['action_list', field.name, 'action_type']) || 'send_email'} 
-                              namePrefix={['action_list', field.name]} 
-                            />
-                          )}
-                        </Form.Item>
-                      </Card>
-                    </Badge.Ribbon>
-                  ))}
-                  <Button 
-                    type="dashed" 
-                    block 
-                    icon={<Plus size={16} />} 
-                    onClick={() => add({ action_type: 'send_email', name: 'New Transition Step', config: {}, priority: (fields.length + 1) * 10, retry_policy: { max_retries: 3, delay_seconds: 60 } })}
-                    style={{ borderColor: '#1677ff', color: '#1677ff' }}
-                  >
-                    Add Transition Step
-                  </Button>
-                </div>
-              )}
-            </Form.List>
+            <Form.Item name="action_list">
+              <ActionListEditor />
+            </Form.Item>
           </Card>
 
           <Card size="small" title="UI Customization" style={{ borderRadius: '12px' }}>

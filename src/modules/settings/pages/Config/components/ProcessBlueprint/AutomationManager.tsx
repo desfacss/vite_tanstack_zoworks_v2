@@ -25,14 +25,18 @@ const { Text, Title } = Typography;
 const { Option } = Select;
 
 interface Action {
-  type: string;
+  action_type: string;
+  name?: string;
   config: any;
+  priority?: number;
+  retry_policy?: { max_retries: number; delay_seconds: number } | null;
+  abort_on_failure?: boolean;
 }
 
 interface Automation {
   id?: string;
   name?: string;
-  event: 'on_enter' | 'on_exit' | 'on_transition' | 'on_field_change' | 'on_sla_breach' | 'on_cron';
+  event: 'on_stage_entry' | 'on_stage_exit' | 'on_transition';
   target_id?: string;
   condition?: RuleGroupType;
   actions: Action[];
@@ -55,9 +59,10 @@ interface SortableActionItemProps {
   onRemove: () => void;
   onUpdate: (updates: Partial<Action>) => void;
   fields: any[];
+  namePrefix: (string | number)[];
 }
 
-const SortableActionItem: React.FC<SortableActionItemProps> = ({ action, index, onRemove, onUpdate, fields }) => {
+const SortableActionItem: React.FC<SortableActionItemProps> = ({ action, index, onRemove, onUpdate, fields, namePrefix }) => {
   const {
     attributes,
     listeners,
@@ -75,10 +80,10 @@ const SortableActionItem: React.FC<SortableActionItemProps> = ({ action, index, 
   };
 
   const ACTION_TYPES = [
-    { label: 'Update Field', value: 'update_field', icon: Database },
     { label: 'Send Email', value: 'send_email', icon: Mail },
-    { label: 'Trigger Webhook', value: 'trigger_webhook', icon: Globe },
-    { label: 'Create Entity (Task/etc)', value: 'create_entity', icon: PlusSquare },
+    { label: 'Send Notification', value: 'send_notification', icon: Globe },
+    { label: 'Update Entity', value: 'update_entity', icon: Database },
+    { label: 'Create Entity', value: 'create_entity', icon: PlusSquare },
     { label: 'Remote Call (RPC)', value: 'rpc', icon: Code },
   ];
 
@@ -93,9 +98,9 @@ const SortableActionItem: React.FC<SortableActionItemProps> = ({ action, index, 
             <Badge count={index + 1} size="small" style={{ backgroundColor: '#1677ff' }} />
             <Select 
               size="small"
-              value={action.type}
+              value={action.action_type}
               style={{ width: 180 }}
-              onChange={(val) => onUpdate({ type: val, config: {} })}
+              onChange={(val) => onUpdate({ action_type: val, config: {} })}
               options={ACTION_TYPES}
             />
           </div>
@@ -104,7 +109,7 @@ const SortableActionItem: React.FC<SortableActionItemProps> = ({ action, index, 
           <Button type="text" danger size="small" icon={<Trash2 size={14} />} onClick={onRemove} />
         }
       >
-        <ActionConfigForm type={action.type} fields={fields} />
+        <ActionConfigForm type={action.action_type} fields={fields} namePrefix={namePrefix} />
       </Card>
     </div>
   );
@@ -119,8 +124,8 @@ const AutomationManager: React.FC<AutomationManagerProps> = ({ automations, onCh
   const handleAdd = (defaults?: Partial<Automation>) => {
     const newAutomation: Automation = {
       name: 'New Automation',
-      event: 'on_enter',
-      actions: [{ type: 'update_field', config: {} }],
+      event: 'on_stage_entry',
+      actions: [{ action_type: 'send_email', name: 'New action', config: {}, priority: 10, retry_policy: { max_retries: 3, delay_seconds: 60 } }],
       condition: { combinator: 'and', rules: [] },
       is_active: true,
       stop_on_failure: false,
@@ -138,10 +143,13 @@ const AutomationManager: React.FC<AutomationManagerProps> = ({ automations, onCh
       ...automation,
       // Ensure the condition is a valid RuleGroupType for react-querybuilder
       condition: automation.condition || { combinator: 'and', rules: [] },
-      // Provide defaults for actions
       actions: (automation.actions || []).map(a => ({
-        type: a.type,
-        config: a.config || (a as any).payload || {}
+        action_type: (a as any).action_type || (a as any).type || 'send_email',
+        name: a.name || '',
+        config: a.config || {},
+        priority: a.priority || 10,
+        retry_policy: a.retry_policy !== undefined ? a.retry_policy : { max_retries: 3, delay_seconds: 60 },
+        abort_on_failure: a.abort_on_failure || false,
       }))
     });
     setDrawerVisible(true);
@@ -190,26 +198,23 @@ const AutomationManager: React.FC<AutomationManagerProps> = ({ automations, onCh
 
   const getEventTagColor = (event: string) => {
     switch(event) {
-      case 'on_enter': return 'blue';
-      case 'on_exit': return 'cyan';
+      case 'on_stage_entry': return 'blue';
+      case 'on_stage_exit': return 'cyan';
       case 'on_transition': return 'purple';
-      case 'on_field_change': return 'orange';
-      case 'on_sla_breach': return 'red';
-      case 'on_cron': return 'green';
       default: return 'default';
     }
   };
 
   const groupedData = React.useMemo(() => {
     const groups: Record<string, Record<string, { automations: (Automation & { originalIndex: number })[], label: string }>> = {
-      on_enter: {},
-      on_exit: {},
+      on_stage_entry: {},
+      on_stage_exit: {},
       on_transition: {},
       other: {}
     };
 
     data.forEach((a, index) => {
-      const typeKey = (['on_enter', 'on_exit', 'on_transition'].includes(a.event)) ? a.event : 'other';
+      const typeKey = (['on_stage_entry', 'on_stage_exit', 'on_transition'].includes(a.event)) ? a.event : 'other';
       const targetKey = a.target_id || 'any';
       
       if (!groups[typeKey][targetKey]) {
@@ -367,12 +372,9 @@ const AutomationManager: React.FC<AutomationManagerProps> = ({ automations, onCh
               <Col span={12}>
                 <Form.Item label="Trigger Event" name="event" rules={[{ required: true }]}>
                   <Select onChange={() => form.setFieldValue('target_id', undefined)}>
-                    <Option value="on_enter">On Enter Stage</Option>
-                    <Option value="on_exit">On Exit Stage</Option>
+                    <Option value="on_stage_entry">On Stage Entry</Option>
+                    <Option value="on_stage_exit">On Stage Exit</Option>
                     <Option value="on_transition">On Transition</Option>
-                    <Option value="on_field_change">On Field Change</Option>
-                    <Option value="on_sla_breach">On SLA Breach</Option>
-                    <Option value="on_cron">Scheduled (Cron)</Option>
                   </Select>
                 </Form.Item>
               </Col>
@@ -383,7 +385,7 @@ const AutomationManager: React.FC<AutomationManagerProps> = ({ automations, onCh
                 >
                   {({ getFieldValue }) => {
                     const event = getFieldValue('event');
-                    if (event === 'on_enter' || event === 'on_exit') {
+                    if (event === 'on_stage_entry' || event === 'on_stage_exit') {
                       return (
                         <Form.Item label="Target Stage" name="target_id">
                           <Select placeholder="Pick a stage">
@@ -442,6 +444,7 @@ const AutomationManager: React.FC<AutomationManagerProps> = ({ automations, onCh
                           form.setFieldsValue({ actions: [...currentActions] });
                         }}
                         fields={fields}
+                        namePrefix={[field.name]}
                       />
                     ))}
                     {actions.length === 0 && <Empty description="No actions configured" style={{ padding: '20px' }} />}
@@ -449,7 +452,7 @@ const AutomationManager: React.FC<AutomationManagerProps> = ({ automations, onCh
                       type="dashed" 
                       block 
                       icon={<Plus size={16} />} 
-                      onClick={() => add({ type: 'update_field', config: {} })}
+                      onClick={() => add({ action_type: 'send_email', name: 'New action', config: {}, priority: 10, retry_policy: { max_retries: 3, delay_seconds: 60 } })}
                       style={{ marginTop: '8px' }}
                     >
                       Add Step to Pipeline
@@ -531,11 +534,11 @@ const AutomationCard: React.FC<{
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
            {!compact && (
               <Text type="secondary" style={{ fontSize: '11px' }}>
-                {automation.event === 'on_enter' || automation.event === 'on_exit' ? (
+                {automation.event === 'on_stage_entry' || automation.event === 'on_stage_exit' ? (
                   `Target: ${stageList.find(s => s.id === automation.target_id)?.name || automation.target_id || 'Any'}`
                 ) : automation.event === 'on_transition' ? (
                   `Transition: ${transitionList.find(t => t.id === automation.target_id)?.label || transitionList.find(t => t.id === automation.target_id)?.name || automation.target_id || 'Any'}`
-                ) : 'Trigger: Data change'}
+                ) : 'Trigger: Custom'}
               </Text>
            )}
            {compact && (
@@ -545,9 +548,9 @@ const AutomationCard: React.FC<{
            )}
            <Divider type="vertical" />
            <div style={{ display: 'flex', gap: '4px' }}>
-             {(automation.actions || []).map((act, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '2px', background: '#f5f5f5', padding: '1px 6px', borderRadius: '4px' }}>
-                  <Text type="secondary" style={{ fontSize: '10px' }}>{i + 1}. {act.type?.split('_')[0] || 'unknown'}</Text>
+              {(automation.actions || []).map((act, i) => (
+                 <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '2px', background: '#f5f5f5', padding: '1px 6px', borderRadius: '4px' }}>
+                   <Text type="secondary" style={{ fontSize: '10px' }}>{i + 1}. {(act as any).action_type?.split('_')[0] || (act as any).type?.split('_')[0] || 'unknown'}</Text>
                 </div>
              ))}
            </div>

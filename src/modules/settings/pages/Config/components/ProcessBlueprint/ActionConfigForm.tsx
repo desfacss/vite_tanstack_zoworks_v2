@@ -7,10 +7,13 @@ const { Option } = Select;
 
 interface ActionConfigFormProps {
   type: string;
-  fields: any[]; // Entity metadata
+  fields?: any[]; // Entity metadata (currently unused)
+  namePrefix?: (string | number)[];
 }
 
-const ActionConfigForm: React.FC<ActionConfigFormProps> = ({ type, fields }) => {
+const ActionConfigForm: React.FC<ActionConfigFormProps> = ({ type, namePrefix }) => {
+  const getPath = (...path: (string | number)[]) => namePrefix ? [...namePrefix, ...path] : path;
+
   const renderForm = () => {
     switch (type) {
       case 'send_email':
@@ -18,18 +21,39 @@ const ActionConfigForm: React.FC<ActionConfigFormProps> = ({ type, fields }) => 
           <>
             <Row gutter={8}>
               <Col span={12}>
-                <Form.Item label="Email Template ID" name={['config', 'template_id']} rules={[{ required: true }]}>
+                <Form.Item label="Email Template ID" name={getPath('config', 'template_id')} rules={[{ required: true }]}>
                   <Input placeholder="e.g. ticket-acknowledge" />
                 </Form.Item>
               </Col>
               <Col span={12}>
-                 <Form.Item label="Subject (Optional Override)" name={['config', 'subject']}>
+                 <Form.Item label="Subject (Optional Override)" name={getPath('config', 'subject')}>
                     <Input placeholder="Fixed subject or {{expression}}" />
                  </Form.Item>
               </Col>
             </Row>
-            <Form.Item label="Recipients / Body (Advanced JSON)" name={['config']}>
+            <Form.Item label="Recipients / Body (Advanced JSON)" name={getPath('config')}>
               <Input.TextArea rows={6} placeholder="Full configuration JSON..." style={{ fontFamily: 'monospace' }} />
+            </Form.Item>
+          </>
+        );
+
+      case 'send_notification':
+        return (
+          <>
+            <Row gutter={8}>
+              <Col span={12}>
+                <Form.Item label="Notification Template ID" name={getPath('config', 'template_id')} rules={[{ required: true }]}>
+                  <Input placeholder="e.g. alert-manager" />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                 <Form.Item label="Subject / Message Override" name={getPath('config', 'subject')}>
+                    <Input placeholder="Custom message or {{expression}}" />
+                 </Form.Item>
+              </Col>
+            </Row>
+            <Form.Item label="Recipients Data (JSON)" name={getPath('config')}>
+              <Input.TextArea rows={4} placeholder='{ "recipients": ... }' style={{ fontFamily: 'monospace' }} />
             </Form.Item>
           </>
         );
@@ -39,12 +63,12 @@ const ActionConfigForm: React.FC<ActionConfigFormProps> = ({ type, fields }) => 
           <>
             <Row gutter={8}>
               <Col span={8}>
-                <Form.Item label="Schema" name={['config', 'entity_schema']} initialValue="blueprint">
+                <Form.Item label="Schema" name={getPath('config', 'entity_schema')} initialValue="blueprint">
                   <Input placeholder="blueprint" />
                 </Form.Item>
               </Col>
               <Col span={16}>
-                <Form.Item label="Entity Name" name={['config', 'entity_name']} rules={[{ required: true }]}>
+                <Form.Item label="Entity Name" name={getPath('config', 'entity_name')} rules={[{ required: true }]}>
                   <Select placeholder="Pick target entity">
                     <Option value="tasks">Tasks (Work Orders)</Option>
                     <Option value="tickets">Tickets</Option>
@@ -53,7 +77,7 @@ const ActionConfigForm: React.FC<ActionConfigFormProps> = ({ type, fields }) => 
                 </Form.Item>
               </Col>
             </Row>
-            <Form.Item label="Entity Payload (JSON Template)" name={['config', 'payload']} rules={[{ required: true }]}>
+            <Form.Item label="Entity Payload (JSON Template)" name={getPath('config', 'payload')} rules={[{ required: true }]}>
               <Input.TextArea rows={8} style={{ fontFamily: 'monospace' }} placeholder='{ "name": "Task for {{new.id}}", ... }' />
             </Form.Item>
           </>
@@ -62,33 +86,37 @@ const ActionConfigForm: React.FC<ActionConfigFormProps> = ({ type, fields }) => 
       case 'rpc':
         return (
           <>
-            <Form.Item label="PostgreSQL RPC Function" name={['config', 'rpc_name']} rules={[{ required: true }]}>
+            <Form.Item label="PostgreSQL RPC Function" name={getPath('config', 'rpc')} rules={[{ required: true }]}>
               <Input placeholder="schema.function_name" />
             </Form.Item>
-            <Form.Item label="Arguments (JSON)" name={['config', 'args']}>
-              <Input.TextArea rows={4} style={{ fontFamily: 'monospace' }} placeholder='{ "id": "{{entity.id}}", ... }' />
+            <Form.Item label="Arguments (JSON)" name={getPath('config', 'args')}>
+              <Input.TextArea rows={4} style={{ fontFamily: 'monospace' }} placeholder='{ "p_id": "{{entity.id}}", ... }' />
             </Form.Item>
           </>
         );
 
-      case 'update_field':
+      case 'update_entity':
         return (
-          <Row gutter={8}>
-            <Col span={12}>
-              <Form.Item label="Target Field" name={['config', 'field']} rules={[{ required: true }]}>
-                <Select placeholder="Select field" showSearch>
-                  {(fields || []).map(f => (
-                    <Option key={f.key} value={f.key}>{f.display_name || f.key}</Option>
-                  ))}
-                </Select>
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item label="New Value" name={['config', 'value']} rules={[{ required: true }]}>
-                <Input placeholder="Fixed value or {{expression}}" />
-              </Form.Item>
-            </Col>
-          </Row>
+          <>
+            <Row gutter={8}>
+              <Col span={8}>
+                <Form.Item label="Schema" name={getPath('config', 'entity_schema')}>
+                  <Input placeholder="blueprint" />
+                </Form.Item>
+              </Col>
+              <Col span={16}>
+                <Form.Item label="Entity Name" name={getPath('config', 'entity_name')}>
+                  <Input placeholder="e.g. deals" />
+                </Form.Item>
+              </Col>
+            </Row>
+            <Form.Item label="Entity ID" name={getPath('config', 'entity_id')}>
+               <Input placeholder="e.g. {{entity.id}} or fixed UUID" />
+            </Form.Item>
+            <Form.Item label="Payload (JSON)" name={getPath('config', 'payload')} rules={[{ required: true }]}>
+               <Input.TextArea rows={4} placeholder='{ "stage_id": "closed_won" }' style={{ fontFamily: 'monospace' }} />
+            </Form.Item>
+          </>
         );
 
       default:
@@ -98,7 +126,7 @@ const ActionConfigForm: React.FC<ActionConfigFormProps> = ({ type, fields }) => 
                     Visual editor not yet optimized for: <Text strong>{type}</Text>. 
                     You can still edit the raw configuration below.
                 </Text>
-                <Form.Item name="config">
+                <Form.Item name={getPath('config')}>
                     <Input.TextArea rows={10} style={{ fontFamily: 'monospace' }} placeholder="Raw configuration JSON..." />
                 </Form.Item>
             </div>
@@ -108,9 +136,9 @@ const ActionConfigForm: React.FC<ActionConfigFormProps> = ({ type, fields }) => 
 
   const getIcon = () => {
     switch (type) {
-      case 'update_field': return <Database size={16} />;
+      case 'update_entity': return <Database size={16} />;
       case 'send_email': return <Mail size={16} />;
-      case 'trigger_webhook': return <Globe size={16} />;
+      case 'send_notification': return <Globe size={16} />;
       case 'create_entity': return <PlusSquare size={16} />;
       case 'rpc': return <Code size={16} />;
       default: return null;
@@ -123,6 +151,39 @@ const ActionConfigForm: React.FC<ActionConfigFormProps> = ({ type, fields }) => 
         {getIcon()}
         <Text strong>{type.toUpperCase().replace('_', ' ')} Settings</Text>
       </Space>
+      <div style={{ background: '#fafafa', padding: '12px', borderRadius: '6px', marginBottom: '16px', border: '1px solid #f0f0f0' }}>
+        <Row gutter={12}>
+           <Col span={10}>
+             <Form.Item label="Action Name" name={getPath('name')} rules={[{ required: true }]} style={{ marginBottom: 8 }}>
+                <Input placeholder="e.g. Send Email" />
+             </Form.Item>
+           </Col>
+           <Col span={4}>
+             <Form.Item label="Priority" name={getPath('priority')} style={{ marginBottom: 8 }}>
+                <Input type="number" />
+             </Form.Item>
+           </Col>
+           <Col span={10}>
+              <Row gutter={4}>
+                 <Col span={12}>
+                    <Form.Item label="Max Retries" name={getPath('retry_policy', 'max_retries')} style={{ marginBottom: 8 }}>
+                       <Input type="number" />
+                    </Form.Item>
+                 </Col>
+                 <Col span={12}>
+                    <Form.Item label="Delay (s)" name={getPath('retry_policy', 'delay_seconds')} style={{ marginBottom: 8 }}>
+                       <Input type="number" />
+                    </Form.Item>
+                 </Col>
+              </Row>
+           </Col>
+        </Row>
+        {type === 'rpc' && (
+           <Form.Item name={getPath('abort_on_failure')} valuePropName="checked" style={{ marginBottom: 0 }}>
+              <Typography.Text type="secondary" style={{ fontSize: '13px' }}><Input type="checkbox" style={{ marginRight: 8 }} /> Abort on Failure</Typography.Text>
+           </Form.Item>
+        )}
+      </div>
       {renderForm()}
     </div>
   );
