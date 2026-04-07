@@ -122,7 +122,6 @@ const CommerceSettings = lazy(() => import('@/modules/commerce/pages/admin/Comme
 
 // Migration Module
 const MigrationDataExplorer = lazy(() => import('../modules/migration/pages/DataExplorer'));
-const MigrationGeofenceMap = lazy(() => import('../modules/migration/pages/GeofenceMap'));
 const MigrationLegacyTickets = lazy(() => import('../modules/migration/pages/LegacyTickets'));
 const MigrationWorkflowPage = lazy(() => import('../modules/migration/pages/WorkflowMigrationPage'));
 const MigrationActivities = lazy(() => import('../modules/migration/pages/LegacyActivities'));
@@ -327,7 +326,6 @@ export const AppRoutes: FC = () => {
 
                         {/* Migration Module */}
                         <Route path="/migration/data" element={<MigrationDataExplorer />} />
-                        <Route path="/migration/geofence" element={<MigrationGeofenceMap />} />
                         <Route path="/migration/tickets" element={<MigrationLegacyTickets />} />
                         <Route path="/migration/workflows" element={<MigrationWorkflowPage />} />
                         <Route path="/migration/activities" element={<MigrationActivities />} />

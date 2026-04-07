@@ -12,6 +12,7 @@ import { Modal, message, Button, Card, DatePicker, Typography, Space } from 'ant
 import * as wellknown from 'wellknown';
 import { supabase } from '@/core/lib/supabase';
 import type { Customer, AgentWithDetails } from '../types';
+import { parseWkb } from '../utils';
 import { Trash2, Calendar, Navigation } from 'lucide-react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -85,7 +86,7 @@ const CustomerMap: React.FC<CustomerMapProps> = ({
       customers.forEach(c => {
         if (c.geofence) {
           try {
-            const geo = wellknown.parse(c.geofence);
+            const geo = typeof c.geofence === 'string' ? parseWkb(c.geofence) : c.geofence;
             if (geo?.type === 'Polygon') {
               geo.coordinates[0].forEach((coord: any) => bounds.extend([coord[1], coord[0]]));
               hasValid = true;
@@ -118,11 +119,16 @@ const CustomerMap: React.FC<CustomerMapProps> = ({
     if (!selectedCustomer || !drawnGeofence) return;
     try {
       const wkt = wellknown.stringify(drawnGeofence);
-      // Determine schema (crm or identity etc depending on settings, but using RPC)
-      const { error } = await supabase.rpc('update_client_geofence', {
-        client_id: selectedCustomer.id,
-        wkt: wkt
-      });
+      // Update crm.accounts directly instead of calling broken RPC
+      const { error } = await supabase
+        .schema('crm' as any)
+        .from('accounts')
+        .update({ 
+          geofence: wkt,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', selectedCustomer.id);
+      
       if (error) throw error;
       onGeofenceUpdate(selectedCustomer.id, wkt);
       message.success('Geofence saved successfully');
@@ -137,10 +143,16 @@ const CustomerMap: React.FC<CustomerMapProps> = ({
 
   const handleDeleteGeofence = async (id: string) => {
     try {
-      const { error } = await supabase.rpc('update_client_geofence', {
-        client_id: id,
-        wkt: null
-      });
+      // Update crm.accounts directly instead of calling broken RPC
+      const { error } = await supabase
+        .schema('crm' as any)
+        .from('accounts')
+        .update({ 
+          geofence: null,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id);
+      
       if (error) throw error;
       onGeofenceUpdate(id, null);
       message.success('Geofence deleted');
@@ -191,7 +203,7 @@ const CustomerMap: React.FC<CustomerMapProps> = ({
           {customers.map(customer => {
             if (!customer.geofence) return null;
             try {
-              const geo = wellknown.parse(customer.geofence);
+              const geo = typeof customer.geofence === 'string' ? parseWkb(customer.geofence) : customer.geofence;
               if (geo?.type !== 'Polygon') return null;
               const pos = geo.coordinates[0].map((c: any) => [c[1], c[0]]);
               const isSelected = selectedCustomer?.id === customer.id;

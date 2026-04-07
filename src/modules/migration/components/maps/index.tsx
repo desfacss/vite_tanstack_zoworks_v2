@@ -5,12 +5,14 @@ import CustomerMap from './CustomerMap/CustomerMap';
 import AgentList from './AgentList/AgentList';
 import type { Customer, AgentWithDetails, UserTrack } from './types';
 import { supabase } from '@/core/lib/supabase';
+import { useAuthStore } from '@/core/lib/store';
 import { MapPin, Users, Navigation } from 'lucide-react';
 
 const { Content, Sider } = Layout;
 const { Title, Text } = Typography;
 
 const MappingContainer: React.FC = () => {
+  const { organization } = useAuthStore();
   const [showTrackMap, setShowTrackMap] = useState<boolean>(false);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [agents, setAgents] = useState<AgentWithDetails[]>([]);
@@ -51,23 +53,26 @@ const MappingContainer: React.FC = () => {
 
   const fetchCustomers = async () => {
     try {
-      // User specified crm.accounts
+      // Use api_new_fetch_entity_records for accounts too
       const { data, error } = await supabase
-        .schema('crm' as any)
-        .from('accounts')
-        .select('id, details, geofence')
-        .eq('is_active', true);
+        .schema('core' as any)
+        .rpc('api_new_fetch_entity_records', {
+          config: {
+            entity_name: 'v_accounts',
+            entity_schema: 'crm',
+            organization_id: organization?.id,
+            pagination: { limit: 100 },
+            sorting: { column: 'name', direction: 'ASC' }
+          }
+        });
 
       if (error) throw error;
+      const records = data?.data || [];
       
-      const mappedData = (data || []).map(item => {
-        let name = 'Unnamed Account';
-        if (item.details) {
-          const detailsObj = typeof item.details === 'string' ? JSON.parse(item.details) : item.details;
-          name = detailsObj.name || name;
-        }
-        return { ...item, name };
-      });
+      const mappedData = records.map((item: any) => ({
+        ...item,
+        name: item.name || 'Unnamed Account'
+      }));
       
       setCustomers(mappedData);
     } catch (err: any) {
@@ -78,35 +83,53 @@ const MappingContainer: React.FC = () => {
 
   const fetchAgents = async () => {
     try {
-      // User specified public.loc_agent_locations joined with identity.users
+      // Use api_new_fetch_entity_records as requested by the user
       const { data, error } = await supabase
-        .schema('core' as any) // Using core schema since loc_agent_locations might be there, or public
+        .schema('core' as any)
         .rpc('api_new_fetch_entity_records', {
           config: {
-            main_table: { name: 'loc_agent_locations', schema: 'public' },
-            join_table: { name: 'users', schema: 'identity', on_fk_column: 'user_id' },
-            filters: { order_by: 'recorded_at DESC', limit: 500 }
+            entity_name: 'loc_agent_locations',
+            entity_schema: 'public',
+            organization_id: organization?.id,
+            include: [
+              {
+                entity_name: 'users',
+                entity_schema: 'identity',
+                on: 'user_id',
+                select: ['id', 'name', 'details']
+              }
+            ],
+            pagination: { limit: 500 },
+            sorting: { column: 'recorded_at', direction: 'DESC' }
           }
         });
 
       if (error) throw error;
-      if (!data) return;
+      const records = data?.data || [];
+      if (records.length === 0) return;
+
+      // Map joined data correctly - L4/V4 pattern commonly uses 'users' or 'identity_users' as nested object or flattened key
+      const mappedData = records.map((curr: any) => {
+        // Fetch user from various possible return names (nested array, object or flattened)
+        const userObj = curr.users?.[0] || curr.users || curr.identityusers || curr.identity_users || { name: 'Unknown Agent' };
+        return {
+          ...curr,
+          user: userObj
+        };
+      });
 
       // Filter latest location per agent
-      const latest = data.reduce((acc: any, curr: any) => {
-        if (!acc[curr.user_id] || new Date(curr.recorded_at) > new Date(acc[curr.user_id].recorded_at)) {
-          acc[curr.user_id] = {
-            ...curr,
-            user: curr.identityusers // Map joined data correctly
-          };
+      const latest = mappedData.reduce((acc: any, curr: any) => {
+        if (!acc[curr.user_id] || (curr.recorded_at && (!acc[curr.user_id].recorded_at || new Date(curr.recorded_at) > new Date(acc[curr.user_id].recorded_at)))) {
+          acc[curr.user_id] = curr;
         }
         return acc;
       }, {});
 
       // Build tracks
-      const tracks: Record<string, UserTrack> = data.reduce((acc: any, curr: any) => {
+      const tracks: Record<string, UserTrack> = mappedData.reduce((acc: any, curr: any) => {
         if (!acc[curr.user_id]) {
-          acc[curr.user_id] = { user: curr.identityusers, track: [], trackWithDates: [] };
+          acc[curr.user_id] = { user: curr.user, track: [], trackWithDates: [] };
         }
         acc[curr.user_id].track.push([curr.lat, curr.lng]);
         acc[curr.user_id].trackWithDates.push({ coordinates: [curr.lat, curr.lng], timestamp: curr.recorded_at });
@@ -117,18 +140,41 @@ const MappingContainer: React.FC = () => {
       setAgents(Object.values(latest));
     } catch (err: any) {
       console.error('Error fetching agents:', err);
-      // Fallback to simpler query if RPC fails
-      const { data, error } = await supabase
-        .from('loc_agent_locations')
-        .select(`*, user:users(*)`)
-        .order('recorded_at', { ascending: false })
-        .limit(100);
+      // Fallback: Fetch locations and then users separately to handle cross-schema join reliably
+      try {
+        const { data: locs, error: locErr } = await supabase
+          .from('loc_agent_locations')
+          .select('*')
+          .order('recorded_at', { ascending: false })
+          .limit(100);
         
-      if (!error && data) {
-         setAgents(data as any);
+        if (locErr) throw locErr;
+        if (!locs || locs.length === 0) return;
+
+        const userIds = [...new Set(locs.map(l => l.user_id).filter(id => id))];
+        const { data: users, error: userErr } = await supabase
+          .schema('identity')
+          .from('users')
+          .select('id, name, details')
+          .in('id', userIds);
+          
+        if (!userErr && users) {
+          const userMap = Object.fromEntries(users.map(u => [u.id, u]));
+          const agentsWithUsers = (locs || []).map(l => ({
+            ...l,
+            user: userMap[l.user_id] || { name: 'Unknown User' }
+          }));
+          setAgents(agentsWithUsers as any);
+        } else {
+          setAgents(locs as any);
+        }
+      } catch (fallbackErr) {
+        console.error('Fallback fetch failed:', fallbackErr);
       }
     }
   };
+
+
 
   const handleGeofenceUpdate = (id: string, wkt: string | null) => {
     setCustomers(prev => prev.map(c => c.id === id ? { ...c, geofence: wkt } : c));

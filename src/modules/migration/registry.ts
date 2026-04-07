@@ -21,13 +21,6 @@ export function register() {
       parentId: 'migration-root'
     },
     {
-        key: 'migration-geofence',
-        label: 'Geofence Map',
-        path: '/migration/geofence',
-        icon: 'map-pin',
-        parentId: 'migration-root'
-    },
-    {
         key: 'migration-tickets',
         label: 'My Tickets (Legacy)',
         path: '/migration/tickets',
