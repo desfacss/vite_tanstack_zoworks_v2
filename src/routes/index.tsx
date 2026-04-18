@@ -315,6 +315,7 @@ export const AppRoutes: FC = () => {
                         <Route path="/catalog/:entity" element={<GenericDynamicPage schema="catalog" />} />
                         <Route path="/ctrm/:entity" element={<GenericDynamicPage schema="ctrm" />} />
                         <Route path="/analytics/:entity" element={<GenericDynamicPage schema="analytics" />} />
+                        <Route path="/procurement/:entity" element={<GenericDynamicPage schema="procurement" />} />
                         <Route path="/construction/:entity" element={<GenericDynamicPage schema="construction" />} />
                         <Route path="/workforce/:entity" element={<GenericDynamicPage schema="workforce" />} />
                         <Route path="/blueprint/:entity" element={<GenericDynamicPage schema="blueprint" />} />

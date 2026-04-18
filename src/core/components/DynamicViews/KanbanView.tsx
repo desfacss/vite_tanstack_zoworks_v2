@@ -178,7 +178,19 @@ const KanbanView: React.FC<KanbanViewProps> = ({
 
   // Initialize groupByType with a fallback to workflowDefinitions
   const [groupByType, setGroupBy] = useState<string>(() => {
-    const types = viewConfig?.kanbanview?.types;
+    const kanbanConfig = viewConfig?.kanbanview;
+    const types = kanbanConfig?.types;
+    
+    // Support both new string-based groupBy and legacy object-based groupBy
+    const savedGroupBy = kanbanConfig?.groupBy;
+    const initialGroupBy = typeof savedGroupBy === 'string' 
+      ? savedGroupBy 
+      : (savedGroupBy as any)?.field;
+
+    if (initialGroupBy && types?.[initialGroupBy]) {
+      return initialGroupBy;
+    }
+
     if (types && Object.keys(types).length > 0) {
       return Object.keys(types)[0];
     }
@@ -218,9 +230,12 @@ const KanbanView: React.FC<KanbanViewProps> = ({
 
   // Compute groupByOptions with workflow definitions
   const groupByOptions = useMemo(() => {
-    const options = Object.entries(viewConfig?.kanbanview?.types || {}).map(([key, type]) => ({
+    const kanbanConfig = viewConfig?.kanbanview;
+    if (!kanbanConfig || !kanbanConfig.types) return [];
+
+    const options = Object.entries(kanbanConfig.types).map(([key, type]) => ({
       value: key,
-      label: (type as any).name,
+      label: (type as any).name || key,
     }));
 
     // Add workflow-based groupBy options
@@ -239,8 +254,8 @@ const KanbanView: React.FC<KanbanViewProps> = ({
 
   // Effect to update boardData when data, viewConfig, groupByType, or workflowDefinitions change
   useEffect(() => {
-    if (!groupByType || !viewConfig?.kanbanview) {
-      setBoardData({}); // Clear board if no group type or config
+    if (!groupByType || !viewConfig?.kanbanview || !Array.isArray(data)) {
+      setBoardData({}); // Clear board if no group type, config, or valid data
       return;
     }
 

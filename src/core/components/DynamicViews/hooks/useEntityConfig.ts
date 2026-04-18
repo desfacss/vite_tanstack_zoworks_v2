@@ -30,6 +30,18 @@ interface ViewConfig {
   v_metadata?: any[] | null;
 }
 
+const safeParse = (data: any) => {
+  if (typeof data === 'string' && data.trim().startsWith('{')) {
+    try {
+      return JSON.parse(data);
+    } catch (e) {
+      console.error('Failed to parse JSON field:', e);
+      return {};
+    }
+  }
+  return data || {};
+};
+
 /**
  * Fetches entity and view configuration from the database.
  *
@@ -94,18 +106,28 @@ export const useViewConfigEnhanced = (entityType: string, entitySchema: string) 
       }
 
       // Merge and format data for DynamicViews consumption
+      const general = safeParse(viewConfigData.general);
       const mergedConfig: Config = {
-        ...viewConfigData.general,
+        ...general,
         details: {
           name: snakeToTitleCase(finalEntityType), // Default fallback
           ...(entityData.semantics?.details || {}),
-          ...(viewConfigData.general?.details || {}),
+          ...(general.details || {}),
           ...(viewConfigData.details || {}), // Fallback to deprecated top-level column if exists
         },
       };
 
       const mergedViewConfig: ViewConfig = {
         ...viewConfigData,
+        general: general,
+        tableview: safeParse(viewConfigData.tableview),
+        gridview: safeParse(viewConfigData.gridview),
+        kanbanview: safeParse(viewConfigData.kanbanview),
+        detailview: safeParse(viewConfigData.detailview),
+        calendarview: safeParse(viewConfigData.calendarview),
+        metricsview: safeParse(viewConfigData.metricsview),
+        dashboardview: safeParse(viewConfigData.dashboardview),
+        details_overview: safeParse(viewConfigData.details_overview),
         metadata: entityData?.v_metadata,
         v_metadata: entityData?.v_metadata,
       };

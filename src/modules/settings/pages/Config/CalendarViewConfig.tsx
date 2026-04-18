@@ -106,16 +106,34 @@ const CalendarViewConfig: React.FC<CalendarViewConfigProps> = ({
     setShowFeatures(configData?.showFeatures || ['search', 'enable_view', 'columnVisibility', 'pagination', 'export', 'rowActions']);
   }, [configData]);
 
-  const transformedColumns = metadata?.filter(col => col?.is_displayable === true)?.map(col => col.key) || [];
+  const getFlattenedColumns = (metadata: MetadataItem[]) => {
+    const columns: { key: string; display_name: string }[] = [];
+    metadata.forEach(item => {
+      columns.push({ key: item.key, display_name: item.display_name });
+      
+      // Handle nested_schema
+      if ((item as any).nested_schema?.properties) {
+        Object.entries((item as any).nested_schema.properties).forEach(([propKey, propValue]: [string, any]) => {
+          const nestedKey = `${item.key}.${propKey}`;
+          const nestedDisplayName = propValue.title || `${item.display_name} ${propKey.charAt(0).toUpperCase() + propKey.slice(1)}`;
+          columns.push({ key: nestedKey, display_name: nestedDisplayName });
+        });
+      }
+    });
+    return columns;
+  };
+
+  const flattenedColumns = getFlattenedColumns(metadata || []);
+  const transformedColumns = flattenedColumns.map(col => col.key);
 
   const handleFieldChange = (index: number, key: keyof Field, value: string) => {
     const updatedFields = [...fields];
     updatedFields[index][key] = value;
     if (key === 'fieldPath') {
-      const selectedColumn = metadata?.find(col => col.key === value);
+      const selectedColumn = flattenedColumns.find(col => col.key === value);
       if (selectedColumn) {
         updatedFields[index].fieldName = selectedColumn.display_name;
-        updatedFields[index].fieldPath = selectedColumn.foreign_key ? `${value}_name` : value;
+        updatedFields[index].fieldPath = value;
       }
     }
     setFields(updatedFields);
@@ -233,7 +251,7 @@ const CalendarViewConfig: React.FC<CalendarViewConfigProps> = ({
       dataIndex: 'fieldPath',
       key: 'fieldPath',
       render: (_: any, record: Field, index: number) => (
-        <Select
+        <Select showSearch
           value={record.fieldPath}
           onChange={(value) => handleFieldChange(index, 'fieldPath', value)}
           style={{ width: '100%' }}

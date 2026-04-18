@@ -134,10 +134,10 @@ const onFinish = async (values: any) => {
     if (!selectedAccount) return;
 
     // Module validation — at least one must be selected
-    if (selectedModules.length === 0) {
-      message.warning('Please select at least one module before submitting.');
-      return;
-    }
+    // if (selectedModules.length === 0) {
+    //   message.warning('Please select at least one module before submitting.');
+    //   return;
+    // }
 
     setLoading(true);
     try {

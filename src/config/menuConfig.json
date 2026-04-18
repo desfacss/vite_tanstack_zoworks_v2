@@ -50,13 +50,6 @@
       },
       {
         "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
-        "routePath": "/crm/vendors",
-        "translationKey": "vendors",
-        "key": "crm-vendors",
-        "submoduleKey": "crm-vendors"
-      },
-      {
-        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
         "routePath": "/crm/customer_segments",
         "translationKey": "customer_segments",
         "key": "crm-customer-segments",
@@ -68,6 +61,15 @@
         "translationKey": "customers_business",
         "key": "crm-customers-business",
         "submoduleKey": "crm-customers_business"
+      }
+    ],
+    "procurement": [
+      {
+        "filePath": "src/core/components/DynamicViews/GenericDynamicPage.tsx",
+        "routePath": "/procurement/vendors",
+        "translationKey": "vendors",
+        "key": "procurement-vendors",
+        "submoduleKey": "procurement-vendors"
       }
     ],
     "esm": [

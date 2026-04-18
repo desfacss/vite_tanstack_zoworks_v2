@@ -63,29 +63,20 @@ export async function register(
       order: 20,
     });
 
-    // Global Add Action
+    // Timesheet Actions
     registry.registerAction({
       id: 'timesheet-add',
       entityTypes: timesheetEntityTypes,
       position: 'global',
-      label: 'Add Timesheet',
-      component: () => import('./components/Times'),
-    });
-
-    // Row Edit Action
-    registry.registerAction({
-      id: 'timesheet-edit',
-      entityTypes: timesheetEntityTypes,
-      position: 'row',
-      label: 'Edit',
+      label: 'workforce:nav.timesheets',
       component: () => import('./components/Times'),
     });
 
     registry.registerAction({
       id: 'timesheet',
       entityTypes: timesheetEntityTypes,
-      position: 'both',
-      label: 'Timesheet',
+      position: 'row',
+      label: 'Edit',
       component: () => import('./components/Times'),
     });
     console.log('[Workforce] ✓ Timesheets registered');
@@ -95,30 +86,20 @@ export async function register(
   if (subModules.expenses !== false) {
     const expenseEntityTypes = ['expense_sheets', 'workforce.expense_sheets', 'expense_sheet', 'expense_sheet_items'];
 
-    // Global Add Action
+    // Expense Actions
     registry.registerAction({
       id: 'expense-add',
       entityTypes: expenseEntityTypes,
       position: 'global',
-      label: 'Add Expense',
+      label: 'workforce:nav.expenses',
       component: () => import('./components/Expenses'),
     });
 
-    // Row Edit Action
-    registry.registerAction({
-      id: 'expense-edit',
-      entityTypes: expenseEntityTypes,
-      position: 'row',
-      label: 'Edit',
-      component: () => import('./components/Expenses'),
-    });
-
-    // Alias for backward compatibility or direct DB form matches
     registry.registerAction({
       id: 'expense_sheet',
       entityTypes: expenseEntityTypes,
-      position: 'both',
-      label: 'Expense Sheet',
+      position: 'row',
+      label: 'Edit',
       component: () => import('./components/Expenses'),
     });
     console.log('[Workforce] ✓ Expenses registered');

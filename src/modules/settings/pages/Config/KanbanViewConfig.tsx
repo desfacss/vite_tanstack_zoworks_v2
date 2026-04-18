@@ -334,14 +334,20 @@ const KanbanViewConfig: React.FC<KanbanViewConfigProps> = ({
       title: 'Type Name',
       dataIndex: 'name',
       key: 'name',
-      render: (text: string) => <span>{text}</span>,
+      render: (text: string, record: any) => (
+        <Input
+          value={text}
+          onChange={(e) => handleTypeChange(record.key, 'name', e.target.value)}
+          placeholder="Type Name"
+        />
+      ),
     },
     {
       title: 'Field Path',
       dataIndex: 'fieldPath',
       key: 'fieldPath',
       render: (text: string, record: any, index: number) => (
-        <Select
+        <Select showSearch
           value={text}
           onChange={(value) => handleTypeChange(record.key, 'fieldPath', value)}
           style={{ width: '100%' }}
@@ -394,7 +400,7 @@ const KanbanViewConfig: React.FC<KanbanViewConfigProps> = ({
       dataIndex: 'fieldPath',
       key: 'fieldPath',
       render: (_: any, record: Field, index: number) => (
-        <Select
+        <Select showSearch
           value={record.fieldPath}
           onChange={(value) => handleFieldChange(index, 'fieldPath', value)}
           style={{ width: '100%' }}
