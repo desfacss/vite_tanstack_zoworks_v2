@@ -216,6 +216,7 @@ export const AppRoutes: FC = () => {
 
                         {/* Service Reports */}
                         <Route path="/support/service-reports" element={<ServiceReports />} />
+                        <Route path="/esm/service_reports" element={<ServiceReports />} />
 
                         {/* Service Invoices */}
                         <Route path="/support/service-invoices" element={<ServiceInvoices />} />

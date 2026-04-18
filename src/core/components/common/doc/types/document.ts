@@ -51,14 +51,14 @@ export const DOCUMENT_TYPES: DocumentTypeConfig[] = [
   {
     type_id: 'doc_invoices',
     display_name: 'Invoice',
-    table_name: 'doc_invoices', 
+    table_name: 'finance.invoices', 
     icon: 'FileTextOutlined',
     color: '#1890ff'
   },
   {
     type_id: 'doc_service_reports',
     display_name: 'Service Report',
-    table_name: 'blueprint.service_reports',
+    table_name: 'esm.service_reports',
     icon: 'ToolOutlined',
     color: '#52c41a'
   },

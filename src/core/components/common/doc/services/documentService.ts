@@ -167,8 +167,8 @@ export class DocumentService {
     if (!document.id && !document.display_id && document.content) {
       try {
         const entityTypeMap: Record<string, string> = {
-          'doc_invoices': 'doc_invoices',
-          'blueprint.service_reports': 'doc_service_reports',
+          'finance.invoices': 'doc_invoices',
+          'esm.service_reports': 'doc_service_reports',
           'doc_purchase_orders': 'purchase-order',
           'doc_credit_notes': 'credit-note'
         };
