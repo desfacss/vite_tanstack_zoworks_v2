@@ -129,6 +129,8 @@ const MigrationTeams = lazy(() => import('../modules/migration/pages/LegacyTeams
 const MigrationNlpPage = lazy(() => import('../modules/migration/pages/NlpMigrationPage'));
 const MigrationAiQueryPage = lazy(() => import('../modules/migration/pages/AiQueryMigrationPage'));
 const MigrationTrackingPage = lazy(() => import('../modules/migration/pages/TrackingMigrationPage'));
+const PaymentTestPage = lazy(() => import('../pages/PaymentTest'));
+
 
 export const AppRoutes: FC = () => {
     const { user, permissions, bypass, setNavigationItems } = useAuthStore(state => ({
@@ -300,6 +302,8 @@ export const AppRoutes: FC = () => {
                         {/* Sample page for new module development */}
                         <Route path="/sample" element={<SamplePage />} />
                         <Route path="/rjsf" element={<TestRJSFCoreForm />} />
+                        <Route path="/payment-test" element={<PaymentTestPage />} />
+
 
 
                         {/* Dynamic routes for schemas */}
