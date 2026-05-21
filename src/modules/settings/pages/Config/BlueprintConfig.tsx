@@ -1,12 +1,68 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Input, Form, Select, Space, Row, Col, Card, message, Tabs, Table, Typography, Modal, Popconfirm, Switch, Divider, Tooltip, Tag, Collapse } from 'antd';
-import { SaveOutlined, RocketOutlined, HistoryOutlined, SettingOutlined, DatabaseOutlined, DesktopOutlined, DeleteOutlined, InfoCircleOutlined, PlusOutlined } from '@ant-design/icons';
+import { Button, Input, Form, Select, Space, Row, Col, Card, message, Tabs, Table, Typography, Modal, Popconfirm, Switch, Divider, Tooltip, Tag, Collapse, Alert } from 'antd';
+import { SaveOutlined, RocketOutlined, HistoryOutlined, SettingOutlined, DatabaseOutlined, DesktopOutlined, DeleteOutlined, InfoCircleOutlined, PlusOutlined, WarningOutlined } from '@ant-design/icons';
 import { supabase } from '@/core/lib/supabase';
 import { EntityBlueprint } from './types/entityTypes';
 import JsonEditor from '@/modules/ai/components/JsonEditor';
 import ReactDiffViewer from 'react-diff-viewer-continued';
 
-const { Option } = Select;
+// ─── Business rule constants (frozen — sourced from DB constraints) ───────────
+const CLASSIFICATION_OPTIONS = [
+  { value: 'transactional', label: 'Transactional' },
+  { value: 'master',        label: 'Master' },
+  { value: 'configuration', label: 'Configuration' },
+  { value: 'analytical',    label: 'Analytical' },
+];
+
+const REGISTRATION_MODE_BY_CLASSIFICATION: Record<string, { value: string; label: string }[]> = {
+  master:        [{ value: 'anchor', label: 'Anchor' }, { value: 'contact_anchor', label: 'Contact Anchor' }, { value: 'graduated', label: 'Graduated' }],
+  transactional: [{ value: 'none', label: 'None' }, { value: 'graduated', label: 'Graduated' }],
+  configuration: [{ value: 'none', label: 'None' }],
+  analytical:    [{ value: 'none', label: 'None' }],
+};
+
+const FORM_TYPE_OPTIONS = [
+  { value: 'simple',    label: 'Simple' },
+  { value: 'dependent', label: 'Dependent' },
+  { value: 'composite', label: 'Composite' },
+  { value: 'nested',    label: 'Nested' },
+  { value: 'junction',  label: 'Junction' },
+  { value: 'allocator', label: 'Allocator' },
+];
+
+// form_type → ai_resolution auto-derivation (business rule)
+const AI_RESOLUTION_BY_FORM_TYPE: Record<string, string> = {
+  simple:    'direct',
+  junction:  'direct',
+  dependent: 'resolve_parent',
+  composite: 'resolve_parent',
+  nested:    'nested_create',
+  allocator: 'allocator_flow',
+};
+
+const AI_RESOLUTION_OPTIONS = [
+  { value: 'direct',        label: 'Direct' },
+  { value: 'resolve_parent',label: 'Resolve Parent' },
+  { value: 'chain_resolve', label: 'Chain Resolve' },
+  { value: 'nested_create', label: 'Nested Create' },
+  { value: 'allocator_flow',label: 'Allocator Flow' },
+];
+
+const RLS_TEMPLATE_OPTIONS = [
+  { value: 'standard',         label: 'Standard (org isolation)' },
+  { value: 'tenant_isolation', label: 'Tenant Isolation' },
+  { value: 'multi_org',        label: 'Multi-Org' },
+  { value: 'configuration',    label: 'Configuration (read-only)' },
+  { value: 'analytical',       label: 'Analytical' },
+  { value: 'workforce',        label: 'Workforce (owner/approver)' },
+];
+
+const CONTEXT_STATUS_OPTIONS = [
+  { value: 'draft',   label: 'Draft' },
+  { value: 'alpha',   label: 'Alpha' },
+  { value: 'applied', label: 'Applied' },
+];
+
 const { TextArea } = Input;
 const { TabPane } = Tabs;
 const { Title, Paragraph } = Typography;
@@ -37,6 +93,26 @@ const BlueprintConfig: React.FC<BlueprintConfigProps> = ({ entityType, entitySch
   const [diffActiveKey, setDiffActiveKey] = useState<string>('full');
   const [form] = Form.useForm();
 
+  // Track classification and registration_mode for cross-field validation
+  const classification = Form.useWatch('classification', form) || 'transactional';
+  const registrationMode = Form.useWatch('registration_mode', form) || 'none';
+  const rlsTemplate = Form.useWatch(['rls_config', 'template'], form);
+
+  const validRegModes = REGISTRATION_MODE_BY_CLASSIFICATION[classification] || REGISTRATION_MODE_BY_CLASSIFICATION.transactional;
+
+  // When classification changes, reset registration_mode if current value is not valid
+  useEffect(() => {
+    const validValues = validRegModes.map(o => o.value);
+    if (!validValues.includes(registrationMode)) {
+      const defaultMode = (classification === 'master') ? 'anchor' : 'none';
+      form.setFieldsValue({ registration_mode: defaultMode });
+    }
+    // configuration and analytical are always locked to none
+    if (classification === 'configuration' || classification === 'analytical') {
+      form.setFieldsValue({ registration_mode: 'none' });
+    }
+  }, [classification]);
+
   useEffect(() => {
     fetchBlueprint();
   }, [entityType, entitySchema]);
@@ -64,6 +140,10 @@ const BlueprintConfig: React.FC<BlueprintConfigProps> = ({ entityType, entitySch
         setBlueprint(data);
         form.setFieldsValue({
           ...data,
+          registration_mode: data.registration_mode || 'none',
+          form_type: data.form_type || 'simple',
+          ai_resolution: data.ai_resolution || 'direct',
+          rls_config: data.rls_config || { template: 'standard' },
           extra_objects: data.extra_objects || {},
           ui_config: data.ui_config || {},
           ui_general: data.ui_general || {},
@@ -71,7 +151,7 @@ const BlueprintConfig: React.FC<BlueprintConfigProps> = ({ entityType, entitySch
           ui_dashboard: data.ui_dashboard || {},
           semantics: data.semantics || {},
           rules: data.rules || {},
-          ai_metadata: data.ai_metadata || {},
+          ai_metadata: data.ai_metadata || { embedding_model: 'text-embedding-3-large' },
           jsonb_schema: data.jsonb_schema || {},
           display_format: data.display_format || {},
           sub_panels: data.sub_panels || [],
@@ -83,9 +163,12 @@ const BlueprintConfig: React.FC<BlueprintConfigProps> = ({ entityType, entitySch
         const defaults: Partial<EntityBlueprint> = {
           entity_type: sanitizedEntityType,
           entity_schema: entitySchema,
-          status: 'draft',
           classification: 'transactional',
-          ai_metadata: { embedding_model: "text-embedding-3-large" },
+          registration_mode: 'none',
+          form_type: 'simple',
+          ai_resolution: 'direct',
+          rls_config: { template: 'standard' },
+          ai_metadata: { embedding_model: 'text-embedding-3-large' },
           extra_objects: {},
           ui_config: {},
           ui_general: {},
@@ -133,14 +216,44 @@ const BlueprintConfig: React.FC<BlueprintConfigProps> = ({ entityType, entitySch
     try {
       setSaving(true);
       const sanitizedEntityType = entityType.includes('.') ? entityType.split('.').pop() : entityType;
-      
-      // Parse JSON fields and formats
+
+      // Auto-derive ai_resolution from form_type if not explicitly overridden
+      const formType = values.form_type || 'simple';
+      const derivedAiResolution = AI_RESOLUTION_BY_FORM_TYPE[formType] || values.ai_resolution || 'direct';
+
+      // workforce RLS requires owner_col
+      if (values.rls_config?.template === 'workforce' && !values.rls_config?.owner_col) {
+        message.error('Workforce RLS template requires an owner column to be set');
+        setSaving(false);
+        return;
+      }
+
+      // anchor registration requires core.unified_objects in dependencies
+      if (values.registration_mode === 'anchor') {
+        const deps: string[] = values.dependencies || [];
+        if (!deps.includes('core.unified_objects')) {
+          message.warning('Anchor entities should declare "core.unified_objects" as a dependency');
+        }
+      }
+      if (values.registration_mode === 'contact_anchor') {
+        const deps: string[] = values.dependencies || [];
+        if (!deps.includes('unified.contacts')) {
+          message.warning('Contact anchor entities should declare "unified.contacts" as a dependency');
+        }
+      }
+
+      // Build clean payload — only include known top-level columns
       const payload: any = {
         entity_type: sanitizedEntityType,
         entity_schema: entitySchema,
         ...values,
+        ai_resolution: derivedAiResolution,
         updated_at: new Date().toISOString(),
       };
+
+      // Remove non-existent columns that were legacy form fields
+      delete payload.status;       // no standalone status column — lives in semantics.context.status
+      delete payload.display_name; // not a DB column
 
       const { data, error } = await supabase
         .schema('core')
@@ -353,57 +466,165 @@ const BlueprintConfig: React.FC<BlueprintConfigProps> = ({ entityType, entitySch
         layout="vertical"
         onFinish={handleSave}
       >
-        <Card 
+        <Card
           title={
             <Space>
               <span>General Information</span>
               {blueprint.id && <Tag color="blue">{blueprint.id}</Tag>}
               {blueprint.is_active ? <Tag color="success">Active</Tag> : <Tag color="default">Inactive</Tag>}
+              {blueprint.bootstrap_generation && blueprint.bootstrap_generation > 0
+                ? <Tag color="green">Bootstrapped</Tag>
+                : <Tag color="orange">Not Bootstrapped</Tag>}
             </Space>
-          } 
+          }
           style={{ marginBottom: 24 }}
         >
-          <Row gutter={24}>
-            <Col span={12}>
-              <Form.Item name="display_name" label="Display Name">
-                <Input placeholder="Human readable name" />
-              </Form.Item>
-            </Col>
+          {/* Bootstrap status banner */}
+          {blueprint.bootstrap_error && (
+            <Alert
+              type="error"
+              icon={<WarningOutlined />}
+              showIcon
+              message="Last bootstrap failed"
+              description={blueprint.bootstrap_error}
+              style={{ marginBottom: 16 }}
+            />
+          )}
+
+          {/* Row 1: Classification + Registration Mode + Form Type + AI Resolution */}
+          <Row gutter={16}>
             <Col span={6}>
               <Form.Item name="classification" label="Classification" initialValue="transactional">
-                <Select size="small">
-                  <Option value="transactional">Transactional</Option>
-                  <Option value="master">Master</Option>
-                  <Option value="configuration">Configuration</Option>
-                  <Option value="analytical">Analytical</Option>
-                </Select>
+                <Select options={CLASSIFICATION_OPTIONS} />
               </Form.Item>
             </Col>
             <Col span={6}>
-              <Form.Item name="status" label="Status" initialValue="draft">
-                <Select>
-                  <Option value="draft">Draft</Option>
-                  <Option value="active">Active</Option>
-                  <Option value="archived">Archived</Option>
-                </Select>
+              <Form.Item
+                name="registration_mode"
+                label="Registration Mode"
+                tooltip="Master entities must use anchor/contact_anchor/graduated. Config & Analytical are locked to none."
+                rules={[{ required: true }]}
+              >
+                <Select
+                  options={validRegModes}
+                  disabled={classification === 'configuration' || classification === 'analytical'}
+                />
+              </Form.Item>
+            </Col>
+            <Col span={6}>
+              <Form.Item name="form_type" label="Form Type" rules={[{ required: true }]}>
+                <Select
+                  options={FORM_TYPE_OPTIONS}
+                  onChange={(val) => {
+                    const derived = AI_RESOLUTION_BY_FORM_TYPE[val];
+                    if (derived) form.setFieldsValue({ ai_resolution: derived });
+                  }}
+                />
+              </Form.Item>
+            </Col>
+            <Col span={6}>
+              <Form.Item
+                name="ai_resolution"
+                label="AI Resolution"
+                tooltip="Auto-derived from form type. Override only if you have a custom flow."
+              >
+                <Select options={AI_RESOLUTION_OPTIONS} />
               </Form.Item>
             </Col>
           </Row>
+
+          {/* Dependency warnings */}
+          {registrationMode === 'anchor' && (
+            <Alert
+              type="info"
+              showIcon
+              message='Anchor entities must include "core.unified_objects" in dependencies below.'
+              style={{ marginBottom: 12 }}
+            />
+          )}
+          {registrationMode === 'contact_anchor' && (
+            <Alert
+              type="info"
+              showIcon
+              message='Contact anchor entities must include "unified.contacts" in dependencies below.'
+              style={{ marginBottom: 12 }}
+            />
+          )}
+
+          {/* Row 2: Base source + Partition filter */}
           <Row gutter={24}>
             <Col span={12}>
-              <Form.Item name="base_source" label="Base Source Table">
+              <Form.Item
+                name="base_source"
+                label="Base Source Table"
+                rules={[{
+                  pattern: /^[a-z_]+\.[a-z_]+$/,
+                  message: 'Must follow schema.table format (e.g. unified.contacts)',
+                }]}
+              >
                 <Input placeholder="e.g. unified.contacts" />
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item name="partition_filter" label="Partition Filter">
-                <Input placeholder="e.g. contact_type = 'agent'" />
+              <Form.Item
+                name="partition_filter"
+                label="Partition Filter"
+                tooltip="SQL WHERE fragment applied to the generated view. Use partition_filter_structured for the validated version."
+              >
+                <Input placeholder="e.g. intent_type = 'CRM_PROSPECT'" />
               </Form.Item>
             </Col>
           </Row>
-          <Form.Item name="dependencies" label="Dependencies">
-            <Select mode="tags" style={{ width: '100%' }} placeholder="Add table dependencies (e.g. core.unified_objects)" size="small" />
+
+          {/* Dependencies */}
+          <Form.Item
+            name="dependencies"
+            label="Dependencies"
+            tooltip="List all schema.table references this entity joins. Required for anchor/contact_anchor modes."
+          >
+            <Select
+              mode="tags"
+              style={{ width: '100%' }}
+              placeholder="Add table dependencies (e.g. core.unified_objects, unified.contacts)"
+              size="small"
+              tokenSeparators={[',']}
+            />
           </Form.Item>
+
+          {/* RLS Config */}
+          <Card title="Security (RLS)" size="small" style={{ marginTop: 8 }}>
+            <Row gutter={16}>
+              <Col span={8}>
+                <Form.Item name={['rls_config', 'template']} label="RLS Template">
+                  <Select options={RLS_TEMPLATE_OPTIONS} />
+                </Form.Item>
+              </Col>
+              {rlsTemplate === 'workforce' && (
+                <>
+                  <Col span={4}>
+                    <Form.Item name={['rls_config', 'owner_col']} label="Owner Column" rules={[{ required: true, message: 'Required for workforce RLS' }]}>
+                      <Input placeholder="e.g. user_id" size="small" />
+                    </Form.Item>
+                  </Col>
+                  <Col span={4}>
+                    <Form.Item name={['rls_config', 'approver_col']} label="Approver Column">
+                      <Input placeholder="e.g. approver_id" size="small" />
+                    </Form.Item>
+                  </Col>
+                  <Col span={4}>
+                    <Form.Item name={['rls_config', 'status_col']} label="Status Column">
+                      <Input placeholder="e.g. stage_id" size="small" />
+                    </Form.Item>
+                  </Col>
+                  <Col span={4}>
+                    <Form.Item name={['rls_config', 'location_col']} label="Location Column">
+                      <Input placeholder="e.g. location_id" size="small" />
+                    </Form.Item>
+                  </Col>
+                </>
+              )}
+            </Row>
+          </Card>
         </Card>
 
         <Tabs defaultActiveKey="sql" type="card">
@@ -431,13 +652,8 @@ const BlueprintConfig: React.FC<BlueprintConfigProps> = ({ entityType, entitySch
                   </Form.Item>
                 </Col>
                 <Col span={8}>
-                  <Form.Item name={['semantics', 'context', 'status']} label="Status">
-                    <Select size="small">
-                      <Option value="draft">Draft</Option>
-                      <Option value="alpha">Alpha</Option>
-                      <Option value="beta">Beta</Option>
-                      <Option value="applied">Applied</Option>
-                    </Select>
+                  <Form.Item name={['semantics', 'context', 'status']} label="Semantic Status">
+                    <Select size="small" options={CONTEXT_STATUS_OPTIONS} />
                   </Form.Item>
                 </Col>
               </Row>
@@ -449,28 +665,33 @@ const BlueprintConfig: React.FC<BlueprintConfigProps> = ({ entityType, entitySch
               </Form.Item>
             </Card>
 
-            <Card title="Registration & Lifecycle Rules" size="small" style={{ marginBottom: 16 }}>
-              <Row gutter={24}>
-                <Col span={12}>
-                  <Form.Item name={['rules', 'registration', 'mode']} label="Registration Mode">
-                    <Select size="small">
-                      <Option value="anchor">Anchor (Base Table)</Option>
-                      <Option value="graduated">Graduated (Promotion)</Option>
-                      <Option value="none">None</Option>
-                    </Select>
-                  </Form.Item>
-                </Col>
-                <Col span={6}>
-                  <Form.Item name={['rules', 'registration', 'is_graduated_only']} label="Graduated Only" valuePropName="checked">
-                    <Switch size="small" />
-                  </Form.Item>
-                </Col>
-                <Col span={6}>
-                  <Form.Item name={['rules', 'registration', 'migrated_to_column']} label="Migrated" valuePropName="checked">
-                    <Switch size="small" />
-                  </Form.Item>
-                </Col>
-              </Row>
+            <Card title="Semantics Assignments" size="small" style={{ marginBottom: 16 }}>
+              <Form.List name={['semantics', 'assignments']}>
+                {(fields, { add, remove }) => (
+                  <>
+                    {fields.map(({ key, name, ...restField }) => (
+                      <Space key={key} style={{ display: 'flex', marginBottom: 8 }} align="baseline">
+                        <Form.Item {...restField} name={[name, 'column']} rules={[{ required: true }]}>
+                          <Input placeholder="column" size="small" style={{ width: 140 }} />
+                        </Form.Item>
+                        <Form.Item {...restField} name={[name, 'sql']} rules={[{ required: true }]}>
+                          <Input placeholder="SQL expression" size="small" style={{ width: 260 }} />
+                        </Form.Item>
+                        <Form.Item {...restField} name={[name, 'on_insert']} valuePropName="checked">
+                          <Switch size="small" checkedChildren="on_insert" unCheckedChildren="on_insert" />
+                        </Form.Item>
+                        <Form.Item {...restField} name={[name, 'overwrite']} valuePropName="checked">
+                          <Switch size="small" checkedChildren="overwrite" unCheckedChildren="overwrite" />
+                        </Form.Item>
+                        <DeleteOutlined onClick={() => remove(name)} style={{ color: '#ff4d4f' }} />
+                      </Space>
+                    ))}
+                    <Button type="dashed" onClick={() => add()} block icon={<PlusOutlined />} size="small">
+                      Add Assignment
+                    </Button>
+                  </>
+                )}
+              </Form.List>
             </Card>
 
             <Collapse ghost size="small">
@@ -506,28 +727,59 @@ const BlueprintConfig: React.FC<BlueprintConfigProps> = ({ entityType, entitySch
             <Card title="View Configuration" size="small" style={{ marginBottom: 16 }}>
               <Row gutter={16}>
                 <Col span={12}>
-                  <Form.Item name={['ui_general', 'default_view']} label="Default View">
-                    <Select size="small">
-                      <Option value="tableview">Table View</Option>
-                      <Option value="gridview">Grid View</Option>
-                      <Option value="kanbanview">Kanban View</Option>
-                      <Option value="detailview">Detail View</Option>
-                      <Option value="mapview">Map View</Option>
-                      <Option value="calendarview">Calendar View</Option>
-                    </Select>
+                  <Form.Item
+                    name={['ui_general', 'available_views']}
+                    label="Enabled Views"
+                    tooltip="Select all views that should be available to users. Default view must be in this list."
+                  >
+                    <Select
+                      mode="multiple"
+                      size="small"
+                      placeholder="Select views available to users"
+                      options={[
+                        { value: 'tableview',   label: 'Table View' },
+                        { value: 'gridview',    label: 'Grid View' },
+                        { value: 'kanbanview',  label: 'Kanban View' },
+                        { value: 'detailview',  label: 'Detail View' },
+                        { value: 'mapview',     label: 'Map View' },
+                        { value: 'calendarview',label: 'Calendar View' },
+                        { value: 'ganttview',   label: 'Gantt View' },
+                        { value: 'metricsview', label: 'Metrics View' },
+                      ]}
+                    />
                   </Form.Item>
                 </Col>
                 <Col span={12}>
-                  <Form.Item name={['ui_general', 'available_views']} label="Enabled Views">
-                    <Select mode="multiple" size="small" placeholder="Select views available to users">
-                      <Option value="tableview">Table View</Option>
-                      <Option value="gridview">Grid View</Option>
-                      <Option value="kanbanview">Kanban View</Option>
-                      <Option value="detailview">Detail View</Option>
-                      <Option value="mapview">Map View</Option>
-                      <Option value="calendarview">Calendar View</Option>
-                      <Option value="metricsview">Metrics View</Option>
-                    </Select>
+                  <Form.Item
+                    name={['ui_general', 'default_view']}
+                    label="Default View"
+                    tooltip="Must be in the Enabled Views list above."
+                    rules={[
+                      {
+                        validator: (_, value) => {
+                          if (!value) return Promise.resolve();
+                          const available: string[] = form.getFieldValue(['ui_general', 'available_views']) || [];
+                          if (available.length > 0 && !available.includes(value)) {
+                            return Promise.reject(new Error('Default view must be in the enabled views list'));
+                          }
+                          return Promise.resolve();
+                        },
+                      },
+                    ]}
+                  >
+                    <Select
+                      size="small"
+                      options={[
+                        { value: 'tableview',   label: 'Table View' },
+                        { value: 'gridview',    label: 'Grid View' },
+                        { value: 'kanbanview',  label: 'Kanban View' },
+                        { value: 'detailview',  label: 'Detail View' },
+                        { value: 'mapview',     label: 'Map View' },
+                        { value: 'calendarview',label: 'Calendar View' },
+                        { value: 'ganttview',   label: 'Gantt View' },
+                        { value: 'metricsview', label: 'Metrics View' },
+                      ]}
+                    />
                   </Form.Item>
                 </Col>
               </Row>
@@ -654,29 +906,64 @@ const BlueprintConfig: React.FC<BlueprintConfigProps> = ({ entityType, entitySch
             </Collapse>
           </TabPane>
           <TabPane tab={<span><SettingOutlined />Schema & Format</span>} key="schema">
-            <Card title="Display Formatting" size="small" style={{ marginBottom: 16 }}>
+            <Card title="Display ID Format (Pre-Bootstrap)" size="small" style={{ marginBottom: 16 }}>
+              {classification !== 'master' && (
+                <Alert
+                  type="warning"
+                  showIcon
+                  message="Display ID format is typically only used for master classification entities (e.g. projects, tickets, assets)."
+                  style={{ marginBottom: 12 }}
+                />
+              )}
+              <Alert
+                type="info"
+                showIcon
+                message="Set the format here before bootstrapping. The bootstrap engine seeds display_id_states from this config. Counter status (post-bootstrap) is visible in the ID Config tab."
+                style={{ marginBottom: 12 }}
+              />
               <Row gutter={16}>
                 <Col span={12}>
-                  <Form.Item 
-                    name={['display_format', 'format']} 
+                  <Form.Item
+                    name={['display_format', 'format']}
                     label={
                       <span>
                         ID Format Pattern&nbsp;
-                        <Tooltip title="Pattern for auto-generated IDs, e.g. DOC-{SEQ}">
+                        <Tooltip title="Tokens: {COUNTER}, {YEAR}, {MONTH}. Example: PRJ-{COUNTER}">
                           <InfoCircleOutlined />
                         </Tooltip>
                       </span>
                     }
                   >
-                    <Input placeholder="e.g. {PREFIX}-{SEQ}" size="small" />
+                    <Input placeholder="e.g. PRJ-{COUNTER} or TKT-{YEAR}-{COUNTER}" size="small" />
                   </Form.Item>
                 </Col>
-                <Col span={12}>
+                <Col span={6}>
                   <Form.Item name={['display_format', 'counter_padding']} label="Counter Padding">
-                    <Input type="number" placeholder="e.g. 5" size="small" />
+                    <Select size="small" options={[
+                      { value: 3, label: '3 digits (001)' },
+                      { value: 4, label: '4 digits (0001)' },
+                      { value: 5, label: '5 digits (00001)' },
+                      { value: 6, label: '6 digits (000001)' },
+                    ]} />
+                  </Form.Item>
+                </Col>
+                <Col span={6}>
+                  <Form.Item name={['display_format', 'counter_config', 'reset_period']} label="Reset Period">
+                    <Select size="small" options={[
+                      { value: 'NEVER',         label: 'Never' },
+                      { value: 'CALENDAR_YEAR', label: 'Calendar Year (Jan 1)' },
+                    ]} />
                   </Form.Item>
                 </Col>
               </Row>
+              {(blueprint.bootstrap_generation || 0) === 0 && (
+                <Alert
+                  type="warning"
+                  showIcon
+                  message="This entity has not been bootstrapped yet. Save & Bootstrap to generate the view and seed the display_id_states counter."
+                  style={{ marginTop: 8 }}
+                />
+              )}
             </Card>
 
             <Card title="JSONB Structure & Validation" size="small">

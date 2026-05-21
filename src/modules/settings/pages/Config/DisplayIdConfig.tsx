@@ -5,7 +5,6 @@ import { supabase } from '@/core/lib/supabase';
 import TokenTemplateModal, { useTokenTemplates } from './TokenTemplateModal'; // Import the new modal
 
 const { Title, Text } = Typography;
-const { Option } = Select;
 const { TextArea } = Input;
 
 interface DisplayIdConfigProps {
@@ -16,7 +15,7 @@ interface DisplayIdConfigProps {
 
 interface IdConfig {
   format_template: string;
-  reset_period: 'CALENDAR_YEAR' | 'FINANCIAL_YEAR';
+  reset_period: 'NEVER' | 'CALENDAR_YEAR';
   padding: number;
   current_counter?: Record<string, number>;
 }
@@ -25,8 +24,8 @@ const DisplayIdConfig: React.FC<DisplayIdConfigProps> = ({ entityType, entitySch
   const [loading, setLoading] = useState(false);
   const [config, setConfig] = useState<IdConfig>({
     format_template: '',
-    reset_period: 'CALENDAR_YEAR',
-    padding: 4,
+    reset_period: 'NEVER',
+    padding: 6,
     current_counter: {},
   });
   const [previewId, setPreviewId] = useState('');
@@ -209,31 +208,31 @@ const DisplayIdConfig: React.FC<DisplayIdConfigProps> = ({ entityType, entitySch
             </Col>
 
             <Col span={12}>
-              <Form.Item 
-                name="padding" 
-                label="Counter Padding" 
-                initialValue={4}
+              <Form.Item
+                name="padding"
+                label="Counter Padding"
+                initialValue={6}
                 rules={[{ required: true }]}
               >
-                <Select>
-                  <Option value={3}>3 Digits (001)</Option>
-                  <Option value={4}>4 Digits (0001)</Option>
-                  <Option value={5}>5 Digits (00001)</Option>
-                  <Option value={6}>6 Digits (000001)</Option>
-                </Select>
+                <Select options={[
+                  { value: 3, label: '3 digits (001)' },
+                  { value: 4, label: '4 digits (0001)' },
+                  { value: 5, label: '5 digits (00001)' },
+                  { value: 6, label: '6 digits (000001)' },
+                ]} />
               </Form.Item>
             </Col>
 
             <Col span={12}>
-              <Form.Item 
-                name="reset_period" 
-                label="Counter Reset Period" 
-                initialValue="CALENDAR_YEAR"
+              <Form.Item
+                name="reset_period"
+                label="Counter Reset Period"
+                initialValue="NEVER"
               >
-                <Select>
-                  <Option value="CALENDAR_YEAR">Calendar Year (Jan 1st)</Option>
-                  <Option value="FINANCIAL_YEAR">Financial Year (Apr 1st)</Option>
-                </Select>
+                <Select options={[
+                  { value: 'NEVER',         label: 'Never (sequential forever)' },
+                  { value: 'CALENDAR_YEAR', label: 'Calendar Year (Jan 1st)' },
+                ]} />
               </Form.Item>
             </Col>
 

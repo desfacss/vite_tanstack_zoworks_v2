@@ -301,12 +301,14 @@ const YViewConfigManager: React.FC = () => {
         if (viewError) throw viewError;
 
         // Perform synchronization write to core.entity_blueprints (except for 'stages')
-        if (blueprintUpdateCol && entityType && entitySchema) {
+        const sanitizedEntityType = entityType.includes('.') ? entityType.split('.').pop()! : entityType;
+        if (blueprintUpdateCol && sanitizedEntityType && entitySchema) {
             const { error: blueprintError } = await supabase
                 .schema('core')
                 .from('entity_blueprints')
                 .update({ [blueprintUpdateCol]: blueprintUpdateData })
-                .eq('base_source', entityType);
+                .eq('entity_type', sanitizedEntityType)
+                .eq('entity_schema', entitySchema);
             
             if (blueprintError) {
                 console.error('Error syncing to entity_blueprints:', blueprintError);
