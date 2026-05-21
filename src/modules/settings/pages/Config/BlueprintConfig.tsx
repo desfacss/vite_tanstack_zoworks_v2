@@ -1118,25 +1118,7 @@ const BlueprintConfig: React.FC<BlueprintConfigProps> = ({ entityType, entitySch
                   splitView={true}
                   leftTitle="Historical Version (Saved)"
                   rightTitle="Current Live Version"
-                  styles={{
-                    variables: {
-                      diffViewerBackground: '#fff',
-                      diffViewerColor: '#212529',
-                      addedBackground: '#e6ffed',
-                      addedColor: '#24292e',
-                      removedBackground: '#ffeef0',
-                      removedColor: '#24292e',
-                      wordAddedBackground: '#acf2bd',
-                      wordRemovedBackground: '#fdb8c0',
-                      addedGutterBackground: '#cdffd8',
-                      removedGutterBackground: '#ffdce0',
-                      gutterColor: '#212529',
-                      codeFoldGutterBackground: '#212529',
-                      codeFoldBackground: '#212529',
-                      emptyLineBackground: '#fff',
-                      foldPlaceholderColor: '#212529',
-                    },
-                  }}
+                  styles={{} as any}
                 />
               </div>
             </div>

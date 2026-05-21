@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Tabs, Button, message, Modal, Space, Tooltip, Checkbox, Tag, Layout, Menu } from 'antd';
 import Form from '@rjsf/antd';
 import { RJSFSchema } from '@rjsf/utils';
@@ -63,6 +63,7 @@ const YViewConfigManager: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>('viewConfig');
   // const [dropdownOptions, setDropdownOptions] = useState<string[]>([]);
   const [selectedRow, setSelectedRow] = useState<string | null>(null);
+  const pendingSelectionRef = useRef<string | null>(null);
   const [schemaOptions, setSchemaOptions] = useState<string[]>([]); // New state for unique schemas
   // Entity Registration Wizard state (replaces old simple modal)
   const [wizardVisible, setWizardVisible] = useState<boolean>(false);
@@ -86,6 +87,19 @@ const YViewConfigManager: React.FC = () => {
   // Open the Entity Registration Wizard
   const handleAddNew = () => {
     setWizardVisible(true);
+  };
+
+  // Called by wizard after successful blueprint creation — auto-select and jump to Blueprint tab
+  const handleWizardSuccess = (newEntityId: string) => {
+    setWizardVisible(false);
+    if (newEntityId) {
+      pendingSelectionRef.current = newEntityId;
+      setActiveTab('blueprint');
+    }
+    fetchConfigs();  // fetchConfigs reads pendingSelectionRef and auto-selects
+    if (newEntityId) {
+      message.info('Blueprint created — fill in the details below and click Save & Bootstrap to generate views and triggers.', 6);
+    }
   };
 
   const fetchConfigs = async () => {
@@ -126,8 +140,17 @@ const YViewConfigManager: React.FC = () => {
       const schemas = Array.from(new Set(entityData.map(e => e.entity_schema))).filter(Boolean) as string[];
       setSchemaOptions(schemas);
 
-      // Restore selection if exists
-      if (selectedRow) {
+      // If wizard just created an entity, auto-select it
+      const pendingId = pendingSelectionRef.current;
+      if (pendingId) {
+        const newEntity = mergedConfigs.find(c => c.id === pendingId);
+        if (newEntity) {
+          setSelectedRow(pendingId);
+          setSelectedConfig(newEntity);
+        }
+        pendingSelectionRef.current = null;
+      } else if (selectedRow) {
+        // Restore existing selection after refresh
         const updated = mergedConfigs.find(c => c.id === selectedRow);
         if (updated) setSelectedConfig(updated);
       }
@@ -582,6 +605,13 @@ const YViewConfigManager: React.FC = () => {
       </Sider>
       
       <Content style={{ padding: '0 24px 24px' }}>
+        {/* Bootstrap required banner for new unbootstrapped entities */}
+        {selectedConfig && (selectedConfig.bootstrap_generation ?? 0) === 0 && (
+          <div style={{ background: '#e6f4ff', border: '1px solid #91caff', borderRadius: 6, padding: '10px 16px', margin: '16px 0 0', display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ color: '#1677ff', fontWeight: 600 }}>⚡ Blueprint not bootstrapped yet.</span>
+            <span style={{ color: '#333' }}>Open the <strong>Blueprint</strong> tab → fill in classification, RLS, and semantics → click <strong>Save &amp; Bootstrap</strong> to generate views, triggers, indexes and RLS policies.</span>
+          </div>
+        )}
         <div style={{ padding: '20px 0', borderBottom: '1px solid #f0f0f0', marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Space align="center">
             <h2 style={{ margin: 0 }}>
@@ -787,10 +817,7 @@ const YViewConfigManager: React.FC = () => {
       <EntityRegistrationWizard
         visible={wizardVisible}
         onClose={() => setWizardVisible(false)}
-        onSuccess={() => {
-          setWizardVisible(false);
-          fetchConfigs();
-        }}
+        onSuccess={handleWizardSuccess}
         existingSchemas={schemaOptions}
       />
 

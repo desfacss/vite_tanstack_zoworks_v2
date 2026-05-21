@@ -108,36 +108,66 @@ export interface EntityConfig {
   updated_at?: string;
 }
 
-/** 
+/**
  * Entity Blueprint configuration
- * Corresponds to core.entity_blueprints table
+ * Corresponds to core.entity_blueprints table — all columns reflected here.
+ * FROZEN taxonomy: classification, registration_mode, form_type, ai_resolution values are
+ * constrained by DB CHECK constraints — only valid values listed below may be used.
  */
 export interface EntityBlueprint {
   id: string;
   entity_type: string;
   entity_schema: string;
-  base_source?: string | null;
-  physical_ddl?: string | null;
-  extra_objects?: Record<string, any> | null;
+  base_source?: string | null;            // schema.table format
   custom_view_sql?: string | null;
-  partition_filter?: string | null;
-  ui_config?: Record<string, any> | null;
-  ui_general?: Record<string, any> | null;
-  ui_details_overview?: Record<string, any> | null;
-  ui_dashboard?: Record<string, any> | null;
+  partition_filter?: string | null;       // legacy SQL fragment
+  partition_filter_structured?: Record<string, any> | null; // preferred JSONB predicates
   dependencies?: string[] | null;
-  status?: string | null;
+  dependencies_locked?: boolean | null;
   sub_panels?: any[] | null;
-  display_name?: string | null;
   semantics?: Record<string, any> | null;
   rules?: Record<string, any> | null;
   ai_metadata?: Record<string, any> | null;
-  jsonb_schema?: Record<string, any> | null;
-  display_format?: Record<string, any> | null;
+  /** Valid: 'master' | 'transactional' | 'configuration' | 'analytical' */
   classification?: string | null;
+  display_format?: Record<string, any> | null;
   version?: number | null;
   blueprint_hash?: string | null;
+  /** Valid: 'simple' | 'dependent' | 'composite' | 'allocator' | 'nested' | 'junction' */
+  form_type?: string | null;
+  /** Valid: 'direct' | 'resolve_parent' | 'chain_resolve' | 'allocator_flow' | 'nested_create' */
+  ai_resolution?: string | null;
+  jsonb_schema?: Record<string, any> | null;
+  ui_general?: Record<string, any> | null;
+  ui_details_overview?: Record<string, any> | null;
+  ui_dashboard?: Record<string, any> | null;
+  ui_tableview?: Record<string, any> | null;
+  ui_gridview?: Record<string, any> | null;
+  ui_kanbanview?: Record<string, any> | null;
+  ui_ganttview?: Record<string, any> | null;
+  ui_calendarview?: Record<string, any> | null;
+  ui_mapview?: Record<string, any> | null;
+  ui_detailview?: Record<string, any> | null;
+  rls_config?: Record<string, any> | null;
+  /** Valid: 'anchor' | 'graduated' | 'contact_anchor' | 'none' */
+  registration_mode?: string | null;
   is_active?: boolean | null;
+  organization_id?: string | null;
+  created_by?: string | null;
+  updated_by?: string | null;
+  metadata_intent?: any[] | null;
+  physical_intent?: string | null;
+  /** 0 = not bootstrapped, 1+ = bootstrapped */
+  bootstrap_generation?: number | null;
+  trigger_template_version?: number | null;
+  last_bootstrap_at?: string | null;
+  last_bootstrap_hash?: string | null;
+  bootstrap_error?: string | null;
+  // Legacy fields kept for backward compat
+  extra_objects?: Record<string, any> | null;
+  ui_config?: Record<string, any> | null;
+  physical_ddl?: string | null;
+  display_name?: string | null;
   created_at?: string;
   updated_at?: string;
 }
