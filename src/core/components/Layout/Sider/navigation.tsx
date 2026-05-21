@@ -134,6 +134,7 @@ const iconMap: Record<string, React.ReactNode> = {
   'form-elements': <LayoutTemplate size={18} />,
   onboarding: <ClipboardCheck size={18} />,
   observability: <Activity size={18} />,
+  saas_settings: <Settings size={18} />,
   default: <FileText size={18} />,
 };
 

@@ -446,6 +446,13 @@
         "submoduleKey": "admin-diagnostics"
       },
       {
+        "filePath": "src/modules/admin/pages/Settings/OrganizationSettings.tsx",
+        "routePath": "/admin/sass",
+        "translationKey": "saas_settings",
+        "key": "saas_settings",
+        "submoduleKey": "admin-saas_settings"
+      },
+      {
         "filePath": "src/modules/admin/pages/Settings/index.tsx",
         "routePath": "/admin/settings",
         "translationKey": "settings",

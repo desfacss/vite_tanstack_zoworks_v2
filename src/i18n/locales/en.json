@@ -159,7 +159,8 @@
         "commerce-price-lists": "Price Lists",
         "commerce-customer-segments": "Customer Segments",
         "fsm-tracking": "Tracking",
-        "system-notifications": "Notifications"
+        "system-notifications": "Notifications",
+        "saas_settings": "SaaS Settings"
       }
     },
     "settings": {

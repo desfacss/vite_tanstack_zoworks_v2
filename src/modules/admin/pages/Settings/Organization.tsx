@@ -52,12 +52,15 @@ interface OrganizationDetails {
 }
 
 const OrganizationSetup: React.FC = () => {
-  const { organization, user } = useAuthStore();
+  const { organization, user, roles, bypass } = useAuthStore();
   const [form] = Form.useForm();
   const [loading, setLoading] = useState<boolean>(false);
   const [organizationData, setOrganizationData] = useState<OrganizationDetails | null>(null);
 
-  const isSassAdmin = user?.roles?.name === 'SassAdmin';
+  // SaaS admin: either bypass flag OR any assigned role named SassAdmin/SaaSAdmin
+  const isSassAdmin = bypass || (roles ?? []).some(
+    (r) => r.name === 'SassAdmin' || r.name === 'SaaSAdmin'
+  );
 
   useEffect(() => {
     const fetchOrganizationData = async () => {

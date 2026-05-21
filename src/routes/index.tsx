@@ -53,6 +53,7 @@ const Tickets = lazy(() => import('../modules/esm/pages/Tickets'));
 const QrTicketPage = lazy(() => import('../modules/esm/pages/QrTicketPage'));
 const ServiceAssets = lazy(() => import('@/modules/external/pages/ServiceAssets'));
 const AdminSettings = lazy(() => import('@/modules/admin/pages/Settings'));
+const SaasAdminSettings = lazy(() => import('@/modules/admin/pages/Settings/OrganizationSettings'));
 const AdminBranding = lazy(() => import('@/modules/admin/pages/Settings/Branding'));
 const AdminFormElements = lazy(() => import('@/modules/admin/pages/Settings/FormElements'));
 const AdminNotifications = lazy(() => import('@/modules/admin/pages/Settings/Notifications'));
@@ -172,21 +173,21 @@ export const AppRoutes: FC = () => {
                     <Route path="/subscriptions" element={<PublicSubscriptions />} />
                     {/* Shop module — public storefront with nested routes */}
                     <Route path="/shop" element={<ShopLayout />}>
-                      <Route index element={<ShopHomePage />} />
-                      <Route path="products" element={<ShopPLP />} />
-                      <Route path="products/:id" element={<ShopPDP />} />
-                      <Route path="category/:slug" element={<ShopCategory />} />
-                      <Route path="brand/:brandName" element={<ShopBrand />} />
-                      <Route path="search" element={<ShopSearch />} />
-                      <Route path="cart" element={<ShopCart />} />
-                      <Route path="checkout" element={<ShopCheckout />} />
-                      <Route path="order-confirmation" element={<ShopOrderConfirmation />} />
-                      <Route path="wishlist" element={<ShopWishlist />} />
-                      <Route path="account" element={<ShopAccount />} />
-                      <Route path="account/:section" element={<ShopAccount />} />
-                      <Route path="booking" element={<ShopBooking />} />
-                      {/* Legacy catalog page at a separate path */}
-                      <Route path="legacy" element={<EcomCatalogPage />} />
+                        <Route index element={<ShopHomePage />} />
+                        <Route path="products" element={<ShopPLP />} />
+                        <Route path="products/:id" element={<ShopPDP />} />
+                        <Route path="category/:slug" element={<ShopCategory />} />
+                        <Route path="brand/:brandName" element={<ShopBrand />} />
+                        <Route path="search" element={<ShopSearch />} />
+                        <Route path="cart" element={<ShopCart />} />
+                        <Route path="checkout" element={<ShopCheckout />} />
+                        <Route path="order-confirmation" element={<ShopOrderConfirmation />} />
+                        <Route path="wishlist" element={<ShopWishlist />} />
+                        <Route path="account" element={<ShopAccount />} />
+                        <Route path="account/:section" element={<ShopAccount />} />
+                        <Route path="booking" element={<ShopBooking />} />
+                        {/* Legacy catalog page at a separate path */}
+                        <Route path="legacy" element={<EcomCatalogPage />} />
                     </Route>
                     <Route path="/sign/:envelopeId" element={<SignDocument />} />
                     {/* Auth pages moved here - outside AuthGuard */}
@@ -266,6 +267,7 @@ export const AppRoutes: FC = () => {
 
                         {/* Admin - Settings & Branding */}
                         <Route path="/admin/settings" element={<AdminSettings />} />
+                        <Route path="/admin/sass" element={<SaasAdminSettings />} />
                         <Route path="/admin/branding" element={<AdminBranding />} />
                         <Route path="/admin/notifications" element={<AdminNotifications />} />
                         <Route path="/admin/form-elements" element={<AdminFormElements />} />

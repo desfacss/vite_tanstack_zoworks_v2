@@ -88,13 +88,14 @@ const RolesManagement: React.FC = () => {
     }
   };
 
-  // Fetch roles
+  // Fetch roles with tenant-specific or global fallback
   const fetchRoles = async () => {
     if (!effectiveOrgId) return;
     setLoading(true);
 
     try {
-      const { data, error } = await supabase
+      // 1. Try tenant-specific roles first
+      let { data, error } = await supabase
         .schema('identity')
         .from('roles')
         .select('*')
@@ -102,6 +103,20 @@ const RolesManagement: React.FC = () => {
         .order('ui_order', { ascending: true });
 
       if (error) throw error;
+
+      // 2. Fall back to global roles (organization_id IS NULL) if tenant has no specific records
+      if (!data || data.length === 0) {
+        const { data: globalData, error: globalError } = await supabase
+          .schema('identity')
+          .from('roles')
+          .select('*')
+          .is('organization_id', null)
+          .order('ui_order', { ascending: true });
+
+        if (globalError) throw globalError;
+        data = globalData || [];
+      }
+
       setRoles(data || []);
     } catch (error: any) {
       message.error('Failed to fetch roles: ' + error.message);

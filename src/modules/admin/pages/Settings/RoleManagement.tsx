@@ -44,7 +44,8 @@ const RoleManagement: React.FC<RoleManagementProps> = ({ organization, user }) =
       }
       try {
         setLoading(true);
-        const { data, error } = await supabase
+        // 1. Try fetching tenant-specific roles first
+        let { data, error } = await supabase
           .schema('identity').from('roles')
           .select('*')
           .eq('organization_id', organization.id)
@@ -52,6 +53,20 @@ const RoleManagement: React.FC<RoleManagementProps> = ({ organization, user }) =
           .order('name', { ascending: true });
 
         if (error) throw error;
+
+        // 2. Fall back to global roles (organization_id IS NULL) if no tenant-specific records exist
+        if (!data || data.length === 0) {
+          const { data: globalData, error: globalError } = await supabase
+            .schema('identity').from('roles')
+            .select('*')
+            .is('organization_id', null)
+            .eq('is_active', true)
+            .order('name', { ascending: true });
+
+          if (globalError) throw globalError;
+          data = globalData || [];
+        }
+
         setRoles(data || []);
       } catch (error) {
         console.error('Error fetching roles:', error);

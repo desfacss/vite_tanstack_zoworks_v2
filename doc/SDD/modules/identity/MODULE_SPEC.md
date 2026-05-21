@@ -194,6 +194,32 @@ It answers three questions for every other module:
 
 ---
 
+### UC-12: User Profile View
+
+**Actor**: Any User  
+**Trigger**: Navigates to `/profile`  
+**Frontend entry point**: [`Profile.tsx`](file:///Users/macbookpro/zo_v2/mini_project/src/pages/core/Profile/index.tsx)
+
+**Business Rules**:
+- BR-12.1: Uses `useUserProfile` hook which fetches extended user data (like reporting manager).
+- BR-12.2: Reads session data from `useAuthStore` to display `UserCard`, `OrganizationInfo`, roles, teams, and locations.
+- BR-12.3: `subordinateCount` is driven by the JWT claims (if provided) or extended profile data.
+
+---
+
+### UC-13: SaaS Admin Portal Configuration
+
+**Actor**: SaaS Global Admin (`SassAdmin` or `Superadmin`)  
+**Trigger**: Navigates to `/admin/saas`  
+**Frontend entry point**: [`OrganizationSettings.tsx`](file:///Users/macbookpro/zo_v2/mini_project/src/modules/admin/pages/Settings/OrganizationSettings.tsx)
+
+**Business Rules**:
+- BR-13.1: Automatically lists all available organizations via `identity.organizations` query (bypassing normal RLS because of SaaS Admin role).
+- BR-13.2: Contains sub-tabs for global `Module Configurations`, `Role Management`, `Role Permissions`, and `User Management`.
+- BR-13.3: Allows the SaaS admin to provision new modules for a specific tenant and bootstrap their initial RBAC permissions.
+
+---
+
 ## 3. Schema Overview
 
 ### Core Tables

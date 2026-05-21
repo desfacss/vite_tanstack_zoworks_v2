@@ -13,8 +13,11 @@ interface Organization {
 }
 
 const OrganizationSettings: React.FC = () => {
-  const { user, organization } = useAuthStore(); 
-  const sassAdmin = true || (user?.role_id as any)?.name === 'SassAdmin' || (user?.roles as any)?.name === 'SassAdmin';
+  const { user, organization, roles, bypass } = useAuthStore();
+  // SaaS admin: either bypass flag (set by jwt_get_user_session) OR any role named SassAdmin/SaaSAdmin
+  const sassAdmin = bypass || (roles ?? []).some(
+    (r) => r.name === 'SassAdmin' || r.name === 'SaaSAdmin'
+  );
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [selectedOrg, setSelectedOrg] = useState<Organization | null>(null);
   const [loading, setLoading] = useState<boolean>(true);

@@ -30,11 +30,6 @@ const Settings: React.FC = () => {
   // Define the tab items as an array
   const items = [
     {
-      label: 'Organization Admin',
-      key: '1',
-      children: <OrganizationSettings />,
-    },
-    {
       label: 'Organization',
       key: '2',
       children: <Organization />,
