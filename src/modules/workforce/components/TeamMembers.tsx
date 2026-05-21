@@ -60,7 +60,7 @@ const TeamMembers: React.FC<TeamMembersProps> = ({ editItem }) => {
         queryKey: ['roles', organization?.id],
         queryFn: async () => {
             const { data, error } = await supabase
-                .schema('identity_v2').from('roles')
+                .schema('identity').from('roles')
                 .select('id, name')
                 .eq('organization_id', organization?.id);
             if (error) throw error;
@@ -75,7 +75,7 @@ const TeamMembers: React.FC<TeamMembersProps> = ({ editItem }) => {
         queryFn: async () => {
             // Fetch all users from the public schema (needed for names)
             const { data, error } = await supabase
-                .schema('identity_v2').from('users') // Assumes 'users' is in the public schema
+                .schema('identity').from('users') // Assumes 'users' is in the public schema
                 .select('id, name');
             if (error) throw error;
             return data;
@@ -88,7 +88,7 @@ const TeamMembers: React.FC<TeamMembersProps> = ({ editItem }) => {
         queryFn: async () => {
             // Fetch ALL active users in this organization (Org User ID and Supabase User ID)
             const { data, error } = await supabase
-                .schema('identity_v2').from('organization_users')
+                .schema('identity').from('organization_users')
                 .select('id, user_id') // Removed 'users(name)' join
                 .eq('organization_id', organization?.id)
                 .eq('is_active', true);
@@ -131,7 +131,7 @@ const TeamMembers: React.FC<TeamMembersProps> = ({ editItem }) => {
 
             // Fetch current members (organization_user_id and corresponding user_id)
             const { data: membersData, error: memberError } = await supabase
-                .schema('identity_v2').from('user_teams')
+                .schema('identity').from('user_teams')
                 .select('organization_user_id, organization_users(user_id)') // Join to organization_users to get user_id
                 .eq('team_id', team_id);
 
@@ -139,7 +139,7 @@ const TeamMembers: React.FC<TeamMembersProps> = ({ editItem }) => {
 
             // Fetch the roles for these members on this team
             const { data: rolesData, error: roleError } = await supabase
-                .schema('identity_v2').from('user_roles')
+                .schema('identity').from('user_roles')
                 .select('organization_user_id, role_id')
                 .eq('team_id', team_id);
 
@@ -186,10 +186,10 @@ const TeamMembers: React.FC<TeamMembersProps> = ({ editItem }) => {
             const currentOrgUserIds = assignments.map(a => a.organization_user_id);
 
             // Step B: Update user_teams (Membership)
-            await supabase.schema('identity_v2').from('user_teams').delete().eq('team_id', teamId);
+            await supabase.schema('identity').from('user_teams').delete().eq('team_id', teamId);
             if (currentOrgUserIds.length > 0) {
                 const { error } = await supabase
-                    .schema('identity_v2').from('user_teams')
+                    .schema('identity').from('user_teams')
                     .insert(
                         currentOrgUserIds.map(orgUserId => ({
                             team_id: teamId,
@@ -202,7 +202,7 @@ const TeamMembers: React.FC<TeamMembersProps> = ({ editItem }) => {
 
             // Step C: Update user_roles (Authorization)
             // Delete all previous roles for this team, then insert new ones.
-            await supabase.schema('identity_v2').from('user_roles').delete().eq('team_id', teamId);
+            await supabase.schema('identity').from('user_roles').delete().eq('team_id', teamId);
             const rolesToInsert = assignments
                 .filter(a => a.current_role_id) // Only insert if a role is selected
                 .map(a => ({
@@ -214,7 +214,7 @@ const TeamMembers: React.FC<TeamMembersProps> = ({ editItem }) => {
 
             if (rolesToInsert.length > 0) {
                 const { error: roleError } = await supabase
-                    .schema('identity_v2').from('user_roles')
+                    .schema('identity').from('user_roles')
                     .insert(rolesToInsert);
                 if (roleError) throw roleError;
             }

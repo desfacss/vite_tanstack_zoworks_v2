@@ -234,6 +234,7 @@ const Users: React.FC = () => {
           organization_user_id: editingUser.id,
           team_id: teamId,
           created_by: currentUser.id,
+          organization_id: effectiveOrgId,
         }));
         await supabase.schema('identity').from('user_teams').insert(teamAssignments);
       }

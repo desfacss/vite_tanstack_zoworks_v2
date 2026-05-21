@@ -103,22 +103,114 @@ It answers three questions for every other module:
 
 ---
 
+### UC-5: Login & Session Bootstrap
+
+**Actor**: Any User  
+**Trigger**: Successfully logs in via Supabase Auth  
+**Frontend entry point**: [`Login.tsx`](file:///Users/macbookpro/zo_v2/mini_project/src/pages/auth/Login.tsx), [`useUserSession.ts`](file:///Users/macbookpro/zo_v2/mini_project/src/core/hooks/useUserSession.ts)
+
+**Business Rules**:
+- BR-5.1: After successful auth, fetch the user's available organizations via `identity.get_my_organizations()`.
+- BR-5.2: If `pref_organization_id` is set on `identity.users`, auto-select it and redirect.
+- BR-5.3: If multiple orgs and no pref, show the org selection screen.
+- BR-5.4: Upon selection, call `identity.set_preferred_organization(org_id)` and invoke `supabase.auth.refreshSession()` to update the JWT claims with the new `org_id`.
+- BR-5.5: `useUserSession` boots up relying on the JWT `org_id` claim, falling back to DB query if missing. Calls `jwt_get_user_session` to fetch full permissions.
+
+---
+
+### UC-6: Admin Manages User Assignments (Edit)
+
+**Actor**: Tenant Admin  
+**Trigger**: Edits a user's roles, teams, or location  
+**Frontend entry point**: [`Users.tsx`](file:///Users/macbookpro/zo_v2/mini_project/src/modules/admin/pages/Settings/Users.tsx)
+
+**Business Rules**:
+- BR-6.1: Updates to location directly modify `identity.organization_users.location_id`.
+- BR-6.2: Updates to roles delete existing records in `identity.user_roles` for that user/org, and insert the new ones.
+- BR-6.3: Updates to teams delete existing records in `identity.user_teams`, and insert the new ones.
+- BR-6.4: ⚠️ MUST include `organization_id` in inserts to `user_teams` and `user_roles` for RLS to allow the insert.
+
+---
+
+### UC-7: Admin Deactivates/Reactivates User
+
+**Actor**: Tenant Admin  
+**Trigger**: Clicks Deactivate/Activate in Users list  
+**Frontend entry point**: [`Users.tsx`](file:///Users/macbookpro/zo_v2/mini_project/src/modules/admin/pages/Settings/Users.tsx)
+
+**Business Rules**:
+- BR-7.1: Updates `is_active` boolean on `identity.organization_users`.
+- BR-7.2: Database trigger `reassign_reports_on_deactivation_trg` automatically fires to handle subordinates if the user is a manager.
+
+---
+
+### UC-8: Organization Module Configuration
+
+**Actor**: SaaS Global Admin or Tenant Admin  
+**Trigger**: Saves settings in the module config screen  
+**Frontend entry point**: [`ModuleConfigForm.tsx`](file:///Users/macbookpro/zo_v2/mini_project/src/modules/admin/pages/Settings/ModuleConfigForm.tsx)
+
+**Business Rules**:
+- BR-8.1: Frontend fetches the platform module hierarchy via `identity.get_module_hierarchy()`.
+- BR-8.2: Frontend fetches the tenant's current config via `identity.get_organization_module_configs(org_id, scope)`.
+- BR-8.3: Updates are saved via `identity.save_module_configs()` (Note: Currently missing from identity schema dump, investigate).
+
+---
+
+### UC-9: Role Permissions Management
+
+**Actor**: Tenant Admin  
+**Trigger**: Edits role permissions in settings  
+**Frontend entry point**: [`RolePermissions.tsx`](file:///Users/macbookpro/zo_v2/mini_project/src/modules/admin/pages/Settings/RolePermissions.tsx)
+
+**Business Rules**:
+- BR-9.1: Uses `identity.get_applicable_config_type_values` to fetch available permission scopes.
+- BR-9.2: Direct upsert to `identity.roles` with the updated JSONB `permissions` object.
+
+---
+
+### UC-10: Location Hierarchy Management
+
+**Actor**: Tenant Admin  
+**Trigger**: Creates or edits an office location  
+**Frontend entry point**: [`LocationsPage.tsx`](file:///Users/macbookpro/zo_v2/mini_project/src/pages/identity/LocationsPage.tsx)
+
+**Business Rules**:
+- BR-10.1: Standard CRUD operations via DynamicViews.
+- BR-10.2: Database trigger `trg_update_location_path` automatically maintains the materialized path for hierarchy querying.
+
+---
+
+### UC-11: Post-Login Organization Switching
+
+**Actor**: Any User  
+**Trigger**: Selects a different workspace from the header  
+**Frontend entry point**: [`OrgSwitcher.tsx`](file:///Users/macbookpro/zo_v2/mini_project/src/modules/wa/components/common/OrgSwitcher.tsx)
+
+**Business Rules**:
+- BR-11.1: Uses `identity.get_my_organizations()` to populate the dropdown.
+- BR-11.2: Selection calls `identity.set_preferred_organization()` followed by a mandatory `supabase.auth.refreshSession()`.
+- BR-11.3: Redirection to the new tenant context URL.
+
+---
+
 ## 3. Schema Overview
 
 ### Core Tables
 
 | Table | Classification | Tier | RLS | Notes |
 |-------|---------------|------|-----|-------|
-| `identity.organizations` | `configuration` | Outside tier system | ⚠️ **OFF** (P0 bug — see §8) | Partition key for all tenant data. `id` IS the `org_id`. |
-| `identity.users` | `master` / global | Outside tier system | ⚠️ **OFF** (P0 bug — see §8) | Global user table. No `organization_id` column. Multi-org. |
+| `identity.organizations` | `configuration` | Outside tier system | ⚠️ **Effectively OFF** | `FORCE RLS` set, but no `ENABLE` statement. Policies: `Config_Insert_V5`, `Config_Tenant_Or_Global_V5` |
+| `identity.users` | `master` / global | Outside tier system | ⚠️ **Effectively OFF** | `FORCE RLS` set, but no `ENABLE`. Policy: `identity_users_cohesion_policy` |
 | `identity.organization_users` | `master` / `anchor` | **Tier 2 person pillar** | ✅ `Multi_Org_Access_V5` | Tenant membership. UUID shared with `unified.contacts`. |
-| `identity.roles` | `configuration` | N/A | ✅ `Tenant_Isolation_V5` | RBAC roles per org. `permissions jsonb`. |
+| `identity.roles` | `configuration` | N/A | ✅ `Config_Tenant_Or_Global_V5` | RBAC roles per org. `permissions jsonb`. |
 | `identity.teams` | `configuration` | N/A | ✅ `Tenant_Isolation_V5` | Team groupings per org. |
-| `identity.locations` | `configuration` | N/A | ✅ `Tenant_Isolation_V5` | Office/branch locations per org. |
+| `identity.locations` | `configuration` | N/A | ✅ `Multi_Org_Access_V5` | Office/branch locations per org. |
 | `identity.user_roles` | `transactional` | N/A | ✅ `Tenant_Isolation_V5` | Maps `organization_users` → `roles`. Requires `organization_id` for RLS. |
 | `identity.user_teams` | `transactional` | N/A | ✅ `Tenant_Isolation_V5` | Maps `organization_users` → `teams`. Requires `organization_id` for RLS. |
-| `identity.modules` | `configuration` | N/A | ✅ Partial (see §8) | Platform module catalog. |
-| `identity.org_module_configs` | `configuration` | N/A | ✅ Partial (see §8) | Per-org module activation. |
+| `identity.modules` | `configuration` | N/A | ✅ Multiple | Platform module catalog. Policies: Global Read, Tenant Write/Update/Delete |
+| `identity.org_module_configs` | `configuration` | N/A | ✅ `Tenant_Isolation_V5` | Per-org module activation. |
+| `identity.location_types` | `configuration` | N/A | ✅ `Tenant_Isolation_V5` | Types of locations. |
 
 ### Key Relationships
 ```
@@ -361,22 +453,25 @@ END IF;
 | `identity.is_saas_admin()` | Returns true if current user has SaaS admin role |
 | `identity.jwt_generate_thin_claims()` | JWT payload builder |
 | `identity.jwt_get_user_session()` | Session context for RLS |
+| `identity.get_my_organizations()` | Returns JSONB of user's active organizations |
+| `identity.get_module_hierarchy()` | Returns full platform module catalog template |
+| `identity.get_organization_module_configs(org_id, scope)` | Returns module activation config for specific tenant |
+| `identity.get_applicable_config_type_values()` | Returns valid permission options based on schema/type |
 
 ---
 
 ### 4.3 Database Triggers
 
-These fire automatically when `identity.organization_users` receives an INSERT:
+| Trigger | Table | Function Called | Purpose |
+|---------|-------|----------------|---------|
+| `reassign_reports_on_deactivation_trg` | `organization_users` (AFTER UPDATE `is_active`) | `identity.reassign_reports_on_deactivation` | Handles subordinates when a manager is deactivated |
+| `trg_sync_org_user_persona` | `organization_users` (AFTER INSERT/UPDATE `persona_type`) | `identity.trg_sync_org_user_persona` | Syncs persona to registry |
+| `trg_update_location_path` | `locations` (BEFORE INSERT/UPDATE `parent_id`) | `identity.update_location_path` | Maintains location hierarchy path |
+| `trg_validate_user_role_assignment` | `user_roles` (BEFORE INSERT/UPDATE) | `identity.validate_team_assignment` | Validates role within team context |
+| `trg_sync_user_to_unified` | `identity.users` (AFTER INSERT/UPDATE) | `identity.trg_sync_user_to_unified` | Syncs core user fields to unified |
+| `trg_provision_*` | `organization_users` | `core.util_trg_provision_bonded_extension` | ⚠️ May be provisioned outside schema dump. Provisions HR/Finance/Unified records |
 
-| Trigger | Function Called | What It Creates |
-|---------|----------------|----------------|
-| `trg_provision_hr_profiles` | `core.util_trg_provision_bonded_extension('hr.profiles')` | Blank `hr.profiles` row keyed to `org_user_id` |
-| `trg_provision_unified_contacts` | `core.util_trg_provision_bonded_extension('unified.contacts')` | `unified.contacts` record (person anchor) |
-| `trg_provision_finance_financial_profiles` | `core.util_trg_provision_bonded_extension('finance.financial_profiles')` | Financial profile record |
-| `trg_provision_core_unified_objects` | `core.util_trg_provision_bonded_extension('core.unified_objects')` | Tier 0 registry entry |
-| `trg_sync_user_to_unified` | `identity.trg_sync_user_to_unified()` | Fires on `identity.users` INSERT — syncs to unified registries |
-
-> **Critical**: All downstream module data (HR profile, CRM contact, financial profile) is created via these triggers — not by the application. The RPC then enriches the HR profile with form data in Step 3.
+> **Critical**: All downstream module data (HR profile, CRM contact, financial profile) is created via provisioning triggers — not by the application. The central enrollment RPC enriches the HR profile with form data after it is provisioned.
 
 ---
 

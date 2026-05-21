@@ -39,11 +39,12 @@ const Expensesheet: React.FC<ExpensesheetProps> = ({ editItem, onFinish, viewMod
     // --- Data Fetching Logic ---
     useEffect(() => {
         const fetchUsers = async () => {
-            const { data, error } = await supabase.schema('identity').from('users').select('*').eq('organization_id', user?.pref_organization_id).eq('is_active', true);
+            const { data, error } = await supabase.schema('identity').from('organization_users').select('*, user:users(*)').eq('organization_id', user?.pref_organization_id).eq('is_active', true);
             if (error) {
                 console.error('Error fetching users:', error);
             } else {
-                setUsers(data || []);
+                const mappedUsers = data?.map((ou: any) => ({ ...ou, ...ou.user }));
+                setUsers(mappedUsers || []);
             }
         };
         fetchUsers();

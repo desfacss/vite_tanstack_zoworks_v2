@@ -149,3 +149,36 @@ SELECT identity.onboard_invite_user_to_org(
 ### Note on api_new_upsert
 
 The `TODOFix/identity.md` scratch note also mentioned using `api_new_upsert v_user_teams`. The generic upsert RPC `core.api_new_core_upsert_data` will also need `organization_id` in the data payload to satisfy RLS. Using the domain RPC `onboard_invite_user_to_org` is the preferred pattern — it handles all this internally.
+
+---
+
+## CHANGE-004: Fix TeamMembers `identity_v2` Schema References
+
+**Date**: 2026-05-21  
+**Status**: Implemented  
+**Affects**: `src/modules/workforce/components/TeamMembers.tsx`
+
+### Description
+The `TeamMembers.tsx` component was incorrectly querying the `identity_v2` schema (which doesn't exist) instead of `identity`. Fixed 8 queries including fetches to `roles`, `users`, `organization_users`, `user_teams`, `user_roles` and corresponding inserts/deletes to use the correct `identity` schema.
+
+---
+
+## CHANGE-005: Fix RLS in Admin Users Edit Form
+
+**Date**: 2026-05-21  
+**Status**: Implemented  
+**Affects**: `src/modules/admin/pages/Settings/Users.tsx`
+
+### Description
+The user edit form was failing to insert into `identity.user_teams` because the `organization_id` was missing from the payload, causing the RLS policy (`Tenant_Isolation_V5`) to reject the insert. Added `organization_id: effectiveOrgId` to the `teamAssignments` payload.
+
+---
+
+## CHANGE-006: Fix Users Query in Expensesheet
+
+**Date**: 2026-05-21  
+**Status**: Implemented  
+**Affects**: `src/modules/workforce/components/Expensesheet.tsx`
+
+### Description
+The component was incorrectly querying `identity.users` with an `organization_id` filter (a column that does not exist on the global `users` table). Changed the query to target `identity.organization_users` with an inner join to `users`, and mapped the result to preserve compatibility with the rest of the component's expectations.
