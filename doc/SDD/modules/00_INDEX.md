@@ -10,6 +10,7 @@
 | Module | Description | Status | Key Tables | SDD Path |
 |--------|-------------|--------|-----------|---------|
 | `identity` | Auth, tenants, users, roles, teams, org structure, onboarding | ✅ Active | `identity.organizations`, `identity.users`, `identity.organization_users`, `identity.roles`, `identity.teams`, `identity.locations` | [`modules/identity/`](file:///Users/macbookpro/zo_v2/mini_project/doc/SDD/modules/identity/) |
+| `core_composer` | Dynamic metadata engine, entity blueprints, view generation | ✅ Active | `core.entity_blueprints`, `core.entities`, `core.view_configs` | [`modules/core_composer/`](file:///Users/macbookpro/zo_v2/mini_project/doc/SDD/modules/core_composer/) |
 
 ---
 
@@ -44,6 +45,7 @@ forms-engine      ← depends on core (platform-level, no tenant deps)
 | Module | Phase 1 (Schema) | Phase 2 (RPCs) | Phase 3 (Triggers) | Phase 4 (Edge Fn) | Phase 5 (E2E) |
 |--------|-----------------|---------------|-------------------|------------------|--------------|
 | `identity` | ⬜ Pending | ⬜ Pending | ⬜ Pending | ⬜ Pending | ⬜ Pending |
+| `core_composer` | ⬜ Pending | ⬜ Pending | ⬜ Pending | ⬜ Pending | ⬜ Pending |
 
 ---
 
