@@ -1,0 +1,125 @@
+# Identity Module — Edge Function Tests
+# Format: VS Code REST Client (.http) compatible + equivalent curl commands
+# Project URL: https://ytirobpsblbzgslcfqhn.supabase.co
+# Anon Key: sb_publishable_R6HCTaroeh0wjAcESBa-MQ_Pr69gegS
+# JWT Verification: DISABLED on invite_users (--no-verify-jwt)
+# Authorization header is OPTIONAL — apikey header alone is sufficient.
+
+###
+# TEST-EF-001: Invite a Brand New User
+# Expected Response Shape A:
+# {
+#   "message": "Invitation sent successfully",
+#   "is_new_user": true,
+#   "needs_onboarding": true
+# }
+# ⚠️ KNOWN BUG (GAP-003): auth_user_id is NOT returned in Shape A.
+# The frontend reads inviteData?.id which will be undefined.
+POST https://ytirobpsblbzgslcfqhn.supabase.co/functions/v1/invite_users
+apikey: sb_publishable_R6HCTaroeh0wjAcESBa-MQ_Pr69gegS
+Content-Type: application/json
+
+{
+  "email": "test_new_user_001@example.com",
+  "organization_id": "a41b2216-736c-4c00-99ca-30a0cd8ca0d2"
+}
+
+# Equivalent curl:
+# curl -X POST "https://ytirobpsblbzgslcfqhn.supabase.co/functions/v1/invite_users" \
+#   -H "apikey: sb_publishable_R6HCTaroeh0wjAcESBa-MQ_Pr69gegS" \
+#   -H "Content-Type: application/json" \
+#   -d '{"email": "test_new_user_001@example.com", "organization_id": "a41b2216-736c-4c00-99ca-30a0cd8ca0d2"}'
+
+###
+# TEST-EF-002: Invite a User Already in Supabase Auth (Existing Auth User)
+# Expected Response Shape B:
+# {
+#   "message": "User already exists in Auth but needs onboarding",
+#   "auth_user_id": "<uuid>",
+#   "is_new_user": false,
+#   "needs_onboarding": true
+# }
+# ✅ Shape B correctly returns auth_user_id.
+POST https://ytirobpsblbzgslcfqhn.supabase.co/functions/v1/invite_users
+apikey: sb_publishable_R6HCTaroeh0wjAcESBa-MQ_Pr69gegS
+Content-Type: application/json
+
+{
+  "email": "sandbox_user@example.com",
+  "organization_id": "a41b2216-736c-4c00-99ca-30a0cd8ca0d2"
+}
+
+# Equivalent curl:
+# curl -X POST "https://ytirobpsblbzgslcfqhn.supabase.co/functions/v1/invite_users" \
+#   -H "apikey: sb_publishable_R6HCTaroeh0wjAcESBa-MQ_Pr69gegS" \
+#   -H "Content-Type: application/json" \
+#   -d '{"email": "sandbox_user@example.com", "organization_id": "a41b2216-736c-4c00-99ca-30a0cd8ca0d2"}'
+
+###
+# TEST-EF-003: Invoke With Both apikey and Authorization (Matches Client SDK Behavior)
+# The Supabase JS client sends publishable key in BOTH headers by default.
+# This verifies that the --no-verify-jwt flag allows publishable key as Bearer token.
+# Expected: Same response as TEST-EF-001 or TEST-EF-002 depending on email.
+POST https://ytirobpsblbzgslcfqhn.supabase.co/functions/v1/invite_users
+apikey: sb_publishable_R6HCTaroeh0wjAcESBa-MQ_Pr69gegS
+Authorization: Bearer sb_publishable_R6HCTaroeh0wjAcESBa-MQ_Pr69gegS
+Content-Type: application/json
+
+{
+  "email": "sandbox_user@example.com",
+  "organization_id": "a41b2216-736c-4c00-99ca-30a0cd8ca0d2"
+}
+
+# Equivalent curl:
+# curl -X POST "https://ytirobpsblbzgslcfqhn.supabase.co/functions/v1/invite_users" \
+#   -H "apikey: sb_publishable_R6HCTaroeh0wjAcESBa-MQ_Pr69gegS" \
+#   -H "Authorization: Bearer sb_publishable_R6HCTaroeh0wjAcESBa-MQ_Pr69gegS" \
+#   -H "Content-Type: application/json" \
+#   -d '{"email": "sandbox_user@example.com", "organization_id": "a41b2216-736c-4c00-99ca-30a0cd8ca0d2"}'
+
+###
+# TEST-EF-004: Invoke With No Authorization Header (Cleanest — should work with --no-verify-jwt)
+# Expected: Same as TEST-EF-002 (Shape B for sandbox_user@example.com)
+POST https://ytirobpsblbzgslcfqhn.supabase.co/functions/v1/invite_users
+apikey: sb_publishable_R6HCTaroeh0wjAcESBa-MQ_Pr69gegS
+Content-Type: application/json
+
+{
+  "email": "sandbox_user@example.com",
+  "organization_id": "a41b2216-736c-4c00-99ca-30a0cd8ca0d2"
+}
+
+# Equivalent curl:
+# curl -X POST "https://ytirobpsblbzgslcfqhn.supabase.co/functions/v1/invite_users" \
+#   -H "apikey: sb_publishable_R6HCTaroeh0wjAcESBa-MQ_Pr69gegS" \
+#   -H "Content-Type: application/json" \
+#   -d '{"email": "sandbox_user@example.com", "organization_id": "a41b2216-736c-4c00-99ca-30a0cd8ca0d2"}'
+
+###
+# TEST-EF-005: AFTER CHANGE-001 IS IMPLEMENTED — Verify Shape A Returns auth_user_id
+# Use a fresh email that does NOT exist in auth.users.
+# Expected AFTER fix:
+# {
+#   "message": "Invitation sent successfully",
+#   "auth_user_id": "<uuid>",          ← This should now be present
+#   "is_new_user": true,
+#   "needs_onboarding": true
+# }
+POST https://ytirobpsblbzgslcfqhn.supabase.co/functions/v1/invite_users
+apikey: sb_publishable_R6HCTaroeh0wjAcESBa-MQ_Pr69gegS
+Content-Type: application/json
+
+{
+  "email": "verify_fix_test@example.com",
+  "organization_id": "a41b2216-736c-4c00-99ca-30a0cd8ca0d2"
+}
+
+# After calling above, take the auth_user_id and call the RPC:
+# SELECT identity.onboard_invite_user_to_org(
+#     p_email    := 'verify_fix_test@example.com',
+#     p_first_name := 'Verify',
+#     p_last_name  := 'Fix',
+#     p_org_id   := 'a41b2216-736c-4c00-99ca-30a0cd8ca0d2',
+#     p_auth_id  := '<auth_user_id_from_response>'
+# );
+# Expected: {"status": "success", "user_id": "...", "org_user_id": "..."}
