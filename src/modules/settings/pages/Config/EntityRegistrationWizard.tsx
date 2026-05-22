@@ -131,6 +131,7 @@ const EntityRegistrationWizard: React.FC<EntityRegistrationWizardProps> = ({
   const selectedSchema: string = Form.useWatch('schema', form) || '';
   const classification: string = Form.useWatch('classification', form) || 'transactional';
   const registrationMode: string = Form.useWatch('registration_mode', form) || 'none';
+  const watchedEntityName: string = Form.useWatch('entity_name', form) || '';
 
   const validRegModes = REGISTRATION_MODE_BY_CLASSIFICATION[classification] || REGISTRATION_MODE_BY_CLASSIFICATION.transactional;
   const validFormTypes = FORM_TYPE_BY_REGISTRATION[registrationMode] || FORM_TYPE_BY_REGISTRATION.none;
@@ -233,7 +234,7 @@ const EntityRegistrationWizard: React.FC<EntityRegistrationWizardProps> = ({
   const handleSubmit = async () => {
     setSubmitting(true);
     try {
-      const values = form.getFieldsValue();
+      const values = form.getFieldsValue(true);
       const entityName     = values.entity_name;
       const schema         = values.schema;
       const table          = values.table;
@@ -375,7 +376,7 @@ const EntityRegistrationWizard: React.FC<EntityRegistrationWizardProps> = ({
           { required: true },
           { pattern: /^[a-z][a-z0-9_]*$/, message: 'Lowercase, underscores only, start with letter' },
         ]}
-        extra={`Will be registered as ${selectedSchema || '<schema>'}.${Form.useWatch('entity_name', form) || '<name>'}`}
+        extra={`Will be registered as ${selectedSchema || '<schema>'}.${watchedEntityName || '<name>'}`}
       >
         <Input placeholder="e.g. location_type, purchase_orders" />
       </Form.Item>
@@ -437,7 +438,7 @@ const EntityRegistrationWizard: React.FC<EntityRegistrationWizardProps> = ({
   );
 
   const renderStep2 = () => {
-    const values = form.getFieldsValue();
+    const values = form.getFieldsValue(true);
     const formType = values.form_type || 'simple';
     return (
       <div style={{ padding: '24px 0' }}>
@@ -503,10 +504,16 @@ const EntityRegistrationWizard: React.FC<EntityRegistrationWizardProps> = ({
         style={{ marginBottom: 28 }}
       />
 
-      <Form form={form} layout="vertical">
-        {currentStep === 0 && renderStep0()}
-        {currentStep === 1 && renderStep1()}
-        {currentStep === 2 && renderStep2()}
+      <Form form={form} layout="vertical" preserve={true}>
+        <div style={{ display: currentStep === 0 ? 'block' : 'none' }}>
+          {renderStep0()}
+        </div>
+        <div style={{ display: currentStep === 1 ? 'block' : 'none' }}>
+          {renderStep1()}
+        </div>
+        <div style={{ display: currentStep === 2 ? 'block' : 'none' }}>
+          {renderStep2()}
+        </div>
       </Form>
 
       <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 24 }}>

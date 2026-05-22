@@ -82,7 +82,7 @@ export const useViewConfigEnhanced = (entityType: string, entitySchema: string) 
       const { data: entityData, error: entityError } = await supabase
         .schema('core')
         .from('entities')
-        .select('*')
+        .select('*, v_metadata')
         .eq('entity_type', finalEntityType)
         .eq('entity_schema', finalEntitySchema)
         .single();

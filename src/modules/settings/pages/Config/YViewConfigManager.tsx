@@ -108,7 +108,7 @@ const YViewConfigManager: React.FC = () => {
       const { data: entityData, error: entityError } = await supabase
         .schema('core')
         .from('entities')
-        .select('*')
+        .select('*, v_metadata')
         .order('entity_schema', { ascending: true })
         .order('entity_type', { ascending: true });
 

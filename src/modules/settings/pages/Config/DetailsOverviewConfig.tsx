@@ -109,7 +109,7 @@ const fetchRelatedMetadataFromSupabase = async (sourceTable: string): Promise<Me
   try {
     const { data, error } = await supabase
       .schema('core').from('entities')
-      .select('metadata')
+      .select('v_metadata')
       .eq('entity_schema', entitySchema)
       .eq('entity_type', entityType)
       .single();

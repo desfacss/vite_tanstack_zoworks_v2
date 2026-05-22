@@ -55,6 +55,7 @@ const RLS_TEMPLATE_OPTIONS = [
   { value: 'configuration',    label: 'Configuration (read-only)' },
   { value: 'analytical',       label: 'Analytical' },
   { value: 'workforce',        label: 'Workforce (owner/approver)' },
+  { value: 'identity_users_cohesion_policy',         label: 'Cohesion (identity.users)' },
 ];
 
 const CONTEXT_STATUS_OPTIONS = [

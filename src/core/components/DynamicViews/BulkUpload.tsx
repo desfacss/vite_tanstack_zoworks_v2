@@ -207,7 +207,7 @@ const BulkUpload: React.FC<BulkUploadProps> = ({ supabase }) => {
     const { data, error } = await supabase
       .schema('core')
       .from('entities')
-      .select('*');
+      .select('*, v_metadata');
 
     if (error) {
       message.error('Failed to load entities.');
