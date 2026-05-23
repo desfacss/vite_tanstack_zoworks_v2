@@ -74,9 +74,9 @@ const EntityComments: React.FC<EntityCommentsProps> = ({ entity_id }) => {
         setComments(
           (records || []).map((item: any) => ({
             id: item.id,
-            comment: item.comment || item.content,
-            content: item.content || item.comment,
-            metadata: item.v_metadata,
+            comment: item.content || '',
+            content: item.content || '',
+            metadata: item.metadata,
             created_by: item.created_by,
             created_by_name: userMap[item.created_by] || 'Unknown',
             created_at: item.created_at,
@@ -111,7 +111,6 @@ const EntityComments: React.FC<EntityCommentsProps> = ({ entity_id }) => {
         .insert({
           object_id: entity_id,
           organization_id: org_id,
-          comment: newComment,
           content: newComment,
           created_by: user.id,
           updated_by: user.id,
@@ -123,9 +122,9 @@ const EntityComments: React.FC<EntityCommentsProps> = ({ entity_id }) => {
 
       const addedComment: Comment = {
         id: data.id,
-        comment: data.comment || data.content,
-        content: data.content || data.comment,
-        metadata: data.v_metadata,
+        comment: data.content || '',
+        content: data.content || '',
+        metadata: data.metadata,
         created_by: data.created_by,
         created_by_name: user.name || 'Unknown',
         created_at: data.created_at,
@@ -151,7 +150,6 @@ const EntityComments: React.FC<EntityCommentsProps> = ({ entity_id }) => {
         .schema('core')
         .from('object_comments')
         .update({
-          comment: editingComment.comment,
           content: editingComment.comment,
           updated_by: user?.id,
           updated_at: new Date().toISOString(),
