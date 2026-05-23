@@ -13,6 +13,7 @@ import { trackAndSaveLocation } from "@/core/components/utils/locationTracker";
 import { registry } from "@/core/registry";
 import { PrimaryAction, MoreMenu } from "@/core/components/ActionBar";
 import InviteUserModal from "@/modules/admin/components/InviteUserModal";
+import { useTranslation } from "react-i18next";
 
 interface GlobalAction {
   form: string;
@@ -40,6 +41,7 @@ const GlobalActions: React.FC<GlobalActionsProps> = ({
   parentEditItem,
   extraActions = []
 }) => {
+  const { t } = useTranslation();
   const { contextStack } = useNestedContext();
   const [isDrawerVisible, setIsDrawerVisible] = useState(false);
   const [selectedForm, setSelectedForm] = useState<string | null>(null);
@@ -159,42 +161,45 @@ const GlobalActions: React.FC<GlobalActionsProps> = ({
   const allActions = useMemo(() => {
     const list: any[] = [];
 
-    // 1. Config actions (Add, New, etc)
-    globalActionsFromConfig.forEach((a, idx) => {
-      // Check if this is a component path (starts with ../ or ./) OR a component name (pascal case, no extension)
-      const isComponentPath = a.form.startsWith('../') || a.form.startsWith('./');
-      // Simple component name like "TicketForm" - no slashes, no dots (not a file path or form schema)
-      const isComponentName = !a.form.includes('/') && !a.form.includes('.') && /^[A-Z]/.test(a.form);
-      const isComponent = isComponentPath || isComponentName;
+    // Check if we have registered custom actions for this entity type in the global position
+    const hasCustomActions = registeredActions.length > 0;
 
-      // Check if the form ID exists in the registry
-      const registryAction = registry.getActionById(a.form);
-
-      list.push({
-        type: registryAction ? 'registry' : (isComponent ? 'component' : 'config'),
-        id: registryAction ? a.form : `config-${idx}`,
-        label: a.label === "add_user" ? "Add User" : a.label,
-        form: a.form,
-        isComponentPath: isComponent,
-        isPrimary: a.label.toLowerCase().includes('add') || a.label.toLowerCase().includes('new') || idx === 0
-      });
-    });
-
-    // 2. Registry actions - SKIP if config already has global actions to avoid duplicates
-    // Config actions take precedence over registry actions
-    if (globalActionsFromConfig.length === 0) {
+    if (hasCustomActions) {
+      // Prioritize registered custom actions (forms) and ignore the forms coming from config
       registeredActions.forEach(a => {
+        const rawLabel = typeof a.label === 'function' ? a.label((s: any) => s) : a.label;
         list.push({
           type: 'registry',
           id: a.id,
-          label: typeof a.label === 'function' ? a.label((s: any) => s) : a.label,
-          isPrimary: list.length === 0 // If no config actions, first registry is primary
+          label: rawLabel && rawLabel.includes(':') ? t(rawLabel) : rawLabel,
+          isPrimary: list.length === 0
+        });
+      });
+    } else {
+      // 1. Config actions (Add, New, etc)
+      globalActionsFromConfig.forEach((a, idx) => {
+        // Check if this is a component path (starts with ../ or ./) OR a component name (pascal case, no extension)
+        const isComponentPath = a.form.startsWith('../') || a.form.startsWith('./');
+        // Simple component name like "TicketForm" - no slashes, no dots (not a file path or form schema)
+        const isComponentName = !a.form.includes('/') && !a.form.includes('.') && /^[A-Z]/.test(a.form);
+        const isComponent = isComponentPath || isComponentName;
+
+        // Check if the form ID exists in the registry
+        const registryAction = registry.getActionById(a.form);
+
+        list.push({
+          type: registryAction ? 'registry' : (isComponent ? 'component' : 'config'),
+          id: registryAction ? a.form : `config-${idx}`,
+          label: a.label === "add_user" ? "Add User" : (a.label && a.label.includes(':') ? t(a.label) : a.label),
+          form: a.form,
+          isComponentPath: isComponent,
+          isPrimary: a.label.toLowerCase().includes('add') || a.label.toLowerCase().includes('new') || idx === 0
         });
       });
     }
 
     return list;
-  }, [globalActionsFromConfig, registeredActions]);
+  }, [globalActionsFromConfig, registeredActions, t]);
 
   const primaryActions = allActions.filter(a => a.isPrimary);
   const secondaryActions = allActions.filter(a => !a.isPrimary);

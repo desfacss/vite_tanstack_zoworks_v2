@@ -68,7 +68,7 @@ export async function register(
       id: 'timesheet-add',
       entityTypes: timesheetEntityTypes,
       position: 'global',
-      label: 'workforce:nav.timesheets',
+      label: 'workforce:nav.new_timesheet',
       component: () => import('./components/Times'),
     });
 
@@ -91,7 +91,7 @@ export async function register(
       id: 'expense-add',
       entityTypes: expenseEntityTypes,
       position: 'global',
-      label: 'workforce:nav.expenses',
+      label: 'workforce:nav.new_expense',
       component: () => import('./components/Expenses'),
     });
 

@@ -137,18 +137,22 @@ const LocationSettings: React.FC = () => {
       const values = await form.validateFields();
       console.log('Form values on submit:', values);
 
-      const { data: currentLocation, error: fetchError } = await supabase
-        .schema('identity')
-        .from('locations')
-        .select('app_settings, settings, details')
-        .eq('id', editItem?.id)
-        .single();
+      let currentLocation = null;
+      if (editItem?.id) {
+        const { data, error: fetchError } = await supabase
+          .schema('identity')
+          .from('locations')
+          .select('app_settings, settings, details')
+          .eq('id', editItem.id)
+          .single();
 
-      if (fetchError) {
-        notification.error({
-          message: 'Failed to fetch current location data: ' + fetchError.message,
-        });
-        return;
+        if (fetchError) {
+          notification.error({
+            message: 'Failed to fetch current location data: ' + fetchError.message,
+          });
+          return;
+        }
+        currentLocation = data;
       }
 
       const holidays = values?.settings?.holidays || [];

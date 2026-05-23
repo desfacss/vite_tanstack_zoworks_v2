@@ -5,7 +5,9 @@
     "expenses": "Expenses",
     "timesheets": "Timesheets",
     "teams": "Teams",
-    "teams-users": "Team Members"
+    "teams-users": "Team Members",
+    "new_timesheet": "New Timesheet",
+    "new_expense": "New Expense Sheet"
   },
   "tabs": {
     "timesheet": "Timesheet",
