@@ -86,7 +86,7 @@ const GridView: React.FC<GridViewProps> = ({
     console.log('GridView isMobile:', isMobile, 'window.innerWidth:', window.innerWidth);
 
     const gridViewConfig = viewConfig?.gridview;
-    const { cardsPerRow = 3, spacing = 16, cardStyle = {}, size = 'default', maxWidth = '100%' } =
+    const { cardsPerRow = 3, spacing = 16, cardStyle = {}, size = 'small', maxWidth = '100%' } =
         gridViewConfig?.layout || {};
 
     // Get responsive column spans

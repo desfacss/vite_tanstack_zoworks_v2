@@ -254,6 +254,7 @@ const TableView: React.FC<TableViewProps> = ({
             pagination={false}
             onChange={onTableChange}
             scroll={{ x: 'max-content' }}
+            size="small"
           />
         )}
       </motion.div>

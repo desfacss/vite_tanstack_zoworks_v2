@@ -207,6 +207,9 @@ const KanbanViewConfig: React.FC<KanbanViewConfigProps> = ({
 
   const handleAddLane = (typeKey: string) => {
     const updatedTypes = { ...types };
+    if (!updatedTypes[typeKey].lanes) {
+      updatedTypes[typeKey].lanes = [];
+    }
     updatedTypes[typeKey].lanes = [
       ...updatedTypes[typeKey].lanes,
       { name: '', color: '#efefef', sequence: updatedTypes[typeKey].lanes.length + 1 },
@@ -218,7 +221,8 @@ const KanbanViewConfig: React.FC<KanbanViewConfigProps> = ({
     setCurrentTypeKey(typeKey);
     setCurrentLaneIndex(laneIndex);
     if (laneIndex !== null) {
-      form.setFieldsValue(types[typeKey].lanes[laneIndex]);
+      const currentLanes = types[typeKey].lanes || [];
+      form.setFieldsValue(currentLanes[laneIndex] || {});
     } else {
       form.resetFields();
     }
@@ -229,6 +233,9 @@ const KanbanViewConfig: React.FC<KanbanViewConfigProps> = ({
     if (currentTypeKey === null) return;
     const laneValues = form.getFieldsValue();
     const updatedTypes = { ...types };
+    if (!updatedTypes[currentTypeKey].lanes) {
+      updatedTypes[currentTypeKey].lanes = [];
+    }
     if (currentLaneIndex !== null) {
       updatedTypes[currentTypeKey].lanes[currentLaneIndex] = {
         ...laneValues,
@@ -247,7 +254,8 @@ const KanbanViewConfig: React.FC<KanbanViewConfigProps> = ({
 
   const handleRemoveLane = (typeKey: string, laneIndex: number) => {
     const updatedTypes = { ...types };
-    updatedTypes[typeKey].lanes = updatedTypes[typeKey].lanes
+    const currentLanes = updatedTypes[typeKey].lanes || [];
+    updatedTypes[typeKey].lanes = currentLanes
       .filter((_, i) => i !== laneIndex)
       .map((lane, i) => ({ ...lane, sequence: i + 1 }));
     setTypes(updatedTypes);
@@ -516,7 +524,7 @@ const KanbanViewConfig: React.FC<KanbanViewConfigProps> = ({
           expandedRowRender: (record) => (
             <Table
               columns={laneColumns(record.key)}
-              dataSource={record.lanes}
+              dataSource={record.lanes || []}
                 rowKey={(record) => record.sequence?.toString() ?? ''}
               pagination={false}
             />

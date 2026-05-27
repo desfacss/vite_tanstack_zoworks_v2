@@ -16,20 +16,20 @@ import { useQueryClient } from '@tanstack/react-query';
 const KanbanContainer = styled.div`
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 64px); /* Adjust based on header height */
+  height: calc(100vh - 210px); /* Maximizes display area while preventing double scrolls */
   overflow: hidden;
 `;
 
 const Header = styled.div`
-  padding-bottom: 16px;
+  padding-bottom: 8px; /* Tighter spacing */
 `;
 
 const LanesContainer = styled.div`
   display: flex;
-  gap: 16px;
+  gap: 12px; /* reduced gap */
   overflow-x: auto;
   flex: 1;
-  padding-bottom: 16px;
+  padding-bottom: 8px;
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
 `;
@@ -37,17 +37,17 @@ const LanesContainer = styled.div`
 const Lane = styled.div<{ highlighted?: boolean }>`
   background-color: var(--color-bg-secondary);
   border-radius: var(--tenant-border-radius, 12px);
-  padding: 16px;
-  width: 300px;
-  min-width: 300px;
+  padding: 12px; /* reduced padding */
+  width: 280px;  /* slightly narrower lanes to fit more columns */
+  min-width: 280px;
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 300px);
+  height: 100%;  /* fill lanes container height dynamically */
   scroll-snap-align: start;
   border: 1px solid var(--color-border);
   &.collapsed {
-    width: 60px !important;
-    min-width: 60px !important;
+    width: 50px !important;
+    min-width: 50px !important;
   }
 `;
 
@@ -577,7 +577,7 @@ const KanbanView: React.FC<KanbanViewProps> = ({
                           <Draggable key={card.id} draggableId={card.id.toString()} index={index}>
                             {(provided, snapshot) => (
                               <PortalAwareItem provided={provided} snapshot={snapshot}>
-                                <Card>
+                                <Card size="small">
                                   <div className="card-title">
                                     <GripVertical size={16} style={{ color: 'var(--color-text-tertiary)' }} />
                                     <span>{getFieldValue(card, viewConfig.kanbanview?.cardFields?.title)}</span>

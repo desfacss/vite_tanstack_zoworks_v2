@@ -226,7 +226,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, viewMode, isMobile 
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="px-4 py-3 border-b bg-gray-50">
+      <div className="px-4 pt-5 pb-3 border-b bg-gray-50">
         <div className="flex items-center justify-between mb-2">
           <h1 className="text-h4 !mb-0">
             {getViewTitle()}
@@ -256,7 +256,10 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, viewMode, isMobile 
 
         {/* Week/Day Header with date selection */}
         {showWeekHeader && (
-          <div className="grid grid-cols-7 gap-1 mt-3">
+          <div className="flex">
+            {/* Spacer matching rbc-time-gutter width */}
+            <div style={{ width: '60px', flexShrink: 0 }} />
+            <div className="grid grid-cols-7 gap-1 mt-3 flex-1">
             {getWeekDays().map((date, index) => {
               const isSelected = selectedDate && dayjs(date).isSame(selectedDate, 'day');
               const isToday = dayjs(date).isSame(dayjs(), 'day');
@@ -330,20 +333,21 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, viewMode, isMobile 
                 </div>
               );
             })}
+            </div>
           </div>
         )}
       </div>
 
       {/* Calendar */}
       <div className="flex-1 overflow-hidden">
-        <div className="h-full p-4">
-          <Card className="h-full" bodyStyle={{ padding: '16px', height: '100%' }}>
+        <div className="h-full p-2">
+          <Card className="h-full" bodyStyle={{ padding: '12px', height: '100%' }}>
             <Calendar
               localizer={localizer}
               events={calendarEvents}
               startAccessor={(e: any) => new Date(e.start)}
               endAccessor={(e: any) => new Date(e.end)}
-              style={{ height: 500 }}
+              style={{ height: 'calc(100vh - 460px)', minHeight: '320px' }}
               view={actualView as View}
               views={[Views.MONTH, Views.WEEK, Views.DAY]}
               date={currentDate}
@@ -389,7 +393,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, viewMode, isMobile 
               Events for {dayjs(currentDate).format('dddd, MMMM D, YYYY')}
             </h2>
           </div>
-          <div className="max-h-48 overflow-auto">
+          <div className="max-h-80 overflow-auto">
             {selectedEvents.length > 0 ? (
               <EventList events={selectedEvents} />
             ) : (

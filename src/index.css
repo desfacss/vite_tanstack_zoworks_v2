@@ -2962,6 +2962,59 @@ legend {
   background: transparent;
 }
 
+/* ===== DYNAMIC VIEWS COMPACT STYLES ===== */
+.dynamic-views-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 0 16px !important; /* Tighter container padding */
+}
+
+@media (max-width: 768px) {
+  .dynamic-views-container {
+    padding: 0 8px !important;
+  }
+}
+
+.dynamic-views-container .page-header {
+  min-height: unset !important;
+  padding: 6px 0 !important;
+  margin-bottom: 4px !important;
+}
+
+.dynamic-views-container .page-header .action-bar {
+  min-height: unset !important;
+  gap: 8px !important;
+}
+
+/* Compact layout for grid card/canvas */
+.dynamic-views-container.layout-canvas .page-card {
+  padding: 12px !important;
+  margin-bottom: 12px !important;
+}
+
+.dynamic-views-container.layout-record .page-card {
+  padding: 0 !important;
+}
+
+/* Compact filters form items */
+.dynamic-views-container .global-filters-form .ant-form-item {
+  margin-bottom: 0 !important;
+}
+
+/* Tighter pagination bar */
+.dynamic-views-container .sticky-pagination-bar {
+  padding: 6px 0 !important;
+  margin-top: 4px !important;
+  background: var(--color-bg-primary);
+  border-top: 1px solid var(--color-border);
+}
+
+.dynamic-views-container .ant-table-wrapper .ant-table-pagination-row {
+  display: none !important;
+}
+
+
 /* Ensure parents support sticky */
 .main-content {
   position: relative;

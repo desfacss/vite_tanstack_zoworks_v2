@@ -311,12 +311,12 @@ const GlobalFilters: React.FC<GlobalFiltersProps> = ({
                                         {field.type === 'text' && (
                                             <Input
                                                 placeholder={field.placeholder}
-                                                className="w-full bg-[var(--color-bg-secondary)] border-[var(--color-border)] hover:border-[var(--color-primary)] transition-colors text-[var(--color-text-primary)] font-medium placeholder:text-slate-400 placeholder:opacity-60 overflow-hidden text-ellipsis px-3 h-[44px]"
+                                                className="w-full bg-[var(--color-bg-secondary)] border-[var(--color-border)] hover:border-[var(--color-primary)] transition-colors text-[var(--color-text-primary)] font-medium placeholder:text-slate-400 placeholder:opacity-60 overflow-hidden text-ellipsis px-3 h-[36px]"
                                             />
                                         )}
                                         {field.type === 'date-range' && (
                                             <RangePicker
-                                                className="w-full bg-[var(--color-bg-secondary)] border-[var(--color-border)] hover:border-[var(--color-primary)] transition-colors h-[44px]"
+                                                className="w-full bg-[var(--color-bg-secondary)] border-[var(--color-border)] hover:border-[var(--color-primary)] transition-colors h-[36px]"
                                                 defaultValue={
                                                     field.defaultValue
                                                         ? [dayjs(field.defaultValue[0]), dayjs(field.defaultValue[1])]
@@ -328,7 +328,7 @@ const GlobalFilters: React.FC<GlobalFiltersProps> = ({
                                             <Select
                                                 placeholder={field.placeholder}
                                                 options={selectOptions[field.name] || []}
-                                                className="w-full min-w-[180px] h-[44px]"
+                                                className="w-full min-w-[180px] h-[36px]"
                                                 allowClear
                                                 loading={loading[field.name] || false}
                                             />
@@ -359,19 +359,19 @@ const GlobalFilters: React.FC<GlobalFiltersProps> = ({
                                                         {field.type === 'text' && (
                                                             <Input
                                                                 placeholder={field.placeholder}
-                                                                className="w-full bg-[var(--color-bg-secondary)] border-[var(--color-border)] h-[40px]"
+                                                                className="w-full bg-[var(--color-bg-secondary)] border-[var(--color-border)] h-[36px]"
                                                             />
                                                         )}
                                                         {field.type === 'date-range' && (
                                                             <RangePicker
-                                                                className="w-full bg-[var(--color-bg-secondary)] border-[var(--color-border)] h-[40px]"
+                                                                className="w-full bg-[var(--color-bg-secondary)] border-[var(--color-border)] h-[36px]"
                                                             />
                                                         )}
                                                         {field.type === 'select' && (
                                                             <Select
                                                                 placeholder={field.placeholder}
                                                                 options={selectOptions[field.name] || []}
-                                                                className="w-full h-[40px]"
+                                                                className="w-full h-[36px]"
                                                                 allowClear
                                                                 loading={loading[field.name] || false}
                                                             />
@@ -382,7 +382,7 @@ const GlobalFilters: React.FC<GlobalFiltersProps> = ({
                                         }
                                     >
                                         <Button
-                                            className="hidden md:flex items-center justify-center border-dashed border-slate-300 hover:border-[var(--color-primary)] h-[44px] w-[44px] p-0"
+                                            className="hidden md:flex items-center justify-center border-dashed border-slate-300 hover:border-[var(--color-primary)] h-[36px] w-[36px] p-0"
                                         >
                                             <Filter size={18} className="text-slate-500" />
                                         </Button>
@@ -401,7 +401,7 @@ const GlobalFilters: React.FC<GlobalFiltersProps> = ({
                         >
                             <Button
                                 onClick={() => setDropdownOpen(!dropdownOpen)}
-                                className="flex items-center justify-center border-dashed border-slate-300 hover:border-[var(--color-primary)] h-[44px] w-[44px] p-0"
+                                className="flex items-center justify-center border-dashed border-slate-300 hover:border-[var(--color-primary)] h-[36px] w-[36px] p-0"
                             >
                                 <Settings2 size={16} className="text-slate-500" />
                             </Button>

@@ -1547,7 +1547,7 @@ const DynamicViews: React.FC<DynamicViewsProps> = ({
 
   // Top-level views use consistent page layout
   return (
-    <div className={`page-content ${viewType === 'tableview' && entities.length > 0 ? 'layout-record' : 'layout-canvas'}`}>
+    <div className={`page-content dynamic-views-container ${viewType === 'tableview' && entities.length > 0 ? 'layout-record' : 'layout-canvas'}`}>
       {/* Page Header - tabs on left, actions on right */}
       <PageActionBar>
         <ActionBarLeft>
