@@ -399,6 +399,8 @@ const YViewConfigManager: React.FC = () => {
         onSave={(updatedData) => handleSave(viewName, updatedData)}
         metadata={selectedConfig?.v_metadata}
         availableColumns={data}
+        entityType={selectedConfig?.entity_type}
+        entitySchema={selectedConfig?.entity_schema}
       />
     );
   }

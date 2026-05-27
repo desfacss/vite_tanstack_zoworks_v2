@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Select, Table, Space, Checkbox, Row, Col, Input, Modal, Form, Typography } from 'antd';
 import { PlusOutlined, UpOutlined, DownOutlined, DeleteOutlined, EditOutlined } from '@ant-design/icons';
+import { supabase } from '@/core/lib/supabase';
 const { Title } = Typography;
 const { Option } = Select;
 
@@ -14,6 +15,9 @@ interface Type {
   name: string; // Added name field for type
   fieldPath: string;
   lanes: Lane[];
+  laneSource?: 'static' | 'enum' | 'blueprint';
+  enumValueType?: string;
+  blueprintName?: string;
 }
 
 interface Field {
@@ -63,6 +67,8 @@ interface KanbanViewConfigProps {
   onSave: (data: ConfigData) => void;
   availableColumns: any[];
   metadata?: MetadataItem[];
+  entityType?: string;
+  entitySchema?: string;
 }
 
 const KanbanViewConfig: React.FC<KanbanViewConfigProps> = ({
@@ -70,6 +76,8 @@ const KanbanViewConfig: React.FC<KanbanViewConfigProps> = ({
   onSave,
   availableColumns,
   metadata,
+  entityType,
+  entitySchema,
 }) => {
   const [fields, setFields] = useState<Field[]>(configData?.cardFields ? [
     { order: 1, fieldName: configData.cardFields.title || '', fieldPath: configData.cardFields.title || '' },
@@ -93,7 +101,23 @@ const KanbanViewConfig: React.FC<KanbanViewConfigProps> = ({
   const [laneModalVisible, setLaneModalVisible] = useState<boolean>(false);
   const [currentTypeKey, setCurrentTypeKey] = useState<string | null>(null);
   const [currentLaneIndex, setCurrentLaneIndex] = useState<number | null>(null);
+  const [enumValueTypes, setEnumValueTypes] = useState<string[]>([]);
   const [form] = Form.useForm();
+
+  useEffect(() => {
+    const fetchEnumTypes = async () => {
+      try {
+        const { data, error } = await supabase.schema('core').from('enums').select('value_type');
+        if (error) throw error;
+        const distinctTypes = Array.from(new Set((data || []).map((item: any) => item.value_type))).filter(Boolean) as string[];
+        setEnumValueTypes(distinctTypes);
+      } catch (err) {
+        console.error('Error fetching enum value types:', err);
+      }
+    };
+    fetchEnumTypes();
+  }, []);
+
 
   const getFlattenedColumns = (metadata: MetadataItem[]) => {
     const columns: { key: string; display_name: string }[] = [];
@@ -367,17 +391,56 @@ const KanbanViewConfig: React.FC<KanbanViewConfigProps> = ({
       ),
     },
     {
+      title: 'Lane Source',
+      dataIndex: 'laneSource',
+      key: 'laneSource',
+      render: (text: string, record: any) => (
+        <Select
+          value={text || 'static'}
+          onChange={(value) => handleTypeChange(record.key, 'laneSource', value)}
+          style={{ width: 140 }}
+        >
+          <Option value="static">Static Lanes</Option>
+          <Option value="enum">Core Enum</Option>
+          <Option value="blueprint">Process Blueprint</Option>
+        </Select>
+      ),
+    },
+    {
+      title: 'Enum Value Type',
+      dataIndex: 'enumValueType',
+      key: 'enumValueType',
+      render: (text: string, record: any) => {
+        if (record.laneSource !== 'enum') return '-';
+        return (
+          <Select
+            showSearch
+            value={text}
+            onChange={(value) => handleTypeChange(record.key, 'enumValueType', value)}
+            style={{ width: 160 }}
+            placeholder="Select Value Type"
+          >
+            {enumValueTypes.map(type => (
+              <Option key={type} value={type}>{type}</Option>
+            ))}
+          </Select>
+        );
+      },
+    },
+    {
       title: 'Actions',
       key: 'actions',
       render: (_: any, record: any) => (
         <Space>
-          <Button
-            type="dashed"
-            icon={<PlusOutlined />}
-            onClick={() => handleAddLane(record.key)}
-          >
-            Add Lane
-          </Button>
+          {(!record.laneSource || record.laneSource === 'static') && (
+            <Button
+              type="dashed"
+              icon={<PlusOutlined />}
+              onClick={() => handleAddLane(record.key)}
+            >
+              Add Lane
+            </Button>
+          )}
           <Button
             icon={<DeleteOutlined />}
             danger
@@ -521,14 +584,30 @@ const KanbanViewConfig: React.FC<KanbanViewConfigProps> = ({
         rowKey="key"
         pagination={false}
         expandable={{
-          expandedRowRender: (record) => (
-            <Table
-              columns={laneColumns(record.key)}
-              dataSource={record.lanes || []}
+          expandedRowRender: (record) => {
+            if (record.laneSource === 'enum') {
+              return (
+                <div style={{ padding: '12px 24px', background: 'var(--color-bg-secondary)', border: '1px solid var(--color-border)', borderRadius: '8px' }}>
+                  Lanes will be dynamically loaded from <strong>core.enums</strong> where value_type is <strong>{record.enumValueType || '(not specified)'}</strong>.
+                </div>
+              );
+            }
+            if (record.laneSource === 'blueprint') {
+              return (
+                <div style={{ padding: '12px 24px', background: 'var(--color-bg-secondary)', border: '1px solid var(--color-border)', borderRadius: '8px' }}>
+                  Lanes will be dynamically loaded from the active <strong>automation.bp_process_blueprints</strong> lifecycle definition stages.
+                </div>
+              );
+            }
+            return (
+              <Table
+                columns={laneColumns(record.key)}
+                dataSource={record.lanes || []}
                 rowKey={(record) => record.sequence?.toString() ?? ''}
-              pagination={false}
-            />
-          ),
+                pagination={false}
+              />
+            );
+          },
         }}
         style={{ marginBottom: '20px' }}
       />

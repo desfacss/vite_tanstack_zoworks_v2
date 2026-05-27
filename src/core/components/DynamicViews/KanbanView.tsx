@@ -141,6 +141,7 @@ const PortalAwareItem: React.FC<{
 
 interface KanbanViewProps {
   entityType: string;
+  entitySchema?: string;
   viewConfig?: any;
   data: any[];
   isLoading?: boolean;
@@ -165,6 +166,7 @@ interface BoardLane {
 
 const KanbanView: React.FC<KanbanViewProps> = ({
   entityType,
+  entitySchema,
   viewConfig,
   data = [],
   isLoading = false,
@@ -251,59 +253,150 @@ const KanbanView: React.FC<KanbanViewProps> = ({
 
   // Initialize and update boardData
   const [boardData, setBoardData] = useState<Record<string, BoardLane>>({});
+  const [lanesLoading, setLanesLoading] = useState<boolean>(false);
 
   // Effect to update boardData when data, viewConfig, groupByType, or workflowDefinitions change
   useEffect(() => {
-    if (!groupByType || !viewConfig?.kanbanview || !Array.isArray(data)) {
-      setBoardData({}); // Clear board if no group type, config, or valid data
-      return;
-    }
-
-    let fieldPath: string | undefined;
-    let processedLanes: BoardLane[] = [];
-
-    if (groupByType?.startsWith('workflow_')) {
-      // Logic for grouping by dynamic_workflow_definitions
-      const workflowId = groupByType?.replace('workflow_', '');
-      const workflow = workflowDefinitions?.find((w) => w.id === workflowId);
-      if (workflow) {
-        fieldPath = 'stage_id'; // Explicitly use 'stage_id' for tickets when grouping by workflow
-        processedLanes = workflow.definitions?.stages?.map((stage: any, index: number) => ({
-          id: stage.id,       // Internal ID for grouping/filtering (e.g., "NEW_TICKET")
-          title: stage.name,   // Display title for the lane (e.g., "New Ticket")
-          color: stage.color || '#f0f0f0',
-          cards: [], // Cards will be filled below
-        })).sort((a, b) => a.sequence - b.sequence) || []; // Ensure lanes are sorted
+    const loadLanesAndData = async () => {
+      if (!groupByType || !viewConfig?.kanbanview || !Array.isArray(data)) {
+        setBoardData({}); // Clear board if no group type, config, or valid data
+        return;
       }
-    } else {
-      // Logic for grouping by viewConfig.kanbanview.types (existing logic)
-      const selectedType = viewConfig?.kanbanview?.types[groupByType];
-      if (selectedType) {
-        fieldPath = selectedType?.fieldPath;
-        processedLanes = selectedType?.lanes?.sort((a: LaneConfigItem, b: LaneConfigItem) => a.sequence - b.sequence).map((laneConfig: LaneConfigItem) => ({
-          id: laneConfig?.name,    // Use 'name' as ID for compatibility with old config
-          title: laneConfig?.name, // Use 'name' as title for display
-          color: laneConfig?.color,
-          cards: [], // Cards will be filled below
-        })) || [];
+
+      let fieldPath: string | undefined;
+      let processedLanes: BoardLane[] = [];
+
+      if (groupByType?.startsWith('workflow_')) {
+        // Logic for grouping by dynamic_workflow_definitions
+        const workflowId = groupByType?.replace('workflow_', '');
+        const workflow = workflowDefinitions?.find((w) => w.id === workflowId);
+        if (workflow) {
+          fieldPath = 'stage_id'; // Explicitly use 'stage_id' for tickets when grouping by workflow
+          processedLanes = workflow.definitions?.stages?.map((stage: any, index: number) => ({
+            id: stage.id,       // Internal ID for grouping/filtering (e.g., "NEW_TICKET")
+            title: stage.name,   // Display title for the lane (e.g., "New Ticket")
+            color: stage.color || '#f0f0f0',
+            cards: [], // Cards will be filled below
+          })).sort((a, b) => a.sequence - b.sequence) || []; // Ensure lanes are sorted
+        }
+      } else {
+        // Logic for grouping by viewConfig.kanbanview.types (existing logic)
+        const selectedType = viewConfig?.kanbanview?.types[groupByType];
+        if (selectedType) {
+          fieldPath = selectedType?.fieldPath;
+          const laneSource = selectedType?.laneSource || 'static';
+
+          if (laneSource === 'enum' && selectedType.enumValueType) {
+            setLanesLoading(true);
+            try {
+              const { data: allEnums, error } = await supabase
+                .schema('core')
+                .from('enums')
+                .select('value, display_order, organization_id')
+                .eq('value_type', selectedType.enumValueType)
+                .eq('is_active', true);
+
+              if (error) throw error;
+              if (allEnums) {
+                // Filter: if organization_id matches user's organization, use only those, else fall back to null organization_id
+                const orgRows = organization?.id ? allEnums.filter((r: any) => r.organization_id === organization.id) : [];
+                const filtered = orgRows.length > 0 ? orgRows : allEnums.filter((r: any) => !r.organization_id);
+
+                // Sort by display_order, then by value
+                processedLanes = filtered
+                  .sort((a: any, b: any) => (a.display_order || 0) - (b.display_order || 0) || a.value.localeCompare(b.value))
+                  .map((item: any, index: number) => ({
+                    id: item.value,
+                    title: item.value,
+                    color: '#1890ff',
+                    cards: [],
+                  }));
+              }
+            } catch (err) {
+              console.error('Error fetching enum lanes:', err);
+            } finally {
+              setLanesLoading(false);
+            }
+          } else if (laneSource === 'blueprint') {
+            setLanesLoading(true);
+            try {
+              const schemaName = entitySchema || 'public';
+              const cleanEntityType = entityType.includes('.') ? entityType.split('.').pop()! : entityType;
+              let query = supabase
+                .schema('automation')
+                .from('bp_process_blueprints')
+                .select('definition, version')
+                .eq('entity_schema', schemaName)
+                .eq('entity_type', cleanEntityType);
+
+              if (selectedType.blueprintName) {
+                query = query.eq('name', selectedType.blueprintName);
+              }
+
+              if (organization?.id) {
+                query = query.or(`organization_id.eq.${organization.id},organization_id.is.null`);
+              } else {
+                query = query.is('organization_id', null);
+              }
+
+              const { data: blueprints, error } = await query;
+              if (error) throw error;
+
+              if (blueprints && blueprints.length > 0) {
+                const sorted = blueprints.sort((a: any, b: any) => b.version - a.version);
+                const latestBlueprint = sorted[0];
+                const stages = latestBlueprint?.definition?.lifecycle?.stages || latestBlueprint?.definition?.stages || [];
+
+                const categoryColors: Record<string, string> = {
+                  'NEW': '#1890ff',
+                  'IN_PROGRESS': '#fa8c16',
+                  'CLOSED_WON': '#52c41a',
+                  'CLOSED_LOST': '#ff4d4f',
+                  'CANCELLED': '#bfbfbf',
+                };
+
+                processedLanes = stages.map((stage: any) => ({
+                  id: stage.id,
+                  title: stage.name,
+                  color: categoryColors[stage.category] || '#1890ff',
+                  cards: [],
+                }));
+              }
+            } catch (err) {
+              console.error('Error fetching blueprint lanes:', err);
+            } finally {
+              setLanesLoading(false);
+            }
+          } else {
+            // Static lanes (default fallback)
+            processedLanes = selectedType?.lanes?.sort((a: LaneConfigItem, b: LaneConfigItem) => a.sequence - b.sequence).map((laneConfig: LaneConfigItem) => ({
+              id: laneConfig?.name,    // Use 'name' as ID for compatibility with old config
+              title: laneConfig?.name, // Use 'name' as title for display
+              color: laneConfig?.color,
+              cards: [], // Cards will be filled below
+            })) || [];
+          }
+        }
       }
-    }
 
-    if (!fieldPath || !processedLanes.length) {
-      setBoardData({});
-      return;
-    }
+      if (!fieldPath || !processedLanes.length) {
+        setBoardData({});
+        return;
+      }
 
-    const newBoard: Record<string, BoardLane> = {};
-    processedLanes.forEach((lane) => {
-      newBoard[lane.id] = { // Key by the lane's determined 'id'
-        ...lane,
-        cards: data.filter((item) => _.get(item, fieldPath!) === lane.id), // Filter by lane.id
-      };
-    });
+      const newBoard: Record<string, BoardLane> = {};
+      processedLanes.forEach((lane) => {
+        newBoard[lane.id] = { // Key by the lane's determined 'id'
+          ...lane,
+          cards: data.filter((item) => _.get(item, fieldPath!) === lane.id), // Filter by lane.id
+        };
+      });
 
-    setBoardData(newBoard);
-  }, [data, viewConfig, groupByType, workflowDefinitions]);
+      setBoardData(newBoard);
+    };
+
+    loadLanesAndData();
+  }, [data, viewConfig, groupByType, workflowDefinitions, organization?.id, entitySchema, entityType]);
   // Validate viewConfig - but note: we do the actual early return after all hooks
   const hasValidConfig = viewConfig?.kanbanview && (viewConfig.kanbanview.types || workflowDefinitions.length > 0 || groupByType);
 
@@ -386,13 +479,17 @@ const KanbanView: React.FC<KanbanViewProps> = ({
           [fieldPathForRPC]: targetValueForRPC
         };
 
+        const schemaName = entitySchema || viewConfig?.entity_schema || "public";
+        const cleanEntityType = entityType.includes('.') ? entityType.split('.').pop()! : entityType;
+        const fullTableName = `${schemaName}.${cleanEntityType}`;
+
         console.log('Update payload:', {
-          table_name: (viewConfig?.entity_schema || "public") + "." + entityType,
+          table_name: fullTableName,
           data: updatePayload
         });
 
         const { data: rpcData, error } = await supabase.schema('core').rpc('api_new_core_upsert_data', {
-          table_name: (viewConfig?.entity_schema || "public") + "." + entityType,
+          table_name: fullTableName,
           data: updatePayload
         });
 
@@ -408,8 +505,8 @@ const KanbanView: React.FC<KanbanViewProps> = ({
         queryClient.invalidateQueries({ queryKey: [entityType, organization?.id] });
       }
     },
-    // Added boardData to dependencies because `boardData[destLaneId]?.id` is used inside onDragEnd
-    [viewConfig, groupByType, entityType, organization?.id, user?.id, queryClient, boardData]
+    // Added boardData and entitySchema to dependencies because they are used inside onDragEnd
+    [viewConfig, groupByType, entityType, entitySchema, organization?.id, user?.id, queryClient, boardData]
   );
 
   // Toggle lane collapse
@@ -463,7 +560,7 @@ const KanbanView: React.FC<KanbanViewProps> = ({
   }, [groupByType, groupByOptions]);
 
   // Early return for loading state
-  if (isLoading) {
+  if (isLoading || lanesLoading) {
     return <div>Loading...</div>;
   }
 
