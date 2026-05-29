@@ -679,7 +679,7 @@
 //                   allDisplayableColumns={allDisplayableColumns}
 //                   visibleColumns={visibleColumns}
 //                 />
-//                 {showPagination && (
+//                 {showPagination && isMobile && (
 //                   <div className="mt-4 flex justify-end">
 //                     <Pagination
 //                       current={pagination.current}
@@ -1477,6 +1477,22 @@ const DynamicViews: React.FC<DynamicViewsProps> = ({
   // If we have more data OR we are past page 1, show pagination
   const showPagination = hasMore || currentPageIndex > 0;
 
+  const renderTopPagination = () => {
+    if (isMobile || !showPagination) return null;
+    return (
+      <div className="top-pagination-container">
+        <Pagination
+          current={currentPageIndex + 1}
+          pageSize={pageSize}
+          total={hasMore ? ((currentPageIndex + 1) * pageSize) + 1 : (currentPageIndex + 1) * pageSize}
+          onChange={handlePaginationChange}
+          simple={true}
+          showSizeChanger={false}
+        />
+      </div>
+    );
+  };
+
   // For detail views (nested), keep the simple card layout
   if (detailView) {
     return (
@@ -1547,7 +1563,7 @@ const DynamicViews: React.FC<DynamicViewsProps> = ({
 
   // Top-level views use consistent page layout
   return (
-    <div className={`page-content dynamic-views-container ${viewType === 'tableview' && entities.length > 0 ? 'layout-record' : 'layout-canvas'}`}>
+    <div className="page-content dynamic-views-container layout-record">
       {/* Page Header - tabs on left, actions on right */}
       <PageActionBar>
         <ActionBarLeft>
@@ -1557,6 +1573,7 @@ const DynamicViews: React.FC<DynamicViewsProps> = ({
           {!!isTopLevel && isDesktop && globalFiltersElement}
         </div>
         <ActionBarRight>
+          {renderTopPagination()}
           {globalActionsElement}
           {renderViewSelector()}
         </ActionBarRight>

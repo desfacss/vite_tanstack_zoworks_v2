@@ -185,8 +185,8 @@ const GanttChart: React.FC<GanttViewProps> = ({
   }
 
   return (
-    <div>
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mt-4">
+    <div className="flex-1 flex flex-col min-h-0" style={{ height: '100%' }}>
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mt-0 flex-1 flex flex-col min-h-0" style={{ height: '100%' }}>
         {globalFilters && <div className="flex-1 min-w-[300px] pb-4">{globalFilters}</div>}
         {!isMobile ? (
           <>

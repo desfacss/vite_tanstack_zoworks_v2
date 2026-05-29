@@ -16,7 +16,8 @@ import { useQueryClient } from '@tanstack/react-query';
 const KanbanContainer = styled.div`
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 210px); /* Maximizes display area while preventing double scrolls */
+  flex: 1;
+  min-height: 0;
   overflow: hidden;
 `;
 
@@ -573,7 +574,8 @@ const KanbanView: React.FC<KanbanViewProps> = ({
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="p-4"
+      className="p-0 flex-1 flex flex-col min-h-0"
+      style={{ height: '100%' }}
     >
       <style>
         {`

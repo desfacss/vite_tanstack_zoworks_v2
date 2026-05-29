@@ -276,8 +276,8 @@ const MapViewComponent: React.FC<MapViewProps> = ({
 
       const newGeofences: Record<string, LatLng[]> = {};
       const idsWithGeofence = data
-        .filter((r) => r[geofenceField])
-        .map((r) => ({ id: r.id, wkt: r[geofenceField] }));
+        .filter((r: any) => r[geofenceField])
+        .map((r: any) => ({ id: r.id, wkt: r[geofenceField] }));
 
       idsWithGeofence.forEach(({ id, wkt }: any) => {
         const parsed = parseGeofence(wkt);
@@ -346,7 +346,7 @@ const MapViewComponent: React.FC<MapViewProps> = ({
   }
 
   return (
-    <div style={{ minHeight: '600px', height: '600px', width: '100%', position: 'relative', border: '1px solid #eee', borderRadius: '8px', overflow: 'hidden' }}>
+    <div className="flex-1 flex flex-col min-h-[500px]" style={{ height: '100%', width: '100%', position: 'relative', border: '1px solid #eee', borderRadius: '8px', overflow: 'hidden' }}>
       <MapContainer
         center={mapCenter}
         zoom={zoom}

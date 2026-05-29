@@ -206,7 +206,7 @@ const TableView: React.FC<TableViewProps> = ({
 
   return (
     <div>
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mt-4">
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mt-0">
         {globalFilters && <div className="flex-1 min-w-[300px] pb-4">{globalFilters}</div>}
         {isMobile ? (
           isLoading ? (
@@ -253,7 +253,7 @@ const TableView: React.FC<TableViewProps> = ({
             rowKey="id"
             pagination={false}
             onChange={onTableChange}
-            scroll={{ x: 'max-content' }}
+            scroll={{ y: (isMobile || data.length <= 10) ? undefined : 'calc(100vh - 210px)', x: 'max-content' }}
             size="small"
           />
         )}

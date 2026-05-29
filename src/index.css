@@ -5622,3 +5622,67 @@ legend {
 .ant-statistic-content-value {
   color: var(--color-text-primary) !important;
 }
+
+/* ==========================================================================
+   COHESIVE HIGH-DENSITY ENTERPRISE LAYOUT IMPROVEMENTS (Desktop/Tablet)
+   ========================================================================== */
+
+@media (min-width: 1024px) {
+  /* Complete edge-to-edge layout for table list views */
+  .page-container:has(.layout-record) {
+    padding-left: var(--layout-padding-desktop) !important;
+    padding-right: var(--layout-padding-desktop) !important;
+    padding-bottom: 0 !important;
+    overflow: hidden !important;
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - var(--header-height)) !important;
+  }
+  
+  .layout-record.dynamic-views-container {
+    padding: 0 !important;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+  }
+  
+  .layout-record .page-card {
+    margin-bottom: 0 !important;
+    padding: 16px !important;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+  
+  .layout-record:has(.ant-table-wrapper) .page-card {
+    padding: 0 !important;
+  }
+
+  .layout-record .ant-table-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+}
+
+.ant-table-body {
+  overflow-y: auto !important;
+}
+
+/* Unified styling for compact top pagination */
+.top-pagination-container {
+  display: flex;
+  align-items: center;
+  margin-right: 8px;
+}
+
+.top-pagination-container .ant-pagination {
+  margin: 0 !important;
+}
+
+.top-pagination-container .ant-pagination-item {
+  display: none !important; /* Hide individual page numbers to keep it simple/compact */
+}
