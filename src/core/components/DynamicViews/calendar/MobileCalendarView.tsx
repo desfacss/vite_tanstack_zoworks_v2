@@ -116,16 +116,16 @@ const MobileCalendarView: React.FC<MobileCalendarViewProps> = ({ data, viewConfi
     ];
 
     return (
-        <div className="h-screen bg-white">
+        <div className="flex-1 flex flex-col min-h-0 w-full bg-white" style={{ height: '100%' }}>
             <Card
-                className="h-full !rounded-none border-0"
-                bodyStyle={{ padding: 0, height: '100%' }}
+                className="h-full !rounded-none border-0 flex-1 flex flex-col min-h-0"
+                bodyStyle={{ padding: 0, height: '100%', display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}
             >
                 <Tabs
                     activeKey={activeView}
                     onChange={(key) => setActiveView(key as ViewType)}
                     items={tabItems}
-                    className="h-full"
+                    className="h-full flex-1 flex flex-col min-h-0"
                     tabBarStyle={{
                         margin: 0,
                         padding: '0 16px',

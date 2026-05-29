@@ -30,7 +30,7 @@ const LanesContainer = styled.div`
   gap: 12px; /* reduced gap */
   overflow-x: auto;
   flex: 1;
-  padding-bottom: 8px;
+  padding-bottom: 0px;
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
 `;
@@ -574,7 +574,7 @@ const KanbanView: React.FC<KanbanViewProps> = ({
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="p-0 flex-1 flex flex-col min-h-0"
+      className="p-0 flex-1 flex flex-col min-h-0 kanban-board-wrapper"
       style={{ height: '100%' }}
     >
       <style>
@@ -588,31 +588,33 @@ const KanbanView: React.FC<KanbanViewProps> = ({
       </style>
 
       <KanbanContainer>
-        <Header className="flex items-center gap-4 flex-wrap">
-          {globalFilters && <div className="flex-1 min-w-[300px]">{globalFilters}</div>}
-          <div className="flex items-center gap-2">
-            {viewConfig.kanbanview.showFeatures.includes('groupBy') && (
-              <>
-                <span className="text-gray-700">Group by:</span>
-                {groupByOptions.length > 1 ? (
-                  <Select
-                    value={groupByType}
-                    onChange={handleGroupByChange}
-                    style={{ width: 200 }}
-                    options={groupByOptions}
-                  />
-                ) : (
-                  <span className="text-gray-700 font-semibold">{selectedGroupLabel}</span>
-                )}
-              </>
-            )}
-            {/* {viewConfig.kanbanview.showFeatures.includes('export') && (
-              <Button onClick={handleExport} type="default" className="ml-2">
-                Export
-              </Button>
-            )} */}
-          </div>
-        </Header>
+        {(globalFilters || viewConfig.kanbanview.showFeatures.includes('groupBy')) && (
+          <Header className="flex items-center gap-4 flex-wrap">
+            {globalFilters && <div className="flex-1 min-w-[300px]">{globalFilters}</div>}
+            <div className="flex items-center gap-2">
+              {viewConfig.kanbanview.showFeatures.includes('groupBy') && (
+                <>
+                  <span className="text-gray-700">Group by:</span>
+                  {groupByOptions.length > 1 ? (
+                    <Select
+                      value={groupByType}
+                      onChange={handleGroupByChange}
+                      style={{ width: 200 }}
+                      options={groupByOptions}
+                    />
+                  ) : (
+                    <span className="text-gray-700 font-semibold">{selectedGroupLabel}</span>
+                  )}
+                </>
+              )}
+              {/* {viewConfig.kanbanview.showFeatures.includes('export') && (
+                <Button onClick={handleExport} type="default" className="ml-2">
+                  Export
+                </Button>
+              )} */}
+            </div>
+          </Header>
+        )}
 
         <DragDropContext onDragEnd={onDragEnd}>
           <LanesContainer>

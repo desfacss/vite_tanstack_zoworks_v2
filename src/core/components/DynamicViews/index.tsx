@@ -1586,7 +1586,7 @@ const DynamicViews: React.FC<DynamicViewsProps> = ({
             <div className="w-full h-64 rounded-xl content-shimmer" />
           }
         >
-          <div ref={printRef}>
+          <div ref={printRef} className="flex-1 flex flex-col min-h-0 w-full" style={{ height: '100%' }}>
             {entities.length === 0 && !isDataLoading && currentPageIndex === 0 ? (
               <ZeroStateContent
                 entityName={config?.details?.name}

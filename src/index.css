@@ -5632,7 +5632,7 @@ legend {
   .page-container:has(.layout-record) {
     padding-left: var(--layout-padding-desktop) !important;
     padding-right: var(--layout-padding-desktop) !important;
-    padding-bottom: 0 !important;
+    padding-bottom: var(--layout-padding-desktop) !important;
     overflow: hidden !important;
     display: flex;
     flex-direction: column;
@@ -5657,6 +5657,10 @@ legend {
   }
   
   .layout-record:has(.ant-table-wrapper) .page-card {
+    padding: 0 !important;
+  }
+  
+  .layout-record:has(.kanban-board-wrapper) .page-card {
     padding: 0 !important;
   }
 

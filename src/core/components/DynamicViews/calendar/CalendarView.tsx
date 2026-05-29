@@ -347,7 +347,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, viewMode, isMobile 
               events={calendarEvents}
               startAccessor={(e: any) => new Date(e.start)}
               endAccessor={(e: any) => new Date(e.end)}
-              style={{ height: 'calc(100vh - 460px)', minHeight: '320px' }}
+              style={{ height: '100%' }}
               view={actualView as View}
               views={[Views.MONTH, Views.WEEK, Views.DAY]}
               date={currentDate}
@@ -360,7 +360,6 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, viewMode, isMobile 
               popup
               popupOffset={{ x: 10, y: 10 }}
               formats={{
-                // ... (formats remain the same) ...
                 timeGutterFormat: 'HH:mm',
                 eventTimeRangeFormat: ({ start, end }) =>
                   `${dayjs(start).format('HH:mm')} - ${dayjs(end).format('HH:mm')}`,
@@ -384,26 +383,6 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, viewMode, isMobile 
           </Card>
         </div>
       </div>
-
-      {/* Selected Date Events */}
-      {selectedDate && (
-        <div className="border-t bg-white">
-          <div className="px-4 py-3 bg-gray-50">
-            <h2 className="text-h5 !mb-0">
-              Events for {dayjs(currentDate).format('dddd, MMMM D, YYYY')}
-            </h2>
-          </div>
-          <div className="max-h-80 overflow-auto">
-            {selectedEvents.length > 0 ? (
-              <EventList events={selectedEvents} />
-            ) : (
-              <div className="px-4 py-8">
-                <Empty description="No events for this date" />
-              </div>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 };
