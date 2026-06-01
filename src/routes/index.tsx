@@ -85,6 +85,8 @@ const WorkforceTimesheets = lazy(() => import('@/modules/workforce/pages/Timeshe
 const WorkforceExpenses = lazy(() => import('@/modules/workforce/pages/Expenses'));
 const TeamsUsers = lazy(() => import('@/modules/workforce/pages/TeamsUsers'));
 const TestRJSFCoreForm = lazy(() => import('../pages/TestRJSFCoreForm'));
+const TestRJSFGenForm = lazy(() => import('../pages/TestRJSFGenForm'));
+
 
 // FSM Module
 const FsmTracking = lazy(() => import('@/modules/fsm/pages/TrackingPage'));
@@ -304,6 +306,8 @@ export const AppRoutes: FC = () => {
                         {/* Sample page for new module development */}
                         <Route path="/sample" element={<SamplePage />} />
                         <Route path="/rjsf" element={<TestRJSFCoreForm />} />
+                        <Route path="/rjsf-gen" element={<TestRJSFGenForm />} />
+
                         <Route path="/payment-test" element={<PaymentTestPage />} />
 
 
