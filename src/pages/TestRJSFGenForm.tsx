@@ -172,7 +172,7 @@ const TestRJSFGenForm = () => {
     const [uiSchemaStr, setUiSchemaStr] = useState<string>('');
     const [dbSchemaStr, setDbSchemaStr] = useState<string>('');
 
-    const [loading, setLoading] = useState(false);
+    const [_loading, setLoading] = useState(false);
     const [generating, setGenerating] = useState(false);
     const [saving, setSaving] = useState(false);
     const [isGlobal, setIsGlobal] = useState(true);

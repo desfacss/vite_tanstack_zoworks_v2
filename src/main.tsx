@@ -64,7 +64,6 @@
 // src/main.tsx
 
 import './core/lib/ace-config';
-import React from 'react'; // Import React if using StrictMode (optional)
 import { createRoot } from 'react-dom/client';
 import { registerSW } from 'virtual:pwa-register';
 // No need to import AntApp here anymore

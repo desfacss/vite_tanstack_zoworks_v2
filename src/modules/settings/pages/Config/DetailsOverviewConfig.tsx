@@ -587,7 +587,7 @@ const DetailsOverviewConfig: React.FC<DetailsOverviewConfigProps> = ({
             onChange={(value) => handleFieldChange(groupIndex, index, 'fieldPath', value)}
             style={{ width: '100%' }}
             filterOption={(input, option) =>
-              (option?.children as string).toLowerCase().includes(input.toLowerCase())
+              (option?.children as unknown as string).toLowerCase().includes(input.toLowerCase())
             }
           >
             {allExpandedFields.map((col) => (
@@ -615,7 +615,7 @@ const DetailsOverviewConfig: React.FC<DetailsOverviewConfigProps> = ({
         dataIndex: 'style',
         key: 'style',
         width: 120,
-        render: (_: any, record: FieldConfig, index: number, groupIndex: number) => (
+        render: (_: any, _record: FieldConfig, index: number, groupIndex: number) => (
           <Button icon={<EditOutlined />} onClick={() => handleOpenStyleModal(groupIndex, index)}>
             Edit JSON
           </Button>
