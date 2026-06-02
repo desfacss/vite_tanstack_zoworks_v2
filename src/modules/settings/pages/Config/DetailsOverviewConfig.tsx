@@ -22,6 +22,7 @@ import {
   EditOutlined,
   SyncOutlined, // Added icon for manual refresh
 } from '@ant-design/icons';
+import ace from 'ace-builds';
 import AceEditor from 'react-ace';
 import 'ace-builds/src-noconflict/mode-json';
 import 'ace-builds/src-noconflict/theme-monokai';
