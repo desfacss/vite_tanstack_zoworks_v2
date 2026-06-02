@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import RJSFCoreForm from '@/core/components/RJSFCoreForm';
-import { Card, Button, Space, message, Typography, Tabs, Divider, Row, Col, Switch, Input, Select } from 'antd';
+import { Card, Button, Space, message, Typography, Tabs, Divider, Switch, Input, Select, Radio, Drawer, Row, Col, Tooltip, Modal } from 'antd';
 import { supabase } from '@/core/lib/supabase';
 import { ThunderboltOutlined, SaveOutlined, PlusOutlined } from '@ant-design/icons';
-import { Trash2, Settings2 } from 'lucide-react';
+import { Trash2, Settings2, Code, Braces, Type, AlignLeft, Lock, List, Calendar, Hash, Sliders, Phone, Mail, Link as LinkIcon, Tags, CheckSquare, CircleDot, FileUp, Globe, Table, EyeOff } from 'lucide-react';
 import AceEditor from 'react-ace';
 import { useAuthStore, useThemeStore } from '@/core/lib/store';
 import PageManager from '@/core/components/PageManager';
@@ -103,6 +103,55 @@ const getFlattenedFields = (properties: any, prefix = ''): { path: string, label
     });
 };
 
+const getWidgetIcon = (widget: string) => {
+    switch (widget) {
+        case 'text':
+            return <Type size={14} style={{ opacity: 0.7 }} />;
+        case 'textarea':
+            return <AlignLeft size={14} style={{ opacity: 0.7 }} />;
+        case 'password':
+            return <Lock size={14} style={{ opacity: 0.7 }} />;
+        case 'SelectCustomWidget':
+        case 'SelectSingle':
+        case 'SelectMultiple':
+        case 'SelectMultiTags':
+        case 'SelectableTags':
+            return <List size={14} style={{ opacity: 0.7 }} />;
+        case 'date':
+        case 'date-time':
+        case 'DateRangePickerWidget':
+        case 'DateTimeRangePickerWidget':
+            return <Calendar size={14} style={{ opacity: 0.7 }} />;
+        case 'updown':
+            return <Hash size={14} style={{ opacity: 0.7 }} />;
+        case 'range':
+            return <Sliders size={14} style={{ opacity: 0.7 }} />;
+        case 'phone':
+            return <Phone size={14} style={{ opacity: 0.7 }} />;
+        case 'email':
+            return <Mail size={14} style={{ opacity: 0.7 }} />;
+        case 'url':
+            return <LinkIcon size={14} style={{ opacity: 0.7 }} />;
+        case 'TagsWidget':
+            return <Tags size={14} style={{ opacity: 0.7 }} />;
+        case 'checkbox':
+            return <CheckSquare size={14} style={{ opacity: 0.7 }} />;
+        case 'radio':
+            return <CircleDot size={14} style={{ opacity: 0.7 }} />;
+        case 'file':
+            return <FileUp size={14} style={{ opacity: 0.7 }} />;
+        case 'WebWidget':
+            return <Globe size={14} style={{ opacity: 0.7 }} />;
+        case 'EditableTableWidget':
+            return <Table size={14} style={{ opacity: 0.7 }} />;
+        case 'hidden':
+        case 'Hidden':
+            return <EyeOff size={14} style={{ opacity: 0.7 }} />;
+        default:
+            return <Type size={14} style={{ opacity: 0.7 }} />;
+    }
+};
+
 const defaultJsonInput = `{
   "organization_id": "a41b2216-736c-4c00-99ca-30a0cd8ca0d2",
   "account_id": "b52b2216-736c-4c00-99ca-30a0cd8ca0d3",
@@ -158,11 +207,15 @@ const TestRJSFGenForm = () => {
     const { isDarkMode } = useThemeStore();
     const { token } = antdTheme.useToken();
     
+    // Entity selector state (from /rjsf)
+    const [entities, setEntities] = useState<any[]>([]);
+    const [selectedEntity, setSelectedEntity] = useState<string | null>(null);
+    const [mode, setMode] = useState<'minimal' | 'recommended' | 'all'>('recommended');
+    const [loading, setLoading] = useState(false);
+
     // Inputs state
     const [jsonDataStr, setJsonDataStr] = useState<string>(defaultJsonInput);
     const [optionsStr, setOptionsStr] = useState<string>(defaultOptionsInput);
-    const [targetSchema, setTargetSchema] = useState<string>('crm');
-    const [targetTable, setTargetTable] = useState<string>('contacts');
 
 
     const [generatedSchema, setGeneratedSchema] = useState<any>(null);
@@ -172,8 +225,8 @@ const TestRJSFGenForm = () => {
     const [uiSchemaStr, setUiSchemaStr] = useState<string>('');
     const [dbSchemaStr, setDbSchemaStr] = useState<string>('');
 
-    const [_loading, setLoading] = useState(false);
     const [generating, setGenerating] = useState(false);
+    const [generatingEntity, setGeneratingEntity] = useState(false);
     const [saving, setSaving] = useState(false);
     const [isGlobal, setIsGlobal] = useState(true);
     const [formName, setFormName] = useState<string>('');
@@ -182,7 +235,11 @@ const TestRJSFGenForm = () => {
     const [masterFields, setMasterFields] = useState<{ 
         key: string, 
         display_name: string, 
-        type?: string
+        type?: string,
+        foreign_key?: {
+            source_table: string,
+            display_column: string
+        }
     }[]>([]);
 
     // States for "Add Field" UI
@@ -221,6 +278,30 @@ const TestRJSFGenForm = () => {
     const [selectedFormId, setSelectedFormId] = useState<string | null>(null);
     const [loadingSavedForms, setLoadingSavedForms] = useState(false);
 
+    // Drawer visibility states
+    const [jsonInputDrawerOpen, setJsonInputDrawerOpen] = useState(false);
+    const [schemaEditorDrawerOpen, setSchemaEditorDrawerOpen] = useState(false);
+
+    // Edit Field Modal states
+    const [isEditFieldModalOpen, setIsEditFieldModalOpen] = useState(false);
+    const [editingFieldPath, setEditingFieldPath] = useState('');
+    const [editFieldTitle, setEditFieldTitle] = useState('');
+    const [editFieldPlaceholder, setEditFieldPlaceholder] = useState('');
+    const [editFieldDefaultValue, setEditFieldDefaultValue] = useState('');
+    const [editFieldType, setEditFieldType] = useState('default');
+    const [editFieldRequired, setEditFieldRequired] = useState(false);
+    const [editFieldReadonly, setEditFieldReadonly] = useState(false);
+    const [editFieldHidden, setEditFieldHidden] = useState(false);
+    const [editFieldManualOptions, setEditFieldManualOptions] = useState('');
+    const [editLookupSchema, setEditLookupSchema] = useState('');
+    const [editLookupTable, setEditLookupTable] = useState('');
+    const [editLookupColumn, setEditLookupColumn] = useState('');
+    const [editLookupNoId, setEditLookupNoId] = useState(false);
+    const [editFieldDependsOn, setEditFieldDependsOn] = useState('');
+    const [editFieldDependsOnField, setEditFieldDependsOnField] = useState('');
+    const [editFieldDependsOnColumn, setEditFieldDependsOnColumn] = useState('');
+    const [editFieldAcceptedFileTypes, setEditFieldAcceptedFileTypes] = useState('');
+
     const WIDGET_OPTIONS = [
         { label: 'Default', value: 'default' },
         { label: 'Input', value: 'text' },
@@ -249,18 +330,111 @@ const TestRJSFGenForm = () => {
         { label: 'Hidden', value: 'hidden' },
     ];
 
-    // Fetch saved forms on mount
-    const fetchSavedForms = async () => {
+    // Fetch entities for entity dropdown (same as /rjsf)
+    useEffect(() => {
+        const fetchEntities = async () => {
+            setLoading(true);
+            try {
+                const { data, error } = await supabase
+                    .schema('core')
+                    .from('view_configs')
+                    .select(`
+                        entity_type,
+                        entities:entity_id (
+                            entity_schema
+                        )
+                    `)
+                    .eq('is_active', true);
+
+                if (error) throw error;
+
+                const formatted = data?.map((item: any) => {
+                    const schema = item.entities?.entity_schema || 'public';
+                    const type = item.entity_type;
+                    const fullName = type.startsWith(`${schema}.`) ? type : `${schema}.${type}`;
+                    return { label: fullName, value: fullName };
+                }) || [];
+
+                formatted.sort((a, b) => a.label.localeCompare(b.label));
+                setEntities(formatted);
+            } catch (err: any) {
+                message.error('Failed to fetch entities: ' + err.message);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchEntities();
+    }, []);
+
+    // Fetch entity metadata when selectedEntity changes (populates Add Field suggestions)
+    useEffect(() => {
+        const fetchMetadata = async () => {
+            if (!selectedEntity) {
+                setMasterFields([]);
+                return;
+            }
+            try {
+                const [schema, type] = selectedEntity.split('.');
+                const { data, error } = await supabase
+                    .schema('core')
+                    .from('entities')
+                    .select('v_metadata')
+                    .eq('entity_schema', schema)
+                    .eq('entity_type', type)
+                    .maybeSingle();
+
+                if (error) throw error;
+                if (data) {
+                    const fields = data.v_metadata || [];
+                    const formatted = fields.map((f: any) => ({
+                        key: f.key,
+                        display_name: f.display_name || f.key,
+                        type: f.type || 'string',
+                        foreign_key: f.foreign_key
+                    }));
+                    setMasterFields(formatted);
+                }
+            } catch (err: any) {
+                console.error('Failed to fetch field metadata:', err);
+            }
+        };
+        fetchMetadata();
+    }, [selectedEntity]);
+
+    // Fetch saved forms filtered by selected entity (same as /rjsf)
+    const fetchSavedForms = async (entityFilter?: string | null) => {
         setLoadingSavedForms(true);
         try {
-            const { data, error } = await supabase
+            let query = supabase
                 .schema('core')
                 .from('forms')
                 .select('id, name, organization_id')
                 .order('name', { ascending: true });
 
-            if (error) throw error;
-            setSavedForms(data || []);
+            if (entityFilter) {
+                const searchPattern = entityFilter.replace('.', '_');
+                const entityName = entityFilter.includes('.') ? entityFilter.split('.')[1] : entityFilter;
+
+                const { data, error } = await query.ilike('name', `%${searchPattern}%`);
+                if (error) throw error;
+
+                if (!data || data.length === 0) {
+                    const { data: fallbackData, error: fallbackError } = await supabase
+                        .schema('core')
+                        .from('forms')
+                        .select('id, name, organization_id')
+                        .ilike('name', `%${entityName}%`)
+                        .order('name', { ascending: true });
+                    if (fallbackError) throw fallbackError;
+                    setSavedForms(fallbackData || []);
+                } else {
+                    setSavedForms(data || []);
+                }
+            } else {
+                const { data, error } = await query;
+                if (error) throw error;
+                setSavedForms(data || []);
+            }
         } catch (err: any) {
             console.error('Failed to fetch saved forms:', err);
         } finally {
@@ -269,8 +443,8 @@ const TestRJSFGenForm = () => {
     };
 
     useEffect(() => {
-        fetchSavedForms();
-    }, []);
+        fetchSavedForms(selectedEntity);
+    }, [selectedEntity]);
 
     const handleLoadForm = async (formId: string) => {
         if (!formId) return;
@@ -325,6 +499,21 @@ const TestRJSFGenForm = () => {
         }
     };
 
+    // Lookup pre-fill when field name changes (uses foreign_key from entity metadata)
+    useEffect(() => {
+        if (isAddingField && newFieldName) {
+            const fieldMeta = masterFields.find(f => f.key === newFieldName);
+            if (fieldMeta?.foreign_key) {
+                setLookupTable(fieldMeta.foreign_key.source_table || '');
+                setLookupColumn(fieldMeta.foreign_key.display_column || '');
+            }
+            if (!newFieldTitle) {
+                setNewFieldTitle(fieldMeta?.display_name || newFieldName);
+            }
+        }
+    }, [newFieldName, isAddingField, masterFields]);
+
+    // Generate via core.utils_form_gen (JSON paste approach)
     const handleGenerate = async () => {
         setGenerating(true);
         try {
@@ -358,25 +547,29 @@ const TestRJSFGenForm = () => {
                     ui_schema: (data as any).ui_schema || (data as any).uiSchema,
                     db_schema: (data as any).db_schema || (data as any).dbSchema
                 };
-                const schemas = alignSchema(rawSchemas, targetSchema, targetTable);
+                // Use selectedEntity for db_schema if available
+                const [entSchema, entTable] = selectedEntity?.split('.') || ['', ''];
+                const schemas = alignSchema(rawSchemas, entSchema || undefined, entTable || undefined);
                 setGeneratedSchema(schemas);
                 
-                // Cleanup ui_schema of any invalid 'input' widgets recursively
                 const cleanUiSchema = cleanupUiSchema(schemas.ui_schema);
 
                 setDataSchemaStr(JSON.stringify(schemas.data_schema, null, 2));
                 setUiSchemaStr(JSON.stringify(cleanUiSchema, null, 2));
                 setDbSchemaStr(JSON.stringify(schemas.db_schema, null, 2));
 
-
                 // Set default form name
-                setFormName(`generated_form_${Date.now().toString().slice(-4)}`);
+                if (selectedEntity) {
+                    const [s, t] = selectedEntity.split('.');
+                    setFormName(`${s}_${t}_gen`);
+                } else {
+                    setFormName(`generated_form_${Date.now().toString().slice(-4)}`);
+                }
 
-                // Set current uiLayout
                 setUiLayout(schemas.ui_schema?.['ui:layout'] || [[]]);
 
-                // Extract master fields for sidebar additions
-                if (schemas.data_schema && schemas.data_schema.properties) {
+                // Only update masterFields from schema if entity metadata is not loaded
+                if (!selectedEntity && schemas.data_schema?.properties) {
                     const fields = Object.keys(schemas.data_schema.properties).map(key => ({
                         key,
                         display_name: schemas.data_schema.properties[key].title || key,
@@ -385,12 +578,61 @@ const TestRJSFGenForm = () => {
                     setMasterFields(fields);
                 }
 
-                message.success('Schema generated successfully from JSON');
+                message.success('Schema generated successfully from JSON via core.utils_form_gen');
             }
         } catch (err: any) {
             message.error('Generation failed: ' + err.message);
         } finally {
             setGenerating(false);
+        }
+    };
+
+    // Generate via api_new_generate_form_schema_v3 (entity dropdown approach, from /rjsf)
+    const handleGenerateFromEntity = async () => {
+        if (!selectedEntity) return;
+        setGeneratingEntity(true);
+        try {
+            const { data, error } = await supabase.schema('core').rpc('api_new_generate_form_schema_v3', {
+                p_entity_name: selectedEntity,
+                p_options: {
+                    mode,
+                    includeForeignKeyFields: true,
+                    includeSystemFields: false,
+                    includeReadOnlyFields: false,
+                    expandJsonbFields: true,
+                    generateRequired: true
+                }
+            });
+
+            if (error) throw error;
+
+            if (data) {
+                const schemas = {
+                    data_schema: (data as any).data_schema || (data as any).dataSchema,
+                    ui_schema: (data as any).ui_schema || (data as any).uiSchema,
+                    db_schema: (data as any).db_schema || (data as any).dbSchema
+                };
+                setGeneratedSchema(schemas);
+
+                const cleanUiSchema = cleanupUiSchema(schemas.ui_schema);
+
+                setDataSchemaStr(JSON.stringify(schemas.data_schema, null, 2));
+                setUiSchemaStr(JSON.stringify(cleanUiSchema, null, 2));
+                setDbSchemaStr(JSON.stringify(schemas.db_schema, null, 2));
+
+                const [schemaName, entityName] = selectedEntity.split('.');
+                let suffix = 'form';
+                if (mode === 'minimal') suffix = 'min';
+                else if (mode === 'all') suffix = 'custom';
+                setFormName(`${schemaName}_${entityName}_${suffix}`);
+
+                setUiLayout(schemas.ui_schema?.['ui:layout'] || [[]]);
+                message.success('Schema generated successfully from entity');
+            }
+        } catch (err: any) {
+            message.error('Entity generation failed: ' + err.message);
+        } finally {
+            setGeneratingEntity(false);
         }
     };
 
@@ -741,64 +983,262 @@ const TestRJSFGenForm = () => {
         }
     };
 
-    const handleWidgetChange = (fieldPath: string, widget: string) => {
+
+    const openEditFieldModal = (fieldPath: string) => {
         try {
-            const currentUi = JSON.parse(uiSchemaStr);
-            const currentData = JSON.parse(dataSchemaStr);
+            const currentData = JSON.parse(dataSchemaStr || '{"type":"object","properties":{},"required":[]}');
+            const currentUi = JSON.parse(uiSchemaStr || '{}');
             
             const pathParts = fieldPath.split('.');
             const propPath = ['properties', ...pathParts.flatMap(p => [p, 'properties'])].slice(0, -1);
             
-            if (widget === 'default') {
-                unset(currentUi, [fieldPath, 'ui:widget']);
+            const property = get(currentData, propPath);
+            if (!property) {
+                message.error('Field not found in data schema');
+                return;
+            }
+
+            setEditingFieldPath(fieldPath);
+            setEditFieldTitle(property.title || '');
+            
+            let defaultValue = '';
+            if (property.default !== undefined) {
+                defaultValue = typeof property.default === 'object' ? JSON.stringify(property.default) : String(property.default);
+            }
+            setEditFieldDefaultValue(defaultValue);
+
+            // Required status
+            let isReq = false;
+            const parentPath = propPath.slice(0, -2);
+            const parentObj = parentPath.length === 0 ? currentData : get(currentData, parentPath);
+            const fieldKey = pathParts[pathParts.length - 1];
+            if (parentObj && Array.isArray(parentObj.required)) {
+                isReq = parentObj.required.includes(fieldKey);
+            }
+            setEditFieldRequired(isReq);
+
+            // UI Schema options
+            const uiPlaceholder = get(currentUi, [fieldPath, 'ui:placeholder'], '');
+            setEditFieldPlaceholder(uiPlaceholder);
+
+            const uiReadonly = get(currentUi, [fieldPath, 'ui:readonly'], false);
+            setEditFieldReadonly(uiReadonly);
+
+            const uiWidget = get(currentUi, [fieldPath, 'ui:widget']);
+            const isHidden = uiWidget === 'Hidden' || uiWidget === 'hidden';
+            setEditFieldHidden(isHidden);
+
+            // Determine editFieldType
+            let currentWidget = uiWidget || 'default';
+            if (currentWidget === 'SelectCustomWidget') {
+                const mode = get(currentUi, [fieldPath, 'ui:options', 'mode'], 'single');
+                if (mode === 'multiple') currentWidget = 'SelectMultiple';
+                else if (mode === 'tags') currentWidget = 'SelectMultiTags';
+                else currentWidget = 'SelectSingle';
+            }
+            setEditFieldType(currentWidget);
+
+            // Manual options
+            if (Array.isArray(property.enum)) {
+                setEditFieldManualOptions(property.enum.join(', '));
             } else {
-                set(currentUi, [fieldPath, 'ui:widget'], widget);
-                
-                const fieldProp = get(currentData, propPath);
-                if (fieldProp) {
-                    if (widget === 'checkbox') {
-                        fieldProp.type = 'boolean';
-                    } else if (widget === 'DateRangePickerWidget' || widget === 'DateTimeRangePickerWidget' || widget === 'EditableTableWidget' || widget === 'TagsWidget') {
-                        fieldProp.type = 'array';
-                        if (!fieldProp.items) {
-                            fieldProp.items = { type: 'string' };
-                        }
-                    } else if (widget === 'updown' || widget === 'range') {
-                        fieldProp.type = 'number';
-                        delete fieldProp.format;
-                    } else if (widget === 'text' || widget === 'textarea' || widget === 'password' || widget === 'date' || widget === 'date-time' || widget === 'SelectSingle' || widget === 'SelectCustomWidget' || widget === 'SelectableTags' || widget === 'SelectMultiple' || widget === 'SelectMultiTags' || widget === 'email' || widget === 'url' || widget === 'phone' || widget === 'hidden') {
-                        fieldProp.type = 'string';
-                        if (widget === 'email') fieldProp.format = 'email';
-                        else if (widget === 'url') fieldProp.format = 'uri';
-                        else delete fieldProp.format;
+                setEditFieldManualOptions('');
+            }
+
+            // Lookup enum configuration
+            const enumConfig = property.enum && typeof property.enum === 'object' ? property.enum : null;
+            if (enumConfig) {
+                const fullTable = enumConfig.table || '';
+                let schema = '';
+                let table = fullTable;
+                if (fullTable.includes('.')) {
+                    const parts = fullTable.split('.');
+                    schema = parts[0];
+                    table = parts.slice(1).join('.');
+                }
+                setEditLookupSchema(schema);
+                setEditLookupTable(table);
+                setEditLookupColumn(enumConfig.column || '');
+                setEditLookupNoId(!!enumConfig.no_id);
+                setEditFieldDependsOn(enumConfig.dependsOn || '');
+                setEditFieldDependsOnField(enumConfig.dependsOnField || '');
+                setEditFieldDependsOnColumn(enumConfig.dependsOnColumn || '');
+            } else {
+                setEditLookupSchema('');
+                setEditLookupTable('');
+                setEditLookupColumn('');
+                setEditLookupNoId(false);
+                setEditFieldDependsOn('');
+                setEditFieldDependsOnField('');
+                setEditFieldDependsOnColumn('');
+            }
+
+            // File accepted types
+            const accept = get(currentUi, [fieldPath, 'ui:options', 'accept'], '');
+            setEditFieldAcceptedFileTypes(accept);
+
+            setIsEditFieldModalOpen(true);
+        } catch (e) {
+            message.error('Error loading field details: ' + (e as Error).message);
+        }
+    };
+
+    const handleSaveFieldConfig = () => {
+        try {
+            const currentData = JSON.parse(dataSchemaStr || '{"type":"object","properties":{},"required":[]}');
+            const currentUi = JSON.parse(uiSchemaStr || '{}');
+
+            const pathParts = editingFieldPath.split('.');
+            const propPath = ['properties', ...pathParts.flatMap(p => [p, 'properties'])].slice(0, -1);
+            
+            const property = get(currentData, propPath);
+            if (!property) {
+                message.error('Field not found in data schema');
+                return;
+            }
+
+            // Update title
+            property.title = editFieldTitle || pathParts[pathParts.length - 1];
+
+            // Update default value
+            if (editFieldDefaultValue !== '') {
+                property.default = property.type === 'number' ? Number(editFieldDefaultValue) : editFieldDefaultValue;
+            } else {
+                delete property.default;
+            }
+
+            // Update required status in parent
+            const parentPath = propPath.slice(0, -2);
+            const parentObj = parentPath.length === 0 ? currentData : get(currentData, parentPath);
+            const fieldKey = pathParts[pathParts.length - 1];
+            if (parentObj) {
+                const required = parentObj.required || [];
+                if (editFieldRequired) {
+                    if (!required.includes(fieldKey)) {
+                        required.push(fieldKey);
+                    }
+                } else {
+                    const idx = required.indexOf(fieldKey);
+                    if (idx > -1) {
+                        required.splice(idx, 1);
                     }
                 }
+                parentObj.required = required;
+            }
 
-                if (widget === 'SelectCustomWidget' || widget === 'SelectSingle' || widget === 'SelectMultiple' || widget === 'SelectMultiTags') {
-                    const actualWidget = 'SelectCustomWidget';
-                    set(currentUi, [fieldPath, 'ui:widget'], actualWidget);
-                    
-                    let mode = 'single';
-                    if (widget === 'SelectMultiple') mode = 'multiple';
-                    if (widget === 'SelectMultiTags') mode = 'tags';
+            // Update UI schema placeholder and readonly
+            if (editFieldPlaceholder) {
+                set(currentUi, [editingFieldPath, 'ui:placeholder'], editFieldPlaceholder);
+            } else {
+                unset(currentUi, [editingFieldPath, 'ui:placeholder']);
+            }
 
-                    const existingOptions = get(currentUi, [fieldPath, 'ui:options']) || {};
-                    set(currentUi, [fieldPath, 'ui:options'], { 
-                        ...existingOptions,
-                        mode, 
-                        colSpan: existingOptions.colSpan || 12,
-                        reference_api: existingOptions.reference_api || '/api/v4/logical/fetch/...'
-                    });
-                } else if (widget === 'SelectableTags') {
-                    set(currentUi, [fieldPath, 'ui:widget'], 'SelectableTags');
+            if (editFieldReadonly) {
+                set(currentUi, [editingFieldPath, 'ui:readonly'], true);
+            } else {
+                unset(currentUi, [editingFieldPath, 'ui:readonly']);
+            }
+
+            // Figure out the widget details
+            let activeWidget = editFieldType;
+            let rjsfType = property.type || 'string';
+
+            if (activeWidget === 'checkbox') {
+                rjsfType = 'boolean';
+            } else if (activeWidget === 'DateRangePickerWidget' || activeWidget === 'DateTimeRangePickerWidget' || activeWidget === 'EditableTableWidget' || activeWidget === 'TagsWidget') {
+                rjsfType = 'array';
+            } else if (activeWidget === 'updown' || activeWidget === 'range') {
+                rjsfType = 'number';
+            } else if (activeWidget === 'default') {
+                if (rjsfType === 'boolean') activeWidget = 'checkbox';
+                else if (rjsfType === 'number') activeWidget = 'text';
+                else activeWidget = 'text';
+            }
+
+            property.type = rjsfType;
+            if (rjsfType === 'array' && !property.items) {
+                property.items = { type: 'string' };
+            }
+
+            // Formats
+            if (activeWidget === 'email') {
+                property.format = 'email';
+            } else if (activeWidget === 'url') {
+                property.format = 'uri';
+            } else {
+                delete property.format;
+            }
+
+            // Manual Options vs Lookup
+            if (activeWidget === 'SelectCustomWidget' || activeWidget === 'SelectSingle' || activeWidget === 'SelectMultiple' || activeWidget === 'SelectMultiTags') {
+                if (editLookupTable) {
+                    const enumConfig: any = {
+                        table: editLookupSchema ? `${editLookupSchema}.${editLookupTable}` : editLookupTable,
+                        column: editLookupColumn,
+                        no_id: editLookupNoId
+                    };
+                    if (editFieldDependsOn) {
+                        enumConfig.dependsOn = editFieldDependsOn;
+                        enumConfig.dependsOnField = editFieldDependsOnField || editFieldDependsOn;
+                        enumConfig.dependsOnColumn = editFieldDependsOnColumn;
+                    }
+                    property.enum = enumConfig;
+                } else if (editFieldManualOptions) {
+                    property.enum = editFieldManualOptions.split(',').map(s => s.trim()).filter(Boolean);
+                } else {
+                    delete property.enum;
+                }
+            } else if (editFieldManualOptions) {
+                property.enum = editFieldManualOptions.split(',').map(s => s.trim()).filter(Boolean);
+            } else {
+                delete property.enum;
+            }
+
+            // UI options / layout widget
+            if (editFieldHidden) {
+                set(currentUi, [editingFieldPath, 'ui:widget'], 'Hidden');
+            } else if (activeWidget === 'SelectCustomWidget' || activeWidget === 'SelectSingle' || activeWidget === 'SelectMultiple' || activeWidget === 'SelectMultiTags') {
+                const actualWidget = 'SelectCustomWidget';
+                set(currentUi, [editingFieldPath, 'ui:widget'], actualWidget);
+                
+                let mode = 'single';
+                if (activeWidget === 'SelectMultiple') mode = 'multiple';
+                if (activeWidget === 'SelectMultiTags') mode = 'tags';
+
+                const existingOptions = get(currentUi, [editingFieldPath, 'ui:options']) || {};
+                set(currentUi, [editingFieldPath, 'ui:options'], { 
+                    ...existingOptions,
+                    mode, 
+                    colSpan: existingOptions.colSpan || 12,
+                    reference_api: existingOptions.reference_api || '/api/v4/logical/fetch/...'
+                });
+            } else if (activeWidget === 'phone') {
+                set(currentUi, [editingFieldPath, 'ui:options'], { inputType: 'tel' });
+                set(currentUi, [editingFieldPath, 'ui:widget'], 'phone');
+            } else if (activeWidget === 'file') {
+                set(currentUi, [editingFieldPath, 'ui:widget'], 'file');
+                if (editFieldAcceptedFileTypes) {
+                    set(currentUi, [editingFieldPath, 'ui:options', 'accept'], editFieldAcceptedFileTypes);
+                } else {
+                    unset(currentUi, [editingFieldPath, 'ui:options', 'accept']);
+                }
+            } else {
+                if (activeWidget === 'email' || activeWidget === 'url' || activeWidget === 'text') {
+                    unset(currentUi, [editingFieldPath, 'ui:widget']);
+                } else {
+                    set(currentUi, [editingFieldPath, 'ui:widget'], activeWidget);
                 }
             }
 
-            setUiSchemaStr(JSON.stringify(currentUi, null, 2));
+            const cleanUi = cleanupUiSchema(currentUi);
+
             setDataSchemaStr(JSON.stringify(currentData, null, 2));
-            message.info(`Widget and data type for "${fieldPath}" updated`);
+            setUiSchemaStr(JSON.stringify(cleanUi, null, 2));
+            
+            setIsEditFieldModalOpen(false);
+            message.success(`Field "${editingFieldPath}" config updated`);
         } catch (e) {
-            message.error('Error updating widget: ' + (e as Error).message);
+            message.error('Error saving field config: ' + (e as Error).message);
         }
     };
 
@@ -825,87 +1265,91 @@ const TestRJSFGenForm = () => {
         ? getFlattenedFields(generatedSchema.data_schema.properties)
         : [];
 
-    return (
-        <div style={{ padding: 24 }}>
-            <Card title="RJSF JSON Generator Test Bench (/rjsf-gen)">
-                <Space direction="vertical" style={{ width: '100%' }} size="large">
-                    
-                    <Row gutter={16}>
-                        <Col span={12}>
-                            <Card size="small" title="P_JSON_DATA (Input JSON)" extra={<Text type="secondary">Raw schema fields & sample data</Text>}>
-                                <AceEditor
-                                    mode="json"
-                                    theme={isDarkMode ? "monokai" : "github"}
-                                    value={jsonDataStr}
-                                    onChange={setJsonDataStr}
-                                    width="100%"
-                                    height="300px"
-                                    fontSize={12}
-                                    setOptions={{ useWorker: false, showPrintMargin: false }}
-                                />
-                            </Card>
-                        </Col>
-                        <Col span={12}>
-                            <Card size="small" title="P_OPTIONS (Generation Switches)" extra={<Text type="secondary">Options configuration</Text>}>
-                                <AceEditor
-                                    mode="json"
-                                    theme={isDarkMode ? "monokai" : "github"}
-                                    value={optionsStr}
-                                    onChange={setOptionsStr}
-                                    width="100%"
-                                    height="300px"
-                                    fontSize={12}
-                                    setOptions={{ useWorker: false, showPrintMargin: false }}
-                                />
-                            </Card>
-                        </Col>
-                    </Row>
+    const filteredMasterFieldsOptions = (() => {
+        const addedKeys = new Set(flattenedFields.map(f => f.path));
+        const available = masterFields.filter(f => !addedKeys.has(f.key));
+        const opts = available.map(f => ({ label: f.display_name, value: f.key }));
+        if (newFieldName && !opts.some(o => o.value === newFieldName)) {
+            opts.unshift({ label: `Add custom: "${newFieldName}"`, value: newFieldName });
+        }
+        return opts;
+    })();
 
+    return (
+        <div style={{ padding: 12 }}>
+            <Space direction="vertical" style={{ width: '100%' }} size="middle">
+                    
                     <Card size="small" type="inner" title="Generator Controls">
-                        <Space direction="horizontal" wrap size="middle">
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                <Switch
-                                    checked={isGlobal}
-                                    onChange={setIsGlobal}
+                        <Space direction="horizontal" wrap size="small" align="center" style={{ width: '100%' }}>
+                            {/* 1. Configure JSON Input button */}
+                            
+
+                            {/* 2. Entity Selector */}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                <Text strong style={{ fontSize: '12px' }}>Entity:</Text>
+                                <Select
+                                    style={{ width: 220 }}
+                                    placeholder="Select an entity"
+                                    options={entities}
+                                    loading={loading}
+                                    value={selectedEntity}
+                                    onChange={setSelectedEntity}
+                                    showSearch
+                                    allowClear
+                                    optionFilterProp="label"
                                     size="small"
                                 />
-                                <Text strong>Global Form (No Org ID)</Text>
                             </div>
-                            <div>
-                                <Text strong>Schema: </Text>
-                                <Input
-                                    style={{ width: 120 }}
-                                    placeholder="e.g. crm"
-                                    value={targetSchema}
-                                    onChange={(e) => setTargetSchema(e.target.value)}
-                                />
+
+                            {/* 3. Mode selector */}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                <Text strong style={{ fontSize: '12px' }}>Mode:</Text>
+                                <Radio.Group value={mode} onChange={(e) => setMode(e.target.value)} size="small">
+                                    <Radio.Button value="minimal">Minimal</Radio.Button>
+                                    <Radio.Button value="recommended">Recommended</Radio.Button>
+                                    <Radio.Button value="all">All</Radio.Button>
+                                </Radio.Group>
                             </div>
-                            <div>
-                                <Text strong>Table: </Text>
-                                <Input
-                                    style={{ width: 150 }}
-                                    placeholder="e.g. contacts"
-                                    value={targetTable}
-                                    onChange={(e) => setTargetTable(e.target.value)}
-                                />
-                            </div>
+
+                            {/* 4. Global Switch as Tooltip */}
+                            <Tooltip title="Global Form (No Org ID restriction)">
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                    <Switch
+                                        checked={isGlobal}
+                                        onChange={setIsGlobal}
+                                        size="small"
+                                    />
+                                    <Text strong style={{ fontSize: '12px' }}>Global</Text>
+                                </div>
+                            </Tooltip>
+
+                            {/* 5. Generate Entity button */}
                             <Button
                                 type="primary"
                                 icon={<ThunderboltOutlined />}
-                                onClick={handleGenerate}
-                                loading={generating}
+                                onClick={handleGenerateFromEntity}
+                                loading={generatingEntity}
+                                disabled={!selectedEntity}
+                                size="small"
                             >
-                                Generate Form via core.utils_form_gen
+                                Generate via Entity
                             </Button>
-
-
-                            <div style={{ borderLeft: `1px solid ${token.colorBorder}`, paddingLeft: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
-                                <Text strong>Saved Forms: </Text>
+                            <Button
+                                type="primary"
+                                icon={<Code size={14} />}
+                                onClick={() => setJsonInputDrawerOpen(true)}
+                                size="small"
+                            >
+                                Configure JSON Input
+                            </Button>
+                            {/* 6. Saved Forms dropdown */}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                <Text strong style={{ fontSize: '12px' }}>Saved Forms:</Text>
                                 <Select
-                                    style={{ width: 300 }}
-                                    placeholder="Select a saved form to edit"
+                                    style={{ width: 220 }}
+                                    placeholder={selectedEntity ? `Forms for ${selectedEntity}` : 'Select a saved form'}
                                     options={savedForms.map(f => ({
-                                        label: f.name,
+                                        label: f.name + (f.organization_id ? '' : ' 🌐'),
                                         value: f.id,
                                     }))}
                                     loading={loadingSavedForms}
@@ -914,15 +1358,21 @@ const TestRJSFGenForm = () => {
                                     allowClear
                                     showSearch
                                     optionFilterProp="label"
+                                    size="small"
                                 />
                             </div>
                         </Space>
                     </Card>
 
-                    {generatedSchema && (
-                        <Row gutter={16}>
+                    {generatedSchema ? (
+                        <Row gutter={16} align="top">
+                            {/* Left Panel: Form Fields & Widgets */}
                             <Col span={6}>
-                                <Card size="small" title="Form Fields" style={{ height: '100%', overflowY: 'auto', maxHeight: '1000px' }}>
+                                <Card 
+                                    size="small" 
+                                    title={`Form Fields & Widgets (${flattenedFields.length})`}
+                                    bodyStyle={{ maxHeight: 'calc(100vh - 200px)', overflowY: 'auto' }}
+                                >
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                                         {flattenedFields.map(field => {
                                             const currentUi = JSON.parse(uiSchemaStr || '{}');
@@ -937,19 +1387,33 @@ const TestRJSFGenForm = () => {
                                             return (
                                                 <div key={field.path} style={{
                                                     display: 'flex',
-                                                    flexDirection: 'column',
-                                                    gap: 4,
-                                                    padding: '8px',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'space-between',
+                                                    padding: '6px 8px',
                                                     background: field.depth > 0 ? token.colorFillAlter : token.colorFillSecondary,
                                                     border: `1px solid ${token.colorBorderSecondary}`,
                                                     borderRadius: token.borderRadiusLG,
                                                     marginLeft: field.depth * 16,
-                                                    borderLeft: field.depth > 0 ? `2px solid ${token.colorBorder}` : 'none'
+                                                    borderLeft: field.depth > 0 ? `2px solid ${token.colorBorder}` : 'none',
+                                                    gap: 8
                                                 }}>
-                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                        <Text strong={field.depth === 0} type={field.depth > 0 ? "secondary" : undefined} ellipsis style={{ maxWidth: '80%' }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, flex: 1, minWidth: 0 }}>
+                                                        <Text strong={field.depth === 0} type={field.depth > 0 ? "secondary" : undefined} ellipsis>
                                                             {field.label}
                                                         </Text>
+                                                    </div>
+                                                    <Space size={2} style={{ flexShrink: 0 }}>
+                                                        <Tooltip title={`Widget: ${WIDGET_OPTIONS.find(o => o.value === currentWidget)?.label || currentWidget}`}>
+                                                            <span style={{ display: 'flex', alignItems: 'center', marginRight: 4 }}>
+                                                                {getWidgetIcon(currentWidget)}
+                                                            </span>
+                                                        </Tooltip>
+                                                        <Button
+                                                            type="text"
+                                                            size="small"
+                                                            icon={<Settings2 size={14} />}
+                                                            onClick={() => openEditFieldModal(field.path)}
+                                                        />
                                                         <Button
                                                             type="text"
                                                             danger
@@ -957,17 +1421,7 @@ const TestRJSFGenForm = () => {
                                                             icon={<Trash2 size={14} />}
                                                             onClick={() => handleDeleteField(field.path)}
                                                         />
-                                                    </div>
-                                                    <Select
-                                                        size="small"
-                                                        value={currentWidget}
-                                                        options={WIDGET_OPTIONS}
-                                                        onChange={(val) => handleWidgetChange(field.path, val)}
-                                                        style={{ width: '100%' }}
-                                                        suffixIcon={<Settings2 size={12} />}
-                                                        showSearch
-                                                        optionFilterProp="label"
-                                                    />
+                                                    </Space>
                                                 </div>
                                             );
                                         })}
@@ -1001,12 +1455,8 @@ const TestRJSFGenForm = () => {
                                                     value={newFieldName}
                                                     onChange={setNewFieldName}
                                                     style={{ width: '100%' }}
-                                                    options={masterFields.map(f => ({ label: f.display_name, value: f.key }))}
-                                                    onSearch={(val) => {
-                                                        if (!masterFields.find(f => f.key === val)) {
-                                                            setNewFieldName(val);
-                                                        }
-                                                    }}
+                                                    options={filteredMasterFieldsOptions}
+                                                    onSearch={setNewFieldName}
                                                     dropdownRender={(menu) => (
                                                         <>
                                                             {menu}
@@ -1150,116 +1600,130 @@ const TestRJSFGenForm = () => {
                                             </div>
                                         )}
                                     </div>
-                                </Card>
 
-                                <Card size="small" title="Custom Submit Buttons" style={{ marginTop: 16 }}>
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                                        {(() => {
-                                            try {
-                                                const ui = JSON.parse(uiSchemaStr || '{}');
-                                                const buttons = ui['ui:submitButtons'] || [];
-                                                return buttons.map((btn: any) => (
-                                                    <div key={btn.label} style={{
-                                                        display: 'flex',
-                                                        justifyContent: 'space-between',
-                                                        alignItems: 'center',
-                                                        padding: '8px',
-                                                        background: token.colorFillSecondary,
-                                                        border: `1px solid ${token.colorBorderSecondary}`,
-                                                        borderRadius: token.borderRadiusLG
-                                                    }}>
-                                                        <Space>
-                                                            <Text strong>{btn.label}</Text>
-                                                            <Text type="secondary" style={{ fontSize: '10px' }}>({btn.variant})</Text>
-                                                        </Space>
-                                                        <Button
-                                                            type="text"
-                                                            danger
-                                                            size="small"
-                                                            icon={<Trash2 size={14} />}
-                                                            onClick={() => handleDeleteButton(btn.label)}
-                                                        />
+                                    <Card size="small" title="Custom Submit Buttons" style={{ marginTop: 16 }}>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                                            {(() => {
+                                                try {
+                                                    const ui = JSON.parse(uiSchemaStr || '{}');
+                                                    const buttons = ui['ui:submitButtons'] || [];
+                                                    return buttons.map((btn: any) => (
+                                                        <div key={btn.label} style={{
+                                                            display: 'flex',
+                                                            justifyContent: 'space-between',
+                                                            alignItems: 'center',
+                                                            padding: '8px',
+                                                            background: token.colorFillSecondary,
+                                                            border: `1px solid ${token.colorBorderSecondary}`,
+                                                            borderRadius: token.borderRadiusLG
+                                                        }}>
+                                                            <Space>
+                                                                <Text strong>{btn.label}</Text>
+                                                                <Text type="secondary" style={{ fontSize: '10px' }}>({btn.variant})</Text>
+                                                            </Space>
+                                                            <Button
+                                                                type="text"
+                                                                danger
+                                                                size="small"
+                                                                icon={<Trash2 size={14} />}
+                                                                onClick={() => handleDeleteButton(btn.label)}
+                                                            />
+                                                        </div>
+                                                    ));
+                                                } catch (e) {
+                                                    return <Text type="danger">UI Schema Error</Text>;
+                                                }
+                                            })()}
+
+                                            {!isAddingButton ? (
+                                                <Button
+                                                    type="dashed"
+                                                    block
+                                                    icon={<PlusOutlined />}
+                                                    onClick={() => setIsAddingButton(true)}
+                                                >
+                                                    Add Custom Button
+                                                </Button>
+                                            ) : (
+                                                <div style={{
+                                                    padding: '12px',
+                                                    background: token.colorFillAlter,
+                                                    borderRadius: token.borderRadiusLG,
+                                                    border: `1px dashed ${token.colorBorder}`,
+                                                    display: 'flex',
+                                                    flexDirection: 'column',
+                                                    gap: 8
+                                                }}>
+                                                    <Input
+                                                        size="small"
+                                                        placeholder="Button Label"
+                                                        value={newButtonLabel}
+                                                        onChange={(e) => setNewButtonLabel(e.target.value)}
+                                                    />
+                                                    <Select
+                                                        size="small"
+                                                        value={newButtonVariant}
+                                                        onChange={setNewButtonVariant}
+                                                        options={[
+                                                            { label: 'Primary', value: 'primary' },
+                                                            { label: 'Default', value: 'default' },
+                                                            { label: 'Dashed', value: 'dashed' },
+                                                            { label: 'Danger', value: 'danger' }
+                                                        ]}
+                                                        style={{ width: '100%' }}
+                                                    />
+                                                    <Text type="secondary" style={{ fontSize: '10px' }}>Default Values (JSON):</Text>
+                                                    <AceEditor
+                                                        mode="json"
+                                                        theme={isDarkMode ? "monokai" : "github"}
+                                                        value={newButtonDefaultValues}
+                                                        onChange={setNewButtonDefaultValues}
+                                                        width="100%"
+                                                        height="100px"
+                                                        fontSize={12}
+                                                        setOptions={{ useWorker: false, showPrintMargin: false, showGutter: false }}
+                                                    />
+                                                    <div style={{ display: 'flex', gap: 8 }}>
+                                                        <Button type="primary" size="small" onClick={handleAddCustomButton} style={{ flex: 1 }}>Add</Button>
+                                                        <Button size="small" onClick={() => setIsAddingButton(false)} style={{ flex: 1 }}>Cancel</Button>
                                                     </div>
-                                                ));
-                                            } catch (e) {
-                                                return <Text type="danger">UI Schema Error</Text>;
-                                            }
-                                        })()}
-
-                                        {!isAddingButton ? (
-                                            <Button
-                                                type="dashed"
-                                                block
-                                                icon={<PlusOutlined />}
-                                                onClick={() => setIsAddingButton(true)}
-                                            >
-                                                Add Custom Button
-                                            </Button>
-                                        ) : (
-                                            <div style={{
-                                                padding: '12px',
-                                                background: token.colorFillAlter,
-                                                borderRadius: token.borderRadiusLG,
-                                                border: `1px dashed ${token.colorBorder}`,
-                                                display: 'flex',
-                                                flexDirection: 'column',
-                                                gap: 8
-                                            }}>
-                                                <Input
-                                                    size="small"
-                                                    placeholder="Button Label"
-                                                    value={newButtonLabel}
-                                                    onChange={(e) => setNewButtonLabel(e.target.value)}
-                                                />
-                                                <Select
-                                                    size="small"
-                                                    value={newButtonVariant}
-                                                    onChange={setNewButtonVariant}
-                                                    options={[
-                                                        { label: 'Primary', value: 'primary' },
-                                                        { label: 'Default', value: 'default' },
-                                                        { label: 'Dashed', value: 'dashed' },
-                                                        { label: 'Danger', value: 'danger' }
-                                                    ]}
-                                                    style={{ width: '100%' }}
-                                                />
-                                                <Text type="secondary" style={{ fontSize: '10px' }}>Default Values (JSON):</Text>
-                                                <AceEditor
-                                                    mode="json"
-                                                    theme={isDarkMode ? "monokai" : "github"}
-                                                    value={newButtonDefaultValues}
-                                                    onChange={setNewButtonDefaultValues}
-                                                    width="100%"
-                                                    height="100px"
-                                                    fontSize={12}
-                                                    setOptions={{ useWorker: false, showPrintMargin: false, showGutter: false }}
-                                                />
-                                                <div style={{ display: 'flex', gap: 8 }}>
-                                                    <Button type="primary" size="small" onClick={handleAddCustomButton} style={{ flex: 1 }}>Add</Button>
-                                                    <Button size="small" onClick={() => setIsAddingButton(false)} style={{ flex: 1 }}>Cancel</Button>
                                                 </div>
-                                            </div>
-                                        )}
-                                    </div>
+                                            )}
+                                        </div>
+                                    </Card>
                                 </Card>
                             </Col>
+
+                            {/* Right Panel: Form Preview & Save Controls */}
                             <Col span={18}>
-                                <Space direction="vertical" style={{ width: '100%' }} size="large">
-                                    <Card size="small" type="inner" title="Schema Editors" extra={
-                                        <Space>
-                                            <Input 
-                                                placeholder="Form Name" 
-                                                value={formName} 
-                                                onChange={(e) => setFormName(e.target.value)}
-                                                style={{ width: 250 }}
-                                            />
+                                <Card 
+                                    size="small" 
+                                    title="Form Preview" 
+                                    extra={
+                                        <Space size="middle">
+                                            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                                                <Text strong>Form Name: </Text>
+                                                <Input 
+                                                    placeholder="Form Name" 
+                                                    value={formName} 
+                                                    onChange={(e) => setFormName(e.target.value)}
+                                                    style={{ width: 200 }}
+                                                />
+                                            </div>
+                                            <Button
+                                                type={schemaEditorDrawerOpen ? "primary" : "default"}
+                                                icon={<Braces size={16} />}
+                                                onClick={() => setSchemaEditorDrawerOpen(true)}
+                                            >
+                                                Schema Code
+                                            </Button>
                                             <Button
                                                 type="default"
                                                 icon={<Settings2 size={16} />}
                                                 onClick={() => setIsPageManagerVisible(true)}
                                                 disabled={!generatedSchema}
                                             >
-                                                Manage Pages
+                                                Pages
                                             </Button>
                                             <Button
                                                 type="primary"
@@ -1267,86 +1731,141 @@ const TestRJSFGenForm = () => {
                                                 onClick={handleSaveToForms}
                                                 loading={saving}
                                             >
-                                                Save
+                                                Save Layout
                                             </Button>
                                         </Space>
-                                    }>
-                                        <Tabs
-                                            defaultActiveKey="data"
-                                            items={[
-                                                {
-                                                    label: 'Data Schema',
-                                                    key: 'data',
-                                                    children: (
-                                                        <AceEditor
-                                                            mode="json"
-                                                            theme={isDarkMode ? "monokai" : "github"}
-                                                            value={dataSchemaStr}
-                                                            onChange={(val) => { setDataSchemaStr(val); }}
-                                                            width="100%"
-                                                            height="300px"
-                                                            fontSize={12}
-                                                            setOptions={{ useWorker: false }}
-                                                        />
-                                                    )
-                                                },
-                                                {
-                                                    label: 'UI Schema',
-                                                    key: 'ui',
-                                                    children: (
-                                                        <AceEditor
-                                                            mode="json"
-                                                            theme={isDarkMode ? "monokai" : "github"}
-                                                            value={uiSchemaStr}
-                                                            onChange={(val) => { setUiSchemaStr(val); }}
-                                                            width="100%"
-                                                            height="300px"
-                                                            fontSize={12}
-                                                            setOptions={{ useWorker: false }}
-                                                        />
-                                                    )
-                                                },
-                                                {
-                                                    label: 'DB Schema',
-                                                    key: 'db',
-                                                    children: (
-                                                        <AceEditor
-                                                            mode="json"
-                                                            theme={isDarkMode ? "monokai" : "github"}
-                                                            value={dbSchemaStr}
-                                                            onChange={(val) => { setDbSchemaStr(val); }}
-                                                            width="100%"
-                                                            height="100px"
-                                                            fontSize={12}
-                                                            setOptions={{ useWorker: false }}
-                                                        />
-                                                    )
-                                                }
-                                            ]}
-                                        />
-                                    </Card>
-
-                                    <Divider>Live Preview</Divider>
-
-                                    <Card size="small" type="inner" title={`Form Preview: ${formName}`}>
-                                        <RJSFCoreForm
-                                            schema={generatedSchema}
-                                            onSuccess={(data) => console.log('Saved successfully:', data)}
-                                            key={formName + dataSchemaStr.length + uiSchemaStr.length}
-                                        />
-                                    </Card>
-                                </Space>
+                                    }
+                                    bodyStyle={{ maxHeight: 'calc(100vh - 200px)', overflowY: 'auto' }}
+                                >
+                                    <RJSFCoreForm
+                                        schema={generatedSchema}
+                                        onSuccess={(data) => console.log('Saved successfully:', data)}
+                                        key={formName + dataSchemaStr.length + uiSchemaStr.length}
+                                    />
+                                </Card>
                             </Col>
                         </Row>
-                    )}
-
-                    {!generatedSchema && (
+                    ) : (
                         <Card>
-                            <Text type="secondary">Paste JSON data & options, then click "Generate Form via core.utils_form_gen" to begin.</Text>
+                            <Text type="secondary">Paste JSON data & options (click "Configure Input JSON"), then click "Generate Form via core.utils_form_gen" or select an entity to begin.</Text>
                         </Card>
                     )}
                 </Space>
-            </Card>
+
+            {/* Drawer 1: Configure Input JSON */}
+            <Drawer
+                title="Configure Input JSON & Options"
+                placement="right"
+                width={640}
+                onClose={() => setJsonInputDrawerOpen(false)}
+                open={jsonInputDrawerOpen}
+                extra={
+                    <Space>
+                        <Button
+                            type="primary"
+                            icon={<ThunderboltOutlined />}
+                            onClick={async () => {
+                                await handleGenerate();
+                                setJsonInputDrawerOpen(false);
+                            }}
+                            loading={generating}
+                        >
+                            Generate Form
+                        </Button>
+                        <Button onClick={() => setJsonInputDrawerOpen(false)}>Cancel</Button>
+                    </Space>
+                }
+            >
+                <Space direction="vertical" style={{ width: '100%' }} size="large">
+                    <Card size="small" title="P_JSON_DATA (Input JSON)" extra={<Text type="secondary">Raw schema fields & sample data</Text>}>
+                        <AceEditor
+                            mode="json"
+                            theme={isDarkMode ? "monokai" : "github"}
+                            value={jsonDataStr}
+                            onChange={setJsonDataStr}
+                            width="100%"
+                            height="300px"
+                            fontSize={12}
+                            setOptions={{ useWorker: false, showPrintMargin: false }}
+                        />
+                    </Card>
+                    <Card size="small" title="P_OPTIONS (Generation Switches)" extra={<Text type="secondary">Options configuration</Text>}>
+                        <AceEditor
+                            mode="json"
+                            theme={isDarkMode ? "monokai" : "github"}
+                            value={optionsStr}
+                            onChange={setOptionsStr}
+                            width="100%"
+                            height="200px"
+                            fontSize={12}
+                            setOptions={{ useWorker: false, showPrintMargin: false }}
+                        />
+                    </Card>
+                </Space>
+            </Drawer>
+
+            {/* Drawer 2: Schema Code Editor */}
+            <Drawer
+                title="Schema Code Editor"
+                placement="right"
+                width={720}
+                onClose={() => setSchemaEditorDrawerOpen(false)}
+                open={schemaEditorDrawerOpen}
+            >
+                <Tabs
+                    defaultActiveKey="data"
+                    items={[
+                        {
+                            label: 'Data Schema',
+                            key: 'data',
+                            children: (
+                                <AceEditor
+                                    mode="json"
+                                    theme={isDarkMode ? "monokai" : "github"}
+                                    value={dataSchemaStr}
+                                    onChange={(val) => { setDataSchemaStr(val); }}
+                                    width="100%"
+                                    height="400px"
+                                    fontSize={12}
+                                    setOptions={{ useWorker: false }}
+                                />
+                            )
+                        },
+                        {
+                            label: 'UI Schema',
+                            key: 'ui',
+                            children: (
+                                <AceEditor
+                                    mode="json"
+                                    theme={isDarkMode ? "monokai" : "github"}
+                                    value={uiSchemaStr}
+                                    onChange={(val) => { setUiSchemaStr(val); }}
+                                    width="100%"
+                                    height="400px"
+                                    fontSize={12}
+                                    setOptions={{ useWorker: false }}
+                                />
+                            )
+                        },
+                        {
+                            label: 'DB Schema',
+                            key: 'db',
+                            children: (
+                                <AceEditor
+                                    mode="json"
+                                    theme={isDarkMode ? "monokai" : "github"}
+                                    value={dbSchemaStr}
+                                    onChange={(val) => { setDbSchemaStr(val); }}
+                                    width="100%"
+                                    height="150px"
+                                    fontSize={12}
+                                    setOptions={{ useWorker: false }}
+                                />
+                            )
+                        }
+                    ]}
+                />
+            </Drawer>
 
             <PageManager
                 visible={isPageManagerVisible}
@@ -1355,6 +1874,136 @@ const TestRJSFGenForm = () => {
                 onSave={handleSaveLayout}
                 onCancel={() => setIsPageManagerVisible(false)}
             />
+
+            <Modal
+                title={`Edit Field Config: ${editingFieldPath}`}
+                open={isEditFieldModalOpen}
+                onOk={handleSaveFieldConfig}
+                onCancel={() => setIsEditFieldModalOpen(false)}
+                okText="Save"
+                width={500}
+                bodyStyle={{ maxHeight: '70vh', overflowY: 'auto', padding: '10px 0' }}
+            >
+                <Space direction="vertical" style={{ width: '100%' }} size="middle">
+                    <div>
+                        <Text strong>Field Path (Readonly)</Text>
+                        <Input value={editingFieldPath} disabled style={{ marginTop: 4 }} />
+                    </div>
+                    <div>
+                        <Text strong>Field Title</Text>
+                        <Input value={editFieldTitle} onChange={(e) => setEditFieldTitle(e.target.value)} style={{ marginTop: 4 }} />
+                    </div>
+                    <div>
+                        <Text strong>Placeholder</Text>
+                        <Input value={editFieldPlaceholder} onChange={(e) => setEditFieldPlaceholder(e.target.value)} style={{ marginTop: 4 }} />
+                    </div>
+                    <div>
+                        <Text strong>Default Value</Text>
+                        <Input value={editFieldDefaultValue} onChange={(e) => setEditFieldDefaultValue(e.target.value)} style={{ marginTop: 4 }} />
+                    </div>
+                    <div>
+                        <Text strong>Field Type / Widget</Text>
+                        <Select
+                            value={editFieldType}
+                            onChange={setEditFieldType}
+                            options={WIDGET_OPTIONS}
+                            style={{ width: '100%', marginTop: 4 }}
+                            showSearch
+                            optionFilterProp="label"
+                        />
+                    </div>
+                    <div style={{ display: 'flex', gap: 16 }}>
+                        <label style={{ fontSize: '12px', display: 'flex', alignItems: 'center', gap: 4 }}>
+                            <Switch size="small" checked={editFieldRequired} onChange={setEditFieldRequired} /> Required
+                        </label>
+                        <label style={{ fontSize: '12px', display: 'flex', alignItems: 'center', gap: 4 }}>
+                            <Switch size="small" checked={editFieldReadonly} onChange={setEditFieldReadonly} /> Readonly
+                        </label>
+                        <label style={{ fontSize: '12px', display: 'flex', alignItems: 'center', gap: 4 }}>
+                            <Switch size="small" checked={editFieldHidden} onChange={setEditFieldHidden} /> Hidden
+                        </label>
+                    </div>
+
+                    {editFieldType === 'file' && (
+                        <div>
+                            <Text strong>Accepted File Types</Text>
+                            <Input
+                                placeholder="e.g. .pdf,.jpg"
+                                value={editFieldAcceptedFileTypes}
+                                onChange={(e) => setEditFieldAcceptedFileTypes(e.target.value)}
+                                style={{ marginTop: 4 }}
+                            />
+                        </div>
+                    )}
+
+                    {(editFieldType === 'SelectCustomWidget' || editFieldType === 'SelectSingle' || editFieldType === 'SelectMultiple' || editFieldType === 'SelectMultiTags') && (
+                        <div style={{ padding: '8px', border: `1px solid ${token.colorBorderSecondary}`, borderRadius: token.borderRadiusLG, background: token.colorFillAlter }}>
+                            <Text strong style={{ fontSize: '12px' }}>Lookup Configuration (Optional)</Text>
+                            <Space direction="vertical" style={{ width: '100%', marginTop: 8 }} size="small">
+                                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                                    <Switch size="small" checked={editLookupNoId} onChange={setEditLookupNoId} />
+                                    <span style={{ fontSize: '12px' }}>Use value as ID (no_id)</span>
+                                </div>
+                                <Input 
+                                    size="small" 
+                                    placeholder="Lookup Schema (e.g. core)" 
+                                    value={editLookupSchema} 
+                                    onChange={(e) => setEditLookupSchema(e.target.value)} 
+                                />
+                                <Input 
+                                    size="small" 
+                                    placeholder="Lookup Table" 
+                                    value={editLookupTable} 
+                                    onChange={(e) => setEditLookupTable(e.target.value)} 
+                                />
+                                <Input 
+                                    size="small" 
+                                    placeholder="Lookup Column" 
+                                    value={editLookupColumn} 
+                                    onChange={(e) => setEditLookupColumn(e.target.value)} 
+                                />
+                                
+                                <div style={{ padding: '4px', background: token.colorFillSecondary, borderRadius: '4px', marginTop: 4 }}>
+                                    <div style={{ fontSize: '10px', color: token.colorTextSecondary, marginBottom: '2px' }}>CASCADING</div>
+                                    <Space direction="vertical" style={{ width: '100%' }} size="small">
+                                        <Input 
+                                            size="small" 
+                                            placeholder="Depends On (Field Name)" 
+                                            value={editFieldDependsOn} 
+                                            onChange={(e) => setEditFieldDependsOn(e.target.value)} 
+                                        />
+                                        <Input 
+                                            size="small" 
+                                            placeholder="Depends On Field" 
+                                            value={editFieldDependsOnField} 
+                                            onChange={(e) => setEditFieldDependsOnField(e.target.value)} 
+                                        />
+                                        <Input 
+                                            size="small" 
+                                            placeholder="Filter Column" 
+                                            value={editFieldDependsOnColumn} 
+                                            onChange={(e) => setEditFieldDependsOnColumn(e.target.value)} 
+                                        />
+                                    </Space>
+                                </div>
+                            </Space>
+                        </div>
+                    )}
+
+                    {(!editLookupTable || (editFieldType !== 'SelectCustomWidget' && editFieldType !== 'SelectSingle' && editFieldType !== 'SelectMultiple' && editFieldType !== 'SelectMultiTags')) && (
+                        <div>
+                            <Text strong>Manual Options (comma separated)</Text>
+                            <Input.TextArea
+                                placeholder="e.g. apple, banana, cherry"
+                                value={editFieldManualOptions}
+                                onChange={(e) => setEditFieldManualOptions(e.target.value)}
+                                rows={2}
+                                style={{ marginTop: 4 }}
+                            />
+                        </div>
+                    )}
+                </Space>
+            </Modal>
         </div>
     );
 };
