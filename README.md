@@ -1,5 +1,6 @@
 # Mini Project
 
+
 A minimal standalone project scaffolding derived from the main `vite_tanstack_bolt` project. This project includes all the core infrastructure needed for rapid module development.
 
 ## Features Included
