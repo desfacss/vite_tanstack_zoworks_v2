@@ -528,6 +528,20 @@
         "translationKey": "onboarding",
         "key": "onboarding",
         "submoduleKey": "admin-onboarding"
+      },
+      {
+        "filePath": "src/pages/TestRJSFCoreForm.tsx",
+        "routePath": "/rjsf",
+        "translationKey": "rjsf",
+        "key": "rjsf",
+        "submoduleKey": "admin-rjsf"
+      },
+      {
+        "filePath": "src/pages/TestRJSFGenForm.tsx",
+        "routePath": "/rjsf-gen",
+        "translationKey": "rjsf-gen",
+        "key": "rjsf-gen",
+        "submoduleKey": "admin-rjsf-gen"
       }
     ],
     "wa": [

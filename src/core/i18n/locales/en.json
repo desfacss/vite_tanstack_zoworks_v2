@@ -84,7 +84,9 @@
         "reviews": "Reviews",
         "branding": "Branding",
         "form-elements": "Form Elements",
-        "onboarding": "Onboarding"
+        "onboarding": "Onboarding",
+        "rjsf": "RJSF Form Bench",
+        "rjsf-gen": "RJSF JSON Generator"
       },
       "action": {
         "save": "Save",

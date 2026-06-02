@@ -135,6 +135,8 @@ const iconMap: Record<string, React.ReactNode> = {
   onboarding: <ClipboardCheck size={18} />,
   observability: <Activity size={18} />,
   saas_settings: <Settings size={18} />,
+  rjsf: <Code size={18} />,
+  'rjsf-gen': <Bot size={18} />,
   default: <FileText size={18} />,
 };
 
