@@ -8,7 +8,7 @@ import AceEditor from 'react-ace';
 import { useAuthStore, useThemeStore } from '@/core/lib/store';
 import PageManager from '@/core/components/PageManager';
 
-import ace from 'ace-builds';
+import '@/core/lib/ace-config';
 
 // Import ace modes and themes
 import 'ace-builds/src-noconflict/mode-json';
