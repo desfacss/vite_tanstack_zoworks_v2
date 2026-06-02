@@ -334,6 +334,10 @@ const RJSFCoreForm: React.FC<RJSFCoreFormProps> = ({
       } else if (!tableName.includes('.') && !schemaName) {
         fullTableName = `public.${tableName}`;
       }
+
+      if (fullTableName === 'public.dynamic' && fallbackEntityType) {
+        fullTableName = fallbackEntitySchema ? `${fallbackEntitySchema}.${fallbackEntityType}` : `public.${fallbackEntityType}`;
+      }
       // If it already has a dot, we trust the tableName contains the schema (e.g. "hr.applications")
 
       // Prepare system fields

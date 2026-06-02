@@ -534,7 +534,7 @@ const TestRJSFGenForm = () => {
                 return;
             }
 
-            const { data, error } = await supabase.schema('core').rpc('utils_form_gen', {
+            const { data, error } = await supabase.schema('core').rpc('utils_form_gen_v2', {
                 p_json_data: parsedData,
                 p_options: parsedOptions
             });
@@ -1741,6 +1741,8 @@ const TestRJSFGenForm = () => {
                                         schema={generatedSchema}
                                         onSuccess={(data) => console.log('Saved successfully:', data)}
                                         key={formName + dataSchemaStr.length + uiSchemaStr.length}
+                                        entityType={selectedEntity ? selectedEntity.split('.')[1] : undefined}
+                                        entitySchema={selectedEntity ? selectedEntity.split('.')[0] : undefined}
                                     />
                                 </Card>
                             </Col>
