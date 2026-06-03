@@ -534,7 +534,7 @@ const TestRJSFGenForm = () => {
                 return;
             }
 
-            const { data, error } = await supabase.schema('core').rpc('utils_form_gen_v2', {
+            const { data, error } = await supabase.schema('core').rpc('utils_form_gen_v3', {
                 p_json_data: parsedData,
                 p_options: parsedOptions
             });

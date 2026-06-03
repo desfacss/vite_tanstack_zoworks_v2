@@ -138,6 +138,32 @@ const transformUiSchema = (uiSchema: any, dataSchemaProperties: string[]) => {
   };
 };
 
+const unflattenObject = (obj: any): any => {
+  const result: any = {};
+  for (const key in obj) {
+    if (Object.prototype.hasOwnProperty.call(obj, key)) {
+      if (key.includes('.')) {
+        const parts = key.split('.');
+        let current = result;
+        for (let i = 0; i < parts.length; i++) {
+          const part = parts[i];
+          if (i === parts.length - 1) {
+            current[part] = obj[key];
+          } else {
+            if (!(part in current) || typeof current[part] !== 'object' || current[part] === null) {
+              current[part] = {};
+            }
+            current = current[part];
+          }
+        }
+      } else {
+        result[key] = obj[key];
+      }
+    }
+  }
+  return result;
+};
+
 const RJSFCoreForm: React.FC<RJSFCoreFormProps> = ({
   schema: inputSchema,
   formData: initialFormDataProp,
@@ -341,8 +367,9 @@ const RJSFCoreForm: React.FC<RJSFCoreFormProps> = ({
       // If it already has a dot, we trust the tableName contains the schema (e.g. "hr.applications")
 
       // Prepare system fields
+      const unflattenedValues = unflattenObject(values);
       const dataPayload = {
-        ...values,
+        ...unflattenedValues,
         ...(updateId ? { id: updateId } : {}),
         organization_id: organization.id,
         updated_by: user.id,
