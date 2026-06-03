@@ -9,7 +9,7 @@
 -- PHASE 1: Schema & RLS Existence Tests
 -- ============================================================
 
--- TEST-SQL-001: Verify core identity tables exist
+-- W-TEST-SQL-001: Verify core identity tables exist
 SELECT table_name
 FROM information_schema.tables
 WHERE table_schema = 'identity'
@@ -21,7 +21,7 @@ WHERE table_schema = 'identity'
 ORDER BY table_name;
 -- Expected: 10 rows returned
 
--- TEST-SQL-002: Verify RLS state on identity tables
+-- W-TEST-SQL-002: Verify RLS state on identity tables
 -- ⚠️ Known: organizations and users should show RLS OFF (GAP-001, GAP-002)
 SELECT
     c.relname AS table_name,
@@ -41,7 +41,7 @@ ORDER BY c.relname;
 --   user_teams         | true
 --   users              | false  ← GAP-002: P0 BUG — should be true
 
--- TEST-SQL-003: Verify audit columns on organization_users
+-- W-TEST-SQL-003: Verify audit columns on organization_users
 SELECT column_name
 FROM information_schema.columns
 WHERE table_schema = 'identity'
@@ -50,7 +50,7 @@ WHERE table_schema = 'identity'
 ORDER BY column_name;
 -- Expected: 7 rows (all 7 columns present)
 
--- TEST-SQL-004: Verify user_teams has organization_id column (required for RLS)
+-- W-TEST-SQL-004: Verify user_teams has organization_id column (required for RLS)
 SELECT column_name, is_nullable
 FROM information_schema.columns
 WHERE table_schema = 'identity'
