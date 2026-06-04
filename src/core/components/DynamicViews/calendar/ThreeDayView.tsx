@@ -22,7 +22,7 @@ const ThreeDayView: React.FC<ThreeDayViewProps> = ({ events }) => {
         
         return (
           <div key={dateStr} className="mb-4">
-            <div className="px-4 py-3 bg-gray-50">
+            <div className="px-4 py-3 border-b border-[var(--color-border)] bg-[var(--color-bg-secondary)]">
               <Title level={5} className="!mb-0">
                 {index === 0 ? 'Today' : index === 1 ? 'Tomorrow' : day.format('dddd')}
               </Title>

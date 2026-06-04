@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/core/lib/supabase';
 import { Form, Input, Select, Button, Checkbox, Space, message } from 'antd';
 import { SaveOutlined, PlusOutlined, DeleteOutlined } from '@ant-design/icons';
+import { useQueryClient } from '@tanstack/react-query';
 
 const ViewConfigEditor = ({ entityType, metadata, entitySchema }: any) => {
+  const queryClient = useQueryClient();
   console.log("yq",entityType, metadata, entitySchema);
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
@@ -235,6 +237,7 @@ const ViewConfigEditor = ({ entityType, metadata, entitySchema }: any) => {
       }
 
       message.success('Configuration saved successfully!');
+      queryClient.invalidateQueries({ queryKey: ['viewConfigEnhanced'] });
       if (savedRecord && savedRecord.length > 0) {
         setViewConfigId(savedRecord[0].id);
       }

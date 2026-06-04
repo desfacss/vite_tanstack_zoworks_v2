@@ -1022,14 +1022,55 @@ const DynamicViews: React.FC<DynamicViewsProps> = ({
 
       const allFilters = { ...propDefaultFilters, ...filterValues };
       for (const key in allFilters) {
+        if (key.endsWith('_op')) continue;
         const value = allFilters[key];
         if (value === null || value === undefined || key === 'sorter' || key === 'search') continue;
 
         const customFieldConfig = customFilters.find((f) => f.name === key);
-        const filterType = customFieldConfig?.type || 'eq';
+        const metaField = viewConfig?.v_metadata?.find((m: any) => m.key === key);
+        
+        let filterType = customFieldConfig?.type;
+        if (!filterType && metaField) {
+          const isTemporal = metaField.semantic_type?.sub_type === 'temporal' || 
+                           metaField.type?.includes('timestamp') || 
+                           metaField.type?.includes('date') ||
+                           metaField.data_type?.includes('timestamp') || 
+                           metaField.data_type?.includes('date');
+          filterType = isTemporal ? 'date' : 'eq';
+        }
+        if (filterType === 'date-range' && !Array.isArray(value)) {
+          filterType = 'date';
+        }
+        filterType = filterType || 'eq';
         const joinTable = customFieldConfig?.join_table;
 
-        if (filterType === 'date-range' && Array.isArray(value) && value[0] && value[1]) {
+        if (filterType === 'date') {
+          const op = allFilters[`${key}_op`] || '=';
+          if (op === '=') {
+            filters.push({
+              key: key,
+              operator: '>=',
+              value: dayjs(value).startOf('day').format('YYYY-MM-DD HH:mm:ss'),
+            });
+            filters.push({
+              key: key,
+              operator: '<=',
+              value: dayjs(value).endOf('day').format('YYYY-MM-DD HH:mm:ss'),
+            });
+          } else if (op === '>=') {
+            filters.push({
+              key: key,
+              operator: '>=',
+              value: dayjs(value).startOf('day').format('YYYY-MM-DD HH:mm:ss'),
+            });
+          } else if (op === '<=') {
+            filters.push({
+              key: key,
+              operator: '<=',
+              value: dayjs(value).endOf('day').format('YYYY-MM-DD HH:mm:ss'),
+            });
+          }
+        } else if (filterType === 'date-range' && Array.isArray(value) && value[0] && value[1]) {
           // Split into two filters since the backend hasn't implemented BETWEEN/Array handling yet
           filters.push({
             key: key,

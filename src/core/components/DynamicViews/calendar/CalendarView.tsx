@@ -226,7 +226,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, viewMode, isMobile 
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="px-4 pt-5 pb-3 border-b bg-gray-50">
+      <div className="px-4 pt-5 pb-3 border-b border-[var(--color-border)] bg-[var(--color-bg-secondary)]">
         <div className="flex items-center justify-between mb-2">
           <h1 className="text-h4 !mb-0">
             {getViewTitle()}

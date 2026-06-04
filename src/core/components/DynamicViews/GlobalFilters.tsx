@@ -72,7 +72,54 @@ const GlobalFilters: React.FC<GlobalFiltersProps> = ({
     }, []);
 
     const customFilters: FilterField[] = data?.viewConfig?.general?.filters || [];
-    const [selectOptions, setSelectOptions] = useState<Record<string, { value: string; label: string }[]>>({});
+
+    const otherFilters: FilterField[] = React.useMemo(() => {
+        const metadata = data?.viewConfig?.v_metadata || [];
+        const configuredNames = new Set(customFilters.map(f => f.name));
+        const excludedKeys = new Set(['id', 'organization_id']);
+
+        return metadata
+            .filter((meta: any) => !configuredNames.has(meta.key) && !excludedKeys.has(meta.key))
+            .map((meta: any) => {
+                const isTemporal = meta.semantic_type?.sub_type === 'temporal' || 
+                                 meta.type?.includes('timestamp') || 
+                                 meta.type?.includes('date') ||
+                                 meta.data_type?.includes('timestamp') || 
+                                 meta.data_type?.includes('date');
+                
+                const isSelect = meta.foreign_key || 
+                                ['bool', 'boolean', 'text[]'].includes(meta.type) || 
+                                ['bool', 'boolean', 'text[]'].includes(meta.data_type) || 
+                                ['nominal', 'discrete', 'boolean'].includes(meta.semantic_type?.sub_type);
+                
+                const type: 'text' | 'date-range' | 'select' = isTemporal 
+                    ? 'date-range' 
+                    : (isSelect ? 'select' : 'text');
+
+                let options = undefined;
+                if (meta.foreign_key) {
+                    options = meta.foreign_key;
+                } else if (['bool', 'boolean'].includes(meta.type) || ['bool', 'boolean'].includes(meta.data_type)) {
+                    options = {
+                        isBoolean: true,
+                        list: [
+                            { value: true, label: 'Yes' },
+                            { value: false, label: 'No' }
+                        ]
+                    };
+                }
+
+                return {
+                    name: meta.key,
+                    type,
+                    label: meta.display_name,
+                    placeholder: `Select ${meta.display_name}`,
+                    options,
+                };
+            });
+    }, [data?.viewConfig?.v_metadata, customFilters]);
+
+    const [selectOptions, setSelectOptions] = useState<Record<string, { value: string | boolean; label: string }[]>>({});
     const [loading, setLoading] = useState<Record<string, boolean>>({});
 
     const [modifiedFilters, setModifiedFilters] = useState<Set<string>>(new Set());
@@ -121,19 +168,24 @@ const GlobalFilters: React.FC<GlobalFiltersProps> = ({
 
     useEffect(() => {
         const fetchSelectOptions = async () => {
-            const newOptions: Record<string, { value: string; label: string }[]> = {};
+            const newOptions: Record<string, { value: string | boolean; label: string }[]> = {};
             const newLoading: Record<string, boolean> = {};
+            const allPossibleFilters = [...customFilters, ...otherFilters];
 
-            for (const field of customFilters) {
-                if (field.type === 'select' && field.options?.source_table) {
-                    newLoading[field.name] = true;
-                    const options = await fetchOptions(
-                        field.options.source_table,
-                        field.options.source_column,
-                        field.options.display_column
-                    );
-                    newOptions[field.name] = options;
-                    newLoading[field.name] = false;
+            for (const field of allPossibleFilters) {
+                if (field.type === 'select') {
+                    if (field.options?.source_table) {
+                        newLoading[field.name] = true;
+                        const options = await fetchOptions(
+                            field.options.source_table,
+                            field.options.source_column,
+                            field.options.display_column
+                        );
+                        newOptions[field.name] = options;
+                        newLoading[field.name] = false;
+                    } else if ((field.options as any)?.isBoolean) {
+                        newOptions[field.name] = (field.options as any).list;
+                    }
                 }
             }
 
@@ -141,10 +193,10 @@ const GlobalFilters: React.FC<GlobalFiltersProps> = ({
             setLoading(newLoading);
         };
 
-        if (customFilters.length > 0) {
+        if (customFilters.length > 0 || otherFilters.length > 0) {
             fetchSelectOptions();
         }
-    }, [customFilters]);
+    }, [customFilters, otherFilters]);
 
     const serverSideFilters = customFilters
         .filter((field) => field.isServerSide)
@@ -169,7 +221,7 @@ const GlobalFilters: React.FC<GlobalFiltersProps> = ({
 
     const handleFilterChange = (changedValues: any, allValues: any) => {
         const changedField = Object.keys(changedValues)[0];
-        const fieldConfig = customFilters.find(f => f.name === changedField);
+        const fieldConfig = customFilters.find(f => f.name === changedField) || otherFilters.find(f => f.name === changedField);
 
         if (changedField === 'dateRange') {
             const dateValue = changedValues.dateRange;
@@ -248,23 +300,10 @@ const GlobalFilters: React.FC<GlobalFiltersProps> = ({
     const prepareInitialValues = (filters: Record<string, any>) => {
         const preparedValues = { ...filters };
 
-        customFilters.forEach(fieldConfig => {
-            if (fieldConfig.type === 'date-range' && !preparedValues[fieldConfig.name]) {
-                // Only set the default if the date range hasn't been manually cleared
-                if (!isDateCleared) {
-                    preparedValues[fieldConfig.name] = getPastDateRange(7);
-                } else {
-                    preparedValues[fieldConfig.name] = null;
-                }
-            }
-        });
-
         for (const key in preparedValues) {
-            const fieldConfig = customFilters.find(f => f.name === key);
-            if (fieldConfig?.type === 'date-range' && Array.isArray(preparedValues[key])) {
-                preparedValues[key] = preparedValues[key].map((date: any) =>
-                    date ? dayjs(date) : null
-                );
+            const fieldConfig = customFilters.find(f => f.name === key) || otherFilters.find(f => f.name === key);
+            if (((fieldConfig?.type as any) === 'date-range' || (fieldConfig?.type as any) === 'date') && preparedValues[key] && !Array.isArray(preparedValues[key])) {
+                preparedValues[key] = dayjs(preparedValues[key]);
             }
         }
         return preparedValues;
@@ -304,7 +343,7 @@ const GlobalFilters: React.FC<GlobalFiltersProps> = ({
                                 {visibleFields.map((field, index) => (
                                     <Form.Item
                                         key={field.name}
-                                        name={field.name}
+                                        {...(((field.type as any) !== 'date-range' && (field.type as any) !== 'date') ? { name: field.name } : {})}
                                         label={<span className="text-[11px] font-medium uppercase tracking-wider text-slate-500 md:hidden">{field.label}</span>}
                                         className={`mb-0 ${index === 0 ? 'flex-1 min-w-[200px]' : 'min-w-[160px]'} max-w-[400px]`}
                                     >
@@ -314,15 +353,29 @@ const GlobalFilters: React.FC<GlobalFiltersProps> = ({
                                                 className="w-full bg-[var(--color-bg-secondary)] border-[var(--color-border)] hover:border-[var(--color-primary)] transition-colors text-[var(--color-text-primary)] font-medium placeholder:text-slate-400 placeholder:opacity-60 overflow-hidden text-ellipsis px-3 h-[36px]"
                                             />
                                         )}
-                                        {field.type === 'date-range' && (
-                                            <RangePicker
-                                                className="w-full bg-[var(--color-bg-secondary)] border-[var(--color-border)] hover:border-[var(--color-primary)] transition-colors h-[36px]"
-                                                defaultValue={
-                                                    field.defaultValue
-                                                        ? [dayjs(field.defaultValue[0]), dayjs(field.defaultValue[1])]
-                                                        : undefined
-                                                }
-                                            />
+                                        {((field.type as any) === 'date-range' || (field.type as any) === 'date') && (
+                                            <div className="flex gap-1 items-center w-full">
+                                                <Form.Item
+                                                    name={`${field.name}_op`}
+                                                    noStyle
+                                                    initialValue="="
+                                                >
+                                                    <Select style={{ width: 60 }} className="h-[36px] flex-shrink-0">
+                                                        <Select.Option value="=">=</Select.Option>
+                                                        <Select.Option value=">=">&gt;=</Select.Option>
+                                                        <Select.Option value="<=">&lt;=</Select.Option>
+                                                    </Select>
+                                                </Form.Item>
+                                                <Form.Item
+                                                    name={field.name}
+                                                    noStyle
+                                                >
+                                                    <DatePicker
+                                                        className="w-full flex-1 bg-[var(--color-bg-secondary)] border-[var(--color-border)] hover:border-[var(--color-primary)] transition-colors h-[36px]"
+                                                        placeholder={field.placeholder || "Select Date"}
+                                                    />
+                                                </Form.Item>
+                                            </div>
                                         )}
                                         {field.type === 'select' && (
                                             <Select
@@ -347,7 +400,7 @@ const GlobalFilters: React.FC<GlobalFiltersProps> = ({
                                                 {overflowFields.map(field => (
                                                     <Form.Item
                                                         key={field.name}
-                                                        name={field.name}
+                                                        {...(((field.type as any) !== 'date-range' && (field.type as any) !== 'date') ? { name: field.name } : {})}
                                                         label={
                                                             <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
                                                                 {field.label.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
@@ -362,10 +415,29 @@ const GlobalFilters: React.FC<GlobalFiltersProps> = ({
                                                                 className="w-full bg-[var(--color-bg-secondary)] border-[var(--color-border)] h-[36px]"
                                                             />
                                                         )}
-                                                        {field.type === 'date-range' && (
-                                                            <RangePicker
-                                                                className="w-full bg-[var(--color-bg-secondary)] border-[var(--color-border)] h-[36px]"
-                                                            />
+                                                        {((field.type as any) === 'date-range' || (field.type as any) === 'date') && (
+                                                            <div className="flex gap-1 items-center w-full">
+                                                                <Form.Item
+                                                                    name={`${field.name}_op`}
+                                                                    noStyle
+                                                                    initialValue="="
+                                                                >
+                                                                    <Select style={{ width: 60 }} className="h-[36px] flex-shrink-0">
+                                                                        <Select.Option value="=">=</Select.Option>
+                                                                        <Select.Option value=">=">&gt;=</Select.Option>
+                                                                        <Select.Option value="<=">&lt;=</Select.Option>
+                                                                    </Select>
+                                                                </Form.Item>
+                                                                <Form.Item
+                                                                    name={field.name}
+                                                                    noStyle
+                                                                >
+                                                                    <DatePicker
+                                                                        className="w-full flex-1 bg-[var(--color-bg-secondary)] border-[var(--color-border)] h-[36px]"
+                                                                        placeholder={field.placeholder || "Select Date"}
+                                                                    />
+                                                                </Form.Item>
+                                                            </div>
                                                         )}
                                                         {field.type === 'select' && (
                                                             <Select
@@ -391,6 +463,79 @@ const GlobalFilters: React.FC<GlobalFiltersProps> = ({
                             </>
                         );
                     })()}
+                    {otherFilters.length > 0 && (
+                        <Form.Item className="mb-0">
+                            <Popover
+                                trigger="click"
+                                placement="bottomRight"
+                                content={
+                                    <div className="p-4 space-y-4 min-w-[320px] max-h-[400px] overflow-y-auto">
+                                        <Title level={5} className="!mb-2 text-xs uppercase tracking-widest text-slate-400 font-bold">Advanced Filters</Title>
+                                        {otherFilters.map(field => (
+                                            <Form.Item
+                                                key={field.name}
+                                                {...(((field.type as any) !== 'date-range' && (field.type as any) !== 'date') ? { name: field.name } : {})}
+                                                label={
+                                                    <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                                                        {field.label.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                                                    </span>
+                                                }
+                                                className="mb-3 w-full"
+                                                layout="vertical"
+                                            >
+                                                {field.type === 'text' && (
+                                                    <Input
+                                                        placeholder={field.placeholder}
+                                                        className="w-full bg-[var(--color-bg-secondary)] border-[var(--color-border)] h-[36px]"
+                                                    />
+                                                )}
+                                                {((field.type as any) === 'date-range' || (field.type as any) === 'date') && (
+                                                    <div className="flex gap-1 items-center w-full">
+                                                        <Form.Item
+                                                            name={`${field.name}_op`}
+                                                            noStyle
+                                                            initialValue="="
+                                                        >
+                                                            <Select style={{ width: 60 }} className="h-[36px] flex-shrink-0">
+                                                                <Select.Option value="=">=</Select.Option>
+                                                                <Select.Option value=">=">&gt;=</Select.Option>
+                                                                <Select.Option value="<=">&lt;=</Select.Option>
+                                                            </Select>
+                                                        </Form.Item>
+                                                        <Form.Item
+                                                            name={field.name}
+                                                            noStyle
+                                                        >
+                                                            <DatePicker
+                                                                className="w-full flex-1 bg-[var(--color-bg-secondary)] border-[var(--color-border)] h-[36px]"
+                                                                placeholder={field.placeholder || "Select Date"}
+                                                            />
+                                                        </Form.Item>
+                                                    </div>
+                                                )}
+                                                {field.type === 'select' && (
+                                                    <Select
+                                                        placeholder={field.placeholder}
+                                                        options={selectOptions[field.name] || []}
+                                                        className="w-full h-[36px]"
+                                                        allowClear
+                                                        loading={loading[field.name] || false}
+                                                    />
+                                                )}
+                                            </Form.Item>
+                                        ))}
+                                    </div>
+                                }
+                            >
+                                <Button
+                                    className="flex items-center justify-center gap-2 border border-slate-300 hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] h-[36px] px-3 font-medium text-slate-600 rounded-md"
+                                >
+                                    <Filter size={16} />
+                                    <span>Advanced Filters</span>
+                                </Button>
+                            </Popover>
+                        </Form.Item>
+                    )}
                     {entities?.length > 0 && <Form.Item className="mb-0">
                         <Dropdown
                             menu={{ items: columnVisibilityMenuItems }}

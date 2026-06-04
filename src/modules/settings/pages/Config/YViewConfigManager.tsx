@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Tabs, Button, message, Modal, Space, Tooltip, Checkbox, Tag, Layout, Menu } from 'antd';
+import { useQueryClient } from '@tanstack/react-query';
 import Form from '@rjsf/antd';
 import { RJSFSchema } from '@rjsf/utils';
 import validator from '@rjsf/validator-ajv8';
@@ -58,6 +59,7 @@ interface YViewConfig {
 
 
 const YViewConfigManager: React.FC = () => {
+  const queryClient = useQueryClient();
   const [configs, setConfigs] = useState<YViewConfig[]>([]);
   const [selectedConfig, setSelectedConfig] = useState<YViewConfig | null>(null);
   const [activeTab, setActiveTab] = useState<string>('viewConfig');
@@ -342,6 +344,7 @@ const YViewConfigManager: React.FC = () => {
         }
 
         message.success('Configuration updated successfully');
+        queryClient.invalidateQueries({ queryKey: ['viewConfigEnhanced'] });
         fetchConfigs();
     } catch (error) {
         console.error('Error saving configuration:', error);

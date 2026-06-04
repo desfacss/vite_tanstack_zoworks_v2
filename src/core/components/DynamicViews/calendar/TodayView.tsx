@@ -16,7 +16,7 @@ const TodayView: React.FC<TodayViewProps> = ({ events }) => {
 
   return (
     <div className="h-full">
-      <div className="px-4 py-3 border-b bg-gray-50">
+      <div className="px-4 py-3 border-b border-[var(--color-border)] bg-[var(--color-bg-secondary)]">
         <Title level={4} className="!mb-0">
           Today - {dayjs().format('MMMM D, YYYY')}
         </Title>

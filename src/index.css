@@ -5690,3 +5690,199 @@ legend {
 .top-pagination-container .ant-pagination-item {
   display: none !important; /* Hide individual page numbers to keep it simple/compact */
 }
+
+/* ============================================
+   React Big Calendar & Gantt Chart Theme Adaptations
+   ============================================ */
+
+/* React Big Calendar Theme Overrides */
+.rbc-calendar {
+  background-color: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  border-color: var(--color-border);
+}
+
+.rbc-header {
+  background-color: var(--color-bg-secondary) !important;
+  color: var(--color-text-primary) !important;
+  border-bottom: 1px solid var(--color-border) !important;
+  font-weight: 600;
+  padding: 8px 4px !important;
+}
+
+.rbc-header + .rbc-header {
+  border-left: 1px solid var(--color-border) !important;
+}
+
+.rbc-day-bg {
+  border-left: 1px solid var(--color-border) !important;
+  background-color: var(--color-bg-primary) !important;
+}
+
+.rbc-day-bg + .rbc-day-bg {
+  border-left: 1px solid var(--color-border) !important;
+}
+
+.rbc-month-row + .rbc-month-row {
+  border-top: 1px solid var(--color-border) !important;
+}
+
+.rbc-month-view {
+  border: 1px solid var(--color-border) !important;
+  border-radius: var(--tenant-border-radius, 8px);
+  overflow: hidden;
+  background-color: var(--color-bg-primary) !important;
+}
+
+.rbc-time-view {
+  border: 1px solid var(--color-border) !important;
+  border-radius: var(--tenant-border-radius, 8px);
+  overflow: hidden;
+  background-color: var(--color-bg-primary) !important;
+}
+
+.rbc-time-header {
+  border-bottom: 1px solid var(--color-border) !important;
+  background-color: var(--color-bg-secondary) !important;
+}
+
+.rbc-time-header-content {
+  border-left: 1px solid var(--color-border) !important;
+}
+
+.rbc-time-content {
+  border-top: 1px solid var(--color-border) !important;
+}
+
+.rbc-time-content > * + * {
+  border-left: 1px solid var(--color-border) !important;
+}
+
+.rbc-timeslot-group {
+  border-bottom: 1px solid var(--color-border) !important;
+}
+
+.rbc-day-slot .rbc-time-slot {
+  border-top: 1px solid var(--color-border-subtle, var(--color-border)) !important;
+  opacity: 0.3;
+}
+
+.rbc-time-gutter {
+  background-color: var(--color-bg-secondary) !important;
+  border-right: 1px solid var(--color-border) !important;
+}
+
+.rbc-time-gutter .rbc-timeslot-group {
+  border-bottom: 1px solid var(--color-border) !important;
+}
+
+.rbc-today {
+  background-color: rgba(var(--color-primary-rgb), 0.05) !important;
+}
+
+.rbc-off-range-bg {
+  background-color: var(--color-bg-secondary) !important;
+  opacity: 0.5;
+}
+
+.rbc-event {
+  background-color: var(--color-primary) !important;
+  color: #fff !important;
+  border: none !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.rbc-show-more {
+  color: var(--color-primary) !important;
+  font-weight: 500;
+}
+
+.rbc-agenda-view table.rbc-agenda-table {
+  border: 1px solid var(--color-border) !important;
+}
+
+.rbc-agenda-view table.rbc-agenda-table tbody > tr > td {
+  border: 1px solid var(--color-border) !important;
+  color: var(--color-text-primary) !important;
+}
+
+/* Gantt Chart Theme Overrides */
+._3ZbQT, ._3_ygE {
+  border-color: var(--color-border) !important;
+  background-color: var(--color-bg-primary) !important;
+}
+
+._34SS0 {
+  background-color: var(--color-bg-primary) !important;
+  color: var(--color-text-primary) !important;
+}
+
+._34SS0:nth-of-type(even) {
+  background-color: var(--color-bg-secondary) !important;
+}
+
+._3lLk3, ._WuQ0f {
+  color: var(--color-text-primary) !important;
+  border-bottom: 1px solid var(--color-border) !important;
+  border-right: 1px solid var(--color-border) !important;
+}
+
+._35nLX {
+  fill: var(--color-bg-secondary) !important;
+  stroke: var(--color-border) !important;
+}
+
+._2dZTy {
+  fill: var(--color-bg-primary) !important;
+}
+
+._2dZTy:nth-child(even) {
+  fill: var(--color-bg-secondary) !important;
+}
+
+._3rUKi, ._RuwuK, ._1rLuZ {
+  stroke: var(--color-border) !important;
+}
+
+._9w8d5, ._2q1Kt, ._2QjE6, ._2TfEi {
+  fill: var(--color-text-primary) !important;
+  color: var(--color-text-secondary) !important;
+}
+
+._3T42e {
+  background: var(--color-bg-secondary) !important;
+  border: 1px solid var(--color-border) !important;
+  color: var(--color-text-primary) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+._29NTg {
+  color: var(--color-text-secondary) !important;
+}
+
+/* Ant Design Tabs Theme Overrides */
+.ant-tabs {
+  color: var(--color-text-primary) !important;
+}
+
+.ant-tabs-nav {
+  background-color: var(--color-bg-secondary) !important;
+  border-bottom: 1px solid var(--color-border) !important;
+}
+
+.ant-tabs-tab {
+  color: var(--color-text-secondary) !important;
+}
+
+.ant-tabs-tab:hover {
+  color: var(--color-primary) !important;
+}
+
+.ant-tabs-tab-active .ant-tabs-tab-btn {
+  color: var(--color-primary) !important;
+  font-weight: 600 !important;
+}
+
+.ant-tabs-ink-bar {
+  background: var(--color-primary) !important;
+}
