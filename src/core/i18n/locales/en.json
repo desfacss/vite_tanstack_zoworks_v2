@@ -86,7 +86,9 @@
         "form-elements": "Form Elements",
         "onboarding": "Onboarding",
         "rjsf": "RJSF Form Bench",
-        "rjsf-gen": "RJSF JSON Generator"
+        "rjsf-gen": "RJSF JSON Generator",
+        "context-registry": "Context Registry",
+        "mcp-tools": "MCP Tools"
       },
       "action": {
         "save": "Save",

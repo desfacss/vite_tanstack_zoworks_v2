@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Form, Input, Button, Space, message, Typography, Divider, Switch, Card, Popconfirm } from 'antd';
+import { Form, Input, Button, Space, message, Typography, Divider, Switch, Card, Popconfirm, Select } from 'antd';
 import { Plus, Trash2, GripVertical } from 'lucide-react';
 import { supabase } from '@/core/lib/supabase';
 import JsonEditor from '@/modules/ai/components/JsonEditor';
+import YamlEditor from '@/modules/ai/components/YamlEditor';
+import { useAuthStore } from '@/core/lib/store';
 import { PlaybookRecord, PlaybookStepRecord } from '../types';
 
 const { Title, Text } = Typography;
@@ -28,10 +30,87 @@ const PlaybookForm: React.FC<PlaybookFormProps> = ({
     const [form] = Form.useForm();
     const [loading, setLoading] = useState(false);
     const [steps, setSteps] = useState<Partial<PlaybookStepRecord>[]>([]);
+    const [contextKeys, setContextKeys] = useState<string[]>([]);
+    const [mcpTools, setMcpTools] = useState<string[]>([]);
+    const [registryContents, setRegistryContents] = useState<Record<string, { id?: string; format: 'yaml' | 'json'; content: string }>>({});
+    const { organization } = useAuthStore();
     const isEdit = !!record?.id;
+
+    const fetchRegistryContents = async (keys: string[]) => {
+        if (!keys || keys.length === 0) return;
+        try {
+            let query = supabase
+                .schema('ai_mcp')
+                .from('context_registry')
+                .select('*')
+                .in('key', keys);
+            
+            if (organization?.id) {
+                query = query.eq('organization_id', organization.id);
+            }
+            const { data, error } = await query;
+            if (!error && data) {
+                setRegistryContents(prev => {
+                    const next = { ...prev };
+                    data.forEach(item => {
+                        next[item.key] = {
+                            id: item.id,
+                            format: item.format as any,
+                            content: item.content
+                        };
+                    });
+                    keys.forEach(key => {
+                        if (!next[key]) {
+                            next[key] = {
+                                format: 'yaml',
+                                content: `# ${key}\nmeta:\n  scope: ""\nconstraints:\n  - ""`
+                            };
+                        }
+                    });
+                    return next;
+                });
+            }
+        } catch (err) {
+            console.error('Error fetching registry contents:', err);
+        }
+    };
+
+    const loadContextKeys = async () => {
+        try {
+            const { data, error } = await supabase
+                .schema('ai_mcp')
+                .from('context_registry')
+                .select('key')
+                .order('key', { ascending: true });
+            if (!error && data) {
+                setContextKeys(data.map(r => r.key));
+            }
+        } catch (err) {
+            console.error('Error loading context keys:', err);
+        }
+    };
+
+    const loadMcpTools = async () => {
+        try {
+            const { data, error } = await supabase
+                .schema('ai_mcp')
+                .from('mcp_tools')
+                .select('tool_key')
+                .eq('is_enabled', true)
+                .order('name', { ascending: true });
+            if (!error && data) {
+                setMcpTools(data.map(r => r.tool_key));
+            }
+        } catch (err) {
+            console.error('Error loading mcp tools:', err);
+        }
+    };
 
     // Fetch steps if editing
     useEffect(() => {
+        loadContextKeys();
+        loadMcpTools();
+
         const fetchSteps = async () => {
             if (isEdit && record?.id) {
                 const { data, error } = await supabase
@@ -44,13 +123,31 @@ const PlaybookForm: React.FC<PlaybookFormProps> = ({
                 if (error) {
                     message.error('Failed to load playbook steps');
                 } else if (data) {
-                    setSteps(data);
+                    const stepRecords = data.map(s => ({
+                        ...s,
+                        static_context_keys: s.static_context_keys || [],
+                        allowed_tools: s.allowed_tools || [],
+                        allowed_entities: s.allowed_entities || [],
+                    }));
+                    setSteps(stepRecords);
+
+                    // Collect all static context keys from steps
+                    const stepKeys = stepRecords.flatMap(s => s.static_context_keys || []);
+                    const allKeys = Array.from(new Set([...(record.static_context_keys || []), ...stepKeys]));
+                    if (allKeys.length > 0) {
+                        fetchRegistryContents(allKeys);
+                    }
                 }
+            } else if (record && record.static_context_keys && record.static_context_keys.length > 0) {
+                fetchRegistryContents(record.static_context_keys);
             }
         };
 
         if (record) {
-            form.setFieldsValue(record);
+            form.setFieldsValue({
+                ...record,
+                static_context_keys: record.static_context_keys || []
+            });
             fetchSteps();
         } else {
             form.resetFields();
@@ -61,11 +158,37 @@ const PlaybookForm: React.FC<PlaybookFormProps> = ({
     const onFinish = async (values: any) => {
         setLoading(true);
         try {
+            // Save all context registry changes first
+            const allSelectedKeys = Array.from(new Set([
+                ...(values.static_context_keys || []),
+                ...steps.flatMap(s => s.static_context_keys || [])
+            ]));
+            const orgId = record?.organization_id || organization?.id || '00000000-0000-0000-0000-000000000000';
+
+            for (const key of allSelectedKeys) {
+                const item = registryContents[key];
+                if (item) {
+                    const { error: registryError } = await supabase
+                        .schema('ai_mcp')
+                        .from('context_registry')
+                        .upsert({
+                            id: item.id || undefined,
+                            organization_id: orgId,
+                            key: key,
+                            format: item.format,
+                            content: item.content
+                        }, { onConflict: 'organization_id,key' });
+
+                    if (registryError) throw registryError;
+                }
+            }
+
             // 1. Save Playbook (Parent)
             const playbookPayload = {
                 name: values.name,
                 description: values.description,
                 trigger_command: values.trigger_command,
+                static_context_keys: values.static_context_keys || [],
             };
 
             let playbookId = record?.id;
@@ -117,7 +240,10 @@ const PlaybookForm: React.FC<PlaybookFormProps> = ({
                 position: index + 1, // Ensure position is sequential
                 execution_logic: typeof step.execution_logic === 'string' 
                     ? JSON.parse(step.execution_logic) 
-                    : (step.execution_logic || {})
+                    : (step.execution_logic || {}),
+                static_context_keys: step.static_context_keys || [],
+                allowed_tools: step.allowed_tools || [],
+                allowed_entities: step.allowed_entities || [],
             }));
 
             if (stepsToSave.length > 0) {
@@ -145,7 +271,10 @@ const PlaybookForm: React.FC<PlaybookFormProps> = ({
             name: 'New Step', 
             instruction: '', 
             position: steps.length + 1,
-            is_auto_execute: true 
+            is_auto_execute: true,
+            static_context_keys: [],
+            allowed_tools: [],
+            allowed_entities: []
         }]);
     };
 
@@ -194,6 +323,93 @@ const PlaybookForm: React.FC<PlaybookFormProps> = ({
                 label="Description"
             >
                 <Input.TextArea rows={2} placeholder="Brief summary of what this playbook does..." />
+            </Form.Item>
+
+            <Form.Item
+                name="static_context_keys"
+                label="Playbook Context Rules"
+                tooltip="Global context rules applied to the entire playbook."
+            >
+                <Select
+                    mode="multiple"
+                    placeholder="Select context rules to apply..."
+                    style={{ width: '100%' }}
+                    onChange={(val) => {
+                        form.setFieldsValue({ static_context_keys: val });
+                        const unloaded = val.filter(k => !registryContents[k]);
+                        if (unloaded.length > 0) {
+                            fetchRegistryContents(unloaded);
+                        }
+                    }}
+                >
+                    {contextKeys.map(key => (
+                        <Select.Option key={key} value={key}>{key}</Select.Option>
+                    ))}
+                </Select>
+            </Form.Item>
+
+            <Form.Item
+                noStyle
+                shouldUpdate={(prev, curr) => prev.static_context_keys !== curr.static_context_keys}
+            >
+                {({ getFieldValue }) => {
+                    const keys: string[] = getFieldValue('static_context_keys') || [];
+                    if (keys.length === 0) return null;
+                    return (
+                        <div style={{ marginBottom: '16px' }}>
+                            <Text strong style={{ fontSize: '13px', display: 'block', marginBottom: '8px' }}>Playbook Context Editors (Saved on submit)</Text>
+                            <Card size="small" style={{ background: '#fafafa', maxHeight: '300px', overflowY: 'auto' }}>
+                                {keys.map(key => {
+                                    const item = registryContents[key] || { format: 'yaml', content: '' };
+                                    return (
+                                        <div key={key} style={{ marginBottom: '16px', borderBottom: '1px solid #f0f0f0', paddingBottom: '12px' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                                                <span style={{ fontWeight: 500, fontFamily: 'monospace' }}>{key}</span>
+                                                <Select
+                                                    size="small"
+                                                    value={item.format}
+                                                    style={{ width: '80px' }}
+                                                    onChange={(val: 'yaml' | 'json') => {
+                                                        setRegistryContents(prev => ({
+                                                            ...prev,
+                                                            [key]: { ...prev[key], format: val }
+                                                        }));
+                                                    }}
+                                                >
+                                                    <Select.Option value="yaml">YAML</Select.Option>
+                                                    <Select.Option value="json">JSON</Select.Option>
+                                                </Select>
+                                            </div>
+                                            {item.format === 'json' ? (
+                                                <JsonEditor
+                                                    value={item.content}
+                                                    onChange={(val) => {
+                                                        setRegistryContents(prev => ({
+                                                            ...prev,
+                                                            [key]: { ...prev[key], content: val }
+                                                        }));
+                                                    }}
+                                                    rows={5}
+                                                />
+                                            ) : (
+                                                <YamlEditor
+                                                    value={item.content}
+                                                    onChange={(val) => {
+                                                        setRegistryContents(prev => ({
+                                                            ...prev,
+                                                            [key]: { ...prev[key], content: val }
+                                                        }));
+                                                    }}
+                                                    rows={5}
+                                                />
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </Card>
+                        </div>
+                    );
+                }}
             </Form.Item>
 
             <Divider orientation="left">Playbook Steps</Divider>
@@ -258,6 +474,113 @@ const PlaybookForm: React.FC<PlaybookFormProps> = ({
                                 />
                             </Form.Item>
                         </div>
+
+                        <div className="grid grid-cols-3 gap-4 mt-4">
+                            <Form.Item label="Step Context Rules">
+                                <Select
+                                    mode="multiple"
+                                    placeholder="Bind context rules..."
+                                    style={{ width: '100%' }}
+                                    value={step.static_context_keys || []}
+                                    onChange={(val) => {
+                                        updateStep(index, 'static_context_keys', val);
+                                        const unloaded = val.filter(k => !registryContents[k]);
+                                        if (unloaded.length > 0) {
+                                            fetchRegistryContents(unloaded);
+                                        }
+                                    }}
+                                >
+                                    {contextKeys.map(k => (
+                                        <Select.Option key={k} value={k}>{k}</Select.Option>
+                                    ))}
+                                </Select>
+                            </Form.Item>
+                            <Form.Item label="Step Tool Permissions">
+                                <Select
+                                    mode="multiple"
+                                    placeholder="Permitted tools..."
+                                    style={{ width: '100%' }}
+                                    value={step.allowed_tools || []}
+                                    onChange={(val) => updateStep(index, 'allowed_tools', val)}
+                                >
+                                    {mcpTools.map(t => (
+                                        <Select.Option key={t} value={t}>{t}</Select.Option>
+                                    ))}
+                                </Select>
+                            </Form.Item>
+                            <Form.Item label="Step Data Permissions">
+                                <Select
+                                    mode="tags"
+                                    placeholder="Allowed entities..."
+                                    style={{ width: '100%' }}
+                                    value={step.allowed_entities || []}
+                                    onChange={(val) => updateStep(index, 'allowed_entities', val)}
+                                    tokenSeparators={[',']}
+                                >
+                                    <Select.Option value="crm.leads">crm.leads</Select.Option>
+                                    <Select.Option value="crm.deals">crm.deals</Select.Option>
+                                    <Select.Option value="crm.contacts">crm.contacts</Select.Option>
+                                    <Select.Option value="accounting.invoices">accounting.invoices</Select.Option>
+                                    <Select.Option value="ctrm.trades">ctrm.trades</Select.Option>
+                                    <Select.Option value="ctrm.contracts">ctrm.contracts</Select.Option>
+                                </Select>
+                            </Form.Item>
+                        </div>
+
+                        {step.static_context_keys && step.static_context_keys.length > 0 && (
+                            <div style={{ marginTop: '16px' }}>
+                                <Text strong style={{ fontSize: '12px', display: 'block', marginBottom: '8px' }}>Step Context Editors (Saved on submit)</Text>
+                                <Card size="small" style={{ background: '#fafafa', maxHeight: '250px', overflowY: 'auto' }}>
+                                    {step.static_context_keys.map(key => {
+                                        const item = registryContents[key] || { format: 'yaml', content: '' };
+                                        return (
+                                            <div key={key} style={{ marginBottom: '12px', borderBottom: '1px solid #f0f0f0', paddingBottom: '8px' }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                                                    <span style={{ fontWeight: 500, fontFamily: 'monospace', fontSize: '12px' }}>{key}</span>
+                                                    <Select
+                                                        size="small"
+                                                        value={item.format}
+                                                        style={{ width: '70px' }}
+                                                        onChange={(val: 'yaml' | 'json') => {
+                                                            setRegistryContents(prev => ({
+                                                                ...prev,
+                                                                [key]: { ...prev[key], format: val }
+                                                            }));
+                                                        }}
+                                                    >
+                                                        <Select.Option value="yaml">YAML</Select.Option>
+                                                        <Select.Option value="json">JSON</Select.Option>
+                                                    </Select>
+                                                </div>
+                                                {item.format === 'json' ? (
+                                                    <JsonEditor
+                                                        value={item.content}
+                                                        onChange={(val) => {
+                                                            setRegistryContents(prev => ({
+                                                                ...prev,
+                                                                [key]: { ...prev[key], content: val }
+                                                            }));
+                                                        }}
+                                                        rows={4}
+                                                    />
+                                                ) : (
+                                                    <YamlEditor
+                                                        value={item.content}
+                                                        onChange={(val) => {
+                                                            setRegistryContents(prev => ({
+                                                                ...prev,
+                                                                [key]: { ...prev[key], content: val }
+                                                            }));
+                                                        }}
+                                                        rows={4}
+                                                    />
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+                                </Card>
+                            </div>
+                        )}
                     </Card>
                 ))}
                 

@@ -99,6 +99,8 @@ const Invoices = lazy(() => import('@/modules/erp/pages/Invoices'));
 
 // AI Module
 const AIWorkbench = lazy(() => import('@/modules/ai/pages/AIWorkbench'));
+const ContextRegistryPage = lazy(() => import('@/modules/ai/pages/ContextRegistryPage'));
+const McpToolsPage = lazy(() => import('@/modules/ai/pages/McpToolsPage'));
 const GenericDynamicPage = lazy(() => import('@/core/components/DynamicViews/GenericDynamicPage'));
 
 // E-Sign Module
@@ -319,6 +321,10 @@ export const AppRoutes: FC = () => {
                         <Route path="/identity/locations" element={<LocationsPage />} />
                         <Route path="/identity/:entity" element={<GenericDynamicPage schema="identity" />} />
                         <Route path="/core/:entity" element={<GenericDynamicPage schema="core" />} />
+                        <Route path="/ai/context-registry" element={<ContextRegistryPage />} />
+                        <Route path="/ai/mcp-tools" element={<McpToolsPage />} />
+                        <Route path="/ai_mcp/context_registry" element={<ContextRegistryPage />} />
+                        <Route path="/ai_mcp/mcp_tools" element={<McpToolsPage />} />
                         <Route path="/ai/:entity" element={<GenericDynamicPage schema="ai_mcp" />} />
                         <Route path="/ai_mcp/:entity" element={<GenericDynamicPage schema="ai_mcp" />} />
                         <Route path="/crm/:entity" element={<GenericDynamicPage schema="crm" />} />

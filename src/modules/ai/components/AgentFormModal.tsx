@@ -3,8 +3,10 @@ import { Form, Input, Select, Switch, Tabs, Row, Col, message, Divider, Typograp
 import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 import { AgentRecord } from '../types';
 import JsonEditor from './JsonEditor';
+import YamlEditor from './YamlEditor';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/core/lib/store';
+import { Tag } from 'antd';
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -73,15 +75,92 @@ const AgentForm: React.FC<AgentFormProps> = ({
     const [loading, setLoading] = useState(false);
     const [agents, setAgents] = useState<AgentRecord[]>([]);
     const [organizations, setOrganizations] = useState<any[]>([]);
+    const [contextKeys, setContextKeys] = useState<string[]>([]);
+    const [mcpTools, setMcpTools] = useState<string[]>([]);
+    const [registryContents, setRegistryContents] = useState<Record<string, { id?: string; format: 'yaml' | 'json'; content: string }>>({});
     const { organization } = useAuthStore();
 
     // Determine mode based on parentEditItem
     const mode = parentEditItem ? 'edit' : 'create';
     const initialData = parentEditItem;
 
+    const fetchRegistryContents = async (keys: string[]) => {
+        if (!keys || keys.length === 0) return;
+        try {
+            let query = supabase
+                .schema('ai_mcp')
+                .from('context_registry')
+                .select('*')
+                .in('key', keys);
+            
+            if (organization?.id) {
+                query = query.eq('organization_id', organization.id);
+            }
+            const { data, error } = await query;
+            if (!error && data) {
+                setRegistryContents(prev => {
+                    const next = { ...prev };
+                    data.forEach(item => {
+                        next[item.key] = {
+                            id: item.id,
+                            format: item.format as any,
+                            content: item.content
+                        };
+                    });
+                    keys.forEach(key => {
+                        if (!next[key]) {
+                            next[key] = {
+                                format: 'yaml',
+                                content: `# ${key}\nmeta:\n  scope: ""\nconstraints:\n  - ""`
+                            };
+                        }
+                    });
+                    return next;
+                });
+            }
+        } catch (err) {
+            console.error('Error fetching registry contents:', err);
+        }
+    };
+
+    const loadContextKeys = async () => {
+        try {
+            let query = supabase
+                .schema('ai_mcp')
+                .from('context_registry')
+                .select('key');
+            if (organization?.id) {
+                query = query.eq('organization_id', organization.id);
+            }
+            const { data, error } = await query;
+            if (!error && data) {
+                setContextKeys(data.map(r => r.key));
+            }
+        } catch (err) {
+            console.error('Error loading context keys:', err);
+        }
+    };
+
+    const loadMcpTools = async () => {
+        try {
+            const { data, error } = await supabase
+                .schema('ai_mcp')
+                .from('mcp_tools')
+                .select('tool_key')
+                .eq('is_enabled', true);
+            if (!error && data) {
+                setMcpTools(data.map(r => r.tool_key));
+            }
+        } catch (err) {
+            console.error('Error loading mcp tools:', err);
+        }
+    };
+
     useEffect(() => {
         loadAgents();
         loadOrganizations();
+        loadContextKeys();
+        loadMcpTools();
         
         if (initialData && mode === 'edit') {
             const config = initialData.config || {};
@@ -89,6 +168,9 @@ const AgentForm: React.FC<AgentFormProps> = ({
                 ...initialData,
                 model_config: initialData.model_config || defaultModelConfig,
                 planning_config: initialData.planning_config || defaultPlanningConfig,
+                static_context_keys: initialData.static_context_keys || [],
+                allowed_tools: initialData.allowed_tools || [],
+                allowed_entities: initialData.allowed_entities || [],
                 // Extract common config fields for UI widgets
                 config_routing_entities: config.routing?.entities || [],
                 config_routing_keywords: config.routing?.keywords || [],
@@ -98,6 +180,9 @@ const AgentForm: React.FC<AgentFormProps> = ({
                 config: JSON.stringify(config, null, 2),
                 semantics: initialData.semantics || {},
             });
+            if (initialData.static_context_keys && initialData.static_context_keys.length > 0) {
+                fetchRegistryContents(initialData.static_context_keys);
+            }
         } else {
             form.setFieldsValue({
                 role_level: 'specialist',
@@ -107,6 +192,9 @@ const AgentForm: React.FC<AgentFormProps> = ({
                 organization_id: organization?.id,
                 model_config: defaultModelConfig,
                 planning_config: defaultPlanningConfig,
+                static_context_keys: [],
+                allowed_tools: [],
+                allowed_entities: [],
                 config_routing_entities: [],
                 config_routing_keywords: [],
                 config_patterns: [],
@@ -174,11 +262,36 @@ const AgentForm: React.FC<AgentFormProps> = ({
                 configObj.patterns = values.config_patterns;
             }
 
-            // Directly use objects from form
+            // 1. Save all context registry changes first
+            const selectedKeys: string[] = values.static_context_keys || [];
+            const orgId = values.organization_id || organization?.id || '00000000-0000-0000-0000-000000000000';
+
+            for (const key of selectedKeys) {
+                const item = registryContents[key];
+                if (item) {
+                    const { error: registryError } = await supabase
+                        .schema('ai_mcp')
+                        .from('context_registry')
+                        .upsert({
+                            id: item.id || undefined,
+                            organization_id: orgId,
+                            key: key,
+                            format: item.format,
+                            content: item.content
+                        }, { onConflict: 'organization_id,key' });
+
+                    if (registryError) throw registryError;
+                }
+            }
+
+            // 2. Directly use objects from form
             const payload: Partial<AgentRecord> = {
                 ...values,
                 config: configObj,
                 organization_id: values.organization_id || organization?.id,
+                static_context_keys: selectedKeys,
+                allowed_tools: values.allowed_tools || [],
+                allowed_entities: values.allowed_entities || [],
             };
 
             // Clean up temporary form fields
@@ -545,6 +658,152 @@ const AgentForm: React.FC<AgentFormProps> = ({
                         </Form.Item>
                     </Col>
                 </Row>
+            )
+        },
+        {
+            key: 'context_boundaries',
+            label: 'Context Boundaries',
+            children: (
+                <div style={{ padding: '4px' }}>
+                    <Row gutter={[24, 16]}>
+                        <Col span={24}>
+                            <Title level={5} style={{ fontSize: '14px', marginBottom: '8px' }}>Security & Token Execution Boundaries</Title>
+                            <Text type="secondary">Define absolute context rules, tools, and database schemas accessible by the agent persona.</Text>
+                            <Divider style={{ margin: '12px 0' }} />
+                        </Col>
+                        
+                        <Col span={24}>
+                            <Form.Item 
+                                name="static_context_keys" 
+                                label="Bind Base Context Rules"
+                                tooltip="Global context rules injected from the Context Registry."
+                            >
+                                <Select 
+                                    mode="multiple" 
+                                    placeholder="Select context rules to bind..."
+                                    style={{ width: '100%' }}
+                                    onChange={(val) => {
+                                        form.setFieldsValue({ static_context_keys: val });
+                                        const unloaded = val.filter(k => !registryContents[k]);
+                                        if (unloaded.length > 0) {
+                                            fetchRegistryContents(unloaded);
+                                        }
+                                    }}
+                                >
+                                    {contextKeys.map(key => (
+                                        <Option key={key} value={key}>{key}</Option>
+                                    ))}
+                                </Select>
+                            </Form.Item>
+                        </Col>
+
+                        <Col span={24}>
+                            <Form.Item
+                                noStyle
+                                shouldUpdate={(prev, curr) => prev.static_context_keys !== curr.static_context_keys}
+                            >
+                                {({ getFieldValue }) => {
+                                    const keys: string[] = getFieldValue('static_context_keys') || [];
+                                    if (keys.length === 0) return null;
+                                    return (
+                                        <div style={{ marginBottom: '16px' }}>
+                                            <Text strong style={{ fontSize: '13px', display: 'block', marginBottom: '8px' }}>Context Code Editors (Saved on submit)</Text>
+                                            <Card size="small" style={{ background: '#fafafa', maxHeight: '300px', overflowY: 'auto' }}>
+                                                {keys.map(key => {
+                                                    const item = registryContents[key] || { format: 'yaml', content: '' };
+                                                    return (
+                                                        <div key={key} style={{ marginBottom: '16px', borderBottom: '1px solid #f0f0f0', paddingBottom: '12px' }}>
+                                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                                                                <Tag color="purple" className="font-mono">{key}</Tag>
+                                                                <Select
+                                                                    size="small"
+                                                                    value={item.format}
+                                                                    style={{ width: '80px' }}
+                                                                    onChange={(val: 'yaml' | 'json') => {
+                                                                        setRegistryContents(prev => ({
+                                                                            ...prev,
+                                                                            [key]: { ...prev[key], format: val }
+                                                                        }));
+                                                                    }}
+                                                                >
+                                                                    <Option value="yaml">YAML</Option>
+                                                                    <Option value="json">JSON</Option>
+                                                                </Select>
+                                                            </div>
+                                                            {item.format === 'json' ? (
+                                                                <JsonEditor
+                                                                    value={item.content}
+                                                                    onChange={(val) => {
+                                                                        setRegistryContents(prev => ({
+                                                                            ...prev,
+                                                                            [key]: { ...prev[key], content: val }
+                                                                        }));
+                                                                    }}
+                                                                    rows={5}
+                                                                />
+                                                            ) : (
+                                                                <YamlEditor
+                                                                    value={item.content}
+                                                                    onChange={(val) => {
+                                                                        setRegistryContents(prev => ({
+                                                                            ...prev,
+                                                                            [key]: { ...prev[key], content: val }
+                                                                        }));
+                                                                    }}
+                                                                    rows={5}
+                                                                />
+                                                            )}
+                                                        </div>
+                                                    );
+                                                })}
+                                            </Card>
+                                        </div>
+                                    );
+                                }}
+                            </Form.Item>
+                        </Col>
+
+                        <Col span={24}>
+                            <Form.Item 
+                                name="allowed_tools" 
+                                label="Allowed Tool Permissions"
+                                tooltip="The absolute maximum tool access for this agent globally."
+                            >
+                                <Select 
+                                    mode="multiple" 
+                                    placeholder="Select permitted tools..."
+                                    style={{ width: '100%' }}
+                                >
+                                    {mcpTools.map(key => (
+                                        <Option key={key} value={key}>{key}</Option>
+                                    ))}
+                                </Select>
+                            </Form.Item>
+                        </Col>
+
+                        <Col span={24}>
+                            <Form.Item 
+                                name="allowed_entities" 
+                                label="Data Permissions (Allowed Schemas / Entities)"
+                                tooltip="Database schemas or tables this agent is allowed to access globally (e.g., crm.deals, accounting.invoices)."
+                            >
+                                <Select 
+                                    mode="tags" 
+                                    placeholder="Add allowed entities or tables (press enter)..."
+                                    style={{ width: '100%' }}
+                                    tokenSeparators={[',']}
+                                >
+                                    <Option value="crm.leads">crm.leads</Option>
+                                    <Option value="crm.deals">crm.deals</Option>
+                                    <Option value="crm.contacts">crm.contacts</Option>
+                                    <Option value="accounting.invoices">accounting.invoices</Option>
+                                    <Option value="ctrm.trades">ctrm.trades</Option>
+                                    <Option value="ctrm.contracts">ctrm.contracts</Option>
+                                </Select>
+                            </Form.Item>
+                        </Col>
+                    </Row>
+                </div>
             )
         }
     ];

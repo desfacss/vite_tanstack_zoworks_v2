@@ -736,6 +736,20 @@
         "translationKey": "playbooks",
         "key": "ai-playbooks",
         "submoduleKey": "ai-playbooks"
+      },
+      {
+        "filePath": "src/modules/ai/pages/ContextRegistryPage.tsx",
+        "routePath": "/ai/context-registry",
+        "translationKey": "context-registry",
+        "key": "context-registry",
+        "submoduleKey": "context-registry"
+      },
+      {
+        "filePath": "src/modules/ai/pages/McpToolsPage.tsx",
+        "routePath": "/ai/mcp-tools",
+        "translationKey": "mcp-tools",
+        "key": "mcp-tools",
+        "submoduleKey": "mcp-tools"
       }
     ],
     "analytics": [
