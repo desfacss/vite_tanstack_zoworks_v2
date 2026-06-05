@@ -29,39 +29,40 @@ To make this configuration-driven, you need a relational bridge between your pla
 
 ```sql
 -- 1. Context Registry (Your Context-as-Code files stored in DB)
-CREATE TABLE context_registry (
+CREATE TABLE ai_mcp.context_registry (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    key TEXT UNIQUE NOT NULL, -- e.g., 'rules.global.service_commerce'
+    organization_id UUID NOT NULL,
+    key TEXT NOT NULL, -- e.g., 'rules.global.service_commerce'
     format TEXT NOT NULL CHECK (format IN ('yaml', 'json')),
     content TEXT NOT NULL, -- The raw YAML or JSON context code
-    created_at TIMESTAMPTZ DEFAULT NOW()
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE (organization_id, key)
 );
 
--- 2. Tools Registry (Declarative MCP or standard tool definitions)
-CREATE TABLE tools_registry (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name TEXT UNIQUE NOT NULL, -- e.g., 'create_whatsapp_invoice'
-    definition JSONB NOT NULL, -- OpenAI function calling schema
-    required_context_keys TEXT[] -- Array of context_registry keys this tool needs
-);
+-- Enable RLS on context_registry
+ALTER TABLE ai_mcp.context_registry ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Tenant Isolation" ON ai_mcp.context_registry 
+  FOR ALL USING (organization_id = identity.get_current_org_id());
 
--- 3. Playbook Steps (The Nodes)
-CREATE TABLE playbook_steps (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    playbook_id UUID NOT NULL,
-    step_name TEXT NOT NULL,
-    agent_role TEXT NOT NULL, -- e.g., 'Lead-to-Cash Orchestrator'
-    
-    -- Context-as-Code binding
-    static_context_keys TEXT[], -- e.g., ['rules.global.service_commerce']
-    
-    -- Tools & Data Catalog Scoping
-    allowed_tools TEXT[], -- e.g., ['create_whatsapp_invoice']
-    allowed_entities TEXT[], -- e.g., ['core.invoices', 'core.customers']
-    
-    config JSONB NOT NULL -- Step execution configs
-);
+-- 2. Tools Registry (Update existing ai_mcp.mcp_tools)
+ALTER TABLE ai_mcp.mcp_tools 
+ADD COLUMN required_context_keys TEXT[] DEFAULT '{}';
 
+-- 3. Playbook Steps (Update existing ai_mcp.playbook_steps)
+ALTER TABLE ai_mcp.playbook_steps 
+ADD COLUMN static_context_keys TEXT[] DEFAULT '{}',
+ADD COLUMN allowed_tools TEXT[] DEFAULT '{}',
+ADD COLUMN allowed_entities TEXT[] DEFAULT '{}';
+
+-- 4. Agents (Update existing ai_mcp.agents to allow contextual bootstrapping)
+ALTER TABLE ai_mcp.agents 
+ADD COLUMN static_context_keys TEXT[] DEFAULT '{}',
+ADD COLUMN allowed_tools TEXT[] DEFAULT '{}',
+ADD COLUMN allowed_entities TEXT[] DEFAULT '{}';
+
+-- 5. Playbooks (Update existing ai_mcp.playbooks)
+ALTER TABLE ai_mcp.playbooks 
+ADD COLUMN static_context_keys TEXT[] DEFAULT '{}';
 ```
 
 ---
