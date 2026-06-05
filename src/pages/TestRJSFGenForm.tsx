@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import RJSFCoreForm from '@/core/components/RJSFCoreForm';
+import RJSFMadLibForm from '@/core/components/RJSFMadLibForm';
 import { Card, Button, Space, message, Typography, Tabs, Divider, Switch, Input, Select, Radio, Drawer, Row, Col, Tooltip, Modal } from 'antd';
 import { supabase } from '@/core/lib/supabase';
 import { ThunderboltOutlined, SaveOutlined, PlusOutlined } from '@ant-design/icons';
@@ -212,6 +213,7 @@ const TestRJSFGenForm = () => {
     const [selectedEntity, setSelectedEntity] = useState<string | null>(null);
     const [mode, setMode] = useState<'minimal' | 'recommended' | 'all'>('recommended');
     const [loading, setLoading] = useState(false);
+    const [isMadLibsMode, setIsMadLibsMode] = useState(false);
 
     // Inputs state
     const [jsonDataStr, setJsonDataStr] = useState<string>(defaultJsonInput);
@@ -1702,6 +1704,14 @@ const TestRJSFGenForm = () => {
                                     extra={
                                         <Space size="middle">
                                             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                                                <Switch 
+                                                    checked={isMadLibsMode} 
+                                                    onChange={setIsMadLibsMode} 
+                                                    checkedChildren="Mad Libs" 
+                                                    unCheckedChildren="Standard Form" 
+                                                />
+                                            </div>
+                                            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                                                 <Text strong>Form Name: </Text>
                                                 <Input 
                                                     placeholder="Form Name" 
@@ -1737,13 +1747,23 @@ const TestRJSFGenForm = () => {
                                     }
                                     bodyStyle={{ maxHeight: 'calc(100vh - 200px)', overflowY: 'auto' }}
                                 >
-                                    <RJSFCoreForm
-                                        schema={generatedSchema}
-                                        onSuccess={(data) => console.log('Saved successfully:', data)}
-                                        key={formName + dataSchemaStr.length + uiSchemaStr.length}
-                                        entityType={selectedEntity ? selectedEntity.split('.')[1] : undefined}
-                                        entitySchema={selectedEntity ? selectedEntity.split('.')[0] : undefined}
-                                    />
+                                    {isMadLibsMode ? (
+                                        <RJSFMadLibForm
+                                            schema={generatedSchema}
+                                            onSuccess={(data) => console.log('Saved successfully:', data)}
+                                            key={"madlib-" + formName + dataSchemaStr.length + uiSchemaStr.length}
+                                            entityType={selectedEntity ? selectedEntity.split('.')[1] : undefined}
+                                            entitySchema={selectedEntity ? selectedEntity.split('.')[0] : undefined}
+                                        />
+                                    ) : (
+                                        <RJSFCoreForm
+                                            schema={generatedSchema}
+                                            onSuccess={(data) => console.log('Saved successfully:', data)}
+                                            key={"core-" + formName + dataSchemaStr.length + uiSchemaStr.length}
+                                            entityType={selectedEntity ? selectedEntity.split('.')[1] : undefined}
+                                            entitySchema={selectedEntity ? selectedEntity.split('.')[0] : undefined}
+                                        />
+                                    )}
                                 </Card>
                             </Col>
                         </Row>
