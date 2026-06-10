@@ -24,6 +24,7 @@ interface ViewConfig {
   ganttview: Record<string, any>;
   mapview: Record<string, any>;
   detailview: Record<string, any>;
+  timelineview?: Record<string, any> | null;
   metricsview?: Record<string, any> | null;
   dashboardview?: Record<string, any> | null;
   metadata?: any[] | null;
@@ -125,6 +126,7 @@ export const useViewConfigEnhanced = (entityType: string, entitySchema: string) 
         kanbanview: safeParse(viewConfigData.kanbanview),
         detailview: safeParse(viewConfigData.detailview),
         calendarview: safeParse(viewConfigData.calendarview),
+        timelineview: safeParse(viewConfigData.timelineview),
         metricsview: safeParse(viewConfigData.metricsview),
         dashboardview: safeParse(viewConfigData.dashboardview),
         details_overview: safeParse(viewConfigData.details_overview),

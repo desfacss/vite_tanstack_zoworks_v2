@@ -255,6 +255,7 @@ const ViewConfigEditor = ({ entityType, metadata, entitySchema }: any) => {
               { label: 'Kanban View', value: 'kanbanview' },
               { label: 'Calendar View', value: 'calendarview' },
               { label: 'Gantt View', value: 'ganttview' },
+              { label: 'Timeline View', value: 'timelineview' },
               { label: 'Map View', value: 'mapview' },
               { label: 'Dashboard View', value: 'dashboardview' },
             ]

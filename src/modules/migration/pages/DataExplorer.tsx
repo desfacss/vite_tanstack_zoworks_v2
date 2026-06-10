@@ -8,6 +8,7 @@ const DataExplorer: React.FC = () => {
   // Your provided schema and table data in the desired format
   const allTablesBySchema: { [key: string]: string[] } = {
     "core": ["entities","view_configs", "audit_logs", "entity_versions", "modules","user_dashboards"],
+    "unified": ["tasks"],
     // "cron": ["job", "job_run_details"],
     "external": ["accounts", "contacts", "contract_assets", "contract_offerings", "contracts", "customers", "deals", "leads", "service_assets", "user_account_assignments"],
     "identity": ["organizations", "roles", "teams", "user_roles", "user_teams", "users"],

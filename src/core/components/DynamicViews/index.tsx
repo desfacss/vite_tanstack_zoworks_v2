@@ -714,6 +714,7 @@ import {
   Info,
   MapPin,
   LayoutDashboard,
+  CalendarDays,
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabase';
@@ -823,6 +824,7 @@ const DynamicViews: React.FC<DynamicViewsProps> = ({
     { value: 'kanbanview', label: 'Kanban', icon: <Columns size={16} /> },
     { value: 'calendarview', label: 'Calendar', icon: <Calendar size={16} /> },
     { value: 'ganttview', label: 'Gantt', icon: <FolderKanban size={16} /> },
+    { value: 'timelineview', label: 'Timeline', icon: <CalendarDays size={16} /> },
     { value: 'mapview', label: 'Map', icon: <MapPin size={16} /> },
     { value: 'dashboardview', label: 'Dashboard', icon: <LayoutDashboard size={16} /> },
   ];
@@ -934,7 +936,7 @@ const DynamicViews: React.FC<DynamicViewsProps> = ({
     setHasMore(false);
   };
 
-  const restrictedViews = ['kanbanview', 'ganttview', 'calendarview', 'mapview', 'dashboardview'];
+  const restrictedViews = ['kanbanview', 'ganttview', 'timelineview', 'calendarview', 'mapview', 'dashboardview'];
   const filteredAvailableViews = useMemo(() => {
     if (isTopLevel) {
       return availableViews;

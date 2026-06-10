@@ -9,6 +9,7 @@ export const viewRegistry = {
   gridview: lazy(() => import('./GridView')),
   kanbanview: lazy(() => import('./KanbanView')),
   ganttview: lazy(() => import('./GanttChart')),
+  timelineview: lazy(() => import('./TimelineView')),
   // calendarview: lazy(() => import('./CalendarView')),
   calendarview: lazy(() => import('./calendar/MobileCalendarView')),
   mapview: lazy(() => import('./MapViewComponent'))

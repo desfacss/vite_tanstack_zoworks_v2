@@ -23,6 +23,7 @@ import FormBuilder from './FormBuilder';
 import StagesConfig from './StagesConfig';
 import GanttViewConfig from './GanttViewConfig';
 import CalendarViewConfig from './CalendarViewConfig';
+import TimelineViewConfig from './TimelineViewConfig';
 import MapViewConfig from './MapViewConfig';
 import ViewSuggestionModal from './ViewSuggestionModal';
 import DisplayIdConfig from './DisplayIdConfig';
@@ -417,6 +418,16 @@ const YViewConfigManager: React.FC = () => {
       />
     );
   }
+  if (viewName === 'timelineview') {
+    return (
+      <TimelineViewConfig
+        configData={formData}
+        onSave={(updatedData) => handleSave(viewName, updatedData)}
+        metadata={selectedConfig?.v_metadata}
+        availableColumns={data}
+      />
+    );
+  }
   if (viewName === 'calendarview') {
     return (
       <CalendarViewConfig
@@ -752,6 +763,11 @@ const YViewConfigManager: React.FC = () => {
               key: 'ganttview',
               label: 'Gantt View',
               children: renderTabContent('ganttview'),
+            },
+            {
+              key: 'timelineview',
+              label: 'Timeline View',
+              children: renderTabContent('timelineview'),
             },
             {
               key: 'calendarview',
