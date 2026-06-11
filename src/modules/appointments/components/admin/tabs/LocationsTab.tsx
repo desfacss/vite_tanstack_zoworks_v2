@@ -207,9 +207,13 @@ export function LocationsTab({ organizationId }: LocationsTabProps) {
     );
   }
 
+  const validLocations = locations.filter(
+    (loc) => loc && typeof loc.latitude === 'number' && typeof loc.longitude === 'number' && !isNaN(loc.latitude) && !isNaN(loc.longitude)
+  );
+
   const center: [number, number] =
-    locations.length > 0
-      ? [locations[0].latitude, locations[0].longitude]
+    validLocations.length > 0
+      ? [validLocations[0].latitude, validLocations[0].longitude]
       : [40.7128, -74.006];
 
   return (
@@ -263,7 +267,7 @@ export function LocationsTab({ organizationId }: LocationsTabProps) {
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
 
-            {locations.map((location) => (
+            {validLocations.map((location) => (
               <Marker key={location.id} position={[location.latitude, location.longitude]}>
                 <Popup>
                   <div className="p-2">
@@ -337,7 +341,9 @@ export function LocationsTab({ organizationId }: LocationsTabProps) {
                         </p>
                         <div className="flex items-center space-x-4 mt-2">
                           <span className="text-xs text-gray-500">
-                            {location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}
+                            {typeof location.latitude === 'number' && typeof location.longitude === 'number'
+                              ? `${location.latitude.toFixed(6)}, ${location.longitude.toFixed(6)}`
+                              : 'No coordinates'}
                           </span>
                           <span className="px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded capitalize">
                             {location.type}

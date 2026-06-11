@@ -85,12 +85,13 @@ const { Header, Content } = Layout;
 
 // Helper function to map path to menu key
 const pathToKey = (path: string): string => {
-  if (path === '/') return 'home'; // Assuming '/' corresponds to a potential 'home' key if you add it back
-  if (path.startsWith('/about')) return 'about';
-  if (path.startsWith('/pricing')) return 'pricing';
-  if (path.startsWith('/subscription')) return 'subscription';
-  // Add other mappings as needed
-  return ''; // Default or fallback key
+  if (path === '/') return 'home';
+  if (path.startsWith('/appointments')) return 'appointments';
+  if (path.startsWith('/subscriptions')) return 'subscriptions';
+  if (path.startsWith('/shop')) return 'shop';
+  if (path.startsWith('/login')) return 'login';
+  if (path.startsWith('/signup') || path.startsWith('/sign_up') || path.startsWith('/web_register')) return 'signup';
+  return '';
 };
 
 const PublicLayout = () => {
@@ -120,12 +121,28 @@ const PublicLayout = () => {
             className="bg-transparent border-0 text-[var(--color-text)]" // Ensure menu text color respects theme
             items={[
               {
-                key: 'about',
-                label: <Link to="/about">{t('core.navigation.about')}</Link>,
+                key: 'home',
+                label: <Link to="/">{t('core.navigation.home', 'Home')}</Link>,
+              },
+              {
+                key: 'appointments',
+                label: <Link to="/appointments">{t('core.navigation.appointments', 'Appointments')}</Link>,
+              },
+              {
+                key: 'subscriptions',
+                label: <Link to="/subscriptions">{t('core.navigation.subscriptions', 'Subscriptions')}</Link>,
+              },
+              {
+                key: 'shop',
+                label: <Link to="/shop">{t('core.navigation.shop', 'Shop')}</Link>,
               },
               {
                 key: 'login',
-                label: <Link to="/login">{t('core.auth.action.sign_in')}</Link>,
+                label: <Link to="/login">{t('core.auth.action.sign_in', 'Sign In')}</Link>,
+              },
+              {
+                key: 'signup',
+                label: <Link to="/signup">{t('core.auth.action.sign_up', 'Sign Up')}</Link>,
               },
             ]}
           // Style overrides for menu items if needed (example)
