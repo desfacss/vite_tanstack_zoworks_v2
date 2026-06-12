@@ -70,26 +70,32 @@ export function LocationsTab({ organizationId }: LocationsTabProps) {
     try {
       setLoading(true);
 
-      const [locationsData, territoriesData] = await Promise.all([
-        supabase
-          .schema('identity')
-          .from('locations')
-          .select('*')
-          .eq('organization_id', organizationId)
-          .order('name'),
-        supabase
-          .schema('cal')
-          .from('territories')
-          .select('*')
-          .eq('organization_id', organizationId)
-          .order('name'),
+      const [locationsResponse, territoriesResponse] = await Promise.all([
+        supabase.schema('core').rpc('api_new_fetch_entity_records', {
+          config: {
+            entity_schema: 'identity',
+            entity_name: 'locations',
+            organization_id: organizationId,
+            pagination: { limit: 1000 },
+            sorting: { column: 'name', direction: 'ASC' }
+          }
+        }),
+        supabase.schema('core').rpc('api_new_fetch_entity_records', {
+          config: {
+            entity_schema: 'cal',
+            entity_name: 'territories',
+            organization_id: organizationId,
+            pagination: { limit: 1000 },
+            sorting: { column: 'name', direction: 'ASC' }
+          }
+        }),
       ]);
 
-      if (locationsData.error) throw locationsData.error;
-      if (territoriesData.error) throw territoriesData.error;
+      if (locationsResponse.error) throw locationsResponse.error;
+      if (territoriesResponse.error) throw territoriesResponse.error;
 
-      setLocations(locationsData.data || []);
-      setTerritories(territoriesData.data || []);
+      setLocations(locationsResponse.data?.data || []);
+      setTerritories(territoriesResponse.data?.data || []);
     } catch (error) {
       console.error('Error loading locations:', error);
       showToast('Failed to load locations', 'error');
@@ -142,39 +148,44 @@ export function LocationsTab({ organizationId }: LocationsTabProps) {
     try {
       if (editingLocation) {
         const { error } = await supabase
-          .schema('identity')
-          .from('locations')
-          .update({
-            name: data.name,
-            address: data.address,
-            city: data.city,
-            state: data.state,
-            postal_code: data.postal_code,
-            country: data.country,
-            latitude: data.latitude,
-            longitude: data.longitude,
-            type: data.type,
-          })
-          .eq('id', editingLocation.id);
+          .schema('core')
+          .rpc('api_new_core_upsert_data', {
+            table_name: 'identity.locations',
+            data: {
+              id: editingLocation.id,
+              organization_id: organizationId,
+              name: data.name,
+              address: data.address,
+              city: data.city,
+              state: data.state,
+              postal_code: data.postal_code,
+              country: data.country,
+              latitude: data.latitude,
+              longitude: data.longitude,
+              type: data.type,
+            }
+          });
 
         if (error) throw error;
 
         showToast(`${data.name} updated successfully`, 'success');
       } else {
         const { error } = await supabase
-          .schema('identity')
-          .from('locations')
-          .insert({
-            organization_id: organizationId,
-            name: data.name,
-            address: data.address,
-            city: data.city,
-            state: data.state,
-            postal_code: data.postal_code,
-            country: data.country,
-            latitude: data.latitude,
-            longitude: data.longitude,
-            type: data.type,
+          .schema('core')
+          .rpc('api_new_core_upsert_data', {
+            table_name: 'identity.locations',
+            data: {
+              organization_id: organizationId,
+              name: data.name,
+              address: data.address,
+              city: data.city,
+              state: data.state,
+              postal_code: data.postal_code,
+              country: data.country,
+              latitude: data.latitude,
+              longitude: data.longitude,
+              type: data.type,
+            }
           });
 
         if (error) throw error;

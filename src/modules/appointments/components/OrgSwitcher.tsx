@@ -16,18 +16,23 @@ export function OrgSwitcher() {
 
     async function loadOrganizations() {
         try {
-            const { data, error } = await supabase
-                .schema('identity')
-                .from('organizations')
-                .select('id, name')
-                .order('name');
+            const { data: orgsResponse } = await supabase
+                .schema('core')
+                .rpc('api_new_fetch_entity_records', {
+                    config: {
+                        entity_schema: 'identity',
+                        entity_name: 'organizations',
+                        pagination: { limit: 1000 },
+                        sorting: { column: 'name', direction: 'ASC' }
+                    }
+                });
 
-            if (error) throw error;
-            setOrganizations((data || []) as any);
+            const orgs = orgsResponse?.data || [];
+            setOrganizations(orgs);
 
             // Auto-select first if none selected
-            if (data && data.length > 0 && !selectedOrganization) {
-                setOrganization(data[0] as any);
+            if (orgs.length > 0 && !selectedOrganization) {
+                setOrganization(orgs[0]);
             }
         } catch (error) {
             console.error('Error loading organizations:', error);

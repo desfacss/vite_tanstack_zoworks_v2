@@ -20,10 +20,17 @@ export default function PublicAppointmentsPage() {
         } else {
             const publicOrgId = import.meta.env.VITE_PUBLIC_ORG_ID;
             if (publicOrgId) {
-                supabase.schema('identity').from('organizations').select('*').eq('id', publicOrgId).single()
-                    .then(({ data }) => {
-                        if (data) setOrganization(data);
-                    });
+                supabase.schema('core').rpc('api_new_fetch_entity_records', {
+                    config: {
+                        entity_schema: 'identity',
+                        entity_name: 'organizations',
+                        filters: [{ key: 'id', operator: '=', value: publicOrgId }],
+                        pagination: { limit: 1 }
+                    }
+                }).then(({ data }) => {
+                    const org = data?.data?.[0];
+                    if (org) setOrganization(org);
+                });
             }
         }
     }, [authOrganization]);
@@ -51,11 +58,26 @@ export default function PublicAppointmentsPage() {
         if (!organization?.id) return;
         setIsLoading(true);
         try {
-            const { data: etData } = await supabase.schema('cal').from('event_types').select('*').eq('organization_id', organization.id);
-            setEventTypes(etData || []);
+            const { data: etResponse } = await supabase.schema('core').rpc('api_new_fetch_entity_records', {
+                config: {
+                    entity_schema: 'cal',
+                    entity_name: 'event_types',
+                    organization_id: organization.id,
+                    pagination: { limit: 1000 }
+                }
+            });
+            setEventTypes(etResponse?.data || []);
 
             // Load app settings for use case info if needed
-            const { data: orgData } = await supabase.schema('identity').from('organizations').select('app_settings').eq('id', organization.id).single();
+            const { data: orgResponse } = await supabase.schema('core').rpc('api_new_fetch_entity_records', {
+                config: {
+                    entity_schema: 'identity',
+                    entity_name: 'organizations',
+                    filters: [{ key: 'id', operator: '=', value: organization.id }],
+                    pagination: { limit: 1 }
+                }
+            });
+            const orgData = orgResponse?.data?.[0];
             if (orgData?.app_settings?.use_case) {
                 // This is a simplification, in source it comes from a specific table or config
                 setSelectedUseCase({
@@ -93,29 +115,68 @@ export default function PublicAppointmentsPage() {
         try {
             // Load rules and bookings for the selected event type
             const [books, res, resRules, resOverrides, etRes, bookRes] = await Promise.all([
-                supabase.schema('cal').from('v_bookings').select('*').eq('event_type_id', eventType.id),
-                supabase.schema('cal').from('v_bookable_resources').select('*').eq('organization_id', organization?.id),
-                supabase.schema('cal').from('resource_availability_rules').select('*'),
-                supabase.schema('unified').from('resource_unavailability').select('*'),
-                supabase.schema('cal').from('event_type_resources').select('*').eq('event_type_id', eventType.id),
-                supabase.schema('unified').from('task_assignments').select('*')
+                supabase.schema('core').rpc('api_new_fetch_entity_records', {
+                    config: {
+                        entity_schema: 'cal',
+                        entity_name: 'v_bookings',
+                        filters: [{ key: 'event_type_id', operator: '=', value: eventType.id }],
+                        pagination: { limit: 1000 }
+                    }
+                }),
+                supabase.schema('core').rpc('api_new_fetch_entity_records', {
+                    config: {
+                        entity_schema: 'cal',
+                        entity_name: 'v_bookable_resources',
+                        organization_id: organization?.id,
+                        pagination: { limit: 1000 }
+                    }
+                }),
+                supabase.schema('core').rpc('api_new_fetch_entity_records', {
+                    config: {
+                        entity_schema: 'cal',
+                        entity_name: 'resource_availability_rules',
+                        pagination: { limit: 1000 }
+                    }
+                }),
+                supabase.schema('core').rpc('api_new_fetch_entity_records', {
+                    config: {
+                        entity_schema: 'unified',
+                        entity_name: 'resource_unavailability',
+                        pagination: { limit: 1000 }
+                    }
+                }),
+                supabase.schema('core').rpc('api_new_fetch_entity_records', {
+                    config: {
+                        entity_schema: 'cal',
+                        entity_name: 'event_type_resources',
+                        filters: [{ key: 'event_type_id', operator: '=', value: eventType.id }],
+                        pagination: { limit: 1000 }
+                    }
+                }),
+                supabase.schema('core').rpc('api_new_fetch_entity_records', {
+                    config: {
+                        entity_schema: 'unified',
+                        entity_name: 'task_assignments',
+                        pagination: { limit: 1000 }
+                    }
+                })
             ]);
 
             // Map cal views and unified tables to old interface shapes for frontend availability engine compat
-            const mappedBookings = (books.data || []).map((b: any) => ({
+            const mappedBookings = (books.data?.data || []).map((b: any) => ({
                 ...b,
                 id: b.booking_id,
                 scheduled_at: b.scheduled_start
             }));
 
-            const mappedOverrides = (resOverrides.data || []).map((o: any) => ({
+            const mappedOverrides = (resOverrides.data?.data || []).map((o: any) => ({
                 ...o,
                 start_time: o.start_at,
                 end_time: o.end_at,
                 date: o.start_at ? o.start_at.split('T')[0] : ''
             }));
 
-            const mappedBookingResources = (bookRes.data || []).map((br: any) => ({
+            const mappedBookingResources = (bookRes.data?.data || []).map((br: any) => ({
                 ...br,
                 booking_id: br.task_id
             }));
@@ -123,10 +184,10 @@ export default function PublicAppointmentsPage() {
             setAvailabilityRules([]); // Global rules not used in resource-centric model
             setDateOverrides([]); // Global overrides not used in resource-centric model
             setBookings(mappedBookings);
-            setResources(res.data || []);
-            setResourceAvailabilityRules(resRules.data || []);
+            setResources(res.data?.data || []);
+            setResourceAvailabilityRules(resRules.data?.data || []);
             setResourceDateOverrides(mappedOverrides);
-            setEventTypeResources(etRes.data || []);
+            setEventTypeResources(etRes.data?.data || []);
             setBookingResources(mappedBookingResources);
 
             setView('BOOKING_PAGE');

@@ -100,16 +100,20 @@ export function EventTypeFormModal({
 
   async function loadLocations() {
     try {
-      const { data, error } = await supabase
-        .schema('identity')
-        .from('locations')
-        // .select('id, name, address, city')
-        .select('id, name')
-        .eq('organization_id', organizationId)
-        .order('name');
+      const { data: locationsResponse, error } = await supabase
+        .schema('core')
+        .rpc('api_new_fetch_entity_records', {
+          config: {
+            entity_schema: 'identity',
+            entity_name: 'locations',
+            organization_id: organizationId,
+            pagination: { limit: 1000 },
+            sorting: { column: 'name', direction: 'ASC' }
+          }
+        });
 
       if (error) throw error;
-      setLocations(data || []);
+      setLocations(locationsResponse?.data || []);
     } catch (error) {
       console.error('Error loading locations:', error);
     }

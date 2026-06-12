@@ -112,20 +112,24 @@ export function ResourcesTab({ organizationId }: ResourcesTabProps) {
     try {
       setLoading(true);
 
-      let query = supabase
-        .schema('cal')
-        .from('v_bookable_resources')
-        .select('*')
-        .eq('organization_id', organizationId)
-        .order('name');
-
-      const { data, error } = await query;
+      const { data: resResponse, error } = await supabase
+        .schema('core')
+        .rpc('api_new_fetch_entity_records', {
+          config: {
+            entity_schema: 'cal',
+            entity_name: 'v_bookable_resources',
+            organization_id: organizationId,
+            pagination: { limit: 1000 },
+            sorting: { column: 'name', direction: 'ASC' }
+          }
+        });
 
       if (error) throw error;
 
-      setResources(data || []);
+      const data = resResponse?.data || [];
+      setResources(data);
 
-      if (data) {
+      if (data.length > 0) {
         loadCalendarIntegrations(data.map(r => r.id));
       }
     } catch (error) {
@@ -138,17 +142,21 @@ export function ResourcesTab({ organizationId }: ResourcesTabProps) {
 
   async function loadCalendarIntegrations(resourceIds: string[]) {
     try {
-      const { data, error } = await supabase
-        .schema('cal')
-        .from('calendar_integrations')
-        .select('contact_id, is_active')
-        .in('contact_id', resourceIds);
+      const { data: integrationsResponse, error } = await supabase
+        .schema('core')
+        .rpc('api_new_fetch_entity_records', {
+          config: {
+            entity_schema: 'cal',
+            entity_name: 'calendar_integrations',
+            pagination: { limit: 1000 }
+          }
+        });
 
       if (error) throw error;
 
       const counts: Record<string, number> = {};
-      data?.forEach((integration) => {
-        if (integration.is_active) {
+      (integrationsResponse?.data || [])?.forEach((integration: any) => {
+        if (integration.is_active && resourceIds.includes(integration.contact_id)) {
           counts[integration.contact_id] = (counts[integration.contact_id] || 0) + 1;
         }
       });
@@ -220,6 +228,8 @@ export function ResourcesTab({ organizationId }: ResourcesTabProps) {
         const isPerson = editingResource.type === 'person';
         const targetTable = isPerson ? 'contacts' : 'assets';
         const updatePayload: any = {
+          id: editingResource.id,
+          organization_id: organizationId,
           name: data.name,
           booking_timezone: data.timezone,
           is_active: data.status === 'active',
@@ -234,10 +244,11 @@ export function ResourcesTab({ organizationId }: ResourcesTabProps) {
         }
 
         const { error } = await supabase
-          .schema('unified')
-          .from(targetTable)
-          .update(updatePayload)
-          .eq('id', editingResource.id);
+          .schema('core')
+          .rpc('api_new_core_upsert_data', {
+            table_name: `unified.${targetTable}`,
+            data: updatePayload
+          });
 
         if (error) throw error;
 
@@ -250,7 +261,7 @@ export function ResourcesTab({ organizationId }: ResourcesTabProps) {
         let finalOrgUserId = data.organization_user_id;
 
         if (isPerson && data.userMode === 'new') {
-          // 1. Insert into identity.users
+          // 1. Insert into identity.users via RPC
           const nameParts = data.name.trim().split(/\s+/);
           const firstName = nameParts[0] || '';
           const lastName = nameParts.slice(1).join(' ') || '';
@@ -269,17 +280,17 @@ export function ResourcesTab({ organizationId }: ResourcesTabProps) {
             }
           };
 
-          const { data: userData, error: userError } = await supabase
-            .schema('identity')
-            .from('users')
-            .insert(userPayload)
-            .select('id')
-            .single();
+          const { data: userId, error: userError } = await supabase
+            .schema('core')
+            .rpc('api_new_core_upsert_data', {
+              table_name: 'identity.users',
+              data: userPayload
+            });
 
           if (userError) throw userError;
-          finalUserId = userData.id;
+          finalUserId = userId;
 
-          // 2. Insert into identity.organization_users
+          // 2. Insert into identity.organization_users via RPC
           const orgUserPayload = {
             organization_id: organizationId,
             user_id: finalUserId,
@@ -287,15 +298,15 @@ export function ResourcesTab({ organizationId }: ResourcesTabProps) {
             persona_type: 'worker'
           };
 
-          const { data: orgUserData, error: orgUserError } = await supabase
-            .schema('identity')
-            .from('organization_users')
-            .insert(orgUserPayload)
-            .select('id')
-            .single();
+          const { data: orgUserId, error: orgUserError } = await supabase
+            .schema('core')
+            .rpc('api_new_core_upsert_data', {
+              table_name: 'identity.organization_users',
+              data: orgUserPayload
+            });
 
           if (orgUserError) throw orgUserError;
-          finalOrgUserId = orgUserData.id;
+          finalOrgUserId = orgUserId;
         }
 
         const insertPayload: any = {
@@ -318,9 +329,11 @@ export function ResourcesTab({ organizationId }: ResourcesTabProps) {
         }
 
         const { error } = await supabase
-          .schema('unified')
-          .from(targetTable)
-          .insert(insertPayload);
+          .schema('core')
+          .rpc('api_new_core_upsert_data', {
+            table_name: `unified.${targetTable}`,
+            data: insertPayload
+          });
 
         if (error) throw error;
 

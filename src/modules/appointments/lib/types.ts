@@ -107,6 +107,7 @@ export interface Resource {
     avatar_url?: string;
     status: ResourceStatus;
     timezone: string;
+    resource_kind?: string;
     metadata?: Record<string, any>;
     created_at: string;
     updated_at: string;

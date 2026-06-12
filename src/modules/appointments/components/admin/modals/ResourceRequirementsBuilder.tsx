@@ -50,16 +50,21 @@ export function ResourceRequirementsBuilder({
 
   async function loadResources() {
     try {
-      const { data, error } = await supabase
-        .schema('cal')
-        .from('v_bookable_resources')
-        .select('*')
-        .eq('organization_id', organizationId)
-        .eq('is_active', true)
-        .order('name');
+      const { data: resResponse, error } = await supabase
+        .schema('core')
+        .rpc('api_new_fetch_entity_records', {
+          config: {
+            entity_schema: 'cal',
+            entity_name: 'v_bookable_resources',
+            organization_id: organizationId,
+            filters: [{ key: 'is_active', operator: '=', value: true }],
+            pagination: { limit: 1000 },
+            sorting: { column: 'name', direction: 'ASC' }
+          }
+        });
 
       if (error) throw error;
-      setResources(data || []);
+      setResources(resResponse?.data || []);
     } catch (error) {
       console.error('Error loading resources:', error);
     } finally {

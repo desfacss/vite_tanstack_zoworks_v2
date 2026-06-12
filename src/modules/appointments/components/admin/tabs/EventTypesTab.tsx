@@ -47,16 +47,21 @@ export function EventTypesTab({ organizationId }: EventTypesTabProps) {
     try {
       setLoading(true);
 
-      const { data, error } = await supabase
-        .schema('cal')
-        .from('event_types')
-        .select('*')
-        .eq('organization_id', organizationId)
-        .order('title');
+      const { data: etResponse, error } = await supabase
+        .schema('core')
+        .rpc('api_new_fetch_entity_records', {
+          config: {
+            entity_schema: 'cal',
+            entity_name: 'event_types',
+            organization_id: organizationId,
+            pagination: { limit: 1000 },
+            sorting: { column: 'title', direction: 'ASC' }
+          }
+        });
 
       if (error) throw error;
 
-      setEventTypes(data || []);
+      setEventTypes(etResponse?.data || []);
     } catch (error) {
       console.error('Error loading event types:', error);
       showToast('Failed to load event types', 'error');
@@ -144,56 +149,47 @@ export function EventTypesTab({ organizationId }: EventTypesTabProps) {
     try {
       let eventTypeId: string;
 
+      const payload: any = {
+        organization_id: organizationId,
+        title: data.title,
+        slug: data.slug,
+        duration_minutes: data.duration,
+        description: data.description,
+        color: data.color,
+        capacity_limit: data.capacity_limit || null,
+        requires_multi_resource: data.requires_multi_resource,
+        credit_cost: data.credit_cost || null,
+        buffer_minutes: data.buffer_minutes || null,
+        is_active: data.is_active,
+        booking_mode: data.booking_mode || 'appointment',
+        assignment_strategy: data.assignment_strategy || 'round-robin',
+        location_id: data.location_id || null,
+      };
+
       if (editingEventType) {
+        payload.id = editingEventType.id;
+
         const { error } = await supabase
-          .schema('cal')
-          .from('event_types')
-          .update({
-            title: data.title,
-            slug: data.slug,
-            duration_minutes: data.duration,
-            description: data.description,
-            color: data.color,
-            capacity_limit: data.capacity_limit || null,
-            requires_multi_resource: data.requires_multi_resource,
-            credit_cost: data.credit_cost || null,
-            buffer_minutes: data.buffer_minutes || null,
-            is_active: data.is_active,
-            booking_mode: data.booking_mode || 'appointment',
-            assignment_strategy: data.assignment_strategy || 'round-robin',
-            location_id: data.location_id || null,
-          })
-          .eq('id', editingEventType.id);
+          .schema('core')
+          .rpc('api_new_core_upsert_data', {
+            table_name: 'cal.event_types',
+            data: payload
+          });
 
         if (error) throw error;
         eventTypeId = editingEventType.id;
 
         showToast(`${data.title} updated successfully`, 'success');
       } else {
-        const { data: insertedData, error } = await supabase
-          .schema('cal')
-          .from('event_types')
-          .insert({
-            organization_id: organizationId,
-            title: data.title,
-            slug: data.slug,
-            duration_minutes: data.duration,
-            description: data.description,
-            color: data.color,
-            capacity_limit: data.capacity_limit || null,
-            requires_multi_resource: data.requires_multi_resource,
-            credit_cost: data.credit_cost || null,
-            buffer_minutes: data.buffer_minutes || null,
-            is_active: data.is_active,
-            booking_mode: data.booking_mode || 'appointment',
-            assignment_strategy: data.assignment_strategy || 'round-robin',
-            location_id: data.location_id || null,
-          })
-          .select()
-          .single();
+        const { data: insertedId, error } = await supabase
+          .schema('core')
+          .rpc('api_new_core_upsert_data', {
+            table_name: 'cal.event_types',
+            data: payload
+          });
 
         if (error) throw error;
-        eventTypeId = insertedData.id;
+        eventTypeId = insertedId;
 
         showToast(`${data.title} created successfully`, 'success');
       }
@@ -219,10 +215,14 @@ export function EventTypesTab({ organizationId }: EventTypesTabProps) {
               is_required: req.isRequired,
             }));
 
-            await supabase
-              .schema('cal')
-              .from('event_type_resources')
-              .insert(resourceRows);
+            for (const row of resourceRows) {
+              await supabase
+                .schema('core')
+                .rpc('api_new_core_upsert_data', {
+                  table_name: 'cal.event_type_resources',
+                  data: row
+                });
+            }
           }
         }
       }

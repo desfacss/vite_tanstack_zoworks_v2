@@ -44,8 +44,15 @@ export function SeedDataButton() {
         setStatus('error');
         setMessage(`Seeding partially failed for: ${failed.map((f: any) => f.key).join(', ')}. Check console for details.`);
       } else {
-        const { count } = await supabase.schema('calendar').from('event_types').select('*', { count: 'exact', head: true });
-        console.log(`✅ Seeding complete! Total Event Types in DB: ${count}`);
+        const { data: etResponse } = await supabase.schema('core').rpc('api_new_fetch_entity_records', {
+          config: {
+            entity_schema: 'cal',
+            entity_name: 'event_types',
+            pagination: { limit: 1 }
+          }
+        });
+        const count = etResponse?.data?.length || 0;
+        console.log(`\u2705 Seeding complete! Total Event Types in DB: ${count}`);
 
         setStatus('success');
         setMessage(`All use case data seeded successfully! (${count} event types active) Page will reload in 2 seconds...`);

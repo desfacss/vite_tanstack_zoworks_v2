@@ -24,17 +24,23 @@ export function UseCaseSelector({ selectedOrganizationId, onOrganizationChange }
 
   async function loadOrganizations() {
     try {
-      const { data, error } = await supabase
-        .schema('identity')
-        .from('organizations')
-        .select('id, name')
-        .order('name');
+      const { data: orgsResponse, error } = await supabase
+        .schema('core')
+        .rpc('api_new_fetch_entity_records', {
+          config: {
+            entity_schema: 'identity',
+            entity_name: 'organizations',
+            pagination: { limit: 1000 },
+            sorting: { column: 'name', direction: 'ASC' }
+          }
+        });
 
       if (error) throw error;
 
-      setOrganizations(data || []);
-      if (data && data.length > 0 && !selectedOrganizationId) {
-        onOrganizationChange(data[0].id);
+      const orgs = orgsResponse?.data || [];
+      setOrganizations(orgs);
+      if (orgs.length > 0 && !selectedOrganizationId) {
+        onOrganizationChange(orgs[0].id);
       }
     } catch (error) {
       console.error('Error loading organizations:', error);

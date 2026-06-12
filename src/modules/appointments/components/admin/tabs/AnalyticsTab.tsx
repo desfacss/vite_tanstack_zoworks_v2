@@ -52,11 +52,18 @@ export function AnalyticsTab({ organizationId }: AnalyticsTabProps) {
     try {
       setLoading(true);
 
-      const { data: rawBookings } = await supabase
-        .schema('cal')
-        .from('v_bookings')
-        .select('booking_id, status, scheduled_start, scheduled_end, assigned_resource_id, assigned_resource_name')
-        .eq('organization_id', organizationId);
+      const { data: bookingsResponse } = await supabase
+        .schema('core')
+        .rpc('api_new_fetch_entity_records', {
+          config: {
+            entity_schema: 'cal',
+            entity_name: 'v_bookings',
+            organization_id: organizationId,
+            pagination: { limit: 1000 }
+          }
+        });
+
+      const rawBookings = bookingsResponse?.data || [];
 
       const bookings = (rawBookings || []).map((b: any) => ({
         id: b.booking_id,

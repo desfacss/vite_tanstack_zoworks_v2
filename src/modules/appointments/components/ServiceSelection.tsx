@@ -42,39 +42,45 @@ export function ServiceSelection({ organizationId, onSelectService, onBack }: Se
     try {
       setLoading(true);
 
-      const { data: eventTypes, error } = await supabase
-        .schema('cal')
-        .from('event_types')
-        .select(`
-          id,
-          title,
-          slug,
-          description,
-          duration,
-          color,
-          capacity_limit,
-          credit_cost,
-          booking_mode,
-          location_id,
-          is_active
-        `)
-        .eq('organization_id', organizationId)
-        .eq('is_active', true)
-        .order('title');
+      const { data: eventTypesResponse } = await supabase
+        .schema('core')
+        .rpc('api_new_fetch_entity_records', {
+          config: {
+            entity_schema: 'cal',
+            entity_name: 'event_types',
+            organization_id: organizationId,
+            filters: [
+              { key: 'is_active', operator: '=', value: true }
+            ],
+            pagination: { limit: 1000 },
+            sorting: { column: 'title', direction: 'ASC' }
+          }
+        });
 
-      if (error) throw error;
+      const eventTypesRaw = eventTypesResponse?.data || [];
+
+      // Map raw db columns (duration_minutes) to UI interface (duration)
+      const eventTypes = eventTypesRaw.map((et: any) => ({
+        ...et,
+        duration: et.duration_minutes || et.duration || 0,
+      }));
 
       // Load location names for services that have locations
       const servicesWithLocations = await Promise.all(
         (eventTypes || []).map(async (et) => {
           if (et.location_id) {
-            const { data: location } = await supabase
-              .schema('identity')
-              .from('locations')
-              .select('name')
-              .eq('id', et.location_id)
-              .maybeSingle();
+            const { data: locResponse } = await supabase
+              .schema('core')
+              .rpc('api_new_fetch_entity_records', {
+                config: {
+                  entity_schema: 'identity',
+                  entity_name: 'locations',
+                  filters: [{ key: 'id', operator: '=', value: et.location_id }],
+                  pagination: { limit: 1 }
+                }
+              });
 
+            const location = locResponse?.data?.[0];
             return { ...et, location_name: location?.name };
           }
           return et;

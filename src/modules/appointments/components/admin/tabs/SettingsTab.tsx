@@ -48,17 +48,24 @@ export function SettingsTab({ organizationId }: SettingsTabProps) {
     try {
       setLoading(true);
 
-      const { data, error } = await supabase
-        .schema('identity')
-        .from('organizations')
-        .select('*')
-        .eq('id', organizationId)
-        .single();
+      const { data: orgResponse, error } = await supabase
+        .schema('core')
+        .rpc('api_new_fetch_entity_records', {
+          config: {
+            entity_schema: 'identity',
+            entity_name: 'organizations',
+            filters: [{ key: 'id', operator: '=', value: organizationId }],
+            pagination: { limit: 1 }
+          }
+        });
 
       if (error) throw error;
 
-      setOrganization(data);
-      setTimezone(data.timezone || 'UTC');
+      const org = orgResponse?.data?.[0] || null;
+      setOrganization(org);
+      if (org) {
+        setTimezone(org.timezone || 'UTC');
+      }
     } catch (error) {
       console.error('Error loading organization:', error);
       showToast('Failed to load organization settings', 'error');
@@ -74,12 +81,14 @@ export function SettingsTab({ organizationId }: SettingsTabProps) {
       setSaving(true);
 
       const { error } = await supabase
-        .schema('identity')
-        .from('organizations')
-        .update({
-          timezone,
-        })
-        .eq('id', organizationId);
+        .schema('core')
+        .rpc('api_new_core_upsert_data', {
+          table_name: 'identity.organizations',
+          data: {
+            id: organizationId,
+            timezone,
+          }
+        });
 
       if (error) throw error;
 

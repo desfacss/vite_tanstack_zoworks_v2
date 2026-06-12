@@ -1,4 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
+import { format, startOfMonth, endOfMonth, isSameDay } from 'date-fns';
+import { formatTime } from '../lib/utils/dateUtils';
 import {
   EventType,
   UserProfile,
@@ -11,6 +14,7 @@ import {
   ResourceAvailabilityRule,
   ResourceDateOverride,
   EventTypeResource,
+  EnhancedTimeSlot,
 } from '../lib/types';
 import CalendarView from './CalendarView';
 import TimeSlotPicker from './TimeSlotPicker';
@@ -20,13 +24,6 @@ import UseCaseBanner from './UseCaseBanner';
 import ResourceSelector from './ResourceSelector';
 import BookingModeFactory from './booking/modes/BookingModeFactory';
 import { detectUserTimezone } from '../lib/utils/timezoneUtils';
-import { generateAvailableSlots, getAvailableDatesInMonth } from '../lib/utils/availabilityUtils';
-import {
-  generateUnifiedAvailableSlots,
-  getAvailableDatesInMonthForResources,
-  assignResourceByStrategy,
-  getAvailableResourcesForSlot,
-} from '../lib/utils/resourceAvailabilityUtils';
 import { CreditCard, ArrowLeft, Clock, Tag, Users, Calendar } from 'lucide-react';
 
 interface PublicBookingPageProps {
@@ -79,7 +76,8 @@ export default function PublicBookingPage({
   const [availableDates, setAvailableDates] = useState<Date[]>([]);
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
   const [selectedResourceId, setSelectedResourceId] = useState<string | null>(null);
-  const [assignedResource, setAssignedResource] = useState<Resource | null>(null);
+  const [dbSlotsMap, setDbSlotsMap] = useState<Map<string, any[]>>(new Map());
+  const [isLoadingSlots, setIsLoadingSlots] = useState(false);
 
   const eventTypeResourceList = eventTypeResources
     .filter(etr => etr.event_type_id === eventType.id && etr.role === 'primary')
@@ -89,142 +87,197 @@ export default function PublicBookingPage({
   const hasResources = eventTypeResourceList.length > 0;
 
   useEffect(() => {
-    if (hasResources) {
-      const dates = getAvailableDatesInMonthForResources(
-        currentMonth,
-        eventType.duration_minutes,
-        resources,
-        eventTypeResources,
-        eventType.id,
-        resourceAvailabilityRules,
-        resourceDateOverrides,
-        bookings,
-        eventType.requires_multi_resource,
-        bookingResources,
-        selectedResourceId || undefined
-      );
-      setAvailableDates(dates);
-    } else {
-      const dates = getAvailableDatesInMonth(
-        currentMonth,
-        eventType.duration_minutes,
-        availabilityRules,
-        dateOverrides,
-        bookings
-      );
-      setAvailableDates(dates);
-    }
-  }, [
-    currentMonth,
-    eventType.duration_minutes,
-    eventType.id,
-    availabilityRules,
-    dateOverrides,
-    bookings,
-    hasResources,
-    resources,
-    eventTypeResources,
-    resourceAvailabilityRules,
-    resourceDateOverrides,
-    selectedResourceId,
-  ]);
+    let active = true;
 
-  useEffect(() => {
-    if (selectedDate) {
-      if (hasResources) {
-        if (eventType.assignment_strategy === 'manual' && !selectedResourceId) {
-          setTimeSlots([]);
-          setSelectedSlot(null);
+    async function fetchDbSlots() {
+      if (!eventType.id) return;
+      setIsLoadingSlots(true);
+
+      try {
+        const today = new Date();
+        const startDate = startOfMonth(currentMonth) > today ? startOfMonth(currentMonth) : today;
+        const dateFrom = format(startDate, 'yyyy-MM-dd');
+        const dateTo = format(endOfMonth(currentMonth), 'yyyy-MM-dd');
+
+        // Determine primary resources to query
+        let primaryResources: Resource[] = [];
+        if (selectedResourceId) {
+          const selectedRes = resources.find(r => r.id === selectedResourceId);
+          if (selectedRes) {
+            primaryResources = [selectedRes];
+          }
+        } else if (hasResources) {
+          primaryResources = eventTypeResourceList;
+        }
+
+        // Determine required resources (e.g. secondary assets) if multi-resource is enabled
+        const requiredResources = eventType.requires_multi_resource
+          ? eventTypeResources
+              .filter(etr => etr.event_type_id === eventType.id && etr.is_required && etr.role !== 'primary')
+              .map(etr => resources.find(r => r.id === etr.resource_id))
+              .filter((r): r is Resource => r !== undefined)
+          : [];
+
+        const allResourcesToQuery = Array.from(new Set([...primaryResources, ...requiredResources]));
+
+        if (allResourcesToQuery.length === 0) {
+          if (active) {
+            setDbSlotsMap(new Map());
+            setIsLoadingSlots(false);
+          }
           return;
         }
 
-        const slots = generateUnifiedAvailableSlots(
-          selectedDate,
-          eventType.duration_minutes,
-          resources,
-          eventTypeResources,
-          eventType.id,
-          resourceAvailabilityRules,
-          resourceDateOverrides,
-          bookings,
-          eventType.capacity_limit,
-          eventType.requires_multi_resource,
-          bookingResources,
-          selectedResourceId || undefined
-        );
-        setTimeSlots(slots);
-      } else {
-        const slots = generateAvailableSlots(
-          selectedDate,
-          eventType.duration_minutes,
-          availabilityRules,
-          dateOverrides,
-          bookings
-        );
-        setTimeSlots(slots);
+        // Fetch slots in parallel
+        const promises = allResourcesToQuery.map(async (res) => {
+          const { data, error } = await supabase
+            .schema('cal')
+            .rpc('get_available_slots', {
+              p_resource_id: res.id,
+              p_resource_kind: res.resource_kind || 'contact',
+              p_event_type_id: eventType.id,
+              p_date_from: dateFrom,
+              p_date_to: dateTo,
+            });
+          
+          if (error) {
+            console.error(`Error fetching slots for resource ${res.name}:`, error);
+            return { resourceId: res.id, slots: [] };
+          }
+          return { resourceId: res.id, slots: data || [] };
+        });
+
+        const results = await Promise.all(promises);
+        
+        if (!active) return;
+
+        const newMap = new Map<string, any[]>();
+        results.forEach(resResult => {
+          newMap.set(resResult.resourceId, resResult.slots);
+        });
+
+        setDbSlotsMap(newMap);
+      } catch (err) {
+        console.error('Error in fetchDbSlots:', err);
+      } finally {
+        if (active) {
+          setIsLoadingSlots(false);
+        }
       }
+    }
+
+    fetchDbSlots();
+
+    return () => {
+      active = false;
+    };
+  }, [
+    currentMonth,
+    selectedResourceId,
+    eventType.id,
+    eventType.requires_multi_resource,
+    resources,
+    eventTypeResources,
+    hasResources,
+  ]);
+
+  const primaryResources = selectedResourceId
+    ? [resources.find(r => r.id === selectedResourceId)].filter((r): r is Resource => r !== undefined)
+    : eventTypeResourceList;
+
+  const requiredResources = eventType.requires_multi_resource
+    ? eventTypeResources
+        .filter(etr => etr.event_type_id === eventType.id && etr.is_required && etr.role !== 'primary')
+        .map(etr => resources.find(r => r.id === etr.resource_id))
+        .filter((r): r is Resource => r !== undefined)
+    : [];
+
+  const allStartTimes = Array.from(
+    new Set(
+      primaryResources.flatMap(res => {
+        const slots = dbSlotsMap.get(res.id) || [];
+        return slots.map(s => s.slot_start);
+      })
+    )
+  ).sort();
+
+  const getSlotAvailabilityInfo = (startTimeStr: string) => {
+    const isAvailableForRequired = requiredResources.every(reqRes => {
+      const slots = dbSlotsMap.get(reqRes.id) || [];
+      const slot = slots.find(s => s.slot_start === startTimeStr);
+      return slot && slot.is_available;
+    });
+
+    if (eventType.requires_multi_resource && !isAvailableForRequired) {
+      return { available: false, resourceId: undefined, resourceName: undefined };
+    }
+
+    const availablePrimary = primaryResources.find(primRes => {
+      const slots = dbSlotsMap.get(primRes.id) || [];
+      const slot = slots.find(s => s.slot_start === startTimeStr);
+      return slot && slot.is_available;
+    });
+
+    if (availablePrimary) {
+      return {
+        available: true,
+        resourceId: availablePrimary.id,
+        resourceName: availablePrimary.name,
+      };
+    }
+
+    return { available: false, resourceId: undefined, resourceName: undefined };
+  };
+
+  useEffect(() => {
+    const uniqueDatesMap = new Map<string, Date>();
+    allStartTimes.forEach(startTimeStr => {
+      const { available } = getSlotAvailabilityInfo(startTimeStr);
+      if (available) {
+        const date = new Date(startTimeStr);
+        const dateKey = format(date, 'yyyy-MM-dd');
+        if (!uniqueDatesMap.has(dateKey)) {
+          const midnightDate = new Date(date);
+          midnightDate.setHours(0, 0, 0, 0);
+          uniqueDatesMap.set(dateKey, midnightDate);
+        }
+      }
+    });
+    setAvailableDates(Array.from(uniqueDatesMap.values()));
+  }, [dbSlotsMap, selectedResourceId]);
+
+  useEffect(() => {
+    if (selectedDate) {
+      const slotsForSelectedDate = allStartTimes
+        .filter(startTimeStr => {
+          const date = new Date(startTimeStr);
+          return isSameDay(date, selectedDate);
+        })
+        .map(startTimeStr => {
+          const { available, resourceId, resourceName } = getSlotAvailabilityInfo(startTimeStr);
+          const dateTime = new Date(startTimeStr);
+          return {
+            time: formatTime(dateTime, false),
+            datetime: dateTime,
+            available: available,
+            capacity: eventType.capacity_limit || 1,
+            booked: 0,
+            resource_id: resourceId,
+            resource_name: resourceName,
+          } as EnhancedTimeSlot;
+        })
+        .sort((a, b) => a.datetime.getTime() - b.datetime.getTime());
+
+      setTimeSlots(slotsForSelectedDate);
       setSelectedSlot(null);
     } else {
       setTimeSlots([]);
     }
-  }, [
-    selectedDate,
-    eventType.duration_minutes,
-    eventType.id,
-    eventType.capacity_limit,
-    eventType.assignment_strategy,
-    availabilityRules,
-    dateOverrides,
-    bookings,
-    hasResources,
-    resources,
-    eventTypeResources,
-    resourceAvailabilityRules,
-    resourceDateOverrides,
-    selectedResourceId,
-  ]);
+  }, [selectedDate, dbSlotsMap, selectedResourceId]);
 
-  useEffect(() => {
-    if (
-      hasResources &&
-      eventType.assignment_strategy &&
-      eventType.assignment_strategy !== 'manual' &&
-      selectedDate &&
-      selectedSlot
-    ) {
-      const availableResources = getAvailableResourcesForSlot(
-        selectedDate,
-        selectedSlot.time,
-        eventType.duration_minutes,
-        eventTypeResourceList,
-        resourceAvailabilityRules,
-        resourceDateOverrides,
-        bookings
-      );
-
-      const assigned = assignResourceByStrategy(
-        availableResources,
-        eventType.assignment_strategy,
-        bookings
-      );
-
-      setAssignedResource(assigned);
-      if (assigned) {
-        setSelectedResourceId(assigned.id);
-      }
-    }
-  }, [
-    hasResources,
-    eventType.assignment_strategy,
-    eventType.duration_minutes,
-    eventType.id,
-    selectedDate,
-    selectedSlot,
-    eventTypeResourceList,
-    resourceAvailabilityRules,
-    resourceDateOverrides,
-    bookings,
-  ]);
+  const assignedResource = selectedSlot?.resource_id
+    ? resources.find(r => r.id === selectedSlot.resource_id) || null
+    : null;
 
   const handleDateSelect = (date: Date) => {
     setSelectedDate(date);
@@ -237,24 +290,16 @@ export default function PublicBookingPage({
 
   const handleFormSubmit = (formData: { name: string; email: string; notes: string }) => {
     if (selectedDate && selectedSlot) {
-      // Find all required resources for this event type to include in the booking
-      const requiredResourceIds = eventTypeResources
-        .filter(etr => etr.event_type_id === eventType.id && etr.is_required)
-        .map(etr => etr.resource_id);
-
-      // Add the selected primary resource if not already in the list
-      if (selectedResourceId && !requiredResourceIds.includes(selectedResourceId)) {
-        requiredResourceIds.push(selectedResourceId);
-      }
+      const assignedIdToPass = eventType.assignment_strategy === 'manual'
+        ? (selectedResourceId || undefined)
+        : undefined;
 
       onBookingSubmit({
         ...formData,
         selectedDate,
         selectedSlot,
         timezone,
-        assignedResourceId: selectedResourceId || undefined,
-        // We might need to extend onBookingSubmit to handle multiple resource IDs
-        // For now, we'll pass the additional ones in metadata or expect the backend to handle it
+        assignedResourceId: assignedIdToPass,
       });
     }
   };
@@ -504,13 +549,13 @@ export default function PublicBookingPage({
               onSlotSelect={setSelectedSlot}
               onJoinQueue={handleFormSubmit}
               showCapacity={selectedUseCase?.config_json.capacity_enabled}
-              isLoading={isLoading}
+              isLoading={isLoading || isLoadingSlots}
             />
 
             {selectedDate && selectedSlot && eventType.booking_mode !== 'queue' && (
               <div className="border-t pt-6">
                 <h4 className="text-md font-semibold text-gray-900 mb-4">Your Information</h4>
-                <BookingForm onSubmit={handleFormSubmit} isLoading={isLoading} />
+                <BookingForm onSubmit={handleFormSubmit} isLoading={isLoading || isLoadingSlots} />
               </div>
             )}
           </div>

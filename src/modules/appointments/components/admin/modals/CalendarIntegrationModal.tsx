@@ -69,15 +69,20 @@ export function CalendarIntegrationModal({
   async function loadIntegrations() {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .schema('cal')
-        .from('calendar_integrations')
-        .select('*')
-        .eq('contact_id', resourceId)
-        .order('created_at', { ascending: false });
+      const { data: integrationsResponse, error } = await supabase
+        .schema('core')
+        .rpc('api_new_fetch_entity_records', {
+          config: {
+            entity_schema: 'cal',
+            entity_name: 'calendar_integrations',
+            filters: [{ key: 'contact_id', operator: '=', value: resourceId }],
+            pagination: { limit: 1000 },
+            sorting: { column: 'created_at', direction: 'DESC' }
+          }
+        });
 
       if (error) throw error;
-      setIntegrations(data || []);
+      setIntegrations(integrationsResponse?.data || []);
     } catch (error) {
       console.error('Error loading calendar integrations:', error);
       showToast('Failed to load calendar integrations', 'error');
@@ -114,10 +119,14 @@ export function CalendarIntegrationModal({
   const handleToggleActive = async (integration: CalendarIntegration) => {
     try {
       const { error } = await supabase
-        .schema('cal')
-        .from('calendar_integrations')
-        .update({ is_active: !integration.is_active })
-        .eq('id', integration.id);
+        .schema('core')
+        .rpc('api_new_core_upsert_data', {
+          table_name: 'cal.calendar_integrations',
+          data: {
+            id: integration.id,
+            is_active: !integration.is_active
+          }
+        });
 
       if (error) throw error;
 
@@ -136,14 +145,18 @@ export function CalendarIntegrationModal({
     setSyncing(integrationId);
 
     try {
-      await supabase
-        .schema('cal')
-        .from('calendar_integrations')
-        .update({
-          last_sync_at: new Date().toISOString(),
-          last_sync_status: 'success',
-        })
-        .eq('id', integrationId);
+      const { error } = await supabase
+        .schema('core')
+        .rpc('api_new_core_upsert_data', {
+          table_name: 'cal.calendar_integrations',
+          data: {
+            id: integrationId,
+            last_sync_at: new Date().toISOString(),
+            last_sync_status: 'success',
+          }
+        });
+
+      if (error) throw error;
 
       showToast('Calendar synced successfully (demo)', 'success');
       loadIntegrations();

@@ -39,47 +39,69 @@ export function OverviewTab({ organizationId }: OverviewTabProps) {
     try {
       setLoading(true);
 
-      const { data: org } = await supabase
-        .schema('identity')
-        .from('organizations')
-        .select('name')
-        .eq('id', organizationId)
-        .single();
+      const { data: orgResponse } = await supabase
+        .schema('core')
+        .rpc('api_new_fetch_entity_records', {
+          config: {
+            entity_schema: 'identity',
+            entity_name: 'organizations',
+            filters: [{ key: 'id', operator: '=', value: organizationId }],
+            pagination: { limit: 1 }
+          }
+        });
 
+      const org = orgResponse?.data?.[0];
       if (org) setOrganizationName(org.name);
 
-      const [resources, eventTypes, locations, bookings] = await Promise.all([
-        supabase
-          .schema('cal')
-          .from('v_bookable_resources')
-          .select('id, is_active', { count: 'exact' })
-          .eq('organization_id', organizationId),
-        supabase
-          .schema('cal')
-          .from('event_types')
-          .select('id', { count: 'exact' })
-          .eq('organization_id', organizationId),
-        supabase
-          .schema('identity')
-          .from('locations')
-          .select('id', { count: 'exact' })
-          .eq('organization_id', organizationId),
-        supabase
-          .schema('cal')
-          .from('v_bookings')
-          .select('booking_id, scheduled_start', { count: 'exact' })
-          .gte('scheduled_start', new Date().toISOString()),
+      const [resourcesResponse, eventTypesResponse, locationsResponse, bookingsResponse] = await Promise.all([
+        supabase.schema('core').rpc('api_new_fetch_entity_records', {
+          config: {
+            entity_schema: 'cal',
+            entity_name: 'v_bookable_resources',
+            organization_id: organizationId,
+            pagination: { limit: 1000 }
+          }
+        }),
+        supabase.schema('core').rpc('api_new_fetch_entity_records', {
+          config: {
+            entity_schema: 'cal',
+            entity_name: 'event_types',
+            organization_id: organizationId,
+            pagination: { limit: 1000 }
+          }
+        }),
+        supabase.schema('core').rpc('api_new_fetch_entity_records', {
+          config: {
+            entity_schema: 'identity',
+            entity_name: 'locations',
+            organization_id: organizationId,
+            pagination: { limit: 1000 }
+          }
+        }),
+        supabase.schema('core').rpc('api_new_fetch_entity_records', {
+          config: {
+            entity_schema: 'cal',
+            entity_name: 'v_bookings',
+            filters: [{ key: 'scheduled_start', operator: '>=', value: new Date().toISOString() }],
+            pagination: { limit: 1000 }
+          }
+        }),
       ]);
 
-      const activeResources = resources.data?.filter((r: { is_active: boolean }) => r.is_active).length || 0;
+      const resList = resourcesResponse.data?.data || [];
+      const etList = eventTypesResponse.data?.data || [];
+      const locList = locationsResponse.data?.data || [];
+      const bookList = bookingsResponse.data?.data || [];
+
+      const activeResources = resList.filter((r: { is_active: boolean }) => r.is_active).length || 0;
 
       setStats({
-        totalResources: resources.count || 0,
+        totalResources: resList.length,
         activeResources,
-        eventTypes: eventTypes.count || 0,
-        locations: locations.count || 0,
-        totalBookings: bookings.count || 0,
-        upcomingBookings: bookings.count || 0,
+        eventTypes: etList.length,
+        locations: locList.length,
+        totalBookings: bookList.length,
+        upcomingBookings: bookList.length,
       });
     } catch (error) {
       console.error('Error loading stats:', error);
