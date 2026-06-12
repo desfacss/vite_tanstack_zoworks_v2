@@ -2,12 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { Modal } from '../../common/Modal';
 import { User, DoorOpen, Wrench, Truck, Package, Mail, Phone, Clock } from 'lucide-react';
 import { COMMON_TIMEZONES } from '../../../lib/utils/timezoneUtils';
+import { supabase } from '@/lib/supabase';
 
 interface ResourceFormModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (data: ResourceFormData) => Promise<void>;
-  initialData?: ResourceFormData & { id?: string };
+  initialData?: ResourceFormData & { id?: string; user_id?: string };
+  organizationId: string;
 }
 
 export interface ResourceFormData {
@@ -18,6 +20,9 @@ export interface ResourceFormData {
   status: string;
   timezone: string;
   metadata: Record<string, any>;
+  user_id?: string;
+  organization_user_id?: string;
+  userMode?: 'existing' | 'new';
 }
 
 const resourceTypes = [
@@ -40,6 +45,7 @@ export function ResourceFormModal({
   onClose,
   onSubmit,
   initialData,
+  organizationId,
 }: ResourceFormModalProps) {
   const [formData, setFormData] = useState<ResourceFormData>({
     type: 'person',
@@ -51,12 +57,23 @@ export function ResourceFormModal({
     metadata: {},
   });
 
+  const [userMode, setUserMode] = useState<'existing' | 'new'>('existing');
+  const [orgUsers, setOrgUsers] = useState<any[]>([]);
+  const [selectedOrgUserId, setSelectedOrgUserId] = useState<string>('');
+  const [isLoadingUsers, setIsLoadingUsers] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (initialData) {
       setFormData(initialData);
+      if (initialData.type === 'person') {
+        if (initialData.user_id) {
+          setUserMode('existing');
+        } else {
+          setUserMode('new');
+        }
+      }
     } else {
       setFormData({
         type: 'person',
@@ -67,22 +84,71 @@ export function ResourceFormModal({
         timezone: 'America/New_York',
         metadata: {},
       });
+      setUserMode('existing');
+      setSelectedOrgUserId('');
     }
     setErrors({});
   }, [initialData, isOpen]);
 
+  useEffect(() => {
+    if (isOpen && organizationId && formData.type === 'person') {
+      const fetchOrgUsers = async () => {
+        try {
+          setIsLoadingUsers(true);
+          const { data, error } = await supabase
+            .schema('identity')
+            .from('organization_users')
+            .select(`
+              id,
+              user_id,
+              users:users!organization_users_user_id_fkey (
+                name,
+                email,
+                mobile
+              )
+            `)
+            .eq('organization_id', organizationId)
+            .eq('is_active', true);
+
+          if (error) throw error;
+          
+          setOrgUsers(data || []);
+
+          if (initialData?.user_id && data) {
+            const matched = data.find(ou => ou.user_id === initialData.user_id);
+            if (matched) {
+              setSelectedOrgUserId(matched.id);
+            }
+          }
+        } catch (err) {
+          console.error('Error fetching organization users:', err);
+        } finally {
+          setIsLoadingUsers(false);
+        }
+      };
+
+      fetchOrgUsers();
+    }
+  }, [isOpen, organizationId, formData.type, initialData]);
+
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.name.trim()) {
-      newErrors.name = 'Name is required';
-    }
+    if (formData.type === 'person' && userMode === 'existing' && !initialData?.id) {
+      if (!selectedOrgUserId) {
+        newErrors.selectedOrgUserId = 'Please select an organization user';
+      }
+    } else {
+      if (!formData.name.trim()) {
+        newErrors.name = 'Name is required';
+      }
 
-    if (formData.type === 'person') {
-      if (!formData.email?.trim()) {
-        newErrors.email = 'Email is required for people';
-      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-        newErrors.email = 'Please enter a valid email';
+      if (formData.type === 'person') {
+        if (!formData.email?.trim()) {
+          newErrors.email = 'Email is required for people';
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+          newErrors.email = 'Please enter a valid email';
+        }
       }
     }
 
@@ -99,13 +165,42 @@ export function ResourceFormModal({
 
     try {
       setIsLoading(true);
-      await onSubmit(formData);
+      await onSubmit({
+        ...formData,
+        userMode: formData.type === 'person' ? userMode : undefined,
+        user_id: formData.type === 'person' && userMode === 'existing' ? formData.user_id : undefined,
+        organization_user_id: formData.type === 'person' && userMode === 'existing' ? formData.organization_user_id : undefined,
+      });
       onClose();
     } catch (error) {
       console.error('Error submitting form:', error);
       setErrors({ submit: 'Failed to save resource. Please try again.' });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleUserSelect = (orgUserId: string) => {
+    setSelectedOrgUserId(orgUserId);
+    const selectedUser = orgUsers.find(ou => ou.id === orgUserId);
+    if (selectedUser && selectedUser.users) {
+      setFormData(prev => ({
+        ...prev,
+        name: selectedUser.users.name || '',
+        email: selectedUser.users.email || '',
+        phone: selectedUser.users.mobile || '',
+        user_id: selectedUser.user_id,
+        organization_user_id: selectedUser.id,
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        name: '',
+        email: '',
+        phone: '',
+        user_id: undefined,
+        organization_user_id: undefined,
+      }));
     }
   };
 
@@ -121,6 +216,7 @@ export function ResourceFormModal({
   };
 
   const isPerson = formData.type === 'person';
+  const isFieldsDisabled = isPerson && userMode === 'existing';
 
   return (
     <Modal
@@ -162,6 +258,88 @@ export function ResourceFormModal({
           </div>
         </div>
 
+        {isPerson && !initialData?.id && (
+          <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              User Option
+            </label>
+            <div className="flex space-x-4">
+              <label className="inline-flex items-center">
+                <input
+                  type="radio"
+                  className="form-radio text-blue-600 focus:ring-blue-500"
+                  name="userMode"
+                  value="existing"
+                  checked={userMode === 'existing'}
+                  onChange={() => {
+                    setUserMode('existing');
+                    setFormData(prev => ({
+                      ...prev,
+                      name: '',
+                      email: '',
+                      phone: '',
+                      user_id: undefined,
+                      organization_user_id: undefined,
+                    }));
+                    setSelectedOrgUserId('');
+                  }}
+                />
+                <span className="ml-2 text-sm text-gray-700 font-medium">Select Existing User</span>
+              </label>
+              <label className="inline-flex items-center">
+                <input
+                  type="radio"
+                  className="form-radio text-blue-600 focus:ring-blue-500"
+                  name="userMode"
+                  value="new"
+                  checked={userMode === 'new'}
+                  onChange={() => {
+                    setUserMode('new');
+                    setFormData(prev => ({
+                      ...prev,
+                      name: '',
+                      email: '',
+                      phone: '',
+                      user_id: undefined,
+                      organization_user_id: undefined,
+                    }));
+                    setSelectedOrgUserId('');
+                  }}
+                />
+                <span className="ml-2 text-sm text-gray-700 font-medium">Create New User</span>
+              </label>
+            </div>
+          </div>
+        )}
+
+        {isPerson && userMode === 'existing' && !initialData?.id && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Select User *
+            </label>
+            <select
+              value={selectedOrgUserId}
+              onChange={(e) => handleUserSelect(e.target.value)}
+              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.selectedOrgUserId ? 'border-red-500' : 'border-gray-300'
+                }`}
+              disabled={isLoadingUsers}
+            >
+              <option value="">-- Choose an Organization User --</option>
+              {orgUsers.map((ou) => (
+                <option key={ou.id} value={ou.id}>
+                  {ou.users?.name || 'Unknown'} ({ou.users?.email || 'No Email'})
+                </option>
+              ))}
+            </select>
+            {errors.selectedOrgUserId && (
+              <p className="mt-1 text-sm text-red-600">{errors.selectedOrgUserId}</p>
+            )}
+            {isLoadingUsers && (
+              <p className="mt-1 text-xs text-gray-500">Loading users...</p>
+            )}
+          </div>
+        )}
+
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Name *
@@ -170,8 +348,9 @@ export function ResourceFormModal({
             type="text"
             value={formData.name}
             onChange={(e) => updateField('name', e.target.value)}
+            disabled={isFieldsDisabled}
             className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.name ? 'border-red-500' : 'border-gray-300'
-              }`}
+              } ${isFieldsDisabled ? 'bg-gray-100 cursor-not-allowed' : ''}`}
             placeholder={isPerson ? 'John Doe' : 'Resource name'}
           />
           {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
@@ -188,8 +367,9 @@ export function ResourceFormModal({
                 type="email"
                 value={formData.email}
                 onChange={(e) => updateField('email', e.target.value)}
+                disabled={isFieldsDisabled}
                 className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.email ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  } ${isFieldsDisabled ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                 placeholder="email@example.com"
               />
             </div>
@@ -204,7 +384,8 @@ export function ResourceFormModal({
                 type="tel"
                 value={formData.phone}
                 onChange={(e) => updateField('phone', e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                disabled={isFieldsDisabled}
+                className={`w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${isFieldsDisabled ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                 placeholder="+1 (555) 123-4567"
               />
             </div>

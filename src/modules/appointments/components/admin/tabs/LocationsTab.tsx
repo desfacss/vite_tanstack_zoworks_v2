@@ -78,7 +78,7 @@ export function LocationsTab({ organizationId }: LocationsTabProps) {
           .eq('organization_id', organizationId)
           .order('name'),
         supabase
-          .schema('calendar')
+          .schema('cal')
           .from('territories')
           .select('*')
           .eq('organization_id', organizationId)
@@ -118,7 +118,7 @@ export function LocationsTab({ organizationId }: LocationsTabProps) {
 
     try {
       const { error } = await supabase
-        .schema('calendar')
+        .schema('identity')
         .from('locations')
         .delete()
         .eq('id', deletingLocation.id);
@@ -142,7 +142,7 @@ export function LocationsTab({ organizationId }: LocationsTabProps) {
     try {
       if (editingLocation) {
         const { error } = await supabase
-          .schema('calendar')
+          .schema('identity')
           .from('locations')
           .update({
             name: data.name,
@@ -162,7 +162,7 @@ export function LocationsTab({ organizationId }: LocationsTabProps) {
         showToast(`${data.name} updated successfully`, 'success');
       } else {
         const { error } = await supabase
-          .schema('calendar')
+          .schema('identity')
           .from('locations')
           .insert({
             organization_id: organizationId,

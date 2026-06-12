@@ -35,6 +35,7 @@ interface Resource {
   status: string;
   timezone: string;
   metadata: any;
+  user_id?: string;
 }
 
 const resourceTypeIcons = {
@@ -77,20 +78,24 @@ export function ResourcesTab({ organizationId }: ResourcesTabProps) {
           'postgres_changes',
           {
             event: '*',
-            schema: 'calendar',
-            table: 'resources',
+            schema: 'unified',
+            table: 'contacts',
             filter: `organization_id=eq.${organizationId}`,
           },
-          (payload) => {
-            if (payload.eventType === 'INSERT') {
-              setResources((prev) => [...prev, payload.new as Resource].sort((a, b) => a.name.localeCompare(b.name)));
-            } else if (payload.eventType === 'UPDATE') {
-              setResources((prev) =>
-                prev.map((r) => (r.id === payload.new.id ? (payload.new as Resource) : r)).sort((a, b) => a.name.localeCompare(b.name))
-              );
-            } else if (payload.eventType === 'DELETE') {
-              setResources((prev) => prev.filter((r) => r.id !== payload.old.id));
-            }
+          () => {
+            loadResources();
+          }
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'unified',
+            table: 'assets',
+            filter: `organization_id=eq.${organizationId}`,
+          },
+          () => {
+            loadResources();
           }
         )
         .subscribe();
@@ -108,8 +113,8 @@ export function ResourcesTab({ organizationId }: ResourcesTabProps) {
       setLoading(true);
 
       let query = supabase
-        .schema('calendar')
-        .from('resources')
+        .schema('cal')
+        .from('v_bookable_resources')
         .select('*')
         .eq('organization_id', organizationId)
         .order('name');
@@ -134,17 +139,17 @@ export function ResourcesTab({ organizationId }: ResourcesTabProps) {
   async function loadCalendarIntegrations(resourceIds: string[]) {
     try {
       const { data, error } = await supabase
-        .schema('calendar')
+        .schema('cal')
         .from('calendar_integrations')
-        .select('resource_id, is_active')
-        .in('resource_id', resourceIds);
+        .select('contact_id, is_active')
+        .in('contact_id', resourceIds);
 
       if (error) throw error;
 
       const counts: Record<string, number> = {};
       data?.forEach((integration) => {
         if (integration.is_active) {
-          counts[integration.resource_id] = (counts[integration.resource_id] || 0) + 1;
+          counts[integration.contact_id] = (counts[integration.contact_id] || 0) + 1;
         }
       });
 
@@ -186,9 +191,11 @@ export function ResourcesTab({ organizationId }: ResourcesTabProps) {
     if (!deletingResource) return;
 
     try {
+      const isPerson = deletingResource.type === 'person';
+      const targetTable = isPerson ? 'contacts' : 'assets';
       const { error } = await supabase
-        .schema('calendar')
-        .from('resources')
+        .schema('unified')
+        .from(targetTable)
         .delete()
         .eq('id', deletingResource.id);
 
@@ -210,37 +217,110 @@ export function ResourcesTab({ organizationId }: ResourcesTabProps) {
 
     try {
       if (editingResource) {
+        const isPerson = editingResource.type === 'person';
+        const targetTable = isPerson ? 'contacts' : 'assets';
+        const updatePayload: any = {
+          name: data.name,
+          booking_timezone: data.timezone,
+          is_active: data.status === 'active',
+          booking_enabled: true
+        };
+        if (isPerson) {
+          updatePayload.resource_type = data.type;
+          updatePayload.email = data.email || null;
+          updatePayload.phone = data.phone || null;
+        } else {
+          updatePayload.asset_type = data.type;
+        }
+
         const { error } = await supabase
-          .schema('calendar')
-          .from('resources')
-          .update({
-            type: data.type,
-            name: data.name,
-            email: data.email || null,
-            phone: data.phone || null,
-            status: data.status,
-            timezone: data.timezone,
-            metadata: data.metadata,
-          })
+          .schema('unified')
+          .from(targetTable)
+          .update(updatePayload)
           .eq('id', editingResource.id);
 
         if (error) throw error;
 
         showToast(`${data.name} updated successfully`, 'success');
       } else {
-        const { error } = await supabase
-          .schema('calendar')
-          .from('resources')
-          .insert({
-            organization_id: organizationId,
-            type: data.type,
+        const isPerson = data.type === 'person';
+        const targetTable = isPerson ? 'contacts' : 'assets';
+        
+        let finalUserId = data.user_id;
+        let finalOrgUserId = data.organization_user_id;
+
+        if (isPerson && data.userMode === 'new') {
+          // 1. Insert into identity.users
+          const nameParts = data.name.trim().split(/\s+/);
+          const firstName = nameParts[0] || '';
+          const lastName = nameParts.slice(1).join(' ') || '';
+          
+          const userPayload = {
             name: data.name,
             email: data.email || null,
-            phone: data.phone || null,
-            status: data.status,
-            timezone: data.timezone,
-            metadata: data.metadata,
-          });
+            mobile: data.phone || null,
+            is_active: true,
+            pref_organization_id: organizationId,
+            details: {
+              firstName,
+              lastName,
+              email: data.email || null,
+              mobile: data.phone || null,
+            }
+          };
+
+          const { data: userData, error: userError } = await supabase
+            .schema('identity')
+            .from('users')
+            .insert(userPayload)
+            .select('id')
+            .single();
+
+          if (userError) throw userError;
+          finalUserId = userData.id;
+
+          // 2. Insert into identity.organization_users
+          const orgUserPayload = {
+            organization_id: organizationId,
+            user_id: finalUserId,
+            is_active: true,
+            persona_type: 'worker'
+          };
+
+          const { data: orgUserData, error: orgUserError } = await supabase
+            .schema('identity')
+            .from('organization_users')
+            .insert(orgUserPayload)
+            .select('id')
+            .single();
+
+          if (orgUserError) throw orgUserError;
+          finalOrgUserId = orgUserData.id;
+        }
+
+        const insertPayload: any = {
+          organization_id: organizationId,
+          name: data.name,
+          booking_timezone: data.timezone,
+          is_active: data.status === 'active',
+          booking_enabled: true
+        };
+        if (isPerson) {
+          insertPayload.resource_type = data.type;
+          insertPayload.email = data.email || null;
+          insertPayload.phone = data.phone || null;
+          insertPayload.details = {
+            user_id: finalUserId || null,
+            organization_user_id: finalOrgUserId || null
+          };
+        } else {
+          insertPayload.asset_type = data.type;
+        }
+
+        const { error } = await supabase
+          .schema('unified')
+          .from(targetTable)
+          .insert(insertPayload);
 
         if (error) throw error;
 

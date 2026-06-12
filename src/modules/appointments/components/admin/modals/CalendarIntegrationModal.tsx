@@ -70,10 +70,10 @@ export function CalendarIntegrationModal({
     try {
       setLoading(true);
       const { data, error } = await supabase
-        .schema('calendar')
+        .schema('cal')
         .from('calendar_integrations')
         .select('*')
-        .eq('resource_id', resourceId)
+        .eq('contact_id', resourceId)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -96,7 +96,7 @@ export function CalendarIntegrationModal({
   const handleDisconnect = async (integrationId: string) => {
     try {
       const { error } = await supabase
-        .schema('calendar')
+        .schema('cal')
         .from('calendar_integrations')
         .delete()
         .eq('id', integrationId);
@@ -114,7 +114,7 @@ export function CalendarIntegrationModal({
   const handleToggleActive = async (integration: CalendarIntegration) => {
     try {
       const { error } = await supabase
-        .schema('calendar')
+        .schema('cal')
         .from('calendar_integrations')
         .update({ is_active: !integration.is_active })
         .eq('id', integration.id);
@@ -137,7 +137,7 @@ export function CalendarIntegrationModal({
 
     try {
       await supabase
-        .schema('calendar')
+        .schema('cal')
         .from('calendar_integrations')
         .update({
           last_sync_at: new Date().toISOString(),

@@ -9,9 +9,9 @@ export default function AdminAppointmentsPage() {
     return (
         <ToastProvider>
             <div className="min-h-screen bg-gray-50">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-end">
+                {/* <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-end">
                     <OrgSwitcher />
-                </div>
+                </div> */}
 
                 {!organization ? (
                     <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
