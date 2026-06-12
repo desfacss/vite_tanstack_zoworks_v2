@@ -43,7 +43,7 @@ export function ServiceSelection({ organizationId, onSelectService, onBack }: Se
       setLoading(true);
 
       const { data: eventTypes, error } = await supabase
-        .schema('calendar')
+        .schema('cal')
         .from('event_types')
         .select(`
           id,

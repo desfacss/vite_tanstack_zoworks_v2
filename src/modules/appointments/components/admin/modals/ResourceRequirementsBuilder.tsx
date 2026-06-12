@@ -51,11 +51,11 @@ export function ResourceRequirementsBuilder({
   async function loadResources() {
     try {
       const { data, error } = await supabase
-        .schema('calendar')
-        .from('resources')
+        .schema('cal')
+        .from('v_bookable_resources')
         .select('*')
         .eq('organization_id', organizationId)
-        .eq('status', 'active')
+        .eq('is_active', true)
         .order('name');
 
       if (error) throw error;

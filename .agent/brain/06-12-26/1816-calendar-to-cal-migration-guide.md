@@ -3,7 +3,7 @@
 
 > Date: 2026-06-11  
 > Migrations: `20260611000200` (calendar schema), `20260611000300` (cal v1, superseded), `20260611000400` (cal lean — the live target)  
-> Scope: Everything a frontend/API consumer needs to switch from `calendar.*` to `cal.*`
+> Scope: Everything a frontend/API consumer needs to switch from `calendar.*` to `cal.*` schema
 
 ---
 

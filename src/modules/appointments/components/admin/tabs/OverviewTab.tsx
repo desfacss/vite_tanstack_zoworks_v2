@@ -50,12 +50,12 @@ export function OverviewTab({ organizationId }: OverviewTabProps) {
 
       const [resources, eventTypes, locations, bookings] = await Promise.all([
         supabase
-          .schema('calendar')
-          .from('resources')
-          .select('id, status', { count: 'exact' })
+          .schema('cal')
+          .from('v_bookable_resources')
+          .select('id, is_active', { count: 'exact' })
           .eq('organization_id', organizationId),
         supabase
-          .schema('calendar')
+          .schema('cal')
           .from('event_types')
           .select('id', { count: 'exact' })
           .eq('organization_id', organizationId),
@@ -65,13 +65,13 @@ export function OverviewTab({ organizationId }: OverviewTabProps) {
           .select('id', { count: 'exact' })
           .eq('organization_id', organizationId),
         supabase
-          .schema('calendar')
-          .from('bookings')
-          .select('id, scheduled_at', { count: 'exact' })
-          .gte('scheduled_at', new Date().toISOString()),
+          .schema('cal')
+          .from('v_bookings')
+          .select('booking_id, scheduled_start', { count: 'exact' })
+          .gte('scheduled_start', new Date().toISOString()),
       ]);
 
-      const activeResources = resources.data?.filter((r: { status: string }) => r.status === 'active').length || 0;
+      const activeResources = resources.data?.filter((r: { is_active: boolean }) => r.is_active).length || 0;
 
       setStats({
         totalResources: resources.count || 0,

@@ -16,18 +16,16 @@ export interface DatabaseHealth {
 
 const REQUIRED_TABLES = [
   'organizations',
-  'resources',
-  'skills',
   'locations',
-  'territories',
   'use_case_configs',
+  'territories',
   'event_types',
   'event_type_resources',
   'resource_availability_rules',
-  'resource_skills',
-  'resource_territories',
+  'calendar_integrations',
+  'blocked_windows',
   'client_credits',
-  'booking_resources',
+  'resource_territories',
 ];
 
 export async function checkDatabaseHealth(): Promise<DatabaseHealth> {
@@ -43,7 +41,7 @@ export async function checkDatabaseHealth(): Promise<DatabaseHealth> {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
 
-      const schema = ['organizations', 'locations'].includes(tableName) ? 'identity' : 'calendar';
+      const schema = ['organizations', 'locations'].includes(tableName) ? 'identity' : 'cal';
 
       const { count, error } = await supabase
         .schema(schema)

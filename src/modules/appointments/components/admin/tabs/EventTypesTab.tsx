@@ -48,7 +48,7 @@ export function EventTypesTab({ organizationId }: EventTypesTabProps) {
       setLoading(true);
 
       const { data, error } = await supabase
-        .schema('calendar')
+        .schema('cal')
         .from('event_types')
         .select('*')
         .eq('organization_id', organizationId)
@@ -120,7 +120,7 @@ export function EventTypesTab({ organizationId }: EventTypesTabProps) {
 
     try {
       const { error } = await supabase
-        .schema('calendar')
+        .schema('cal')
         .from('event_types')
         .delete()
         .eq('id', deletingEventType.id);
@@ -146,7 +146,7 @@ export function EventTypesTab({ organizationId }: EventTypesTabProps) {
 
       if (editingEventType) {
         const { error } = await supabase
-          .schema('calendar')
+          .schema('cal')
           .from('event_types')
           .update({
             title: data.title,
@@ -171,7 +171,7 @@ export function EventTypesTab({ organizationId }: EventTypesTabProps) {
         showToast(`${data.title} updated successfully`, 'success');
       } else {
         const { data: insertedData, error } = await supabase
-          .schema('calendar')
+          .schema('cal')
           .from('event_types')
           .insert({
             organization_id: organizationId,
@@ -202,7 +202,7 @@ export function EventTypesTab({ organizationId }: EventTypesTabProps) {
       if (data.resource_requirements && data.resource_requirements.length > 0) {
         // Delete existing resource requirements
         await supabase
-          .schema('calendar')
+          .schema('cal')
           .from('event_type_resources')
           .delete()
           .eq('event_type_id', eventTypeId);
@@ -210,16 +210,17 @@ export function EventTypesTab({ organizationId }: EventTypesTabProps) {
         // Insert new resource requirements
         for (const req of data.resource_requirements) {
           if (req.specificResourceIds && req.specificResourceIds.length > 0) {
-            // Insert multiple rows for specific resources
+            // Insert multiple rows for specific resources with correct resource_kind
             const resourceRows = req.specificResourceIds.map(resourceId => ({
               event_type_id: eventTypeId,
               resource_id: resourceId,
+              resource_kind: req.resourceType === 'person' ? 'contact' : 'asset',
               role: req.role,
               is_required: req.isRequired,
             }));
 
             await supabase
-              .schema('calendar')
+              .schema('cal')
               .from('event_type_resources')
               .insert(resourceRows);
           }

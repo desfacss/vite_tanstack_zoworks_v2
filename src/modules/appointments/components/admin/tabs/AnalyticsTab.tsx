@@ -52,11 +52,23 @@ export function AnalyticsTab({ organizationId }: AnalyticsTabProps) {
     try {
       setLoading(true);
 
-      const { data: bookings } = await supabase
-        .schema('calendar')
-        .from('bookings')
-        .select('id, status, start_time, end_time, resource_id, resources!inner(name, organization_id)')
-        .eq('resources.organization_id', organizationId);
+      const { data: rawBookings } = await supabase
+        .schema('cal')
+        .from('v_bookings')
+        .select('booking_id, status, scheduled_start, scheduled_end, assigned_resource_id, assigned_resource_name')
+        .eq('organization_id', organizationId);
+
+      const bookings = (rawBookings || []).map((b: any) => ({
+        id: b.booking_id,
+        status: b.status,
+        start_time: b.scheduled_start,
+        end_time: b.scheduled_end,
+        resource_id: b.assigned_resource_id,
+        resources: {
+          name: b.assigned_resource_name || 'Unknown',
+          organization_id: organizationId
+        }
+      }));
 
       if (bookings && bookings.length > 0) {
         const resourceBookings: Record<string, { name: string; count: number }> = {};

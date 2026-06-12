@@ -289,7 +289,7 @@ export async function seedUseCaseData(useCaseKey: string) {
     console.log(`Seeding data for ${data.organization.name}...`);
 
     const { data: org, error: orgError } = await supabase
-        .schema('calendar')
+        .schema('identity')
         .from('organizations')
         .upsert(data.organization, { onConflict: 'slug' })
         .select()
@@ -299,33 +299,21 @@ export async function seedUseCaseData(useCaseKey: string) {
     console.log('✓ Organization created/updated');
 
     const { data: useCase, error: useCaseError } = await supabase
-        .schema('calendar')
+        .schema('cal')
         .from('use_case_configs')
         .upsert({
-            ...data.useCase,
+            name: data.useCase.name,
+            slug: data.useCase.slug,
+            category: data.useCase.category,
+            icon: data.useCase.icon,
+            description: data.useCase.description,
+            config_json: data.useCase.config_json,
         }, { onConflict: 'slug' })
         .select()
         .single();
 
     if (useCaseError) throw useCaseError;
     console.log('✓ Use case config created/updated');
-
-    const skillMap = new Map();
-    for (const skill of data.skills) {
-        const { data: insertedSkill, error: skillError } = await supabase
-            .schema('calendar')
-            .from('skills')
-            .upsert({
-                ...skill,
-                organization_id: org.id,
-            }, { onConflict: 'organization_id, name' })
-            .select()
-            .single();
-
-        if (skillError) throw skillError;
-        skillMap.set(skill.name, insertedSkill.id);
-    }
-    console.log(`✓ ${data.skills.length} skills created/updated`);
 
     const locationMap = new Map();
     if (data.locations && data.locations.length > 0) {
@@ -347,41 +335,48 @@ export async function seedUseCaseData(useCaseKey: string) {
     }
 
     const resourceMap = new Map();
+    const resourceKindMap = new Map();
     for (const resource of data.resources) {
         const { skills: resourceSkills, availability, ...resourceData } = resource;
 
+        const isPerson = resourceData.type === 'person';
+        const targetTable = isPerson ? 'contacts' : 'assets';
+        
+        const payload: any = {
+            organization_id: org.id,
+            name: resourceData.name,
+            booking_timezone: resourceData.timezone,
+            booking_enabled: true,
+            is_active: resourceData.status === 'active',
+            details: resourceData.metadata || {}
+        };
+        if (isPerson) {
+            payload.resource_type = resourceData.type;
+            payload.email = resourceData.email || null;
+            payload.phone = resourceData.phone || null;
+            payload.skills = resourceSkills || [];
+        } else {
+            payload.asset_type = resourceData.type;
+        }
+
         const { data: insertedResource, error: resourceError } = await supabase
-            .schema('calendar')
-            .from('resources')
-            .upsert({
-                ...resourceData,
-                organization_id: org.id,
-            }, { onConflict: 'organization_id, name' })
+            .schema('unified')
+            .from(targetTable)
+            .upsert(payload, { onConflict: 'organization_id, name' })
             .select()
             .single();
 
         if (resourceError) throw resourceError;
         resourceMap.set(resource.name, insertedResource.id);
-
-        if (resourceSkills && resourceSkills.length > 0) {
-            for (const skillName of resourceSkills) {
-                const skillId = skillMap.get(skillName);
-                if (skillId) {
-                    await supabase.schema('calendar').from('resource_skills').upsert({
-                        resource_id: insertedResource.id,
-                        skill_id: skillId,
-                        proficiency_level: 'proficient',
-                    }, { onConflict: 'resource_id, skill_id' });
-                }
-            }
-        }
+        resourceKindMap.set(resource.name, isPerson ? 'contact' : 'asset');
 
         if (availability && availability.length > 0) {
             for (const avail of availability) {
-                await supabase.schema('calendar').from('resource_availability_rules').upsert({
+                await supabase.schema('cal').from('resource_availability_rules').upsert({
                     resource_id: insertedResource.id,
+                    resource_kind: isPerson ? 'contact' : 'asset',
                     ...avail,
-                }, { onConflict: 'resource_id, day_of_week, start_time, end_time' });
+                }, { onConflict: 'resource_id, resource_kind, day_of_week, start_time, end_time' });
             }
         }
     }
@@ -408,7 +403,7 @@ export async function seedUseCaseData(useCaseKey: string) {
         };
 
         const { data: insertedEventType, error: eventTypeError } = await supabase
-            .schema('calendar')
+            .schema('cal')
             .from('event_types')
             .upsert(eventTypePayload, { onConflict: 'slug' })
             .select()
@@ -420,10 +415,12 @@ export async function seedUseCaseData(useCaseKey: string) {
             let isFirst = true;
             for (const roleAssignment of resource_roles) {
                 const resourceId = resourceMap.get(roleAssignment.resourceName);
+                const resourceKind = resourceKindMap.get(roleAssignment.resourceName) || 'contact';
                 if (resourceId) {
-                    await supabase.schema('calendar').from('event_type_resources').upsert({
+                    await supabase.schema('cal').from('event_type_resources').upsert({
                         event_type_id: insertedEventType.id,
                         resource_id: resourceId,
+                        resource_kind: resourceKind,
                         role: (isFirst && eventTypePayload.requires_multi_resource) ? 'primary' : roleAssignment.role,
                         is_required: true,
                     }, { onConflict: 'event_type_id, resource_id' });
@@ -433,10 +430,12 @@ export async function seedUseCaseData(useCaseKey: string) {
         } else if (data.resources.length > 0) {
             for (const resource of data.resources) {
                 const resourceId = resourceMap.get(resource.name);
+                const resourceKind = resourceKindMap.get(resource.name) || 'contact';
                 if (resourceId) {
-                    await supabase.schema('calendar').from('event_type_resources').upsert({
+                    await supabase.schema('cal').from('event_type_resources').upsert({
                         event_type_id: insertedEventType.id,
                         resource_id: resourceId,
+                        resource_kind: resourceKind,
                         role: 'primary',
                         is_required: true,
                     }, { onConflict: 'event_type_id, resource_id' });
